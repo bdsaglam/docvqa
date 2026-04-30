@@ -2,6 +2,8 @@
 
 ICDAR 2026 DocVQA competition entry. RLM agents with active document perception — iteratively inspect pages via VLM tools from a Python REPL sandbox.
 
+> **Method writeup:** see [`docs/submission-report/submission-summary.pdf`](docs/submission-report/submission-summary.pdf) for the official submission report covering the approach, design choices, and results.
+
 ## Results
 
 | Config | Val Score | Test Score |
