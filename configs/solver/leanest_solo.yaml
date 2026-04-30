@@ -1,0 +1,7 @@
+_target_: docvqa.solvers.leanest_solo_solver.create_leanest_solo_program
+max_iterations: 25
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8

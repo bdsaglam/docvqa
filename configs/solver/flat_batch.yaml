@@ -1,0 +1,7 @@
+_target_: docvqa.solvers.flat_batch_solver.create_flat_batch_program
+iterations_per_question: 4
+base_iterations: 6
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+max_iterations: 40

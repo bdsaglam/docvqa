@@ -1,0 +1,25 @@
+defaults:
+  - lm: qwen-3_5-27b-vllm-local
+  - solver: flat_solo
+  - vlm: qwen-3_5-27b-vllm-local
+  - _self_
+
+# Data settings
+data:
+  dataset: VLR-CVC/DocVQA-2026
+  split: val
+  num_samples: 5
+  doc_ids: null
+  categories: null
+
+# Run settings
+run_id: null
+max_concurrency: 1
+task_timeout_seconds: 14400
+
+# Hydra settings
+hydra:
+  run:
+    dir: output/runs/${now:%Y-%m-%d_%H-%M-%S}
+  job:
+    chdir: false

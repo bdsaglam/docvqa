@@ -1,0 +1,482 @@
+[
+  {
+    "category": "business_report",
+    "question_id": "business_report_1_q1",
+    "answer": "2048.88",
+    "full_answer": "2048.88"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_1_q2",
+    "answer": "Silicon photonics",
+    "full_answer": "Silicon photonics"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_2_q1",
+    "answer": "9633",
+    "full_answer": "9633"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_3_q1",
+    "answer": "Child Education",
+    "full_answer": "Child Education"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_3_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q1",
+    "answer": "non-voting",
+    "full_answer": "non-voting"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q2",
+    "answer": "consumer subscriptions, platforms, devices, other products and services",
+    "full_answer": "consumer subscriptions, platforms, devices, other products and services"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q3",
+    "answer": "Google Cloud Platform, Google Workspace, other enterprise services",
+    "full_answer": "Google Cloud Platform, Google Workspace, other enterprise services"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q4",
+    "answer": "AdMob, AdSense, Google Ad Manager",
+    "full_answer": "AdMob, AdSense, Google Ad Manager"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q5",
+    "answer": "depreciation, employee compensation expenses for engineering and technical employees responsible for R&D related to our existing and new products and services, third-party services fees primarily relating to consulting and outsourced services in support of our engineering and product development efforts",
+    "full_answer": "depreciation, employee compensation expenses for engineering and technical employees responsible for R&D related to our existing and new products and services, third-party services fees primarily relating to consulting and outsourced services in support of our engineering and product development efforts"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q1",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q1",
+    "answer": "Missouri",
+    "full_answer": "Missouri"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q2",
+    "answer": "Milanoff",
+    "full_answer": "Milanoff"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q3",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q4",
+    "answer": "green",
+    "full_answer": "green"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q1",
+    "answer": "1",
+    "full_answer": "1"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q2",
+    "answer": "my little pet",
+    "full_answer": "my little pet"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q1",
+    "answer": "wrench",
+    "full_answer": "wrench"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q1",
+    "answer": "D",
+    "full_answer": "D"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q2",
+    "answer": "27",
+    "full_answer": "27"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q3",
+    "answer": "1901104, 1901106",
+    "full_answer": "1901104, 1901106"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_2_q1",
+    "answer": "22",
+    "full_answer": "22"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_2_q2",
+    "answer": "1004546-1",
+    "full_answer": "1004546-1"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q1",
+    "answer": "68",
+    "full_answer": "68"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q2",
+    "answer": "8.50",
+    "full_answer": "8.50"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q3",
+    "answer": "16",
+    "full_answer": "16"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_4_q1",
+    "answer": "3.70 in",
+    "full_answer": "3.70 in"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_4_q2",
+    "answer": ".598 in",
+    "full_answer": ".598 in"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_1_q1",
+    "answer": "1999",
+    "full_answer": "1999"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_1_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q2",
+    "answer": "0.55 USD",
+    "full_answer": "0.55 USD"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q3",
+    "answer": "N'Djamena",
+    "full_answer": "N'Djamena"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q4",
+    "answer": "Geneva",
+    "full_answer": "Geneva"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q5",
+    "answer": "Libreville",
+    "full_answer": "Libreville"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q6",
+    "answer": "Libreville",
+    "full_answer": "Libreville"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q7",
+    "answer": "Hong Kong",
+    "full_answer": "Hong Kong"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q8",
+    "answer": "Geneva",
+    "full_answer": "Geneva"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_1_q1",
+    "answer": "Palatinus",
+    "full_answer": "Palatinus"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_1_q2",
+    "answer": "P.S.LAVRETI",
+    "full_answer": "P.S.LAVRETI"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q1",
+    "answer": "Other Thoroughfares",
+    "full_answer": "Other Thoroughfares"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q2",
+    "answer": "Wareham",
+    "full_answer": "Wareham"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q1",
+    "answer": "1",
+    "full_answer": "1"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q2",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q3",
+    "answer": "38",
+    "full_answer": "38"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q4",
+    "answer": "76",
+    "full_answer": "76"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q5",
+    "answer": "104",
+    "full_answer": "104"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q7",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_2_q1",
+    "answer": "activations",
+    "full_answer": "activations"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_3_q1",
+    "answer": "18",
+    "full_answer": "18"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_3_q2",
+    "answer": "Arxiv2Markdown, Textbooks-QA",
+    "full_answer": "Arxiv2Markdown, Textbooks-QA"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q2",
+    "answer": "30.2%",
+    "full_answer": "30.2%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q3",
+    "answer": "TexTok-32 + DiT-XL",
+    "full_answer": "TexTok-32 + DiT-XL"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q4",
+    "answer": "128",
+    "full_answer": "128"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q5",
+    "answer": "caption",
+    "full_answer": "caption"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q1",
+    "answer": "540000",
+    "full_answer": "540000"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q4",
+    "answer": "24.7",
+    "full_answer": "24.7"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q5",
+    "answer": "79.0",
+    "full_answer": "79.0"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_1_q1",
+    "answer": "201425",
+    "full_answer": "201425"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_1_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q1",
+    "answer": "23.313",
+    "full_answer": "23.313"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q2",
+    "answer": "to",
+    "full_answer": "to"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q3",
+    "answer": "Update",
+    "full_answer": "Update"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q2",
+    "answer": "Africa",
+    "full_answer": "Africa"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q3",
+    "answer": "32050020877",
+    "full_answer": "32050020877"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q5",
+    "answer": "3.9",
+    "full_answer": "3.9"
+  }
+]

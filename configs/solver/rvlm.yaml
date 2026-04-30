@@ -1,0 +1,6 @@
+_target_: docvqa.solvers.rvlm_solver.create_rvlm_program
+max_iterations: 20
+images_for_last_n: 3
+max_image_pixels: 8000000
+use_category_tips: true
+question_concurrency: 4

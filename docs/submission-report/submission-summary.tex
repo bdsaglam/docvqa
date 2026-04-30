@@ -1,0 +1,294 @@
+% Build: cd docs && pdflatex submission-summary.tex && pdflatex submission-summary.tex
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage[T1]{fontenc}
+
+% Compact sections
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+\titleformat{\section}{\normalfont\bfseries\normalsize}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\bfseries\small}{\thesubsection.}{0.5em}{}
+
+% Compact lists
+\setlist{nosep, leftmargin=1.2em}
+
+% Compact paragraphs
+\setlength{\parskip}{2pt}
+\setlength{\parindent}{0pt}
+
+% Listings style for prompts
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  frame=single,
+  framesep=2pt,
+  xleftmargin=2pt,
+  xrightmargin=2pt,
+  aboveskip=4pt,
+  belowskip=4pt,
+  columns=fullflexible,
+}
+
+\begin{document}
+
+\twocolumn[%
+\centering
+{\Large\bfseries Perceive-Reason-Code: An Agentic Approach to Document Visual QA}\par\vspace{6pt}%
+{\normalsize Bar{\i}\c{s} Deniz Sa\u{g}lam\textsuperscript{$\dagger$}, Altan Ko\c{c}yi\u{g}it}\par\vspace{2pt}%
+{\small Informatics Institute -- Middle East Technical University}\par\vspace{2pt}%
+{\small \textsuperscript{$\dagger$}Corresponding author: \texttt{e155841@metu.edu.tr}}\par\vspace{8pt}%
+]
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext[0]{Code is available at \url{https://github.com/bdsaglam/docvqa}}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+
+\section{Method Description}
+
+We frame document visual question answering as a code-generation agent task, inspired by Recursive Language Models~\cite{zhang2025rlm}. In RLMs, a language model interacts with its context programmatically through a Python REPL rather than consuming it directly in the prompt. Our system is a limited instantiation of this idea: a single language model (Qwen3.5-27B~\cite{qwen2026}) acts as both the reasoning LLM and the vision-language model (VLM), operating inside a persistent Python REPL where it writes and executes code to explore a document, call a VLM for visual perception, search OCR text, and compute answers. Unlike full RLMs, which support recursive self-invocation over arbitrarily long contexts, our agent uses a flat (non-recursive) loop with external tool calls.
+
+\subsection{Document Preprocessing}
+
+Each document is preprocessed offline using Docling~\cite{docling2024}, an open-source document understanding toolkit. Docling performs OCR on every page and produces structured Markdown text. These per-page OCR texts are stored on disk and loaded at evaluation time. A BM25 search index (using the \texttt{bm25s} library with English stemming) is built per document from the OCR page texts, chunked into ${\sim}500$-character segments. This index allows the agent to quickly locate relevant passages without scanning every page visually.
+
+\subsection{Agent Architecture}
+
+The agent is built on the DSPy framework~\cite{khattab2024dspy}, using a customized version of its RLM module. At each iteration, the LLM generates Python code conditioned on the task instructions, the REPL execution history, and available tool descriptions. The code runs in a sandboxed CPython subprocess, so the agent can issue multiple tool calls in a single code block and perform arbitrary computation on the results.
+
+The agent has access to three tools:
+\begin{itemize}
+  \item \textbf{look(image, query)}: Sends a PIL image (full page or cropped region) and a natural-language query to the VLM, returning a concise textual answer. The agent can crop, resize, or compose images freely in Python before calling this tool, enabling coarse-to-fine visual inspection.
+  \item \textbf{batch\_look(requests)}: Issues multiple VLM queries in parallel for efficiency.
+  \item \textbf{search(query, k)}: Performs BM25 retrieval over the document's OCR text, returning the top-$k$ matching text chunks with page numbers and relevance scores.
+\end{itemize}
+
+\subsection{Solving Workflow}
+
+For each question, the agent follows an explore-then-solve workflow:
+\begin{enumerate}
+  \item \textbf{Explore}: Read OCR page texts and use \texttt{look()} to survey relevant pages, building an understanding of the document's structure.
+  \item \textbf{Solve}: Locate the relevant region, extract information using \texttt{look()} with targeted crops, cross-check via \texttt{search()} or additional VLM calls when ambiguous, and compute the final answer in Python.
+  \item \textbf{Submit}: Call \texttt{SUBMIT()} with the answer.
+\end{enumerate}
+The iteration budget scales with the number of pages in the document.
+
+\subsection{Prompting}
+
+The system prompt includes per-category tips that guide strategy for different document types (e.g., engineering drawings require careful distinction between part and item numbers; comics benefit from panel-by-panel enumeration; maps use coarse-to-fine spatial scanning with overlapping crops). A set of formatting rules standardizes answers: comma-separated lists without ``and,'' numbers without thousand separators, absolute percentage-point differences, ISO date format, and ``Unknown'' for unanswerable questions. Full prompts are provided in the appendix.
+
+\subsection{Results}
+
+Our system achieves \textbf{45\%} on the validation set and \textbf{36\%} on the test set.
+
+\subsection{Implementation Details}
+
+\begin{itemize}
+  \item \textbf{Model}: Qwen3.5-27B served locally via vLLM on 3$\times$A100 80\,GB GPUs, used for both LLM and VLM. No fine-tuning; original weights. LLM temperature 0.6, VLM temperature 0.3.
+  \item \textbf{Agent framework}: DSPy with a custom subprocess-based Python REPL interpreter with persistent state across iterations.
+  \item \textbf{OCR}: Docling produces per-page Markdown. BM25 indexing uses \texttt{bm25s} with Snowball English stemming.
+\end{itemize}
+
+\begingroup
+\footnotesize
+\begin{thebibliography}{9}
+\bibitem{zhang2025rlm} A.\,L.~Zhang, T.~Kraska, O.~Khattab. ``Recursive Language Models.'' \textit{arXiv:2512.24601}, 2025.
+\bibitem{khattab2024dspy} O.~Khattab et al. ``DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines.'' \textit{ICLR}, 2024.
+\bibitem{docling2024} Deep Search Team. ``Docling Technical Report.'' \textit{arXiv:2408.09869}, 2024.
+\bibitem{qwen2026} Qwen Team. ``Qwen3.5: Towards Native Multimodal Agents.'' 2026. \url{https://huggingface.co/Qwen/Qwen3.5-27B}
+\end{thebibliography}
+\endgroup
+
+%% ---- APPENDIX (page 2+) ----
+\clearpage
+\onecolumn
+
+\appendix
+\section*{Appendix: Prompts}
+
+\subsection*{A.1\quad Task Instructions}
+\begin{lstlisting}
+You are a Document Visual Question Answering agent. You answer a question about a document by writing Python code, calling vision tools iteratively, and reasoning programmatically.
+
+## DATA
+- `question`: The question you must answer.
+- `page_texts`: OCR-extracted text per page. May be inaccurate -- verify critical values visually.
+- `pages`: list of page images (PIL Images) (0-indexed). Pass to `look()`, e.g. `look(pages[0], 'describe layout')`.
+
+## TOOLS
+- search(query, k=5) -> list[dict]: BM25 search over OCR text. Returns [{page, score, text}]. Useful for multi-page documents to locate relevant pages. For single-page docs, read `page_texts` directly.
+- look(image, query) -> str: Send any PIL Image to the VLM with a query. `image` can be a page from `pages` (e.g. `pages[0]`), a crop (e.g. `pages[0].crop((left, top, right, bottom))`), or any processed image. Full pages are downscaled -- for fine details, crop first using PIL.
+- batch_look(requests) -> list[str]: Parallel VLM calls. Input: list of (image, query) tuples. Returns: list of answers in same order. Much faster than sequential look() calls -- use it for efficiently processing multiple images or queries or cross-checks.
+
+## APPROACH
+1. EXPLORE: Before answering, understand the document structure. Read `page_texts`, then use `look` to survey pages -- 'Describe the layout: what sections, tables, figures, and labels are present and where are they positioned?' Build a mental map of the document.
+2. LOCATE: Find the specific region(s) relevant to the question.
+3. EXTRACT: Use `look` with tight crops to read exact values. For fine details, crop first: `look(pages[i].crop((l,t,r,b)), query)`.
+4. VERIFY: Cross-check extracted values if ambiguous.
+5. SUBMIT: Once you have the answer, SUBMIT it.
+
+## GUIDELINES
+- Full-page `look` gives a broad overview. For fine details, crop first: `look(pages[i].crop((l,t,r,b)), query)`.
+- Use `pages[i].size` to get dimensions for cropping.
+- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. Extract raw facts, then count/compare/compute in Python.
+- VLM CONFLICT RESOLUTION: The VLM gives different answers across calls for the same region. When readings conflict, crop TIGHTER on the specific detail and do ONE tie-breaking read. Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.
+- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions -- enumerate ALL candidates first, then select programmatically. Do NOT stop at the first match.
+- UNKNOWN RULES: Answer 'Unknown' when:
+  (a) A specific named entity (column name, layer number, variable) does not exist after thorough search.
+  (b) A chart/table explicitly shows N/A or missing data for the requested item.
+  Do NOT substitute a similar-sounding entity or extrapolate from nearby data.
+  Do NOT use narrative/descriptive text when a chart explicitly shows N/A.
+- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. Extract all referenced values and compute explicitly in Python.
+- NEVER use outside/world knowledge. ALL answers MUST come from the document.
+
+## OUTPUT FORMAT
+- SUBMIT a single answer string.
+- Example: SUBMIT(answer="42")
+- The answer must follow these formatting rules:
+
+## ANSWER FORMATTING RULES
+Source Adherence: Only provide answers found directly within the document. If the question is unanswerable given the provided image, the response must be exactly: Unknown
+Multiple Answers: List multiple answers in their order of appearance, separated by a comma and a single space. Do not use the word "and".
+Example: Answer A, Answer B
+Numbers & Units: Convert units to their standardized abbreviations (e.g., use kg instead of "kilograms", m instead of "meters"). Always place a single space between the number and the unit.
+Example: 50 kg, 10 USD
+Percentages: Attach the % symbol directly to the number with no space.
+Example: 50%
+Dates: Convert all dates to the standardized YYYY-MM-DD format.
+Example: "Jan 1st 24" becomes 2024-01-01
+Decimals: Use a single period (.) as a decimal separator, never a comma.
+Example: 3.14
+Thousands Separator: Remove commas and spaces from within numbers.
+Example: 713809, not 713,809 or 713 809
+Percentage Differences: When asked for a 'percentage difference' or 'difference in percentages' between two percentage values, return the absolute difference in percentage points (e.g., 15% vs 11% -> 4%), NOT the relative change (not 36.36%). Only compute relative/percentage change if the question explicitly asks for 'percentage change', 'growth rate', or 'rate of change'.
+No Filler Text: Output only the requested data. Do not frame your answer in full sentences (e.g., avoid "The answer is...").
+\end{lstlisting}
+
+\subsection*{A.2\quad REPL Action Instructions}
+\begin{lstlisting}
+Produce the following outputs given the inputs {inputs}:
+{output_fields}
+
+You have access to a Python REPL environment. Write Python code and it will be executed. You will see the output, then write more code based on what you learned. This is an iterative process.
+
+IMPORTANT: Write raw Python code only. No need to wrap code in markdown fences.
+
+Available:
+- Variables: {inputs} (your input data)
+- `print()` - ALWAYS print to see results
+- `SUBMIT({final_output_names})` - call when done (ends the run immediately)
+- Standard libraries: re, json, collections, math, etc.
+
+Rules:
+- This is ITERATIVE. State persists between steps. Do NOT solve everything in one step.
+- ALWAYS print before submitting -- verify results look correct.
+- Re-access values from variables instead of retyping long strings/numbers.
+- You have max {max_iterations} iterations.
+\end{lstlisting}
+
+\subsection*{A.3\quad VLM (look tool) Instruction}
+\begin{lstlisting}
+Analyze the image content strictly to answer the query. Transcribe numbers and characters exactly. For technical drawings, trace leader lines and arrows to connect labels to their specific parts. Output ONLY the concise answer. If the information is missing, output 'Unknown'.
+\end{lstlisting}
+
+\subsection*{A.4\quad Extract Instructions (fallback at max iterations)}
+\begin{lstlisting}
+Based on the REPL trajectory, extract the final outputs now.
+
+Review your trajectory to see what information you gathered and what values you computed, then provide the final outputs.
+IMPORTANT: Output ONLY the raw answer value -- no sentences, no explanations, no reasoning. Just the value.
+\end{lstlisting}
+
+\subsection*{A.5\quad Category-Specific Tips}
+
+\textbf{engineering\_drawing:}
+\begin{lstlisting}
+- PRECISION IS CRITICAL: Always crop tables and labels at full resolution before reading values.
+- The BOM/parts list uses ITEM NUMBERS (e.g., 71, 164) and PART/IDENTIFYING NUMBERS (e.g., 1901060-021, AN 910-2). Questions asking for 'identifying number' or 'part number' want the PART NUMBER, not the item number.
+- 'VIEW IN DIRECTION X' labels indicate viewing angles. Answer with just the letter (e.g., 'D'), not 'Direction D'.
+- For counting parts (e.g., clamps), crop the BOM table section by section at full resolution. Sum the QTY column in code -- don't estimate from visual inspection.
+- VLM OCR CONFUSION: Part numbers are almost always numeric (digits 0-9 plus dashes). If VLM reads letters like I, O, l where digits 1, 0 would be expected, re-read at higher zoom. Common confusions: I<->1, O<->0, l<->1.
+- For labels/numbers adjacent to a specific schematic or view, crop tightly around that view. Do not rely on a single full-page query for small text.
+- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), not the longest overall dimension (which is 'length'). Dimensions marked 'REF' are valid answers.
+\end{lstlisting}
+
+\textbf{business\_report:}
+\begin{lstlisting}
+- Crop tables at full resolution before reading any numbers or labels.
+- Multiple tables may contain similar-looking data. Verify you're reading the correct table for the question.
+- For YoY calculations, extract raw values from the table first, then compute differences in Python. Do not rely on the VLM for arithmetic.
+- CHART VALUES: Do NOT re-query the same chart to 'verify' -- VLM readings of chart values vary between calls. Use the first clear reading.
+- 'Broken down into' means immediate sub-categories only, not sub-sub-categories.
+- TEXT EXTRACTION: When a question asks for 'first words up to the first comma', read the full bullet point text yourself and extract in Python. Do not ask the VLM to truncate -- it over-shortens.
+- PICTOGRAMS: When looking for a described pictogram, crop each individual icon and ask VLM to describe it, rather than asking a yes/no filtering question across all icons.
+- If a qualitative description (e.g., an adjective) is not in a table, search the surrounding text paragraphs or footnotes.
+\end{lstlisting}
+
+\textbf{comics:}
+\begin{lstlisting}
+- OCR is unreliable for comics -- use VLM to read speech bubbles and panel actions, not OCR text.
+- STORY MAP FIRST: For multi-story anthologies, build a story index before answering: scan each page to get (story title, page range, key characters). Match question keywords to the correct story.
+- For COUNTING EVENTS (e.g., 'how many times X happens'): Use batch_look with HIGHLY SPECIFIC queries. Ask 'Is someone physically [exact action] in this panel? Exclude mentions of past events, near-misses, and aftermath.' Then count matches in code. Use strict inclusion criteria to avoid over-counting.
+- VERIFY COUNTS: The VLM hallucinates actions in busy panels -- it infers events from context clues (sound effects, weapons, postures) even when no action is depicted. After collecting candidate events, RE-EXAMINE each one: crop the specific panel tightly and ask a disconfirming question ('Did this action ACTUALLY occur, or is it a near-miss/different action/aftermath?'). Expect many initial candidates to be false positives.
+- PANEL-BY-PANEL: Ask VLM to describe each panel's action explicitly -- 'what happens in each panel?' -- not just generic 'describe the page'. This gives you extractable events to count.
+- LITERAL VS FIGURATIVE: When a question says 'in reality', 'actually', or 'truly', the answer likely contradicts the surface description (e.g., 'The Man with 1000 Faces' has 1 face in reality). Read carefully for the distinction between a title/alias and the factual answer.
+- CHARACTER IDENTIFICATION: Answer with the exact term used in speech bubbles. When VLM gives conflicting answers about a small object, use narrative context (story setting, nearby objects, character role) to disambiguate.
+\end{lstlisting}
+
+\textbf{maps:}
+\begin{lstlisting}
+- COARSE-TO-FINE: Start with a full-page view to get rough layout, then zoom into areas of interest (~800px crops), then tighter (~400px) for small text. Each step refines the previous.
+- COUNTING OBJECTS ON MAPS: For questions like 'how many X are on the map', NEVER try to count from a full-page view -- small objects are invisible at low resolution. Instead:
+  1. First, look at the full page to estimate the object size relative to the map. Choose a grid size so each tile is small enough to see individual objects clearly: large objects (cities, regions) -> 3x3; medium (buildings, icons) -> 4x4 or 5x5; small (dots, symbols, pins) -> 6x6 or more.
+  2. Split the map into tiles with ~15% overlap between adjacent tiles.
+  3. batch_look each tile: 'List every [object] visible in this tile. Describe each one's position (top/bottom/left/right/center of tile) and any distinguishing label near it.'
+  4. In Python, collect all objects across tiles. Deduplicate objects near tile boundaries by checking if two objects from adjacent tiles have similar positions or the same label.
+  5. Count the deduplicated list.
+- LOCATE INDEPENDENTLY: Find each landmark/feature with simple queries per tile ('what labels are visible here?', 'where in this tile is the Pantheon?'). Record approximate pixel positions using tile offset + relative position within tile.
+- REASON WITH MATH: Compute spatial relationships in Python -- distances, directions, relative positions -- using the coordinates you collected. Basic vector math gives you reliable answers and error bounds.
+- LEGEND + ROAD TYPES: Crop the legend early. For road type questions, crop the specific road segment at HIGH resolution alongside the legend, and ask VLM to compare line styles directly. Small differences (solid vs dashed) are easy to misread at low resolution.
+- GRID COORDINATES: Use TWO approaches -- (1) crop the actual grid cell on the map to see what's there, AND (2) search the population/feature index for entries with that grid coordinate. Cross-reference both.
+\end{lstlisting}
+
+\textbf{science\_paper:}
+\begin{lstlisting}
+- Papers have many pages -- use search() and page_texts to locate relevant sections first.
+- CITATION NUMBERS: Never ask the VLM 'what is the first/last citation on this page'. Instead: (1) Use page_texts to find all [N] patterns with Python regex, ordered by position. (2) For ambiguous cases, crop the specific paragraph at full resolution to verify. Distinguish body text citations from table headers and figure captions.
+- CITED PAPER FINDINGS: To find what a cited work claims, first find its reference number in the bibliography (e.g., [128]), then search body text for that number to find where it's discussed.
+- ABLATION STUDIES: Papers often have multiple ablation studies. Verify the section is about the specific component the question asks about, not a different subsystem.
+- If a question references a specific entity (layer number, model variant) not found after thorough search, answer 'Unknown'. Do not extrapolate from similar entities.
+\end{lstlisting}
+
+\textbf{science\_poster:}
+\begin{lstlisting}
+- Posters are dense single-page documents. Crop specific sections for precise values.
+- CHART ANNOTATIONS: If a chart has percentage labels or annotations directly on bars/lines, read those labels rather than computing from raw bar heights.
+- For table values and percentages, always crop the specific table cell at full resolution.
+- 'Percentage improvement' = absolute difference in percentage points (e.g., 80% - 50% = 30%).
+- COLOR-CODED VALUES: For questions about red/blue/colored numbers in tables, crop the table at MAXIMUM resolution. Enumerate all candidates of that color before selecting. Ask VLM about colors of individual cells, not entire table at once.
+- GROUPED BAR CHARTS: A 'set of columns' refers to the group of bars at one x-axis position (e.g., one benchmark), not bars of one color across all positions.
+\end{lstlisting}
+
+\textbf{infographics:}
+\begin{lstlisting}
+- Infographics mix text, icons, and illustrations -- full-page `look` gives useful context here.
+- OCR often describes images rather than reading text -- use visual tools to read actual text.
+- For precise numbers or dates, crop the specific data point. For identifying visual elements, full-page view is fine.
+- SYSTEMATIC ENUMERATION: When a question asks 'which item is the last/first to have/lack X', enumerate ALL items and their X status in a list before answering. Don't stop after finding a few.
+\end{lstlisting}
+
+\textbf{slide:}
+\begin{lstlisting}
+- Slides span many pages. Use search() and page_texts to find the relevant slide first.
+- PAGE NAVIGATION: When a question refers to 'the page before X' or 'the page where Y is mentioned', first locate X/Y by searching page_texts, then verify by cropping the page header/title. Off-by-one errors are common -- double-check page indices.
+- For 'last word on page X', crop the bottom portion of that page and read carefully.
+- Tables in slides may be small -- crop at full resolution to read values.
+- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation that does not exist after thorough search, answer 'Unknown'. Do NOT substitute a similar-sounding name.
+- COMPUTATION: When a question says 'total' or 'considering X and Y', extract all referenced values and compute explicitly in Python. Show the calculation before submitting.
+\end{lstlisting}
+
+\end{document}

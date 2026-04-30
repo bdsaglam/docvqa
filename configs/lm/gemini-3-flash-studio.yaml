@@ -1,0 +1,10 @@
+# Gemini Flash via Google AI Studio. Requires GEMINI_API_KEY.
+# Get a key: https://aistudio.google.com/apikey
+model: gemini/gemini-3-flash-preview
+temperature: 1.0
+max_tokens: null
+cache: false
+api_base: null
+api_key: null
+vertex_location: null
+reasoning_effort: high

@@ -1,0 +1,9 @@
+model: openrouter/Qwen/Qwen3.5-27B
+api_base: null
+api_key: ${oc.env:OPENROUTER_API_KEY}
+max_tokens: 16384
+temperature: 0.3
+vertex_location: null
+top_p: null
+presence_penalty: null
+enable_thinking: false

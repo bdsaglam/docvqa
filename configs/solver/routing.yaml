@@ -1,0 +1,20 @@
+_target_: docvqa.solvers.routing_solver.create_routing_solver
+default_type: flat_batch
+default_config:
+  iterations_per_question: 4
+  base_iterations: 6
+  vlm: ${vlm}
+  rlm_type: lean
+  page_factor: 1.5
+  max_iterations: 40
+visual_type: flat_solo
+visual_config:
+  max_iterations: 30
+  vlm: ${vlm}
+  rlm_type: lean
+  page_factor: 1.5
+  question_concurrency: 4
+visual_categories:
+  - engineering_drawing
+  - business_report
+  - comics

@@ -1,0 +1,117 @@
+x-worker-common: &worker-common
+  image: ghcr.io/docling-project/docling-serve-cu128:latest
+  command: ["docling-serve", "rq-worker"]
+  environment: &worker-env
+    DOCLING_SERVE_ENG_KIND: "rq"
+    DOCLING_SERVE_ENG_RQ_REDIS_URL: "redis://redis:6373/"
+    DOCLING_SERVE_ALLOW_CUSTOM_PICTURE_DESCRIPTION_CONFIG: "true"
+    DOCLING_SERVE_LOAD_MODELS_AT_BOOT: "true"
+    DOCLING_SERVE_MAX_DOCUMENT_TIMEOUT: "1200"
+    DOCLING_DEVICE: "cuda"
+    DOCLING_NUM_THREADS: "4"
+    DOCLING_PERF_PAGE_BATCH_SIZE: "1"
+    OMP_NUM_THREADS: "4"
+    MKL_NUM_THREADS: "4"
+    HF_HOME: "/cache/huggingface"
+  volumes:
+    - /home/baris/.cache/huggingface:/cache/huggingface
+    - docling-cache:/opt/app-root/src/.cache/docling
+  restart: unless-stopped
+  depends_on:
+    redis:
+      condition: service_started
+
+services:
+  redis:
+    image: redis:latest
+    command: ["redis-server", "--port", "6373"]
+    ports:
+      - "6373:6373"
+    restart: unless-stopped
+
+  docling-api:
+    image: ghcr.io/docling-project/docling-serve-cu128:latest
+    container_name: docling-api
+    ports:
+      - "5001:5001"
+    environment:
+      DOCLING_SERVE_ENABLE_UI: "true"
+      DOCLING_SERVE_ENG_KIND: "rq"
+      DOCLING_SERVE_ENG_RQ_REDIS_URL: "redis://redis:6373/"
+      DOCLING_SERVE_MAX_SYNC_WAIT: "1200"
+      DOCLING_SERVE_MAX_DOCUMENT_TIMEOUT: "1200"
+    depends_on:
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  # GPU 1: 3 workers
+  docling-worker-gpu1-1:
+    <<: *worker-common
+    container_name: docling-worker-gpu1-1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+
+  docling-worker-gpu1-2:
+    <<: *worker-common
+    container_name: docling-worker-gpu1-2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+
+  docling-worker-gpu1-3:
+    <<: *worker-common
+    container_name: docling-worker-gpu1-3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["1"]
+              capabilities: [gpu]
+
+  # GPU 2: 3 workers
+  docling-worker-gpu2-1:
+    <<: *worker-common
+    container_name: docling-worker-gpu2-1
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["2"]
+              capabilities: [gpu]
+
+  docling-worker-gpu2-2:
+    <<: *worker-common
+    container_name: docling-worker-gpu2-2
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["2"]
+              capabilities: [gpu]
+
+  docling-worker-gpu2-3:
+    <<: *worker-common
+    container_name: docling-worker-gpu2-3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["2"]
+              capabilities: [gpu]
+
+volumes:
+  docling-cache:

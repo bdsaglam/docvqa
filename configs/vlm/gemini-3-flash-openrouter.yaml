@@ -1,0 +1,7 @@
+# Gemini Flash as VLM via OpenRouter. Requires OPENROUTER_API_KEY.
+# Verify current slug: https://openrouter.ai/models?q=gemini
+model: openrouter/google/gemini-3-flash-preview
+api_base: null
+api_key: ${oc.env:OPENROUTER_API_KEY}
+max_tokens: 16384
+vertex_location: null
