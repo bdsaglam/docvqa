@@ -54,9 +54,20 @@ The dataset download requires `HF_TOKEN` in `.env` (needed even for public datas
 
 ### OCR
 
-OCR extraction happens automatically on first run — each document page is processed via [docling-serve](https://github.com/docling-project/docling-serve) and cached as markdown under `data/{split}/ocr/{doc_id}/page_*.md`. BM25 indexes are also built automatically and cached under `data/bm25/`.
+Each document page is processed via [docling-serve](https://github.com/docling-project/docling-serve) and cached as markdown under `data/{split}/ocr/{doc_id}/page_*.md`. BM25 indexes for retrieval are cached under `data/{split}/bm25/`. You have two options to populate these caches:
 
-To pre-extract OCR for all documents (recommended before running large evals):
+**Option A — Download the pre-built bundle (recommended).** A ~13 MB zip with OCR markdown and BM25 indexes for all val + test documents:
+
+```bash
+# Download from Google Drive (file ID: 1LgLyEkDuDyl_roS2ZlXjhWFE2JhJPg9K)
+uv run --with gdown gdown 1LgLyEkDuDyl_roS2ZlXjhWFE2JhJPg9K -O data.zip
+unzip -o data.zip -d .  # extracts into ./data/{val,test}/{ocr,bm25}/
+rm data.zip
+```
+
+Or download manually from [this link](https://drive.google.com/file/d/1LgLyEkDuDyl_roS2ZlXjhWFE2JhJPg9K/view?usp=drive_link) and unzip into the repo root.
+
+**Option B — Run the OCR pipeline locally.** Reproducible from scratch but requires a GPU and takes a while:
 
 ```bash
 # Start docling-serve locally (GPU-accelerated)
@@ -67,7 +78,7 @@ uv run python scripts/run_ocr.py
 uv run python scripts/run_ocr.py --split test
 ```
 
-Pass `--docling-url http://host:port` if docling-serve runs elsewhere.
+Pass `--docling-url http://host:port` if docling-serve runs elsewhere. If you skip this step entirely, OCR is also produced lazily on first eval run, but pre-populating the cache avoids OCR overhead bleeding into eval timings.
 
 ## Running Solvers
 
