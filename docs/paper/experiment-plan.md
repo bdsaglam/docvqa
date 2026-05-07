@@ -36,8 +36,8 @@ small-open and an alt-frontier point.
 | **Qwen 3.5 9B** (open small) | ≤8B | not run | not run | both ≥3 |
 | **Gemma 4 (size TBD, open)** | ≤8B or 8–35B | not run | not run | both ≥3 |
 | **Qwen 3.6 27B** (open mid) | 8–35B | not run | done (8 trials) | baseline ≥3 |
-| **Gemini 3 Pro** (closed frontier) | >35B | 37.5% test (official) | 1 trial test (59.4%) | scaffold ≥3 |
-| **Gemini 3 Flash** (closed small) | ≤8B (proprietary) | 33.75% test (official) | mentioned ~50%, not in results.md | both ≥3 |
+| **Gemini 3 Pro** (closed frontier) | >35B | 37.5% test (official) | 1 trial test (59.4%) | **frozen — no more runs (out of credits)** |
+| **Gemini 3 Flash** (closed small) | ≤8B (proprietary) | 33.75% test (official) | mentioned ~50%, not in results.md | **frozen — no more runs (out of credits)** |
 | **GPT-5.x or Claude** (closed alt-frontier) | >35B | TBD | TBD | both ≥3 |
 
 Critical: **matched within-model** (same model, baseline vs scaffold) is
@@ -46,8 +46,20 @@ the headline lift figure. The cross-model comparison is secondary.
 Notes:
 - Pick **one** Gemma size based on what's practical to host. Don't run
   every Gemma variant.
-- The alt-frontier model (GPT-5 / Claude) shows the lift isn't a
-  Gemini-specific quirk. Cost-permitting; if budget tight, defer.
+- **Gemini results are frozen** (out of API credits). The 59.4% Pro
+  test and the ~50% Flash number are single-trial; we cannot
+  replicate them. Two ways to handle in paper: (a) report with a
+  **"single trial; replication blocked by compute budget"** caveat
+  and rely on multi-trial open-model lift as the headline; or
+  (b) drop them from the headline lift figure, keep them only as
+  context. **Recommend (a)** — the lift sign is consistent with
+  open-model multi-trial results, and dropping them weakens the
+  frontier story. The variance-discipline rule in §"Variance
+  discipline" needs an explicit exception for these two cells.
+- The alt-frontier model (GPT-5 / Claude) becomes the **primary**
+  frontier datapoint, not a sanity-check secondary one. Originally
+  defensive; now load-bearing. Plan ≥3 trials baseline + ≥3 trials
+  scaffold.
 
 ## B. Benchmark generality (claim 2)
 
@@ -161,55 +173,63 @@ producing a contaminated 18.75% score (re-run t2 cleanly: 38.8%).
 Host-level isolation is the cheapest fix; topic-coherent groups make
 each host's queue easy to reason about.
 
-### Host A (this machine: 3-GPU + 4-GPU vllm lanes, both serving Qwen 3.5 27B)
-**Owns the Qwen 3.5 27B anchor — matched within-model lift figure.**
-Both lanes run the same model so they share OCR caches, BM25
-indexes, and the val/test splits already on disk. Two concurrent
-ablations is the practical ceiling — beyond that, sandbox OOM risk.
+Both hosts serve Qwen 3.5 27B (Host A on local port 8927, 3-GPU; Host
+B on its own local port 8928, 4-GPU — accessed from Host A via
+tunnel). The bottleneck is **sandbox subprocess load on the
+evals.py-running host**, not vllm GPU. Each `evals.py` lane spawns
+many concurrent agent sandboxes for code execution — that's where
+the OOM happened. Splitting which **machine runs evals.py** is the
+real lever; the vllm endpoints are not the contention point.
 
+### Host A (this machine, runs evals.py for these)
 - Active:
-  - `tips-off` (port 8927, c=24) — category tips ablation, 8x val, in flight
-  - `crop-off` (port 8928, c=32) — D-004 cropping ablation, 8x val, in flight
-- Queued (in priority order, single-lane after actives finish):
-  1. **No-loop baseline** (`solver=no_loop`), Qwen 27B val, ≥3 trials — kills "scaffold matters" claim if raw model already wins
-  2. **OCR on/off via Leanest** (`solver=leanest_solo`), Qwen 27B val, ≥3 trials — partial Leanest data already exists; complete to 8x
-  3. **Qwen 27B test runs** — pick best val config → ≥3 trials on test (locks the matched-baseline test number)
-  4. **m=5 turn budget point**, ≥3 trials — defensive lower-end check; existing 4-point curve already shapes the figure
+  - `tips-off` (vllm 8927, c=24) — category tips ablation, 8x val
+  - `crop-off` (vllm 8928, c=32) — D-004 cropping ablation, 8x val
+- Once both finish, Host A drops to one lane (or idles, picking up
+  whatever Host B has not claimed). Two concurrent lanes is the
+  practical ceiling for one machine before sandbox OOM risk returns.
 
-### Host B (other server)
-**Owns independent model groups — no Qwen 27B contention, no shared
-sandbox.** Each group is self-contained and orderable independently.
+### Host B (other server, runs evals.py for these)
+Host B has its own Qwen 27B vllm + sandbox capacity, so it can carry
+**Qwen 27B Group B0** in addition to the B1/B2/B3 groups that don't
+need local 27B at all. Pick groups in this priority order; each
+group is self-contained.
 
-- **Group B1 — Closed/API models (no local GPU needed):**
-  - Gemini 3 Pro test replication with scaffold, ≥3 trials (validates the 59.4% single-trial number; risk-rank #3)
-  - Gemini 3 Flash baseline + scaffold, val + test, ≥3 trials each
-  - Alt-frontier (Claude or GPT-5) baseline + scaffold, val + test, ≥3 trials each (cost-permitting)
+- **Group B0 — Qwen 27B ablations / test (highest priority on B):**
+  - **No-loop baseline** (`solver=no_loop`), val, ≥3 trials — risk-rank #2; kills "scaffold matters" claim if raw model already wins
+  - **OCR on/off via Leanest** (`solver=leanest_solo`), val, ≥3 trials — risk-rank #6; complete the partial Leanest data to 8x
+  - **Qwen 27B test runs** with the best val config (flat_solo lean m=30, full tools) — ≥3 trials on test; locks the matched-baseline test number that anchors the headline lift figure
+  - **m=5 turn budget point**, val, ≥3 trials — defensive; 4-point curve already shapes the figure
+- **Group B1 — Closed/API models (no local GPU; can overlap B0):**
+  - Alt-frontier (Claude or GPT-5) baseline + scaffold, val + test, ≥3 trials each
+  - (Gemini Pro / Flash: **dropped**; out of credits, existing single-trial numbers used as-is per §A note)
 - **Group B2 — Small open models (separate vllm instance):**
   - Qwen 3.5 9B baseline + scaffold, val, ≥3 trials each
   - Gemma (size TBD per open question) baseline + scaffold, val, ≥3 trials each
 - **Group B3 — Second benchmark (after lit review picks):**
   - Qwen 27B baseline + scaffold on chosen benchmark, ≥3 trials
-  - One frontier model (Gemini 3 Pro) baseline + scaffold on chosen benchmark, ≥3 trials
+  - One frontier model (alt-frontier: Claude or GPT-5 — Gemini dropped, see §A) baseline + scaffold on chosen benchmark, ≥3 trials
 
-**Recommended start order on Host B:** B1 first — zero infra setup,
-directly addresses risk-rank #3 (Pro test replication), and the
-closed-API runs are throughput-limited not GPU-limited so they can
-overlap with B2/B3 setup. B2 next, B3 last (depends on lit review).
+**Recommended start order on Host B:** B0 first (clears the highest
+risk-rank items + locks the matched-baseline test number), B1 in
+parallel since it needs no GPU, then B2, then B3 (depends on lit
+review). B0 and B1 can run side-by-side — B1 is API-bound and won't
+contend with sandbox CPU/RAM.
 
 ## Risk-ranked execution order
 
 Run experiments in the order most likely to **falsify the paper first**.
-Items map onto Host A (Qwen 3.5 27B anchor) or Host B (independent
-model groups B1/B2/B3) per the *Server split* section above.
+Items map onto Host A (Qwen 3.5 27B anchor) or Host B (Group
+B0/B1/B2/B3) per the *Server split* section above.
 
 1. **Qwen 27B baseline (no scaffold) on val + test** — locks the
    matched-baseline figure. Cheap. If lift is small, the paper's spine
-   is at risk.
+   is at risk. *(Host B / Group B0)*
 2. **No-loop ablation on Qwen 27B** — kills "scaffold matters" claim if
-   the raw model already does most of the work.
-3. **Gemini 3 Pro test replication (≥3 trials)** — validates the headline
-   59.4% number. Single-trial means we don't actually know what the
-   real number is.
+   the raw model already does most of the work. *(Host B / Group B0)*
+3. ~~Gemini 3 Pro test replication~~ — **dropped, out of API credits.**
+   The 59.4% scaffold and 37.5% baseline numbers are single-trial and
+   cannot be replicated. Treat with caveat in paper (see §A note).
 4. **Second benchmark — Qwen 27B baseline + scaffold** — kills
    "generality" claim if it fails. Run after lit review picks the
    benchmark.
@@ -219,16 +239,19 @@ model groups B1/B2/B3) per the *Server split* section above.
 7. **VLM cropping on/off ablation** — page-only variant vs full
    arbitrary-image variant. Isolates the active-perception contribution.
 8. **Second benchmark — frontier model with scaffold** — strengthens
-   generality on harder model class.
+   generality on harder model class. *(Host B / Group B3)*
 9. **Turn budget curve** — feeds the efficiency story. **Done** (Qwen 3.5
    27B val): peak at m=30 (44.69% ± 2.81pp); m=10/20/40 each ~3–4pp
-   lower. See section C results table.
-10. **Category tips ablation** — defensive.
-11. **Alt-frontier model (GPT-5 / Claude)** — generalization beyond
-    Gemini. Cost-permitting.
+   lower. See section C results table. *(Host A — done)*
+10. **Category tips ablation** — defensive. *(Host A — in flight, lane: `tips-off`)*
+11. **Alt-frontier model (GPT-5 / Claude)** — **promoted from defensive
+    to load-bearing** (Gemini dropped → only frontier datapoint we
+    can multi-trial). *(Host B / Group B1)*
 
-If steps 1–3 fail or weaken substantially, **stop and reframe** before
-spending compute on later steps.
+If steps 1–2 or step 4 fail or weaken substantially, **stop and reframe**
+before spending compute on later steps. (Step 3 was Gemini Pro
+replication — now dropped; the paper cannot rely on a multi-trial Pro
+number, so the falsification gate moves to step 11 — alt-frontier.)
 
 ## Required figures (preliminary — refine after lit review)
 
