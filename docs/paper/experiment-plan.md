@@ -99,9 +99,9 @@ for context.
 | **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | impl ready (`solver=no_loop`); 0/8 |
 | **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | partial — Leanest val runs exist (43.8%) |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
-| **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | impl ready (`solver.vlm_cropping=false`); 0/8 |
+| **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | in progress (lane: `crop-off` on host A; n=1 clean: 35.0%, vs 44.7% baseline) |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
-| **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | in progress (1/8 launched) |
+| **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | in progress (lane: `tips-off` on host A; n=1 clean: 38.8%, t1 excluded due to sandbox-error contamination) |
 
 ### Turn-budget sweep results
 
@@ -149,9 +149,58 @@ Future / deferred:
 - **Failure walkthroughs** — 2–3 traces where the scaffold fails, for
   honest failure section.
 
+## Server split (parallel execution)
+
+Two GPU hosts available. Splitting work across hosts (rather than
+piling it on one) avoids sandbox-subprocess OOM contention. Concrete
+incident: when a 4-GPU vllm spun up alongside a running eval on the
+same box, the eval's sandbox subprocesses started dying — 2064
+"Subprocess is not running" errors in `flat-solo-no-tips-3_5-27b-val-t1`,
+forcing the agent to abstain ("Unknown") on 55/80 questions and
+producing a contaminated 18.75% score (re-run t2 cleanly: 38.8%).
+Host-level isolation is the cheapest fix; topic-coherent groups make
+each host's queue easy to reason about.
+
+### Host A (this machine: 3-GPU + 4-GPU vllm lanes, both serving Qwen 3.5 27B)
+**Owns the Qwen 3.5 27B anchor — matched within-model lift figure.**
+Both lanes run the same model so they share OCR caches, BM25
+indexes, and the val/test splits already on disk. Two concurrent
+ablations is the practical ceiling — beyond that, sandbox OOM risk.
+
+- Active:
+  - `tips-off` (port 8927, c=24) — category tips ablation, 8x val, in flight
+  - `crop-off` (port 8928, c=32) — D-004 cropping ablation, 8x val, in flight
+- Queued (in priority order, single-lane after actives finish):
+  1. **No-loop baseline** (`solver=no_loop`), Qwen 27B val, ≥3 trials — kills "scaffold matters" claim if raw model already wins
+  2. **OCR on/off via Leanest** (`solver=leanest_solo`), Qwen 27B val, ≥3 trials — partial Leanest data already exists; complete to 8x
+  3. **Qwen 27B test runs** — pick best val config → ≥3 trials on test (locks the matched-baseline test number)
+  4. **m=5 turn budget point**, ≥3 trials — defensive lower-end check; existing 4-point curve already shapes the figure
+
+### Host B (other server)
+**Owns independent model groups — no Qwen 27B contention, no shared
+sandbox.** Each group is self-contained and orderable independently.
+
+- **Group B1 — Closed/API models (no local GPU needed):**
+  - Gemini 3 Pro test replication with scaffold, ≥3 trials (validates the 59.4% single-trial number; risk-rank #3)
+  - Gemini 3 Flash baseline + scaffold, val + test, ≥3 trials each
+  - Alt-frontier (Claude or GPT-5) baseline + scaffold, val + test, ≥3 trials each (cost-permitting)
+- **Group B2 — Small open models (separate vllm instance):**
+  - Qwen 3.5 9B baseline + scaffold, val, ≥3 trials each
+  - Gemma (size TBD per open question) baseline + scaffold, val, ≥3 trials each
+- **Group B3 — Second benchmark (after lit review picks):**
+  - Qwen 27B baseline + scaffold on chosen benchmark, ≥3 trials
+  - One frontier model (Gemini 3 Pro) baseline + scaffold on chosen benchmark, ≥3 trials
+
+**Recommended start order on Host B:** B1 first — zero infra setup,
+directly addresses risk-rank #3 (Pro test replication), and the
+closed-API runs are throughput-limited not GPU-limited so they can
+overlap with B2/B3 setup. B2 next, B3 last (depends on lit review).
+
 ## Risk-ranked execution order
 
 Run experiments in the order most likely to **falsify the paper first**.
+Items map onto Host A (Qwen 3.5 27B anchor) or Host B (independent
+model groups B1/B2/B3) per the *Server split* section above.
 
 1. **Qwen 27B baseline (no scaffold) on val + test** — locks the
    matched-baseline figure. Cheap. If lift is small, the paper's spine
