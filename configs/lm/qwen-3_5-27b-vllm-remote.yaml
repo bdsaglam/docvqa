@@ -1,0 +1,11 @@
+model: hosted_vllm/Qwen/Qwen3.5-27B
+temperature: 0.6
+max_tokens: null
+cache: false
+api_base: http://localhost:8928/v1
+api_key: dummy
+vertex_location: null
+top_p: 0.95
+top_k: 20
+presence_penalty: null
+enable_thinking: true
