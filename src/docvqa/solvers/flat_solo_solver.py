@@ -53,8 +53,66 @@ TASK_INSTRUCTIONS = (
     "- batch_look(requests) -> list[str]: Parallel VLM calls. "
     "Input: list of (image, query) tuples. Returns: list of answers in same order. "
     "Much faster than sequential look() calls — use it for efficiently processing multiple images or queries or cross-checks.\n"
+)
+
+
+# Page-only variant: VLM only sees whole pages by index. No cropping. Used by the
+# D-004 ablation that isolates the active-perception (cropping) contribution.
+TASK_INSTRUCTIONS_PAGE_ONLY = (
+    "You are a Document Visual Question Answering agent. You answer a question about a document by "
+    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
+
+    "## DATA\n"
+    "- `question`: The question you must answer.\n"
+    "- `page_texts`: OCR-extracted text per page. May be inaccurate — verify critical values visually.\n"
+    "- `num_pages`: total number of pages (0-indexed).\n\n"
+
+    "## TOOLS\n"
+    "- search(query, k=5) -> list[dict]: BM25 search over OCR text. Returns [{page, score, text}]. "
+    "Useful for multi-page documents to locate relevant pages. For single-page docs, read `page_texts` directly.\n"
+    "- look(page_idx, query) -> str: "
+    "Send the page at index `page_idx` (int, 0-indexed) to the VLM with a query. "
+    "Whole pages only — no cropping is available.\n"
+    "- batch_look(requests) -> list[str]: Parallel VLM calls. "
+    "Input: list of (page_idx, query) tuples. Returns: list of answers in same order. "
+    "Much faster than sequential look() calls — use it for efficiently processing multiple pages or queries.\n"
 
     "## APPROACH\n"
+    "1. EXPLORE: Read `page_texts`, then use `look(page_idx, ...)` to survey pages and build a mental map.\n"
+    "2. LOCATE: Identify the page(s) relevant to the question.\n"
+    "3. EXTRACT: Re-look at relevant pages with targeted queries to read exact values.\n"
+    "4. VERIFY: Cross-check extracted values by re-querying the same page if ambiguous.\n"
+    "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
+
+    "## GUIDELINES\n"
+    "- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. "
+    "Extract raw facts, then count/compare/compute in Python.\n"
+    "- VLM CONFLICT RESOLUTION: When readings conflict on the same page, do ONE tie-breaking read with a "
+    "more specific question. Never silently adopt a new number from a 'verification' pass.\n"
+    "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
+    "then select programmatically. Do NOT stop at the first match.\n"
+    "- UNKNOWN RULES: Answer 'Unknown' when:\n"
+    "  (a) A specific named entity (column name, layer number, variable) does not exist after thorough search.\n"
+    "  (b) A chart/table explicitly shows N/A or missing data for the requested item.\n"
+    "  Do NOT substitute a similar-sounding entity or extrapolate from nearby data.\n"
+    "  Do NOT use narrative/descriptive text when a chart explicitly shows N/A.\n"
+    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
+    "Extract all referenced values and compute explicitly in Python.\n"
+    "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "- SUBMIT a single answer string.\n"
+    '- Example: SUBMIT(answer="42")\n'
+    "- The answer must follow these formatting rules:\n\n"
+
+    + ANSWER_FORMATTING_RULES
+)
+
+
+# Append shared APPROACH/GUIDELINES/OUTPUT to the cropping-enabled TASK_INSTRUCTIONS.
+TASK_INSTRUCTIONS = (
+    TASK_INSTRUCTIONS
+    + "## APPROACH\n"
     "1. EXPLORE: Before answering, understand the document structure. "
     "Read `page_texts`, then use `look` to survey pages — "
     "'Describe the layout: what sections, tables, figures, and labels are present and where are they positioned?' "
@@ -233,6 +291,44 @@ def batch_look(requests):
 '''
 
 
+def _build_sandbox_code_page_only(page_dir: str, num_pages: int) -> str:
+    """Page-only sandbox for the D-004 cropping ablation. `look(page_idx, query)`
+    accepts only an integer page index — no PIL Images, no crops."""
+    return f'''
+import os
+num_pages = {num_pages}
+_page_paths = [os.path.join({page_dir!r}, f"page_{{i}}.png") for i in range({num_pages})]
+for _p in _page_paths:
+    assert os.path.exists(_p), f"Page image not found: {{_p}}"
+
+def look(page_idx, query):
+    """Send page `page_idx` (int, 0-indexed) to the VLM with a query.
+    No cropping is available — whole pages only."""
+    if not isinstance(page_idx, int):
+        raise TypeError(f"look() expects an int page index, got {{type(page_idx).__name__}}")
+    if not (0 <= page_idx < num_pages):
+        raise IndexError(f"page_idx {{page_idx}} out of range [0, {{num_pages}})")
+    return _look_impl(_page_paths[page_idx], query)
+
+def search(query, k=5):
+    """BM25 search over OCR text. Returns list of {{page, score, text}} dicts."""
+    return _search(query, k)
+
+def batch_look(requests):
+    """Send multiple pages to the VLM in parallel. Whole pages only.
+    Input: list of (page_idx, query) tuples. Returns: list of str answers (same order)."""
+    import json as _json
+    paths = []
+    for page_idx, query in requests:
+        if not isinstance(page_idx, int):
+            raise TypeError(f"batch_look() expects int page indices, got {{type(page_idx).__name__}}")
+        if not (0 <= page_idx < num_pages):
+            raise IndexError(f"page_idx {{page_idx}} out of range [0, {{num_pages}})")
+        paths.append({{"path": _page_paths[page_idx], "query": query}})
+    return _batch_look_impl(_json.dumps(paths))
+'''
+
+
 # ---------------------------------------------------------------------------
 # FlatSoloProgram
 # ---------------------------------------------------------------------------
@@ -247,12 +343,16 @@ class FlatSoloProgram:
         rlm_type: str = "lean",
         page_factor: float = 1.5,
         question_concurrency: int = 1,
+        use_category_tips: bool = True,
+        vlm_cropping: bool = True,
     ):
         self.vlm_lm = vlm_lm
         self.max_iterations = max_iterations
         self.rlm_type = rlm_type
         self.page_factor = page_factor
         self.question_concurrency = question_concurrency
+        self.use_category_tips = use_category_tips
+        self.vlm_cropping = vlm_cropping
 
         self.vlm_predict = dspy.Predict(
             dspy.Signature(
@@ -294,10 +394,17 @@ class FlatSoloProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            tips = get_category_tips(document.doc_category)
-            instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
+            base_instructions = TASK_INSTRUCTIONS if self.vlm_cropping else TASK_INSTRUCTIONS_PAGE_ONLY
+            if self.use_category_tips:
+                tips = get_category_tips(document.doc_category)
+                instructions = base_instructions + ("\n" + tips if tips else "")
+            else:
+                instructions = base_instructions
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx)
-            sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
+            if self.vlm_cropping:
+                sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
+            else:
+                sandbox_code = _build_sandbox_code_page_only(tmpdir, len(document.images))
 
             def _solve_question(q):
                 """Solve a single question. Returns (question_id, answer, trajectory)."""
@@ -340,14 +447,12 @@ class FlatSoloProgram:
                             page_texts=page_texts,
                         )
 
-                    try:
-                        result = _solve_one()
-                        answer = str(result.answer or "").strip()
-                        trajectory = result.trajectory
-                    except Exception as e:
-                        logger.warning("Flat solo failed for Q '%s': %s", q.question_id, e)
-                        answer = "Unknown"
-                        trajectory = []
+                    # Fail hard on infra errors (timeout, connection, rate-limit-after-retries).
+                    # Silent "Unknown" fallbacks corrupted prior runs by attributing infra failures
+                    # to the model. We only suppress genuine model-output edge cases below.
+                    result = _solve_one()
+                    answer = str(result.answer or "").strip()
+                    trajectory = result.trajectory
 
                     if not answer:
                         answer = "Unknown"
@@ -422,6 +527,8 @@ def create_flat_solo_program(
     rlm_type: str = "lean",
     page_factor: float = 1.5,
     question_concurrency: int = 4,
+    use_category_tips: bool = True,
+    vlm_cropping: bool = True,
 ) -> FlatSoloProgram:
     vlm_config = LMConfig(
         model=vlm["model"],
@@ -444,4 +551,6 @@ def create_flat_solo_program(
         rlm_type=rlm_type,
         page_factor=page_factor,
         question_concurrency=question_concurrency,
+        use_category_tips=use_category_tips,
+        vlm_cropping=vlm_cropping,
     )

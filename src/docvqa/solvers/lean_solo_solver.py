@@ -331,14 +331,9 @@ class LeanSoloProgram:
                             page_texts=page_texts,
                         )
 
-                    try:
-                        result = _solve_one()
-                        answer = str(result.answer or "").strip()
-                        trajectory = result.trajectory
-                    except Exception as e:
-                        logger.warning("Lean solo failed for Q '%s': %s", q.question_id, e)
-                        answer = "Unknown"
-                        trajectory = []
+                    result = _solve_one()
+                    answer = str(result.answer or "").strip()
+                    trajectory = result.trajectory
 
                     if not answer:
                         answer = "Unknown"

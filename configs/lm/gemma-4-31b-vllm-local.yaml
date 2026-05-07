@@ -1,0 +1,11 @@
+model: hosted_vllm/google/gemma-4-31B-it
+temperature: 0.6
+max_tokens: null
+cache: false
+api_base: http://localhost:8931/v1
+api_key: dummy
+vertex_location: null
+top_p: 0.95
+top_k: 20
+presence_penalty: null
+enable_thinking: false

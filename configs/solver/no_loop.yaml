@@ -1,0 +1,4 @@
+_target_: docvqa.solvers.no_loop_solver.create_no_loop_program
+vlm: ${vlm}
+question_concurrency: 4
+max_height: 16384
