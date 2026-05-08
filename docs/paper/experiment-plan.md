@@ -111,9 +111,9 @@ for context.
 | **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | impl ready (`solver=no_loop`); 0/8 |
 | **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | partial — Leanest val runs exist (43.8%) |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
-| **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | in progress (lane: `crop-off` on host A; n=1 clean: 35.0%, vs 44.7% baseline) |
+| **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | **DONE** — n=8: **36.88% ± 2.50pp** vs 44.69% baseline; gap **−7.81pp (5.88 SE)** |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
-| **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | in progress (lane: `tips-off` on host A; n=1 clean: 38.8%, t1 excluded due to sandbox-error contamination) |
+| **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | **DONE** — n=8 clean (t1 excluded, sandbox-error contam): **38.75% ± 3.13pp** vs 44.69% baseline; gap **−5.94pp (3.99 SE)** |
 
 ### Turn-budget sweep results
 
@@ -182,12 +182,14 @@ the OOM happened. Splitting which **machine runs evals.py** is the
 real lever; the vllm endpoints are not the contention point.
 
 ### Host A (this machine, runs evals.py for these)
-- Active:
-  - `tips-off` (vllm 8927, c=24) — category tips ablation, 8x val
-  - `crop-off` (vllm 8928, c=32) — D-004 cropping ablation, 8x val
-- Once both finish, Host A drops to one lane (or idles, picking up
-  whatever Host B has not claimed). Two concurrent lanes is the
-  practical ceiling for one machine before sandbox OOM risk returns.
+- **Done (May 8, 2026):**
+  - `tips-off` (vllm 8927, c=24) — category tips ablation: n=8 clean, gap −5.94pp (5.88 SE)
+  - `crop-off` (vllm 8928, c=32) — D-004 cropping ablation: n=8, gap −7.81pp (5.88 SE)
+- **Policy:** port 8928 (remote 4-GPU vllm) is **off-limits** to Host A
+  going forward — reserved for Host B's own workload. Host A future
+  ablations use **only the local 8927 lane (single-lane,
+  c=24 ceiling)**.
+- Currently idle. New work would land on 8927 only.
 
 ### Host B (other server, runs evals.py for these)
 Host B has its own Qwen 27B vllm + sandbox capacity, so it can carry
