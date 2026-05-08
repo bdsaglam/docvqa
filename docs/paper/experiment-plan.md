@@ -108,8 +108,8 @@ for context.
 
 | Ablation | Description | RLM-paper parallel | Status |
 |---|---|---|---|
-| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | impl ready (`solver=no_loop`); 0/8 |
-| **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | partial — Leanest val runs exist (43.8%) |
+| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | **DONE** — Qwen 3.5 27B, val, n=3: **17.08% ± 2.60pp** (vs scaffold 44.7%, lift +27.6pp). See `docs/results.md` "No-Loop Baseline" section. |
+| **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | **DONE** — Qwen 3.5 27B val n=3: **40.00% ± 0.00pp** (vs flat_solo 44.7%, OCR adds +4.7pp; vs no_loop 17.08%, the VLM-tool/agent-loop channel alone adds +22.9pp). See `docs/results.md`. Caveat: leanest→flat_solo delta also includes tips+cropping; not a pure OCR ablation. |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
 | **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | **DONE** — n=8: **36.88% ± 2.50pp** vs 44.69% baseline; gap **−7.81pp (5.88 SE)** |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
@@ -121,6 +121,7 @@ Flat Solo lean / Qwen 3.5 27B / val 80q, n=8 per cell:
 
 | max_iterations | mean | std | range |
 |---|---|---|---|
+| **5** | **30.00%** | **0.00pp** | 30.00 (n=3) |
 | 10 | 41.41% | 3.16pp | 36.2–45.0 |
 | 20 | 40.94% | 3.32pp | 36.2–46.2 |
 | **30** | **44.69%** | **2.81pp** | 40.0–48.8 |
@@ -130,10 +131,10 @@ m=30 is the peak; both shorter and longer budgets are ~3–4pp lower.
 Interpretation: the curve is non-monotonic, with longer-than-needed
 budgets actually hurting (likely unproductive trajectories accumulate
 errors / waste context). m=30 also has the lowest variance, supporting
-the same story. m=5 is queued as a lower-end check but the existing
-shape already suggests it will be worse than m=10. For the paper figure
-("turn budget curve"), the headline shape is clear from these four
-points.
+the same story. **m=5 added 2026-05-08, n=3: 30.00% ± 0.00pp** —
+~11pp below m=10, confirming that the lower end of the curve drops off
+sharply (agent doesn't have enough turns to finish its work). The
+five-point curve {5, 10, 20, 30, 40} gives the paper figure a clear shape.
 
 Skipped (see `decisions.md`):
 
@@ -198,8 +199,8 @@ need local 27B at all. Pick groups in this priority order; each
 group is self-contained.
 
 - **Group B0 — Qwen 27B ablations / test (highest priority on B):**
-  - **No-loop baseline** (`solver=no_loop`), val, ≥3 trials — risk-rank #2; kills "scaffold matters" claim if raw model already wins
-  - **OCR on/off via Leanest** (`solver=leanest_solo`), val, ≥3 trials — risk-rank #6; complete the partial Leanest data to 8x
+  - ~~**No-loop baseline** (`solver=no_loop`), val, ≥3 trials — risk-rank #2; kills "scaffold matters" claim if raw model already wins~~ — **DONE 2026-05-08**: 17.08% ± 2.60pp (n=3) vs scaffold 44.7%; +27.6pp lift, claim cleared.
+  - ~~**OCR on/off via Leanest** (`solver=leanest_solo`), val, ≥3 trials~~ — **DONE 2026-05-08**: 40.00% ± 0.00pp (n=3). vs flat_solo 44.7% → OCR + tips + cropping add +4.7pp. vs no_loop 17.08% → VLM-tool/agent-loop channel adds +22.9pp.
   - **Qwen 27B test runs** with the best val config (flat_solo lean m=30, full tools) — ≥3 trials on test; locks the matched-baseline test number that anchors the headline lift figure
   - **m=5 turn budget point**, val, ≥3 trials — defensive; 4-point curve already shapes the figure
 - **Group B1 — Closed/API models (no local GPU; can overlap B0):**
@@ -227,8 +228,7 @@ B0/B1/B2/B3) per the *Server split* section above.
 1. **Qwen 27B baseline (no scaffold) on val + test** — locks the
    matched-baseline figure. Cheap. If lift is small, the paper's spine
    is at risk. *(Host B / Group B0)*
-2. **No-loop ablation on Qwen 27B** — kills "scaffold matters" claim if
-   the raw model already does most of the work. *(Host B / Group B0)*
+2. ~~**No-loop ablation on Qwen 27B**~~ — **DONE 2026-05-08** *(Host B / Group B0)*. Qwen 3.5 27B val, n=3: 17.08% ± 2.60pp; scaffold 44.7% → +27.6pp lift. Claim "scaffold matters" cleared.
 3. ~~Gemini 3 Pro test replication~~ — **dropped, out of API credits.**
    The 59.4% scaffold and 37.5% baseline numbers are single-trial and
    cannot be replicated. Treat with caveat in paper (see §A note).

@@ -25,25 +25,28 @@ uv run python evals.py \
 
 ## Per-trial scores
 
-| Trial | m=10 | m=20 | m=30 (default) | m=40 |
+| Trial | m=5 | m=10 | m=20 | m=30 (default) | m=40 |
+|---|---|---|---|---|---|
+| t1 | 30.00% | 45.00% | 46.25% | 40.00% | 47.50% |
+| t2 | 30.00% | 43.75% | 36.25% | 48.75% | 43.75% |
+| t3 | 30.00% | 36.25% | 40.00% | 45.00% | 40.00% |
+| t4 | — | 40.00% | 40.00% | 46.25% | 38.75% |
+| t5 | — | 42.50% | 43.75% | 46.25% | 41.25% |
+| t6 | — | 40.00% | 38.75% | 46.25% | 42.50% |
+| t7 | — | 45.00% | 43.75% | 42.50% | 35.00% |
+| t8 | — | 38.75% | 38.75% | 42.50% | 37.50% |
+
+## Summary
+
+| Budget | Mean | Std | Range | n |
 |---|---|---|---|---|
-| t1 | 45.00% | 46.25% | 40.00% | 47.50% |
-| t2 | 43.75% | 36.25% | 48.75% | 43.75% |
-| t3 | 36.25% | 40.00% | 45.00% | 40.00% |
-| t4 | 40.00% | 40.00% | 46.25% | 38.75% |
-| t5 | 42.50% | 43.75% | 46.25% | 41.25% |
-| t6 | 40.00% | 38.75% | 46.25% | 42.50% |
-| t7 | 45.00% | 43.75% | 42.50% | 35.00% |
-| t8 | 38.75% | 38.75% | 42.50% | 37.50% |
+| **m=5** | **30.00%** | **0.00pp** | 30.00 | **3** |
+| m=10 | 41.41% | 3.16pp | 36.2–45.0 | 8 |
+| m=20 | 40.94% | 3.32pp | 36.2–46.2 | 8 |
+| **m=30** | **44.69%** | **2.81pp** | 40.0–48.8 | 8 |
+| m=40 | 40.78% | 3.89pp | 35.0–47.5 | 8 |
 
-## Summary (n=8 each, all clean — 0 sandbox errors)
-
-| Budget | Mean | Std | Range |
-|---|---|---|---|
-| m=10 | 41.41% | 3.16pp | 36.2–45.0 |
-| m=20 | 40.94% | 3.32pp | 36.2–46.2 |
-| **m=30** | **44.69%** | **2.81pp** | 40.0–48.8 |
-| m=40 | 40.78% | 3.89pp | 35.0–47.5 |
+m=10/20/30/40: all clean (0 sandbox errors). m=5: clean (0 sandbox errors).
 
 ## Observations
 
@@ -57,9 +60,16 @@ uv run python evals.py \
   drift / accumulate errors / waste context.
 - **m=10 ≈ m=20** — both ~41%. The first budget gain happens between 20
   and 30 turns.
-- m=5 not run (queued as defensive lower-end check, low priority — the
-  curve already shapes clearly).
+- **m=5 added 2026-05-08, n=3:** 30.00% ± 0.00pp. ~11pp below m=10 —
+  starvation is real at 5 turns. All three trials hit exactly 30.00%
+  (per-category mix differs); a coincidence on n=3 but consistent with
+  m=5 having very little turn-by-turn divergence (run is quickly
+  truncated). Run on Host B with `lm.enable_thinking=false` and Host B
+  vllm 8928 (4-GPU); not the same vllm as the m=10..40 cells (Host A
+  8927, 3-GPU). Identical model weights, otherwise identical config.
+  Run dirs: `output/runs/flat-solo-m5-val-{t1,t2,t3}/`.
 
 ## Status
 
-**Done.** Headline: m=30 is the peak at 44.69% ± 2.81pp.
+**Done.** Headline: m=30 is the peak at 44.69% ± 2.81pp. Five-point curve
+{5, 10, 20, 30, 40} for the paper figure; m=5 shows the lower-end drop-off.

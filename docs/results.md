@@ -185,3 +185,158 @@ single trial — comparable to the 3.5 27B SC-8 lift (+6.5pp / +2.4pp).
 - Submissions: `submissions/flat-solo-3_6-27b-val-sc8.json`, `submissions/flat-solo-3_6-27b-test-sc8.json`.
 - Voting script: `scripts/vote_submissions.py`.
 - Test trial wall: ~66h total (8 × ~8h, ranging 7h02 to 8h53).
+
+## No-Loop Baseline (Qwen 3.5 27B) — 3 Trials (2026-05-08)
+
+Direct VLM Q&A — single forward pass per question, no REPL, no agent loop. All
+pages stacked vertically into one composite image (capped at 16384px tall) and
+sent in one VLM call. Implements ablation row "no_loop" (raw model point) for
+the experiment plan's claim 3 (component contributions). VLM at vllm 8928,
+`solver=no_loop`, `lm.enable_thinking=false`, `max_concurrency=16`, val=80q.
+
+### Per-Trial
+
+| Trial | Score | Correct | Wall |
+|-------|:-----:|:-------:|------|
+| t1 | 20.00% | 16/80 | ~12 min |
+| t2 | 15.00% | 12/80 | ~12 min |
+| t3 | 16.25% | 13/80 | ~12 min |
+
+**Mean: 17.08% | Sample std: 2.60pp | Range: 15.00–20.00%**
+
+### Per-Category (mean over 3 trials)
+
+| Category | t1 | t2 | t3 | Mean | Scaffold mean (8-trial 3.5) |
+|----------|:--:|:--:|:--:|:----:|:----:|
+| business_report | 0/10 | 0/10 | 0/10 | 0.0/10 | — |
+| comics | 2/10 | 2/10 | 2/10 | 2.0/10 | — |
+| engineering_drawing | 2/10 | 2/10 | 2/10 | 2.0/10 | — |
+| infographics | 5/10 | 4/10 | 3/10 | 4.0/10 | — |
+| maps | 2/10 | 0/10 | 0/10 | 0.7/10 | — |
+| science_paper | 0/10 | 0/10 | 0/10 | 0.0/10 | — |
+| science_poster | 3/10 | 3/10 | 4/10 | 3.3/10 | — |
+| slide | 2/10 | 1/10 | 2/10 | 1.7/10 | — |
+| **Overall** | **20.0%** | **15.0%** | **16.25%** | **17.08%** | **44.7%** |
+
+### Notes
+
+- **Scaffold lift (matched within-model, Qwen 3.5 27B):**
+  scaffold 44.7% (Flat Solo lean+nothink m=20, 8-trial mean) − no_loop 17.08%
+  = **+27.6pp**. Strong signal that the agent loop / OCR / VLM-tool channels
+  contribute (claim-3 risk-rank #2 cleared on n=1; n=3 confirms).
+- **business_report and science_paper at 0% across all 3 trials.** Long docs
+  (105–181 pages, 19–44 pages) get crushed by the 16384px composite-image cap;
+  per-page resolution drops to ~80–150px tall after rescaling — far below
+  legibility for text answers. This is a structural limit of the no-loop
+  baseline, not a tunable.
+- **comics and engineering_drawing at exact 2/10 every trial.** Suggests the
+  raw VLM gets a deterministic subset of "easy" questions right and loses the
+  rest the same way each time — low entropy in the wrong-answer distribution.
+- **infographics is the best category (4.0/10 mean).** Single-page,
+  text-heavy layouts survive the composite path; this is where raw VLM is
+  closest to the scaffolded agent.
+- **maps high variance on a small base.** t1 hit 2/10, t2/t3 0/10 — std on 10
+  questions is large; not a real signal.
+- Variance (2.60pp std) is comparable to the scaffold's 8-trial std (~2.6pp),
+  so the lift is not noise.
+- Run dirs: `output/runs/no-loop-val-{t1,t2,t3}/`.
+
+## Leanest Solo (OCR-off ablation, Qwen 3.5 27B) — 3 Trials (2026-05-08)
+
+`solver=leanest_solo`. Agent has the VLM `look()` tool and the REPL but **no
+OCR `page_texts` and no BM25 `search()`**. The agent must rely on visual
+perception only — implements the "OCR on/off" ablation row from the
+experiment plan (claim 3, component contributions). All else equal:
+Qwen 3.5 27B for both LLM and VLM via vllm 8928, `lm.enable_thinking=false`,
+`max_concurrency=16`, `max_iterations=25`, val=80q.
+
+### Per-Trial
+
+| Trial | Score | Correct | Wall |
+|-------|:-----:|:-------:|------|
+| t1 | 40.00% | 32/80 | ~1h 05m |
+| t2 | 40.00% | 32/80 | ~1h 16m |
+| t3 | 40.00% | 32/80 | ~1h 00m |
+
+**Mean: 40.00% | Sample std: 0.00pp | Range: 40.00–40.00%**
+
+The exact-tie across 3 trials at 32/80 is a coincidence on overall — per
+category the trials differ noticeably (e.g. infographics 80/50/80, business_report
+20/50/50, maps 0/10/10). The variance is real, just not at the aggregate level
+on n=3.
+
+### Per-Category (mean over 3 trials)
+
+| Category | t1 | t2 | t3 | Mean |
+|----------|:--:|:--:|:--:|:----:|
+| business_report | 2/10 | 5/10 | 5/10 | 4.0/10 |
+| comics | 4/10 | 4/10 | 3/10 | 3.7/10 |
+| engineering_drawing | 6/10 | 6/10 | 4/10 | 5.3/10 |
+| infographics | 8/10 | 5/10 | 8/10 | 7.0/10 |
+| maps | 0/10 | 1/10 | 1/10 | 0.7/10 |
+| science_paper | 4/10 | 3/10 | 4/10 | 3.7/10 |
+| science_poster | 3/10 | 3/10 | 2/10 | 2.7/10 |
+| slide | 5/10 | 5/10 | 5/10 | 5.0/10 |
+| **Overall** | **40.0%** | **40.0%** | **40.0%** | **40.00%** |
+
+### Component contributions (so far, Qwen 3.5 27B val)
+
+| Stage | Mean | Δ vs prior |
+|-------|:----:|:----------:|
+| no_loop (no agent, no OCR, no VLM-tool) | 17.08% (n=3) | — |
+| leanest_solo (+ agent loop + VLM `look()` tool) | 40.00% (n=3) | **+22.92pp** |
+| flat_solo (+ OCR `page_texts` + BM25 `search()` + category tips + VLM cropping) | 44.7% (n=8, existing) | **+4.70pp** |
+
+**Headline takeaway for ablation table:**
+- The recursive VLM sub-call + agent loop channel does the bulk of the lift
+  (+22.9pp).
+- The OCR symbolic-context channel + the remaining flat_solo features (tips,
+  cropping) together add another +4.7pp on top — meaningful but secondary.
+- Caveat: the leanest→flat_solo delta is not a clean "OCR on/off" — it also
+  includes `use_category_tips` and `vlm_cropping`. To isolate OCR alone we
+  would need a flat_solo variant with `page_texts/search` removed but tips and
+  cropping kept. (The plan explicitly accepts leanest_solo as the OCR-off
+  proxy; flagging the conflation for the paper writeup.)
+
+### Notes
+
+- Wall ≈ 1h per trial at c=16, ~3-4× the no_loop trial wall. Agent does
+  multiple VLM `look()` calls per question (max_iterations=25).
+- maps remains a floor (0.7/10 mean) — VLM can read map labels but not
+  trace paths, consistent with the flat_solo finding.
+- Run dirs: `output/runs/leanest-solo-val-{t1,t2,t3}/`.
+
+## Turn-Budget Endpoint — Flat Solo m=5 (Qwen 3.5 27B) — 3 Trials (2026-05-08)
+
+`solver=flat_solo solver.max_iterations=5`, all other defaults (lean RLM,
+nothink, OCR + tips + cropping). Defensive lower-end of the turn-budget
+curve. Qwen 3.5 27B for both LLM and VLM via vllm 8928, c=16, val=80q.
+
+### Per-Trial
+
+| Trial | Score | Correct | Wall |
+|-------|:-----:|:-------:|------|
+| t1 | 30.00% | 24/80 | ~28 min |
+| t2 | 30.00% | 24/80 | ~25 min |
+| t3 | 30.00% | 24/80 | ~25 min |
+
+**Mean: 30.00% | Sample std: 0.00pp | Range: 30.00–30.00%**
+
+Same exact-tie phenomenon as leanest_solo. Per-category t1/t2/t3 differs
+(business_report 60/50/50, comics 20/50/40, infographics 60/50/50,
+science_paper 20/10/20, slide 50/30/40), but overall lands at 30.00% all three.
+
+### Updated turn-budget curve (Qwen 3.5 27B val, lean+nothink, full tools)
+
+| max_iterations | mean | std | n | range |
+|---|---|---|---|---|
+| **5** | **30.00%** | **0.00pp** | **3** | **30.0** |
+| 10 | 41.41% | 3.16pp | 8 | 36.2–45.0 |
+| 20 | 40.94% | 3.32pp | 8 | 36.2–46.2 |
+| **30** | **44.69%** | **2.81pp** | **8** | **40.0–48.8** |
+| 40 | 40.78% | 3.89pp | 8 | 35.0–47.5 |
+
+m=5 is ~11pp below m=10 — the agent doesn't have enough turns to finish its
+work. Combined with the existing curve, the turn-budget figure now spans
+m∈{5, 10, 20, 30, 40} with the peak clearly at m=30. Run dirs:
+`output/runs/flat-solo-m5-val-{t1,t2,t3}/`.

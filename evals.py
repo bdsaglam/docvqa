@@ -77,7 +77,12 @@ def main(cfg: DictConfig) -> None:
     if categories is not None:
         categories = list(categories)
     print(f"Loading dataset: {cfg.data.dataset} [{cfg.data.split}] (doc_ids={doc_ids}, categories={categories})")
-    documents = load_documents(cfg.data.dataset, cfg.data.split, doc_ids=doc_ids)
+    documents = load_documents(
+        cfg.data.dataset,
+        cfg.data.split,
+        num_samples=cfg.data.get("num_samples"),
+        doc_ids=doc_ids,
+    )
     if categories:
         documents = [d for d in documents if d.doc_category in categories]
     print(f"Loaded {len(documents)} documents with {sum(len(d.questions) for d in documents)} questions")
