@@ -6,3 +6,4 @@ page_factor: 1.5
 question_concurrency: 4
 use_category_tips: true
 vlm_cropping: true
+use_search: true
