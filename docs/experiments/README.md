@@ -41,6 +41,6 @@ Each experiment file has these sections:
 | [flat-solo-category-tips-off.md](flat-solo-category-tips-off.md) | done (8 clean trials) |
 | [flat-solo-vlm-cropping-off.md](flat-solo-vlm-cropping-off.md) | done (8 trials) |
 | [leanest-turn-budget-sweep.md](leanest-turn-budget-sweep.md) | in progress (m=30, m=50) |
-| [no-loop-baseline.md](no-loop-baseline.md) | done (3 clean trials) |
-| [leanest-ocr-off.md](leanest-ocr-off.md) | done (3 clean trials) |
-| [no-loop-multi-image.md](no-loop-multi-image.md) | in progress (1/3 running) |
+| [no-loop-baseline.md](no-loop-baseline.md) | done (3 trials tips-on + 3 trials tips-off) |
+| [leanest-ocr-off.md](leanest-ocr-off.md) | done (3 clean trials, comparisons updated for fair baselines) |
+| [no-loop-multi-image.md](no-loop-multi-image.md) | done (3 trials tips-on + 3 trials tips-off) |

@@ -60,11 +60,15 @@ maps 0/1/1) — variance is real, just not at the aggregate level.
 
 ## Comparison
 
-- **vs no_loop baseline (raw VLM, no agent, no OCR, no VLM-tool):**
-  17.08% ± 2.60pp (n=3). **Gap: +22.92pp.**
-  SE = √(0.00²/3 + 2.60²/3) = 1.50pp. **t-stat ≈ 15.3 → highly significant.**
-  The agent loop + VLM `look()` tool channel alone — without OCR —
-  accounts for the majority of the scaffold's lift over raw VLM.
+- **vs fair raw-VLM baseline (no_loop_multi + tips):**
+  23.75% ± 2.17pp (n=3). **Gap: +16.25pp.**
+  SE = √(0.00²/3 + 2.17²/3) = 1.25pp. **t-stat ≈ 13.0 → highly significant.**
+  The agent loop + VLM `look()` channel adds ~16pp over a raw VLM that
+  has matched tips and multi-image legibility.
+- **vs original (unfair) no_loop composite baseline:** 17.08% ± 2.60pp.
+  Gap: +22.92pp. This figure is inflated by the asymmetry — the
+  baseline lacked both tips and multi-image. We report it for
+  context; the fair comparison above is the headline.
 
 - **vs Flat Solo (full method, m=30):** 44.69% ± 2.81pp (n=8).
   **Gap: −4.69pp.** SE = √(0.00²/3 + 2.81²/8) = 0.99pp. **t-stat ≈ 4.74 → significant.**
@@ -93,13 +97,21 @@ maps 0/1/1) — variance is real, just not at the aggregate level.
   docstring confirms: "No page text, no search. The agent works
   purely from visual perception."
 
-## Component-contribution table (Qwen 3.5 27B, val)
+## Component-contribution table (Qwen 3.5 27B, val, fair baselines)
 
-| Stage | Channel added | Mean | Δ vs prior | n |
+| Stage | Channel | Mean | Δ vs prior | n |
 |---|---|---|---|---|
-| no_loop | (raw VLM) | 17.08% | — | 3 |
-| leanest_solo | + agent loop + VLM `look()` | 40.00% | **+22.92pp** | 3 |
-| flat_solo (m=30, full) | + OCR text + BM25 + tips + cropping + 5 turns | 44.69% | **+4.69pp** | 8 |
+| no_loop (composite, no tips) | raw VLM, composite rescale | 17.08% | — | 3 |
+| no_loop (composite, +tips) | + baseline-adapted tips | 21.25% | +4.17pp | 3 |
+| no_loop_multi (head 10pp, +tips) | + multi-image, native res | 23.75% | +2.50pp | 3 |
+| **leanest_solo (+tips)** | + agent loop + VLM `look()` | **40.00%** | **+16.25pp** | 3 |
+| flat_solo (m=30, full) | + OCR text + BM25 + cropping + 5 turns | 44.69% | +4.69pp | 8 |
+
+The recursive agent-loop + VLM `look()` channel adds **+16.25pp** over
+the strongest fair raw-VLM baseline (multi-image + matched tips).
+The original +22.92pp figure was inflated by an unfair tips/legibility
+asymmetry — see `no-loop-baseline.md` and `no-loop-multi-image.md`
+fairness fix sections.
 
 ## Status
 

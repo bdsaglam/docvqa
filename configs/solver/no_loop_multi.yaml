@@ -2,3 +2,4 @@ _target_: docvqa.solvers.no_loop_multi_solver.create_no_loop_multi_program
 vlm: ${vlm}
 question_concurrency: 4
 max_pages: 10
+use_category_tips: true

@@ -25,7 +25,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES
+from docvqa.prompts import ANSWER_FORMATTING_RULES, get_baseline_category_tips
 from docvqa.types import LMConfig
 
 logger = logging.getLogger(__name__)
@@ -43,11 +43,14 @@ TASK_INSTRUCTIONS = (
 
 
 def _build_messages(
-    question: str, doc_info: str, pages: list[PILImage.Image]
+    question: str,
+    doc_info: str,
+    pages: list[PILImage.Image],
+    instructions: str = TASK_INSTRUCTIONS,
 ) -> list[dict[str, Any]]:
     """Build one user message: instructions + interleaved page labels and images."""
     parts: list[dict[str, Any]] = [
-        {"type": "text", "text": f"{TASK_INSTRUCTIONS}\n\nDocument metadata: {doc_info}\n"},
+        {"type": "text", "text": f"{instructions}\n\nDocument metadata: {doc_info}\n"},
     ]
     for i, p in enumerate(pages):
         parts.append({"type": "text", "text": f"\n[Page {i}]"})
@@ -68,10 +71,12 @@ class NoLoopMultiProgram:
         vlm_lm: dspy.LM,
         question_concurrency: int = 4,
         max_pages: int = 10,
+        use_category_tips: bool = True,
     ):
         self.vlm_lm = vlm_lm
         self.question_concurrency = question_concurrency
         self.max_pages = max_pages
+        self.use_category_tips = use_category_tips
 
     def solve_document(
         self, document: Document
@@ -83,6 +88,11 @@ class NoLoopMultiProgram:
             f"Pages shown: {len(pages)} of {len(document.images)}"
             + (" (truncated to first N pages)" if truncated else "")
         )
+        if self.use_category_tips:
+            tips = get_baseline_category_tips(document.doc_category)
+            instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
+        else:
+            instructions = TASK_INSTRUCTIONS
 
         def _solve_question(q):
             with logfire.span(
@@ -111,7 +121,7 @@ class NoLoopMultiProgram:
                     reraise=True,
                 )
                 def _call():
-                    messages = _build_messages(q.question, doc_info, pages)
+                    messages = _build_messages(q.question, doc_info, pages, instructions)
                     response: Any = self.vlm_lm.forward(messages=messages)
                     msg = response.choices[0].message
                     text = msg.content
@@ -187,6 +197,7 @@ def create_no_loop_multi_program(
     vlm: dict[str, Any] | None = None,
     question_concurrency: int = 4,
     max_pages: int = 10,
+    use_category_tips: bool = True,
 ) -> NoLoopMultiProgram:
     vlm_config = (
         LMConfig(
@@ -209,4 +220,5 @@ def create_no_loop_multi_program(
         vlm_lm=vlm_lm,
         question_concurrency=question_concurrency,
         max_pages=max_pages,
+        use_category_tips=use_category_tips,
     )

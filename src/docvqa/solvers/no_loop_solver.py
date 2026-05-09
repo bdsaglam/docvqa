@@ -22,7 +22,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES
+from docvqa.prompts import ANSWER_FORMATTING_RULES, get_baseline_category_tips
 from docvqa.types import LMConfig
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ TASK_INSTRUCTIONS = (
 )
 
 
-def _build_signature() -> dspy.Signature:
+def _build_signature(instructions: str = TASK_INSTRUCTIONS) -> dspy.Signature:
     fields: dict = {
         "question": (str, dspy.InputField(desc="The question to answer about the document")),
         "doc_info": (str, dspy.InputField(desc="Document metadata: category and page count")),
@@ -49,7 +49,7 @@ def _build_signature() -> dspy.Signature:
         ),
         "answer": (str, dspy.OutputField(desc="The final concise answer string.")),
     }
-    return dspy.Signature(fields, TASK_INSTRUCTIONS)
+    return dspy.Signature(fields, instructions)
 
 
 def _stack_pages(pages: list[PILImage.Image], max_height: int = 16384) -> PILImage.Image:
@@ -88,16 +88,28 @@ class NoLoopProgram:
         vlm_lm: dspy.LM,
         question_concurrency: int = 4,
         max_height: int = 16384,
+        use_category_tips: bool = True,
     ):
         self.vlm_lm = vlm_lm
         self.question_concurrency = question_concurrency
         self.max_height = max_height
-        self.predict = dspy.Predict(_build_signature())
+        self.use_category_tips = use_category_tips
+        # Predict is rebuilt per-doc when category tips are enabled.
+        self._default_predict = dspy.Predict(_build_signature())
 
     def solve_document(self, document: Document) -> tuple[dict[str, str], dict[str, list[dict]]]:
         composite = _stack_pages(document.images, max_height=self.max_height)
         composite_dspy = dspy.Image(composite)
         doc_info = f"Category: {document.doc_category}, Pages: {len(document.images)}"
+        if self.use_category_tips:
+            tips = get_baseline_category_tips(document.doc_category)
+            if tips:
+                instructions = TASK_INSTRUCTIONS + "\n" + tips
+                predict = dspy.Predict(_build_signature(instructions))
+            else:
+                predict = self._default_predict
+        else:
+            predict = self._default_predict
 
         def _solve_question(q):
             with logfire.span(
@@ -121,7 +133,7 @@ class NoLoopProgram:
                 )
                 def _call():
                     with dspy.context(lm=self.vlm_lm):
-                        return self.predict(
+                        return predict(
                             question=q.question,
                             doc_info=doc_info,
                             image=composite_dspy,
@@ -193,6 +205,7 @@ def create_no_loop_program(
     vlm: dict[str, Any] | None = None,
     question_concurrency: int = 4,
     max_height: int = 16384,
+    use_category_tips: bool = True,
 ) -> NoLoopProgram:
     vlm_config = LMConfig(
         model=vlm["model"],
@@ -211,4 +224,5 @@ def create_no_loop_program(
         vlm_lm=vlm_lm,
         question_concurrency=question_concurrency,
         max_height=max_height,
+        use_category_tips=use_category_tips,
     )

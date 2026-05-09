@@ -108,8 +108,8 @@ for context.
 
 | Ablation | Description | RLM-paper parallel | Status |
 |---|---|---|---|
-| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | **DONE** — Qwen 3.5 27B, val, n=3: **17.08% ± 2.60pp** (vs scaffold 44.7%, lift +27.6pp). See `docs/results.md` "No-Loop Baseline" section. |
-| **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | **DONE** — Qwen 3.5 27B val n=3: **40.00% ± 0.00pp** (vs flat_solo 44.7%, OCR adds +4.7pp; vs no_loop 17.08%, the VLM-tool/agent-loop channel alone adds +22.9pp). See `docs/results.md`. Caveat: leanest→flat_solo delta also includes tips+cropping; not a pure OCR ablation. |
+| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | **DONE** — Qwen 3.5 27B val, n=3 with matched tips: **21.25% ± 1.25pp** (composite); **23.75% ± 2.17pp** (multi-image native-res, max_pages=10). vs scaffold 44.69%: composite gap −23.4pp (19.1 SE), multi gap −20.9pp (13.1 SE). See `docs/experiments/no-loop-baseline.md` and `no-loop-multi-image.md`. |
+| **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | **DONE** — Qwen 3.5 27B val n=3: **40.00% ± 0.00pp** (vs flat_solo 44.69%: OCR + cropping add +4.7pp; vs no_loop_multi+tips 23.75%: agent-loop + VLM-tool channel adds +16.3pp). See `docs/experiments/leanest-ocr-off.md`. Caveat: leanest→flat_solo delta also includes cropping; not a pure OCR ablation. |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
 | **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | **DONE** — n=8: **36.88% ± 2.50pp** vs 44.69% baseline; gap **−7.81pp (5.88 SE)** |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
@@ -228,7 +228,7 @@ B0/B1/B2/B3) per the *Server split* section above.
 1. **Qwen 27B baseline (no scaffold) on val + test** — locks the
    matched-baseline figure. Cheap. If lift is small, the paper's spine
    is at risk. *(Host B / Group B0)*
-2. ~~**No-loop ablation on Qwen 27B**~~ — **DONE 2026-05-08** *(Host B / Group B0)*. Qwen 3.5 27B val, n=3: 17.08% ± 2.60pp; scaffold 44.7% → +27.6pp lift. Claim "scaffold matters" cleared.
+2. ~~**No-loop ablation on Qwen 27B**~~ — **DONE 2026-05-08** *(Host B / Group B0)*. Qwen 3.5 27B val with matched tips, n=3: composite 21.25% ± 1.25pp; multi-image 23.75% ± 2.17pp. vs scaffold 44.69%: gap −20.9 to −23.4pp (13–19 SE). Claim "scaffold matters" cleared even against the strongest fair raw-VLM control.
 3. ~~Gemini 3 Pro test replication~~ — **dropped, out of API credits.**
    The 59.4% scaffold and 37.5% baseline numbers are single-trial and
    cannot be replicated. Treat with caveat in paper (see §A note).

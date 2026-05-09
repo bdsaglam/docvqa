@@ -285,6 +285,94 @@ def get_category_tips(category: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Baseline-adapted tips
+# ---------------------------------------------------------------------------
+# Mirror of CATEGORY_TIPS but with agent-only guidance stripped (no
+# crop/zoom/search/REPL/Python/batch_look references). Only semantic and
+# question-interpretation guidance that applies to a single-shot VLM call
+# (no_loop, no_loop_multi). Used to give baselines the same domain hints
+# the agent solvers receive without confusing them with tool-use instructions.
+
+BASELINE_CATEGORY_TIPS: dict[str, str] = {
+    "engineering_drawing": (
+        "- The BOM/parts list uses ITEM NUMBERS (e.g., 71, 164) and PART/IDENTIFYING NUMBERS (e.g., 1901060-021, AN 910-2). "
+        "Questions asking for 'identifying number' or 'part number' want the PART NUMBER, not the item number.\n"
+        "- 'VIEW IN DIRECTION X' labels indicate viewing angles. Answer with just the letter (e.g., 'D'), not 'Direction D'.\n"
+        "- OCR CONFUSION: Part numbers are almost always numeric (digits 0-9 plus dashes). "
+        "Common confusions: I↔1, O↔0, l↔1.\n"
+        "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), "
+        "not the longest overall dimension (which is 'length'). Dimensions marked 'REF' are valid answers.\n"
+    ),
+    "business_report": (
+        "- Multiple tables may contain similar-looking data. Make sure you're reading the correct table for the question.\n"
+        "- 'Broken down into' means immediate sub-categories only, not sub-sub-categories.\n"
+        "- For 'first words up to the first comma', read the full bullet-point text and extract up to the first comma; "
+        "do not over-shorten.\n"
+        "- If a qualitative description (e.g., an adjective) is not in a table, it may be in surrounding text "
+        "paragraphs or footnotes.\n"
+    ),
+    "comics": (
+        "- For multi-story anthologies, each story has its own title, page range, and characters. "
+        "Match question keywords to the correct story.\n"
+        "- LITERAL VS FIGURATIVE: When a question says 'in reality', 'actually', or 'truly', the answer likely "
+        "contradicts the surface description (e.g., 'The Man with 1000 Faces' has 1 face in reality). "
+        "Distinguish a title/alias from the factual answer.\n"
+        "- CHARACTER IDENTIFICATION: Answer with the exact term used in speech bubbles when available.\n"
+        "- For COUNTING EVENTS, use strict inclusion criteria — exclude near-misses, past events referenced in "
+        "dialogue, and aftermath. Sound effects or weapons in a panel do not by themselves prove an action occurred.\n"
+    ),
+    "maps": (
+        "- LEGEND: Map symbols and line styles are defined in the legend. For road type questions, compare the line "
+        "style of the specific road segment to legend entries.\n"
+        "- GRID COORDINATES: Cross-reference what is visible in the grid cell with any population/feature index "
+        "that lists entries by grid coordinate.\n"
+    ),
+    "science_paper": (
+        "- CITATION NUMBERS: Citations appear as [N] in body text. Distinguish body-text citations from "
+        "table headers and figure captions.\n"
+        "- CITED PAPER FINDINGS: To find what a cited work claims, locate the reference number in the bibliography, "
+        "then find where that number is discussed in the body text.\n"
+        "- ABLATION STUDIES: Papers often have multiple ablation studies. Verify the section is about "
+        "the specific component the question asks about.\n"
+        "- If a question references a specific entity (layer number, model variant) not found in the document, "
+        "answer 'Unknown'. Do not extrapolate from similar entities.\n"
+    ),
+    "science_poster": (
+        "- CHART ANNOTATIONS: If a chart has percentage labels or annotations directly on bars/lines, "
+        "use those labels rather than estimating from raw bar heights.\n"
+        "- 'Percentage improvement' = absolute difference in percentage points (e.g., 80% − 50% = 30%).\n"
+        "- GROUPED BAR CHARTS: A 'set of columns' refers to the group of bars at one x-axis position "
+        "(e.g., one benchmark), not bars of one color across all positions.\n"
+    ),
+    "infographics": (
+        "- For 'which item is the last/first to have/lack X', enumerate ALL items and their X status before "
+        "answering — don't stop after finding a few.\n"
+    ),
+    "slide": (
+        "- 'Page before X' / 'page where Y is mentioned': locate X or Y in the document, then take the page "
+        "directly preceding/containing it. Off-by-one errors are common — verify by checking page headers/titles.\n"
+        "- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation "
+        "that does not exist in the document, answer 'Unknown'. Do NOT substitute a similar-sounding name.\n"
+        "- COMPUTATION: When a question says 'total' or 'considering X and Y', extract all referenced values "
+        "and compute the result; show the values explicitly in your answer rationale before deciding.\n"
+    ),
+}
+
+
+def get_baseline_category_tips(category: str) -> str:
+    """Get baseline-adapted tips for a single-shot VLM call (no agent verbs).
+
+    Same role as ``get_category_tips`` but the text is stripped of
+    crop/zoom/search/REPL/batch_look guidance, leaving only semantic and
+    question-interpretation hints that apply to a one-call baseline.
+    """
+    tips = BASELINE_CATEGORY_TIPS.get(category, "")
+    if tips:
+        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tips}"
+    return ""
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 PROMPTS = {
