@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import math
 import os
+import re
 import tempfile
 from dataclasses import dataclass
 from typing import Any
@@ -186,7 +187,12 @@ def _build_signature(instructions: str = TASK_INSTRUCTIONS) -> dspy.Signature:
     return dspy.Signature(fields, instructions)
 
 
-def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext) -> list:
+def _strip_search_tool(instructions: str) -> str:
+    """Remove the search() tool line for the use_search=False ablation."""
+    return re.sub(r'- search\(query, k=5\)[^\n]*\n', '', instructions)
+
+
+def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *, use_search: bool = True) -> list:
     from PIL import Image as PILImage
 
     def _look_impl(image_path: str, query: str) -> str:
@@ -244,11 +250,19 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext) -
             span.set_attribute("num_results", len(records))
             return records
 
-    return [_look_impl, _batch_look_impl, _search]
+    tools = [_look_impl, _batch_look_impl]
+    if use_search:
+        tools.append(_search)
+    return tools
 
 
-def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
+def _build_sandbox_code(page_dir: str, num_pages: int, use_search: bool = True) -> str:
     """Build sandbox code that loads pages as PIL Images and defines `look()`."""
+    search_def = '''
+def search(query, k=5):
+    """BM25 search over OCR text. Returns list of {page, score, text} dicts."""
+    return _search(query, k)
+''' if use_search else ''
     return f'''
 import os
 import tempfile
@@ -271,11 +285,7 @@ def look(image, query):
     image.save(tmp, format="PNG")
     tmp.close()
     return _look_impl(tmp.name, query)
-
-def search(query, k=5):
-    """BM25 search over OCR text. Returns list of {{page, score, text}} dicts."""
-    return _search(query, k)
-
+{search_def}
 def batch_look(requests):
     """Send multiple images to the VLM in parallel. Much faster than sequential look() calls.
     Input: list of (image, query) tuples. Returns: list of str answers (same order).
@@ -291,9 +301,14 @@ def batch_look(requests):
 '''
 
 
-def _build_sandbox_code_page_only(page_dir: str, num_pages: int) -> str:
+def _build_sandbox_code_page_only(page_dir: str, num_pages: int, use_search: bool = True) -> str:
     """Page-only sandbox for the D-004 cropping ablation. `look(page_idx, query)`
     accepts only an integer page index — no PIL Images, no crops."""
+    search_def = '''
+def search(query, k=5):
+    """BM25 search over OCR text. Returns list of {page, score, text} dicts."""
+    return _search(query, k)
+''' if use_search else ''
     return f'''
 import os
 num_pages = {num_pages}
@@ -309,11 +324,7 @@ def look(page_idx, query):
     if not (0 <= page_idx < num_pages):
         raise IndexError(f"page_idx {{page_idx}} out of range [0, {{num_pages}})")
     return _look_impl(_page_paths[page_idx], query)
-
-def search(query, k=5):
-    """BM25 search over OCR text. Returns list of {{page, score, text}} dicts."""
-    return _search(query, k)
-
+{search_def}
 def batch_look(requests):
     """Send multiple pages to the VLM in parallel. Whole pages only.
     Input: list of (page_idx, query) tuples. Returns: list of str answers (same order)."""
@@ -345,6 +356,7 @@ class FlatSoloProgram:
         question_concurrency: int = 1,
         use_category_tips: bool = True,
         vlm_cropping: bool = True,
+        use_search: bool = True,
     ):
         self.vlm_lm = vlm_lm
         self.max_iterations = max_iterations
@@ -353,6 +365,7 @@ class FlatSoloProgram:
         self.question_concurrency = question_concurrency
         self.use_category_tips = use_category_tips
         self.vlm_cropping = vlm_cropping
+        self.use_search = use_search
 
         self.vlm_predict = dspy.Predict(
             dspy.Signature(
@@ -395,16 +408,18 @@ class FlatSoloProgram:
             max_iter = self.max_iterations + int(page_bonus)
 
             base_instructions = TASK_INSTRUCTIONS if self.vlm_cropping else TASK_INSTRUCTIONS_PAGE_ONLY
+            if not self.use_search:
+                base_instructions = _strip_search_tool(base_instructions)
             if self.use_category_tips:
                 tips = get_category_tips(document.doc_category)
                 instructions = base_instructions + ("\n" + tips if tips else "")
             else:
                 instructions = base_instructions
-            tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx)
+            tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, use_search=self.use_search)
             if self.vlm_cropping:
-                sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
+                sandbox_code = _build_sandbox_code(tmpdir, len(document.images), use_search=self.use_search)
             else:
-                sandbox_code = _build_sandbox_code_page_only(tmpdir, len(document.images))
+                sandbox_code = _build_sandbox_code_page_only(tmpdir, len(document.images), use_search=self.use_search)
 
             def _solve_question(q):
                 """Solve a single question. Returns (question_id, answer, trajectory)."""
@@ -529,6 +544,7 @@ def create_flat_solo_program(
     question_concurrency: int = 4,
     use_category_tips: bool = True,
     vlm_cropping: bool = True,
+    use_search: bool = True,
 ) -> FlatSoloProgram:
     vlm_config = LMConfig(
         model=vlm["model"],
@@ -553,4 +569,5 @@ def create_flat_solo_program(
         question_concurrency=question_concurrency,
         use_category_tips=use_category_tips,
         vlm_cropping=vlm_cropping,
+        use_search=use_search,
     )

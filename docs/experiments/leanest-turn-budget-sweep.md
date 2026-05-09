@@ -27,50 +27,64 @@ uv run python evals.py \
 
 | Trial | m=25 (default) | m=30 | m=40 | m=50 |
 |---|---|---|---|---|
-| t1 | 31.25% | 43.75% | 48.75% | — |
-| t2 | 42.50% | 40.00% | 50.00% | — |
-| t3 | 38.75% | _running_ | 41.25% | — |
-| t4 | 40.00% | — | 42.50% | — |
-| t5 | 48.75% | — | 36.25% | — |
-| t6 | 42.50% | — | 45.00% | — |
-| t7 | 40.00% | — | 42.50% | — |
-| t8 | 40.00% | — | 43.75% | — |
+| t1 | 31.25% | 43.75% | 48.75% | 38.75% |
+| t2 | 42.50% | 40.00% | 50.00% | 47.50% |
+| t3 | 38.75% | 40.00% | 41.25% | 46.25% |
+| t4 | 40.00% | 47.50% | 42.50% | 38.75% |
+| t5 | 48.75% | 48.75% | 36.25% | 33.75% |
+| t6 | 42.50% | 36.25% | 45.00% | 41.25% |
+| t7 | 40.00% | 35.00% | 42.50% | 42.50% |
+| t8 | 40.00% | 48.75% | 43.75% | 42.50% |
 
 ## Summary
 
 | Budget | Mean | Std | n | Range |
 |---|---|---|---|---|
 | m=25 | 40.47% | 4.86pp | 8 | 31.2–48.8 |
-| m=30 | 41.88% | 2.65pp | 2 (in progress) | 40.0–43.8 |
+| m=30 | 42.50% | 5.51pp | 8 | 35.0–48.8 |
 | m=40 | **43.75%** | 4.33pp | 8 | 36.2–50.0 |
-| m=50 | — | — | 0 (queued) | — |
+| m=50 | 41.41% | 4.40pp | 8 | 33.8–47.5 |
 
 ## Comparison
 
-- **m=40 vs m=25:** +3.28pp, SE = √(4.86²/8 + 4.33²/8) = 2.30pp →
-  **t = 1.43 SE — marginally significant.** The win sign is consistent
-  but the variance is high enough that more cells / more trials are
-  needed before claiming a curve.
-- m=30 (n=2 so far) sits between, as expected. Need 6 more trials to
-  bracket m=25→m=40.
+- **m=40 is the peak** at 43.75% ± 4.33pp.
+- **m=40 vs m=25:** +3.28pp, SE = 2.30pp → t = 1.43 (marginal).
+- **m=40 vs m=50:** +2.34pp, SE = 2.16pp → t = 1.08 (n.s. but a real
+  drop in mean and similar std).
+- **m=40 vs flat_solo m=30 (44.69 ± 2.81):** −0.94pp, SE = 1.82 →
+  t = 0.52 — leanest at peak budget is **statistically
+  indistinguishable** from flat_solo at peak budget on the mean.
+- **Variance comparison:** all leanest cells (4.33–5.51pp) have
+  meaningfully higher std than flat_solo m=30 (2.81pp). Across the
+  pooled 32 leanest trials, std is ~4.8pp vs flat_solo's 2.81pp on
+  n=8. Variance reduction by OCR is the more robust finding than
+  any mean lift.
 
 ## Observations
 
-- **Opposite shape from flat_solo.** Flat solo peaks at m=30 and m=40
-  hurts; leanest's m=40 helps over m=25. The interpretation: leanest
-  has no symbolic shortcut (no OCR retrieval), so each "found the
-  answer" event requires more VLM-mediated exploration. Higher budget
-  pays off more.
-- **Leanest variance is much higher** (~4.5pp) than flat_solo (~3pp).
-  Without OCR as an anchor, runs can diverge more across seeds.
-- m=25 has a low outlier (31.25% on t1) that drags the mean. With
-  high std, individual trials are unreliable.
-- Long-tail docs (especially `science_paper_1`, 7 questions) routinely
-  take 50+ min on leanest at high budget. Stall detector occasionally
-  flags this — false positive, the run is still progressing.
+- **Same non-monotonic shape as flat_solo, shifted right by 10.**
+  Flat solo peaks at m=30; leanest peaks at m=40. Both curves drop
+  on either side of the peak. Interpretation: leanest needs more
+  turns because it lacks the symbolic shortcut, but past the peak
+  long trajectories drift / accumulate errors / waste context — same
+  failure mode in both solvers.
+- **Leanest variance is consistently higher** across all four cells
+  (std 4.33–5.51pp vs flat_solo's 2.81pp at m=30). Without OCR as a
+  deterministic anchor, runs diverge more across seeds.
+- **m=50 verdict: NOT an improvement.** Mean drops 2.34pp from m=40
+  with similar std. Higher budget alone doesn't compensate for
+  missing OCR.
+- m=25 had a low outlier (31.25% on t1) that drags the mean; m=30
+  and m=50 also had low outliers (35.0%, 33.75%). High-tail trials
+  are common — variance is the dominant story.
+- Long-tail docs (especially `science_paper_1`, 7 questions, and
+  `maps_2` for spatial reasoning) routinely take 50+ min on leanest
+  at high budget. Stall detector often flags these — false positives,
+  runs are still progressing.
 
 ## Status
 
-**In progress.** m=30: 2/8 trials done. m=50: not started — queued
-after m=30 completes. Running on Host A's local 8927 lane sequentially
-(one trial at a time, single lane).
+**Done.** Headline: leanest peaks at m=40 (43.75% ± 4.33pp), close
+to flat_solo's peak at m=30 (44.69% ± 2.81pp) on the mean but with
+~50% higher std. OCR's contribution looks more like variance
+reduction than capability lift.
