@@ -62,6 +62,24 @@ uv run python evals.py \
   doesn't appear to destabilize the agent, it just makes it slightly
   worse on average.
 
+## Efficiency (turns per question)
+
+Pooled across 8 clean trials × 80q = 640 questions (`_excluded.` t1
+sandbox-contaminated trial omitted).
+
+| Cell | turns mean ± std | median | p90 | max | turns_correct | turns_wrong | wrong/correct |
+|---|---|---|---|---|---|---|---|
+| flat_solo m=30 (baseline, tips ON) | 13.19 ± 7.85 | 11 | 26 | 40 | 11.92 | 14.22 | 1.19 |
+| flat_solo no-tips | 12.78 ± 7.98 | 10 | 25 | 40 | 10.50 | 14.21 | 1.35 |
+
+Tips do **not** materially change the total number of turns the agent
+spends (−0.4 mean, n.s.). What they shift is **where** turns land:
+without tips, correct trajectories are 1.4 turns shorter on average
+(10.5 vs 11.9) — the agent either gets it quickly or gives up. Wrong
+trajectories are unchanged. Net: thrash ratio jumps from 1.19 to
+1.35. Tips appear to encourage more careful (longer) verification on
+correct answers rather than reducing total work.
+
 ## Status
 
 **Done.** Tips contribute ~6pp; effect is highly significant (3.99 SE).

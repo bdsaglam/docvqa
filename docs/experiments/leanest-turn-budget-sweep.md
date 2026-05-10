@@ -82,6 +82,38 @@ uv run python evals.py \
   at high budget. Stall detector often flags these — false positives,
   runs are still progressing.
 
+## Efficiency (turns per question)
+
+Pooled across 8 trials × 80q per cell.
+
+| Budget | turns mean ± std | median | p90 | max | turns_correct | turns_wrong | wrong/correct |
+|---|---|---|---|---|---|---|---|
+| m=25 (default) | 12.82 ± 7.18 | 11 | 24 | 35 | 11.54 | 13.69 | 1.19 |
+| m=30 | 13.29 ± 7.65 | 11 | 25 | 40 | 11.51 | 14.61 | 1.27 |
+| **m=40 (peak)** | 13.97 ± 9.08 | 11 | 27 | 50 | 11.89 | 15.59 | 1.31 |
+| m=50 | 14.21 ± 9.81 | 11 | 28 | 60 | 12.11 | 15.73 | 1.30 |
+
+Cross-comparison: at the same nominal budget (m=30), leanest uses
+**13.29** vs flat_solo's **13.19** turns/question — essentially
+identical. So the OCR channel isn't saving the agent turns; the two
+solvers do the same volume of work, just in different channels (OCR
++ BM25 vs more `look()` calls).
+
+Other patterns:
+
+- **Median is flat at 11 across all four leanest cells.** The
+  budget mostly affects the long tail (p90 climbs 24 → 28; max
+  climbs 35 → 60). Increasing the cap mostly buys longer wrong
+  trajectories, not more correct ones.
+- **Correct trajectories barely lengthen** (11.54 → 12.11) while
+  wrong trajectories grow much faster (13.69 → 15.73). Thrash
+  ratio rises 1.19 → 1.31. Same shape as the flat_solo budget
+  sweep — extra turns mostly go to the agent thrashing on
+  unsolvable questions.
+- m=40 being the accuracy peak while m=50 has higher mean turns
+  matches the "headroom past the peak is wasted" reading from the
+  flat_solo sweep.
+
 ## Status
 
 **Done.** Headline: leanest peaks at m=40 (43.75% ± 4.33pp), close

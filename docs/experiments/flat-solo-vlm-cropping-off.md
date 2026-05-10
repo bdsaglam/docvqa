@@ -64,6 +64,26 @@ uv run python evals.py \
   whole-page-only VLM access.
 - **D-004 ablation in `decisions.md`** is now backed by an 8-trial run.
 
+## Efficiency (turns per question)
+
+Pooled across 8 trials × 80q (n=633 — a few questions failed before
+producing a trajectory).
+
+| Cell | turns mean ± std | median | p90 | max | turns_correct | turns_wrong | wrong/correct |
+|---|---|---|---|---|---|---|---|
+| flat_solo m=30 (baseline, cropping ON) | 13.19 ± 7.85 | 11 | 26 | 40 | 11.92 | 14.22 | 1.19 |
+| flat_solo no-cropping | 10.90 ± 7.32 | 8 | 21 | 40 | 8.82 | 12.14 | 1.38 |
+
+The page-only variant uses **−2.3 turns/question** on average — the
+biggest turn-count drop of any ablation, *and* it loses 7.8pp
+accuracy. The agent finishes faster but cheaper: with no cropping
+tool, there are simply fewer productive moves to make on hard
+visual-reasoning questions, so it stops earlier. Wrong/correct ratio
+also widens (1.38 vs 1.19): the wrong answers it does produce after
+truncation are still expensive. This is the strongest case in the
+data of "fewer turns, worse outcome" — turn-count alone is not a
+quality signal.
+
 ## Status
 
 **Done.** Cropping contributes ~7.8pp; effect is highly significant

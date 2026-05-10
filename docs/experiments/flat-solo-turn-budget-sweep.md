@@ -69,6 +69,35 @@ m=10/20/30/40: all clean (0 sandbox errors). m=5: clean (0 sandbox errors).
   8927, 3-GPU). Identical model weights, otherwise identical config.
   Run dirs: `output/runs/flat-solo-m5-val-{t1,t2,t3}/`.
 
+## Efficiency (turns per question)
+
+Pooled across 8 trials × 80q per cell (m=5 not measured locally).
+
+| Budget | turns mean ± std | median | p90 | max | turns_correct | turns_wrong | wrong/correct | hit-cap rate (p90 = m?) |
+|---|---|---|---|---|---|---|---|---|
+| m=10 | 9.92 ± 3.79 | 10 | 16 | 20 | 9.00 | 10.57 | 1.17 | budget-bound (max=20=2m) |
+| m=20 | 12.42 ± 6.29 | 11 | 20 | 30 | 10.87 | 13.49 | 1.24 | partly bound |
+| **m=30 (default)** | 13.19 ± 7.85 | 11 | 26 | 40 | 11.92 | 14.22 | 1.19 | rarely bound |
+| m=40 | 13.55 ± 9.01 | 10 | 25 | 50 | 11.42 | 15.01 | 1.31 | not bound |
+
+(`max` exceeds the budget because each iteration may emit several
+trajectory steps — ~2× per iteration on average — so step count tracks
+budget but isn't equal to it. The right-hand column reports whether
+the p90 sits at the cap, which is the practical "budget-bound" check.)
+
+Key reads:
+
+- **The agent is budget-bound at m=10**: median equals the cap, p90
+  saturates. m=10 trajectories are getting truncated.
+- **Past m=30 the budget is slack.** Going m=30 → m=40 only adds
+  +0.36 turns to the mean — the extra 10 turns of headroom are mostly
+  unused. Yet accuracy *drops* 3.9pp (44.7 → 40.8), so the long-tail
+  trajectories the bigger budget enables are net harmful (drift /
+  context dilution).
+- **Wrong/correct thrash ratio drifts up with budget** (1.17 →
+  1.24 → 1.19 → 1.31). With more rope, the agent thrashes more on
+  the questions it ends up getting wrong.
+
 ## Status
 
 **Done.** Headline: m=30 is the peak at 44.69% ± 2.81pp. Five-point curve

@@ -45,3 +45,4 @@ Each experiment file has these sections:
 | [no-loop-baseline.md](no-loop-baseline.md) | done (3 trials tips-on + 3 trials tips-off) |
 | [leanest-ocr-off.md](leanest-ocr-off.md) | done (3 clean trials, comparisons updated for fair baselines) |
 | [no-loop-multi-image.md](no-loop-multi-image.md) | done (3 trials tips-on + 3 trials tips-off) |
+| [efficiency-summary.md](efficiency-summary.md) | cross-cell turns-per-question summary (12 local cells, pooled 8×80q each) |

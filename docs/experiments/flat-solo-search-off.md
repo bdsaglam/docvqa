@@ -87,6 +87,23 @@ uv run python evals.py \
   ~+4pp. The text-being-in-scope and the BM25 retrieval each
   contribute roughly equally to the small OCR effect.
 
+## Efficiency (turns per question)
+
+Pooled across 8 trials × 80q = 640 questions.
+
+| Cell | turns mean ± std | median | p90 | max | turns_correct | turns_wrong | wrong/correct |
+|---|---|---|---|---|---|---|---|
+| flat_solo m=30 (baseline, search ON) | 13.19 ± 7.85 | 11 | 26 | 40 | 11.92 | 14.22 | 1.19 |
+| flat_solo no-search | 13.44 ± 7.81 | 11 | 25 | 40 | 11.33 | 14.99 | 1.32 |
+
+Removing `search()` does **not** reduce the number of agent turns
+(+0.25 mean, well within noise). The agent compensates by manually
+grepping `page_texts` with `re.search()`, which costs the same number
+of turns as a `search()` tool call would. The thrash ratio rises from
+1.19 to 1.32 — wrong answers eat slightly more turns when the agent
+has to assemble retrieval manually. So search() doesn't save the
+agent turns; it slightly stabilises wrong-trajectory length.
+
 ## Status
 
 **Done.** Headline: BM25 search ablation is statistically n.s.

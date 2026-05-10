@@ -113,6 +113,23 @@ The original +22.92pp figure was inflated by an unfair tips/legibility
 asymmetry — see `no-loop-baseline.md` and `no-loop-multi-image.md`
 fairness fix sections.
 
+## Efficiency (turns per question)
+
+Trajectories for these trials live on the host where the runs were
+executed; they were **not measured locally** in the cross-cell
+efficiency aggregation (run dirs `output/runs/leanest-solo-val-t{1..3}/`
+are not present on this host). For the closest local proxy see the
+leanest m=25 cell in `leanest-turn-budget-sweep.md`:
+
+| Cell | turns mean ± std | median | p90 | turns_correct | turns_wrong | wrong/correct |
+|---|---|---|---|---|---|---|
+| leanest m=25 (local 8-trial pool) | 12.82 ± 7.18 | 11 | 24 | 11.54 | 13.69 | 1.19 |
+
+Reading: the OCR-off agent does ~13 turns/question — the same
+ballpark as flat_solo m=30 (13.19). Removing OCR doesn't change the
+agent's per-question work volume; it shifts the work from BM25
+lookups to additional `look()` calls.
+
 ## Status
 
 **Done.** 3 clean trials. Headline: VLM-tool/agent-loop channel adds

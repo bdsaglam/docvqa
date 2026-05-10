@@ -123,6 +123,18 @@ focused answers on simple lookups.
   during this experiment: `evals.py:80` was silently ignoring
   `data.num_samples`; now passes it through.
 
+## Efficiency (turns per question)
+
+| Cell | turns/question | Notes |
+|---|---|---|
+| no_loop (any tips setting) | **N/A (0 by definition)** | Single VLM forward pass; no agent loop, empty trajectories. Doc wall ~12 min × 8 trials. |
+
+For reference: a separate `no-loop-3_5-27b-val-t{1..8}` cell on
+Qwen 3.5 27B (the cells listed in `efficiency-summary.md`) confirms
+all 640 questions have len(trajectory)=0. This is the "no-agent"
+baseline — turn-cost is zero by construction. Compare against
+flat_solo m=30 (13.2 turns/question) for the +23pp lift.
+
 ## Status
 
 **Done.** 3 clean trials with tips ON (headline: 21.25% ± 1.25pp) plus
