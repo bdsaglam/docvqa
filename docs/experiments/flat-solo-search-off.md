@@ -40,30 +40,55 @@ uv run python evals.py \
 
 ## Per-trial scores
 
-| Trial | Score | Sandbox errors |
-|---|---|---|
-| t1 | _running_ | — |
-| t2 | — | — |
-| t3 | — | — |
-| t4 | — | — |
-| t5 | — | — |
-| t6 | — | — |
-| t7 | — | — |
-| t8 | — | — |
+| Trial | Score | Sandbox errors | Notes |
+|---|---|---|---|
+| t1 | 42.50% | 0 | clean. Agent manually scans `page_texts` with `re.search()` (regex). 8 Unknown. |
+| t2 | 41.25% | 0 | clean |
+| t3 | 48.75% | 0 | clean (high outlier) |
+| t4 | 46.25% | 0 | clean |
+| t5 | 40.00% | 0 | clean |
+| t6 | 37.50% | 0 | clean (low) |
+| t7 | 38.75% | 0 | clean (low) |
+| t8 | 45.00% | 0 | clean |
 
-## Summary
+## Summary (n=8, all clean — 0 sandbox errors)
 
-(awaiting trials)
+- per-trial: [42.5, 41.2, 48.8, 46.2, 40.0, 37.5, 38.8, 45.0]
+- mean = **42.50% ± 3.90pp**
+- range 37.5–48.8
 
 ## Comparison to baseline
 
-- **Baseline (flat_solo full, search ON):** 44.69% ± 2.81pp (n=8)
-- Reference: leanest m=40 (no OCR at all) is 43.75% ± 4.33pp.
-- Search-off should sit somewhere between leanest (no OCR) and
-  flat_solo full. If close to baseline → the search tool is mostly
-  redundant given page_texts already in scope. If close to leanest
-  → BM25 retrieval is doing real work.
+- **Baseline (flat_solo full, search ON):** 44.69% ± 2.81pp (n=8).
+- **Gap: −2.19pp**, SE on the difference = √(3.90²/8 + 2.81²/8) = 1.70pp
+- **t-stat: 2.19 / 1.70 ≈ 1.29 → NOT significant.**
+- Reference: leanest m=40 (no OCR at all): 43.75 ± 4.33pp; leanest
+  m=25 default: 40.47 ± 4.86pp.
+
+## Observations
+
+- **BM25 search is largely redundant on this dataset.** Removing it
+  while keeping `page_texts` in scope doesn't move the mean
+  significantly. The agent compensates by manually grepping with
+  `re.search(...)` over `page_texts` (visible in trajectories).
+- **Variance bumps up modestly** (2.81 → 3.90 pp std). Not as dramatic
+  as the OCR-off comparison (leanest), but suggests the BM25 tool was
+  acting as a small stability anchor — when present, it pulls the
+  agent toward consistent retrieval starting points.
+- Implication for the paper: this is a **"scaffold component that
+  didn't matter much"** finding. Worth reporting honestly — RLM
+  paper-style ablations include "X surprisingly didn't help" too.
+- Related ablation: leanest (no OCR at all) gets 40.47–43.75% ±
+  ~4.5pp. Going from leanest → search-off (adding `page_texts` but
+  not BM25) → full (adding BM25) gives an OCR contribution gradient:
+  - **leanest → search-off: +2.0pp** (OCR text in scope adds modest lift)
+  - **search-off → full: +2.2pp** (BM25 retrieval adds another modest lift)
+  Neither step is individually significant, but together they're
+  ~+4pp. The text-being-in-scope and the BM25 retrieval each
+  contribute roughly equally to the small OCR effect.
 
 ## Status
 
-**In progress.** t1 running on Host A's local 8927 lane.
+**Done.** Headline: BM25 search ablation is statistically n.s.
+(−2.19pp, t=1.29). Paper framing: BM25 is largely redundant on
+DocVQA-2026 given OCR text in agent scope.
