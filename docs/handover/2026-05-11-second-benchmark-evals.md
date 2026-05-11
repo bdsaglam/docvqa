@@ -1,34 +1,53 @@
 # Handover — second-benchmark evaluations (MP-DocVQA + MMLongBench-Doc)
 
 **Created:** 2026-05-11
+**Updated:** 2026-05-11 23:50 — refreshed for resume-from-here.
 **Context:** Continuing the §B "benchmark generality" claim from
 `docs/paper/experiment-plan.md`. Picks: MP-DocVQA + MMLongBench-Doc
 (see "Picks rationale" section at bottom for why these two).
 
-## Current state at handover
+## Resume-from-here checklist (top-of-mind for next agent)
 
-- **vllm 8927 (local) — verified UP** at 23:29:55: `Qwen/Qwen3.5-27B`,
-  max_model_len 131072, DP=4 across all 4 GPUs (prefix caching, async-
-  scheduling, reasoning-parser qwen3). Container `vllm-qwen-27b`, tmux
-  `vllm:qwen27b`. Ready to use.
-- **vllm 8928 (other host) — verified UP:** `Qwen/Qwen3.5-27B`,
-  max_model_len 131072, responding cleanly to `/v1/models`. Ready to
-  use immediately.
-- Two endpoints → can run two trials in parallel, each pinned to one
-  endpoint (eval pipeline reads `lm.api_base` / `vlm.api_base` from
-  Hydra config, no code change needed).
+1. **Finish MP-DocVQA prep** (loader exists, sample file + README missing
+   — see "MP-DocVQA prep status" section). ~10-min Python script.
+2. **Wire dataset dispatch** in `src/docvqa/data.py` `load_documents()`
+   so Hydra `data.dataset=lmms-lab/MP-DocVQA` and
+   `data.dataset=yubo2333/MMLongBench-Doc` route to the new loaders
+   in `src/docvqa/datasets/`. The DocVQA-2026 default path stays
+   unchanged. ~30 lines.
+3. **Calibrate Qwen judge** on ~10 hand-marked MMLongBench-Doc triples
+   before running cells (≤30 min). If agreement <70%, iterate the
+   prompt in `src/docvqa/judges/qwen_judge.py` first.
+4. **Run cells** — see "Eval execution plan" section. 4 cells × n=3 =
+   12 trials. Use both endpoints in parallel (~11h total wall).
+5. **Write per-dataset experiment files** as cells complete:
+   `docs/experiments/mp-docvqa-qwen27b.md` and
+   `docs/experiments/mmlongbench-doc-qwen27b.md`. Template = any
+   existing `docs/experiments/*-baseline-scaffold.md`.
+6. **Update §B in `docs/paper/experiment-plan.md`** + index entries
+   in `docs/experiments/README.md` after both datasets done.
+
+## Current state at resume
+
+- **vllm 8927 (local) — UP** as of 2026-05-11 23:29:55:
+  `Qwen/Qwen3.5-27B`, max_model_len 131072, DP=4 across all 4 GPUs
+  (prefix caching, async-scheduling, reasoning-parser qwen3).
+  Container `vllm-qwen-27b`, tmux `vllm:qwen27b`. **Verified idle**
+  — no eval processes running.
+- **vllm 8928 (other host) — UP:** `Qwen/Qwen3.5-27B`, max_model_len
+  131072, responding cleanly to `/v1/models`. Ready to use.
+- Two endpoints → run two trials in parallel, each pinned to one
+  endpoint via Hydra config (no code change needed).
 - **Configs already exist** for both endpoints:
   - `configs/lm/qwen-3_5-27b-vllm-local.yaml` → port 8927
   - `configs/lm/qwen-3_5-27b-vllm-remote.yaml` → port 8928
   - Same names under `configs/vlm/`.
-- **MMLongBench-Doc prep DONE** (sub-agent `ae051cf8a39bcb41a` report
-  below).
-- **MP-DocVQA prep IN PROGRESS** when handover started — sub-agent
-  `a6184cdc6680fd858` was launched with the brief in §"MP-DocVQA spec"
-  below. Check `output_file` if you want their JSONL transcript, or
-  just re-run the prep using the same brief if it didn't finish cleanly.
-  When this handover was written the agent had not yet returned a
-  result.
+- **No agents currently running.** The two prep sub-agents both
+  returned earlier today: MMLongBench-Doc agent finished its full
+  brief; MP-DocVQA agent returned partial deliverables (loader file
+  written, but sample file + README skipped).
+- **Most recent commit:** `e35d0d5` (this handover doc + loaders +
+  judge + data layout migration).
 
 ## Decisions already made (do not re-litigate)
 
@@ -312,9 +331,26 @@ Send on:
   `scripts/run_gemma_chain.sh`, `scripts/run_scaffold_chain.sh` —
   reuse pattern when writing chain script for the new datasets.
 
-## Tasks open at handover
+## User notes
 
-- #5 Prepare MP-DocVQA dataset (in progress, sub-agent)
-- #7 Launch Qwen 27B vllm (in progress — was just relaunched on 8927)
-- #8 Run no_loop_multi + leanest_solo on MP-DocVQA, n=3
-- #9 Run no_loop_multi + leanest_solo on MMLongBench-Doc, n=3
+- Only notify on important events: cell completions (with mean ± std,
+  lift, sandbox-error count), blockers you can't resolve, final wrap-up.
+  Not routine progress.
+- User said "go autonomous, use your judgement and continue rather than
+  wait, unless you are absolutely stuck."
+- On dataset-prep failure: push through with whichever dataset works
+  rather than blocking.
+- Cell results live in `output/runs/<run_id>/results.json`. Use the
+  existing report scripts in `scripts/report.py` to summarize.
+
+## Tasks (cleaned up at resume)
+
+The session-local task tracker is empty by design — recreate as you go.
+Suggested initial set:
+
+1. Finish MP-DocVQA prep (sample file + README).
+2. Wire `data.load_documents` dispatch.
+3. Calibrate Qwen judge.
+4. Run MP-DocVQA × 2 solvers × n=3.
+5. Run MMLongBench-Doc × 2 solvers × n=3.
+6. Update §B + experiments index, commit, notify wrap-up.
