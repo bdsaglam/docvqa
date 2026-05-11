@@ -31,21 +31,34 @@
 We span the size spectrum, hitting all three competition tiers plus a
 small-open and an alt-frontier point.
 
-| Model | Tier | Baseline status | Scaffold status | Trials needed |
-|---|---|---|---|---|
-| **Qwen 3.5 9B** (open small) | ≤8B | not run | not run | both ≥3 |
-| **Gemma 4 (size TBD, open)** | ≤8B or 8–35B | not run | not run | both ≥3 |
-| **Qwen 3.6 27B** (open mid) | 8–35B | not run | done (8 trials) | baseline ≥3 |
-| **Gemini 3 Pro** (closed frontier) | >35B | 37.5% test (official) | 1 trial test (59.4%) | **frozen — no more runs (out of credits)** |
-| **Gemini 3 Flash** (closed small) | ≤8B (proprietary) | 33.75% test (official) | mentioned ~50%, not in results.md | **frozen — no more runs (out of credits)** |
-| **GPT-5.x or Claude** (closed alt-frontier) | >35B | TBD | TBD | both ≥3 |
+| Model | Tier | Baseline (val, n=3) | Scaffold (val, n=3) | Lift | Status |
+|---|---|---|---|---|---|
+| **Gemma 4 E4B-it** (~4B effective, Google) | ≤8B | **3.75% ± 0.00pp** | **9.58% ± 1.44pp** | **+5.83pp** (t=7.0) | **DONE** — see `docs/experiments/gemma-4-e4b-baseline-scaffold.md` |
+| **Qwen 3.5 9B** (open small) | ≤8B | **15.00% ± 1.25pp** | **21.25% ± 2.50pp** | **+6.25pp** (t=3.88) | **DONE** — see `docs/experiments/qwen-9b-baseline-scaffold.md` |
+| **Gemma 4 31B-it** (Google mid) | 8–35B | **10.42% ± 0.72pp** | **35.42% ± 5.20pp** | **+25.00pp** (t=8.25) | **DONE** — see `docs/experiments/gemma-4-31b-baseline-scaffold.md` (vllm triage required) |
+| **Qwen 3.5 27B** (open mid) | 8–35B | 23.75% ± 2.17pp | 44.69% ± 2.81pp (n=8) | +20.94pp | done (existing) — see `docs/experiments/no-loop-multi-image.md` + `flat-solo-turn-budget-sweep.md` |
+| **Gemini 3 Pro** (closed frontier) | >35B | 37.5% test (official) | 1 trial test (59.4%) | — | **frozen — no more runs (out of credits)** |
+| **Gemini 3 Flash** (closed small) | ≤8B (proprietary) | 33.75% test (official) | mentioned ~50%, not in results.md | — | **frozen — no more runs (out of credits)** |
+| **GPT-5.x or Claude** (closed alt-frontier) | >35B | TBD | TBD | TBD | both ≥3 — load-bearing primary frontier point |
 
 Critical: **matched within-model** (same model, baseline vs scaffold) is
 the headline lift figure. The cross-model comparison is secondary.
 
+**Headline pattern across the open-model axis (2026-05-09 / 10):**
+the scaffold lifts every open model class. Lift scales sublinearly
+with model capacity — small models (≤9B) get ~6pp, mid-tier (27–31B)
+get ~21–25pp. The mechanism is the agent loop's reliance on the
+LM writing tool-call code; smaller models write worse code, so they
+extract less from the scaffold (per memory entry
+`feedback_scaffold_lift_scales_with_model_size`). Gemma-vs-Qwen
+within tier: Gemma 4 baseline is weaker than Qwen 3.5 (raw VLM gap),
+but the scaffold absorbs a meaningful fraction of that family gap
+at the mid tier (gap −13pp baseline → −9pp scaffold).
+
 Notes:
-- Pick **one** Gemma size based on what's practical to host. Don't run
-  every Gemma variant.
+- Both Gemma sizes ran (E4B for the ≤8B tier, 31B for the 8–35B
+  tier). The original "pick one" guidance was relaxed because both
+  fit on the available GPUs and add a non-Qwen family per tier.
 - **Gemini results are frozen** (out of API credits). The 59.4% Pro
   test and the ~50% Flash number are single-trial; we cannot
   replicate them. Two ways to handle in paper: (a) report with a
@@ -207,9 +220,10 @@ group is self-contained.
 - **Group B1 — Closed/API models (no local GPU; can overlap B0):**
   - Alt-frontier (Claude or GPT-5) baseline + scaffold, val + test, ≥3 trials each
   - (Gemini Pro / Flash: **dropped**; out of credits, existing single-trial numbers used as-is per §A note)
-- **Group B2 — Small open models (separate vllm instance):**
-  - Qwen 3.5 9B baseline + scaffold, val, ≥3 trials each
-  - Gemma (size TBD per open question) baseline + scaffold, val, ≥3 trials each
+- **Group B2 — Small open models (separate vllm instance):** **DONE 2026-05-09/10**
+  - ~~Qwen 3.5 9B baseline + scaffold, val~~ — n=3+3, lift +6.25pp (`qwen-9b-baseline-scaffold.md`)
+  - ~~Gemma 4 E4B-it baseline + scaffold, val~~ — n=3+3, lift +5.83pp (`gemma-4-e4b-baseline-scaffold.md`)
+  - ~~Gemma 4 31B-it baseline + scaffold, val~~ — n=3+3, lift +25.00pp (`gemma-4-31b-baseline-scaffold.md`); vllm TP=4 + `--enforce-eager` required for scaffold stability
 - **Group B3 — Second benchmark (after lit review picks):**
   - Qwen 27B baseline + scaffold on chosen benchmark, ≥3 trials
   - One frontier model (alt-frontier: Claude or GPT-5 — Gemini dropped, see §A) baseline + scaffold on chosen benchmark, ≥3 trials
@@ -236,8 +250,7 @@ B0/B1/B2/B3) per the *Server split* section above.
 4. **Second benchmark — Qwen 27B baseline + scaffold** — kills
    "generality" claim if it fails. Run after lit review picks the
    benchmark.
-5. **Small-model runs (Qwen 3.5 9B, Gemma)** — extends model axis,
-   relatively cheap.
+5. ~~**Small-model runs (Qwen 3.5 9B, Gemma)**~~ — **DONE 2026-05-09/10** *(Host B / Group B2)*. All three cells (Qwen 9B, Gemma E4B, Gemma 31B) baseline + scaffold n=3 each on val. Headline lifts: 9B +6.25pp, E4B +5.83pp, 31B +25.00pp — all significant. Gemma 31B required vllm `--tensor-parallel-size 4 --enforce-eager` to survive scaffold load (multimodal-embedding bug in TP=2; see `gemma-4-31b-baseline-scaffold.md` triage section). Model-axis claim survives across both ≤8B and 8–35B tiers, and across two model families (Qwen, Gemma).
 6. **OCR on/off ablation** — clean comparison vs Leanest solver.
 7. **VLM cropping on/off ablation** — page-only variant vs full
    arbitrary-image variant. Isolates the active-perception contribution.
@@ -274,7 +287,7 @@ number, so the falsification gate moves to step 11 — alt-frontier.)
 - Compute budget — how aggressively to span the model axis (drop
   alt-frontier or Gemma if tight)?
 - Which 2 benchmarks (defer to lit review)?
-- Which Gemma size?
+- ~~Which Gemma size?~~ — **resolved 2026-05-09**: ran both E4B (≤8B tier) and 31B (8–35B tier). Each adds a non-Qwen point at its respective tier.
 
 ## Cross-references
 

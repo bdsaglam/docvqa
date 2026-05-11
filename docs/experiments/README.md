@@ -46,3 +46,6 @@ Each experiment file has these sections:
 | [leanest-ocr-off.md](leanest-ocr-off.md) | done (3 clean trials, comparisons updated for fair baselines) |
 | [no-loop-multi-image.md](no-loop-multi-image.md) | done (3 trials tips-on + 3 trials tips-off) |
 | [efficiency-summary.md](efficiency-summary.md) | cross-cell turns-per-question summary (12 local cells, pooled 8×80q each) |
+| [qwen-9b-baseline-scaffold.md](qwen-9b-baseline-scaffold.md) | done (3+3 val trials, lift +6.25pp) |
+| [gemma-4-e4b-baseline-scaffold.md](gemma-4-e4b-baseline-scaffold.md) | done (3+3 val trials, lift +5.83pp) |
+| [gemma-4-31b-baseline-scaffold.md](gemma-4-31b-baseline-scaffold.md) | done (3+3 val trials, lift +25.00pp; vllm triage required) |
