@@ -35,9 +35,14 @@ DATA_DIR = Path("data")
 
 
 def _ocr_dir_for_split(split: str) -> Path:
-    """Return OCR directory for a dataset split, e.g. data/val/ocr."""
+    """Return OCR directory for a DocVQA-2026 split.
+
+    Layout: ``data/docvqa-2026/{split}/ocr/{doc_id}/page_*.md``. New
+    datasets follow ``data/{dataset-slug}/{split}/...`` and supply
+    their own ocr path.
+    """
     base_split = split.split("[")[0]  # strip slice like "val[:5]"
-    return DATA_DIR / base_split / "ocr"
+    return DATA_DIR / "docvqa-2026" / base_split / "ocr"
 
 
 def _load_ocr_texts(doc_id: str, num_pages: int, ocr_dir: Path) -> list[str] | None:

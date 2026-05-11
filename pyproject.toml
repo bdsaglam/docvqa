@@ -19,6 +19,7 @@ dependencies = [
     "pystemmer>=3.0.0",
     "wandb>=0.25.1",
     "gepa>=0.1.1",
+    "pypdfium2>=5.8.0",
 ]
 
 [build-system]

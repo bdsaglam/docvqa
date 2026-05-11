@@ -1,7 +1,8 @@
 """Tests for BM25 search quality on real eval documents.
 
-Loads OCR text from data/val/ocr/, builds BM25 indexes, and verifies that
-realistic agent queries return relevant pages in the top results.
+Loads OCR text from data/docvqa-2026/val/ocr/, builds BM25 indexes, and
+verifies that realistic agent queries return relevant pages in the top
+results.
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ import pytest
 
 from docvqa.search import build_index, make_search_tool, _chunk_page
 
-OCR_DIR = Path("data/val/ocr")
+OCR_DIR = Path("data/docvqa-2026/val/ocr")
 
 
 # ---------------------------------------------------------------------------

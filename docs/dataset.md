@@ -185,7 +185,7 @@ Note: some doc IDs appear in both splits (e.g., `comics_1`, `engineering_drawing
 
 ## OCR Coverage
 
-OCR processed via `docling-serve` (Docling pipeline with GPU). Stored as markdown per page: `data/{split}/ocr/{doc_id}/page_N.md`.
+OCR processed via `docling-serve` (Docling pipeline with GPU). Stored as markdown per page: `data/docvqa-2026/{split}/ocr/{doc_id}/page_N.md`.
 
 | Split | Docs with OCR | Total OCR Chars | Avg Chars/Page |
 |---|---|---|---|

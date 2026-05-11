@@ -28,7 +28,7 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 
 - **LLM**: `vertex_ai/gemini-3-pro-preview` (best) or `qwen-3_5-27b` (local)
 - **VLM**: Qwen/Qwen3.5-27B at localhost:8927 (3x A100 GPUs)
-- **OCR data**: `data/{split}/ocr/{doc_id}/page_*.md`
+- **OCR data**: `data/docvqa-2026/{split}/ocr/{doc_id}/page_*.md` (new dataset layout: `data/{dataset-slug}/{split}/...`)
 - **BM25 indexes**: auto-built per doc during eval
 
 ## Key Commands

@@ -30,7 +30,7 @@ Copy `.env.example` to `.env` and fill in the credentials for the provider(s) yo
 cp .env.example .env
 ```
 
-The dataset is loaded automatically from [HuggingFace](https://huggingface.co/datasets/VLR-CVC/DocVQA-2026) (`val` and `test` splits; no train split). First run caches OCR output under `data/{split}/ocr/`.
+The dataset is loaded automatically from [HuggingFace](https://huggingface.co/datasets/VLR-CVC/DocVQA-2026) (`val` and `test` splits; no train split). First run caches OCR output under `data/docvqa-2026/{split}/ocr/`. Additional benchmarks (MP-DocVQA, MMLongBench-Doc) live under `data/{dataset-slug}/{split}/`.
 
 ### Picking an LM / VLM backend
 
@@ -56,7 +56,7 @@ The dataset download requires `HF_TOKEN` in `.env` (needed even for public datas
 
 ### OCR
 
-Each document page is processed via [docling-serve](https://github.com/docling-project/docling-serve) and cached as markdown under `data/{split}/ocr/{doc_id}/page_*.md`. BM25 indexes for retrieval are cached under `data/{split}/bm25/`. You have two options to populate these caches:
+Each document page is processed via [docling-serve](https://github.com/docling-project/docling-serve) and cached as markdown under `data/docvqa-2026/{split}/ocr/{doc_id}/page_*.md`. BM25 indexes for retrieval are cached under `data/docvqa-2026/{split}/bm25/`. You have two options to populate these caches:
 
 **Option A — Download the pre-built bundle (recommended).** A ~13 MB zip with OCR markdown and BM25 indexes for all val + test documents:
 

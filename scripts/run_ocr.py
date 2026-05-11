@@ -199,7 +199,7 @@ def main():
     parser.add_argument("--ocr-dir", type=Path, default=None)
     args = parser.parse_args()
 
-    ocr_dir = args.ocr_dir or (DATA_DIR / args.split / "ocr")
+    ocr_dir = args.ocr_dir or (DATA_DIR / "docvqa-2026" / args.split / "ocr")
 
     # Health check
     try:
