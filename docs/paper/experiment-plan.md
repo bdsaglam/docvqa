@@ -124,10 +124,37 @@ for context.
 | **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | **DONE** — Qwen 3.5 27B val, n=3 with matched tips: **21.25% ± 1.25pp** (composite); **23.75% ± 2.17pp** (multi-image native-res, max_pages=10). vs scaffold 44.69%: composite gap −23.4pp (19.1 SE), multi gap −20.9pp (13.1 SE). See `docs/experiments/no-loop-baseline.md` and `no-loop-multi-image.md`. |
 | **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | **DONE** — Qwen 3.5 27B val n=3: **40.00% ± 0.00pp** (vs flat_solo 44.69%: OCR + cropping add +4.7pp; vs no_loop_multi+tips 23.75%: agent-loop + VLM-tool channel adds +16.3pp). See `docs/experiments/leanest-ocr-off.md`. Caveat: leanest→flat_solo delta also includes cropping; not a pure OCR ablation. |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
-| **Search tool on/off** | Full method vs no-`search()` tool: BM25 retrieval removed but `page_texts` still in scope so the agent can scan OCR manually. Isolates "BM25 retrieval" from "raw OCR text in scope". Cleaner OCR-channel ablation than leanest→flat_solo (which also bundles tool structure). | not in RLM paper | in progress (`solver.use_search=false`); lane: `no-search` on Host A; 1/8 running |
+| **Search tool on/off** | Full method vs no-`search()` tool: BM25 retrieval removed but `page_texts` still in scope so the agent can scan OCR manually. Isolates "BM25 retrieval" from "raw OCR text in scope". Cleaner OCR-channel ablation than leanest→flat_solo (which also bundles tool structure). | not in RLM paper | **DONE** — n=8: **42.50% ± 3.90pp** vs 44.69% baseline; gap **−2.19pp (t=1.29) — NOT significant**. BM25 is largely redundant given `page_texts` in scope; agent compensates via `re.search()` regex over OCR text. See `docs/experiments/flat-solo-search-off.md`. |
 | **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | **DONE** — n=8: **36.88% ± 2.50pp** vs 44.69% baseline; gap **−7.81pp (5.88 SE)** |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
 | **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | **DONE** — n=8 clean (t1 excluded, sandbox-error contam): **38.75% ± 3.13pp** vs 44.69% baseline; gap **−5.94pp (3.99 SE)** |
+
+### OCR's role: two opposing forces (see `per-doc-flat-vs-leanest.md`)
+
+The aggregate OCR effect (~1pp on the mean, n.s.) hides two opposing
+mechanisms. From per-doc comparison of flat_solo m=30 (full, OCR ON)
+vs leanest m=40 (no OCR), n=8 trials each per cell:
+
+- **Long docs (≥20 pages, n=12):** flat_solo +3.3pp over leanest.
+  OCR + BM25 retrieval makes "find the relevant page" cheap when
+  there are dozens of pages to consider. Cleanest win: `business_report_3`
+  (89 pages, 2 questions): flat_solo 100% vs leanest 87.5%.
+- **Short docs (<20 pages, n=13):** delta near zero (+1.4pp).
+- **Visually-rich docs:** OCR can *hurt*. `engineering_drawing_3`
+  (6 pages, leader-line diagrams): leanest beats flat_solo by
+  **+29.2pp** (70.8% vs 41.7%). OCR text from diagrams is noisy
+  and misdirects the agent away from visual reasoning.
+
+Per-doc winner counts: flat 13/25, leanest 5/25, tie 7/25.
+
+**Paper framing.** OCR is a *long-document navigation tool* and a
+*visual-perception distractor*; on a balanced 25-doc benchmark these
+roughly cancel. The "OCR-as-stability-anchor" framing (std halves
+when OCR is present) is the more robust paper claim. The per-doc
+breakdown suggests OCR's value should rise on long-document
+benchmarks (MP-DocVQA, MMLongBench-Doc) and fall on
+diagram/chart-heavy ones (ChartQA, infographic-only sets) —
+falsifiable predictions for the benchmark-generality §B.
 
 ### Turn-budget sweep results
 
