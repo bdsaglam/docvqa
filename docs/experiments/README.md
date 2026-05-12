@@ -47,7 +47,7 @@ Each experiment file has these sections:
 | [no-loop-multi-image.md](no-loop-multi-image.md) | done (3 trials tips-on + 3 trials tips-off) |
 | [efficiency-summary.md](efficiency-summary.md) | cross-cell turns-per-question summary (12 local cells, pooled 8×80q each) |
 | [per-doc-flat-vs-leanest.md](per-doc-flat-vs-leanest.md) | per-doc comparison of best flat_solo vs best leanest configs (OCR's role by doc length & category) |
-| [flat-solo-test-matched-baseline.md](flat-solo-test-matched-baseline.md) | done generating predictions (8 trials); awaiting ICDAR submission scoring |
+| [flat-solo-test-matched-baseline.md](flat-solo-test-matched-baseline.md) | done (8 trials); SC-8 voted test = 38.75% (ICDAR) |
 | [qwen-9b-baseline-scaffold.md](qwen-9b-baseline-scaffold.md) | done (3+3 val trials, lift +6.25pp) |
 | [gemma-4-e4b-baseline-scaffold.md](gemma-4-e4b-baseline-scaffold.md) | done (3+3 val trials, lift +5.83pp) |
 | [gemma-4-31b-baseline-scaffold.md](gemma-4-31b-baseline-scaffold.md) | done (3+3 val trials, lift +25.00pp; vllm triage required) |

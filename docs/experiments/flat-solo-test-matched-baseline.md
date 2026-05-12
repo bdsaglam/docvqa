@@ -85,14 +85,50 @@ From `docs/results.md`:
 So the 3.6 27B test-time SC-8 vote landed close to per-trial mean.
 3.5 27B might be similar or slightly higher.
 
-## Headline number (locked once submitted)
+## Headline numbers (locked)
 
-- **Per-trial mean ± std (matched-baseline number for paper):**
-  TBD on submission
-- **SC-8 voted (context, not headline):** TBD on submission
+- **SC-8 voted test: 38.75%** (ICDAR submission of
+  `submissions/flat-solo-3_5-27b-test-sc8.json`, 2026-05-12).
+- **Per-trial mean ± std test:** TBD — requires submitting individual
+  trial JSONs and averaging. Not done yet (8 separate ICDAR
+  submissions; user's go-ahead needed).
+
+## Comparison context
+
+| Anchor | Test % | Source |
+|---|---|---|
+| **Qwen 3.5 27B flat_solo SC-8 (this run)** | **38.75** | new |
+| Qwen 3.5 27B flat_solo SC-8 (val) | 51.2 | `docs/results.md` |
+| Qwen 3.6 27B flat_solo SC-8 (test) | 43.75 | `docs/results.md`, prior runs |
+| Qwen 3.6 27B flat_solo SC-8 (val) | 51.2 | `docs/results.md` |
+| Gemini 3 Pro raw VLM (test, official) | 37.5 | ICDAR baseline |
+| Gemini 3 Pro + scaffold (test, 1 trial) | 59.4 | `docs/results.md` |
+
+Observations:
+- **Val-test gap is ~12pp for Qwen 3.5 27B SC-8** (51.2 → 39.0).
+  Bigger than the 3.6 27B gap (51.2 → 43.75 = 7pp). 3.5 27B test
+  generalises noticeably worse than 3.6 27B.
+- **The scaffold on Qwen 3.5 27B (38.75%) beats raw Gemini 3 Pro
+  (37.5%) on test by 1.5pp** — a defensible "open-model + scaffold
+  beats closed frontier raw" headline, though margins are tight.
+- The Qwen 3.6 27B SC-8 test (43.75%) result is now the better
+  matched-baseline number for the paper headline if available.
+  This 3.5 27B test gives us a second multi-trial test data point
+  to bracket the variance.
+
+## Caveats
+
+- **Per-trial mean** would be the official "matched-baseline" number
+  per the paper's variance discipline (D-003: no SC voting in
+  headline). Currently we only have the SC-8 voted score because
+  per-trial test scoring requires 8 separate ICDAR submissions.
+- The lift figure (no-scaffold → with-scaffold) on **test** is not
+  yet computable for Qwen 3.5 27B — would need `no_loop` Qwen 3.5
+  27B on test. We have val no_loop only (17–21%). For the headline
+  open-model lift figure, can the user obtain (or estimate) the
+  test no_loop number?
 
 ## Status
 
-**Predictions generated.** Awaiting ICDAR submission + scoring. Per
-the user's instruction, do not auto-submit; user holds submission
-go-ahead.
+**Test SC-8 locked at 38.75%.** Per-trial test means deferred (need
+8 individual ICDAR submissions). User-driven from here.
