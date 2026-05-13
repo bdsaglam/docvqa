@@ -1,0 +1,9 @@
+_target_: docvqa.solvers.leanest_solo_da_solver.create_leanest_solo_da_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
