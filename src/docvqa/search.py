@@ -15,8 +15,11 @@ import Stemmer
 
 logger = logging.getLogger(__name__)
 
-# Default index dir; callers can override via bm25_dir parameter
-DEFAULT_BM25_DIR = Path("data/val/bm25")
+# Default index dir; callers should normally pass ``bm25_dir`` from the
+# Document (each loader fills in ``Document.bm25_dir`` pointing at
+# ``data/<dataset-slug>/<split>/bm25``). This default exists only as a
+# fallback for ad-hoc / CLI use and assumes the DocVQA-2026 layout.
+DEFAULT_BM25_DIR = Path("data/docvqa-2026/val/bm25")
 
 
 def _chunk_page(page_num: int, text: str, max_chunk_chars: int = 500) -> list[dict]:
@@ -58,17 +61,17 @@ def build_index(doc_id: str, page_texts: list[str]) -> bm25s.BM25 | None:
     return retriever
 
 
-def save_index(doc_id: str, retriever: bm25s.BM25, chunks: list[dict], bm25_dir: Path = DEFAULT_BM25_DIR) -> None:
+def save_index(doc_id: str, retriever: bm25s.BM25, chunks: list[dict], bm25_dir: Path | None = None) -> None:
     """Save BM25 index and chunk metadata to disk."""
-    index_dir = bm25_dir / doc_id
+    index_dir = (bm25_dir or DEFAULT_BM25_DIR) / doc_id
     index_dir.mkdir(parents=True, exist_ok=True)
     retriever.save(str(index_dir))
     (index_dir / "chunks.json").write_text(json.dumps(chunks))
 
 
-def load_index(doc_id: str, bm25_dir: Path = DEFAULT_BM25_DIR) -> tuple[bm25s.BM25, list[dict]] | None:
+def load_index(doc_id: str, bm25_dir: Path | None = None) -> tuple[bm25s.BM25, list[dict]] | None:
     """Load a cached BM25 index from disk. Returns None if not cached."""
-    index_dir = bm25_dir / doc_id
+    index_dir = (bm25_dir or DEFAULT_BM25_DIR) / doc_id
     if not (index_dir / "chunks.json").exists():
         return None
     try:
@@ -81,7 +84,7 @@ def load_index(doc_id: str, bm25_dir: Path = DEFAULT_BM25_DIR) -> tuple[bm25s.BM
         return None
 
 
-def get_or_build_index(doc_id: str, page_texts: list[str], bm25_dir: Path = DEFAULT_BM25_DIR) -> bm25s.BM25 | None:
+def get_or_build_index(doc_id: str, page_texts: list[str], bm25_dir: Path | None = None) -> bm25s.BM25 | None:
     """Load cached index or build and cache a new one."""
     cached = load_index(doc_id, bm25_dir)
     if cached is not None:

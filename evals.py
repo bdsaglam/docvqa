@@ -73,6 +73,13 @@ def main(cfg: DictConfig) -> None:
     doc_ids = cfg.data.get("doc_ids")
     if doc_ids is not None:
         doc_ids = list(doc_ids)
+    doc_ids_file = cfg.data.get("doc_ids_file")
+    if doc_ids_file:
+        from pathlib import Path as _P
+        lines = _P(doc_ids_file).read_text().splitlines()
+        file_ids = [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
+        doc_ids = (doc_ids or []) + file_ids if doc_ids else file_ids
+        print(f"Loaded {len(file_ids)} doc_ids from {doc_ids_file}")
     categories = cfg.data.get("categories")
     if categories is not None:
         categories = list(categories)

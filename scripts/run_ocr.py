@@ -5,12 +5,20 @@ All pages are submitted as async tasks upfront, then polled for results.
 Throughput scales with the number of RQ workers (configured in docker-compose).
 
 Usage:
-    uv run python scripts/run_ocr.py                             # all val docs
+    uv run python scripts/run_ocr.py                             # DocVQA-2026 val
     uv run python scripts/run_ocr.py --split test
     uv run python scripts/run_ocr.py --num-samples 5
     uv run python scripts/run_ocr.py --doc-ids maps_1 infographics_1
     uv run python scripts/run_ocr.py --force                      # re-process all
     uv run python scripts/run_ocr.py --docling-url http://localhost:5001
+
+    # MP-DocVQA / MMLongBench-Doc — uses the existing load_documents dispatch:
+    uv run python scripts/run_ocr.py \\
+        --dataset lmms-lab/MP-DocVQA \\
+        --doc-ids-file data/mp-docvqa/val/sample_200q_doc_ids.txt
+    uv run python scripts/run_ocr.py \\
+        --dataset yubo2333/MMLongBench-Doc \\
+        --doc-ids-file data/mmlongbench-doc/val/sample_200q_doc_ids.txt
 
 Requires: docker compose up -d (redis + api + workers)
 """
@@ -27,9 +35,10 @@ from io import BytesIO
 from pathlib import Path
 
 import requests
-from datasets import load_dataset
 from PIL import Image
 from tqdm import tqdm
+
+from docvqa.data import load_documents
 
 # Allow very large images (some test docs are 200M+ pixels)
 Image.MAX_IMAGE_PIXELS = 500_000_000
@@ -41,6 +50,25 @@ DEFAULT_DATASET = "VLR-CVC/DocVQA-2026"
 DEFAULT_SPLIT = "val"
 DATA_DIR = Path("data")
 DOCLING_URL = "http://localhost:5001"
+
+
+# Map HF dataset id → on-disk slug for the OCR output directory. Kept
+# in sync with the per-dataset layout convention
+# (``data/<dataset-slug>/<split>/ocr/<doc_id>/page_*.md``).
+DATASET_SLUGS = {
+    "VLR-CVC/DocVQA-2026": "docvqa-2026",
+    "lmms-lab/MP-DocVQA": "mp-docvqa",
+    "yubo2333/MMLongBench-Doc": "mmlongbench-doc",
+}
+
+
+def _default_ocr_dir(dataset: str, split: str) -> Path:
+    slug = DATASET_SLUGS.get(dataset)
+    if slug is None:
+        # Fall back to the dataset id with slashes replaced — robust to new
+        # datasets even if they're not in the explicit table.
+        slug = dataset.split("/", 1)[-1].lower().replace("/", "-")
+    return DATA_DIR / slug / split / "ocr"
 
 PICTURE_PROMPT = (
     "Describe this image thoroughly. Include all visible text, labels, numbers, "
@@ -62,31 +90,41 @@ class PendingPage:
     submitted_at: float = 0.0
 
 
-def build_payload(img: Image.Image) -> dict:
-    """Build the docling-serve conversion request payload for a single page."""
+def build_payload(img: Image.Image, picture_description: bool = False) -> dict:
+    """Build the docling-serve conversion request payload for a single page.
+
+    ``picture_description`` enables the granite-vision picture-description
+    pipeline. The current docling-serve build (2026-05-12) raises an
+    HFValidationError when loading the granite-vision processor from a
+    local cache path, so picture description is disabled by default.
+    OCR + table-structure extraction still produce the page markdown we
+    need for flat_solo's BM25/text channel.
+    """
     buf = BytesIO()
     img.save(buf, format="PNG")
     b64 = base64.b64encode(buf.getvalue()).decode()
 
-    return {
-        "options": {
-            "to_formats": ["md"],
-            "from_formats": ["image"],
-            "do_ocr": True,
-            "do_table_structure": True,
-            "do_picture_description": True,
-            "image_export_mode": "placeholder",
-            "picture_description_area_threshold": 0.05,
-            "picture_description_local": {
-                "repo_id": "ibm-granite/granite-vision-3.3-2b",
-                "prompt": PICTURE_PROMPT,
-                "generation_config": {
-                    "max_new_tokens": 4096,
-                    "do_sample": False,
-                    "repetition_penalty": 1.2,
-                },
+    options: dict = {
+        "to_formats": ["md"],
+        "from_formats": ["image"],
+        "do_ocr": True,
+        "do_table_structure": True,
+        "do_picture_description": picture_description,
+        "image_export_mode": "placeholder",
+    }
+    if picture_description:
+        options["picture_description_area_threshold"] = 0.05
+        options["picture_description_local"] = {
+            "repo_id": "ibm-granite/granite-vision-3.3-2b",
+            "prompt": PICTURE_PROMPT,
+            "generation_config": {
+                "max_new_tokens": 4096,
+                "do_sample": False,
+                "repetition_penalty": 1.2,
             },
-        },
+        }
+    return {
+        "options": options,
         "sources": [{"kind": "file", "base64_string": b64, "filename": "page.png"}],
     }
 
@@ -194,12 +232,19 @@ def main():
     parser.add_argument("--split", default=DEFAULT_SPLIT)
     parser.add_argument("--num-samples", type=int, default=None)
     parser.add_argument("--doc-ids", nargs="+", default=None)
+    parser.add_argument(
+        "--doc-ids-file",
+        type=Path,
+        default=None,
+        help="File with one doc_id per line (# comments ignored). Mutually exclusive with --doc-ids.",
+    )
     parser.add_argument("--docling-url", default=DOCLING_URL)
     parser.add_argument("--force", action="store_true", help="Re-process even if cached")
     parser.add_argument("--ocr-dir", type=Path, default=None)
     args = parser.parse_args()
 
-    ocr_dir = args.ocr_dir or (DATA_DIR / "docvqa-2026" / args.split / "ocr")
+    ocr_dir = args.ocr_dir or _default_ocr_dir(args.dataset, args.split)
+    logger.info("OCR output dir: %s", ocr_dir)
 
     # Health check
     try:
@@ -213,25 +258,36 @@ def main():
         )
         return
 
-    # Load dataset
-    split = args.split
-    if args.doc_ids is None and args.num_samples is not None:
-        split = f"{split}[:{args.num_samples}]"
-    ds = load_dataset(args.dataset, split=split)
+    # Resolve doc_ids — explicit list, then file, then None (all docs).
+    doc_ids: list[str] | None = args.doc_ids
+    if doc_ids is None and args.doc_ids_file is not None:
+        doc_ids = [
+            line.strip()
+            for line in args.doc_ids_file.read_text().splitlines()
+            if line.strip() and not line.startswith("#")
+        ]
+        logger.info("Loaded %d doc_ids from %s", len(doc_ids), args.doc_ids_file)
 
-    samples = []
-    for sample in ds:
-        if args.doc_ids and sample["doc_id"] not in args.doc_ids:
-            continue
-        samples.append(sample)
+    # Use the same loader the eval pipeline does — dispatches by dataset_name.
+    documents = load_documents(
+        args.dataset,
+        args.split,
+        num_samples=args.num_samples,
+        doc_ids=doc_ids,
+    )
+    logger.info(
+        "Loaded %d documents with %d total pages",
+        len(documents),
+        sum(len(d.images) for d in documents),
+    )
 
     # Build list of pending pages
     pending: list[PendingPage] = []
     doc_page_counts: dict[str, int] = {}
 
-    for sample in samples:
-        doc_id = sample["doc_id"]
-        images = sample["document"]
+    for doc in documents:
+        doc_id = doc.doc_id
+        images = doc.images
         doc_page_counts[doc_id] = len(images)
 
         for i, img in enumerate(images):
@@ -241,7 +297,7 @@ def main():
             pending.append(PendingPage(doc_id=doc_id, page_idx=i, image=img))
 
     if not pending:
-        logger.info("All %d documents already processed", len(samples))
+        logger.info("All %d documents already processed", len(documents))
         return
 
     logger.info(
@@ -290,7 +346,7 @@ def main():
     logger.info(
         "Done. %d pages across %d documents in %.1fs (%.1fs/page avg). Results: %s",
         total_pages,
-        len(samples),
+        len(documents),
         elapsed,
         elapsed / max(total_pages, 1),
         ocr_dir,

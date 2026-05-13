@@ -10,6 +10,7 @@ data:
   split: val
   num_samples: 5
   doc_ids: null
+  doc_ids_file: null
   categories: null
 
 # Run settings

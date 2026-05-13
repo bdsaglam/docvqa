@@ -203,6 +203,7 @@ def load_mmlongbench_doc_documents(
 
     pages_dir = Path(pages_dir or DEFAULT_DATA_DIR / base_split / "pages")
     ocr_dir = Path(ocr_dir or DEFAULT_DATA_DIR / base_split / "ocr")
+    bm25_dir = DEFAULT_DATA_DIR / base_split / "bm25"
 
     documents: list[Document] = []
     for doc_id in universe:
@@ -226,7 +227,15 @@ def load_mmlongbench_doc_documents(
                 doc_id, n_total, len(png_paths), max_pages,
             )
 
-        images = [Image.open(p) for p in png_paths]
+        # Force-load image bytes immediately. ``Image.open`` is lazy and the
+        # underlying file handle can be closed by the time downstream code
+        # (e.g. dspy.Image(...).format()) tries to read pixels, producing
+        # "unrecognized data stream" errors during the actual VLM call.
+        images = []
+        for p in png_paths:
+            with Image.open(p) as im:
+                im.load()
+                images.append(im.copy())
         questions: list[Question] = []
         for row in rows:
             q = Question(
@@ -253,6 +262,7 @@ def load_mmlongbench_doc_documents(
                 images=images,
                 questions=questions,
                 page_texts=_load_ocr_texts(doc_id, len(images), ocr_dir),
+                bm25_dir=bm25_dir,
             )
         )
     return documents

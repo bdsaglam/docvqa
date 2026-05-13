@@ -267,7 +267,11 @@ class LeanSoloProgram:
 
             search_index = None
             if document.page_texts:
-                search_index = get_or_build_index(document.doc_id, document.page_texts)
+                search_index = get_or_build_index(
+                    document.doc_id,
+                    document.page_texts,
+                    bm25_dir=document.bm25_dir,
+                )
 
             ctx = RunContext(
                 page_dir=tmpdir,

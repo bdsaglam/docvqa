@@ -76,28 +76,80 @@ Notes:
 
 ## B. Benchmark generality (claim 2)
 
-Pick 2 benchmarks. Final picks deferred until RVLM/MADQA verification
-completes. Candidates:
+**Picks:** MP-DocVQA (Tito et al., PR 2023) + MMLongBench-Doc
+(NeurIPS 2024). DocVQA-2026 reuses InfographicVQA/SlideVQA/DocVQA-original
+data, so those are ruled out as redundant. MADQA still on the list but
+shelved until RVLM verification finishes.
 
-- **DocVQA (original 2020)** — near-distribution, established baselines.
-- **MP-DocVQA** — multi-page; tests scaffold's ability on long docs.
-- **MMLongBench-Doc** (NeurIPS 2024) — long-context, GPT-4o reportedly ~44.9% F1.
-- **MADQA** (Borchmann et al., arXiv:2603.12180) — multimodal agentic doc
-  QA. **Strong candidate** because their constrained-agent method is also
-  on our baseline list (D-005), so MADQA enables a direct head-to-head.
-- **InfographicVQA** — adjacent, infographic-heavy.
-- **SlideVQA** — adjacent, slide-heavy.
-- **ChartQA** — further; chart reasoning, harder for our OCR-centric tools.
+### Qwen 27B results — 200Q val sample per benchmark, n=3 trials each
 
-For each picked benchmark:
+| Benchmark | Baseline (no_loop_multi) | Scaffold no-OCR (leanest_solo) | Scaffold +OCR (flat_solo) |
+|---|---|---|---|
+| MP-DocVQA val | **63.74% ± 0.28pp** (ANLS) | 58.86% ± 2.31pp (**−4.88pp** vs base, t=−3.64) | 63.09% ± 0.97pp (−0.65pp vs base, n.s.) |
+| MMLongBench-Doc val (ANLS) | 15.32% ± 0.29pp | 30.98% ± 1.62pp (**+15.66pp**, t=16.4) | 31.48% ± 0.77pp (+16.16pp, t=27.5) |
+| MMLongBench-Doc val (judge) | 33.84% ± 0.87pp | 60.27% ± 1.91pp (**+26.43pp**, t=21.8) | 60.44% ± 0.29pp (+26.60pp, t=49.8) |
 
-- Baseline + scaffold on **Qwen 27B** (cheap, open).
-- Baseline + scaffold on **at least one frontier model**.
-- ≥3 trials each.
+**OCR's role flips with doc length.** On MP-DocVQA, OCR *rescues* the
+scaffold (+4.23pp leanest→flat_solo, restores baseline parity). On
+MMLongBench-Doc, OCR adds essentially nothing (+0.17pp judge, n.s.) —
+the active-perception `look()` channel already captures what OCR would.
 
-Two benchmarks is enough for "generalizes." More than that is benchmark
-suite territory — skip unless lit review surfaces a specific comparison
-reviewers will demand.
+Full per-trial / per-format / per-category breakdowns:
+- `docs/experiments/mp-docvqa-qwen27b.md`
+- `docs/experiments/mmlongbench-doc-qwen27b.md`
+
+### Key finding: scaffold lift scales with effective doc length
+
+The two benchmarks land on *opposite signs* and the page-bucket cut on
+MP-DocVQA explains why:
+
+| Bucket (MP-DocVQA) | Baseline | Scaffold | Δ |
+|---|---|---|---|
+| 1pp (70Q, 34% of sample) | 51.9% | 40.5% | **−11.4pp** |
+| 2-5pp (66Q) | 66.7% | 64.1% | −2.5pp |
+| 6-10pp (30Q) | 77.8% | 72.2% | −5.6pp |
+| 11-20pp (39Q) | 69.2% | 72.6% | **+3.4pp** |
+
+On MMLongBench-Doc (47pp avg), the same mechanism gives a +26.43pp
+judge lift; on MP-DocVQA (≤20pp, mostly ≤5pp), the cost of the agent
+loop on short docs dominates and the pooled headline is negative.
+Per-category on MMLongBench-Doc: Financial-report (longest docs)
+**+47.9pp**; Guidebook (most concrete) +16.7pp; even Academic paper
++10.5pp.
+
+### Per answer-format on MMLongBench-Doc (judge)
+
+| Format | Baseline | Scaffold | Δ |
+|---|---|---|---|
+| Float | 2.3% | **50.8%** | **+48.5pp** |
+| Int | 30.9% | 70.7% | +39.8pp |
+| List | 21.4% | 44.0% | +22.6pp |
+| Str | 48.0% | 64.2% | +16.2pp |
+| None ("Not answerable") | 62.9% | 66.7% | +3.8pp |
+
+Numeric formats benefit most: the raw VLM cannot extract precise
+numbers from a truncated 10-page slice of a 100-page financial report,
+but the scaffold's `look()` zooms into the right page. "Not answerable"
+already strong for the baseline (refusal needs no perception).
+
+### Frontier model on these benchmarks
+
+**Not yet run.** Plan: re-use Gemini 3 Pro / Flash on the same 200Q
+samples once §A frontier-model results are in. Expected wall ~2-3h
+per benchmark per solver. Hold off until OCR pipeline is extended to
+the new datasets so flat_solo is also runnable.
+
+### Caveats
+
+- **MMLongBench: 1 of 22 sample docs (`mi_phone.pdf`) fails to download
+  from HF**; 198/207 questions scored. All 5 formats remain represented.
+- **MMLongBench: page cap at 80**; the longest 10-Ks (~150pp) lose
+  evidence pages beyond 80. Numbers are conservative on those docs.
+  Sensitivity check at `max_pages=200` is on the todo list.
+- **Qwen judge calibration** done before any cell ran: 11/12 = 91.7%
+  agreement on hand-marked triples (single miss on Float ~1% tolerance
+  edge case). Below 70% would have blocked cell runs; above threshold
+  by 20+ pp.
 
 ### Method baselines from the lit review (per D-005)
 

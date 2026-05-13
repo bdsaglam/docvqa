@@ -118,6 +118,11 @@ def _ocr_dir_for(split: str) -> Path:
     return DEFAULT_DATA_DIR / base / "ocr"
 
 
+def _bm25_dir_for(split: str) -> Path:
+    base = split.split("[")[0]
+    return DEFAULT_DATA_DIR / base / "bm25"
+
+
 def _load_ocr_texts(doc_id: str, num_pages: int, ocr_dir: Path) -> list[str] | None:
     doc_dir = ocr_dir / doc_id
     if not doc_dir.exists():
@@ -161,12 +166,19 @@ def load_mp_docvqa_documents(
 
     allow: set[str] | None = set(doc_ids) if doc_ids is not None else None
 
+    # Filter to the kept rows BEFORE iterating row-by-row, so we don't
+    # pay JPEG decode cost on the >95% of rows we discard. The full val
+    # split is 5187 rows × 20 image columns — iterating naïvely with
+    # auto-decode takes 10+ minutes per loader call.
+    if allow is not None:
+        doc_id_col = ds["doc_id"]  # cheap: column-only fetch, no image decode
+        keep_indices = [i for i, d in enumerate(doc_id_col) if d in allow]
+        ds = ds.select(keep_indices)
+
     # Group rows by doc_id while keeping insertion order stable.
     by_doc: "OrderedDict[str, list]" = OrderedDict()
     for row in ds:
         doc_id = row["doc_id"]
-        if allow is not None and doc_id not in allow:
-            continue
         by_doc.setdefault(doc_id, []).append(row)
 
     if doc_ids is not None:
@@ -203,15 +215,19 @@ def load_mp_docvqa_documents(
         questions: list[Question] = []
         for row in rows:
             answers = _parse_listish(row.get("answers"))
-            # MP-DocVQA ships multiple answer aliases — join with " | " so the
-            # downstream metric can still hit the canonical form. ANLS-style
-            # scoring typically reduces over the alias list, but our dataclass
-            # only has a single string slot.
+            # MP-DocVQA ships multiple answer aliases. We need every alias to
+            # be visible to the scorer, but ``Question.answer`` is a single
+            # string. ``evaluate_prediction`` runs ``ast.literal_eval`` on the
+            # ground-truth string and reduces over the resulting candidate
+            # list, so we store a python-literal repr of the alias list when
+            # there is more than one.
             answer_str: str | None
-            if answers:
-                answer_str = answers[0] if len(answers) == 1 else " | ".join(map(str, answers))
-            else:
+            if not answers:
                 answer_str = None  # test split
+            elif len(answers) == 1:
+                answer_str = str(answers[0])
+            else:
+                answer_str = repr([str(a) for a in answers])
             questions.append(
                 Question(
                     question_id=str(row["questionId"]),
@@ -227,6 +243,7 @@ def load_mp_docvqa_documents(
                 images=images,
                 questions=questions,
                 page_texts=_load_ocr_texts(doc_id, len(images), ocr_dir),
+                bm25_dir=_bm25_dir_for(split),
             )
         )
 
