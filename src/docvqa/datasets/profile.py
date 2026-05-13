@@ -28,7 +28,11 @@ from typing import Callable, Optional
 
 from docvqa.data import Question
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_category_tips
+from docvqa.prompts import (
+    ANSWER_FORMATTING_RULES,
+    get_baseline_category_tips,
+    get_category_tips,
+)
 
 ScoreFn = Callable[[str, Optional[str], Question], tuple[bool, str]]
 TipsFn = Callable[[str], str]
@@ -71,6 +75,10 @@ class DatasetProfile:
     name: str
     answer_formatting_rules: str = ANSWER_FORMATTING_RULES
     category_tips_fn: TipsFn = field(default_factory=lambda: get_category_tips)
+    # Separate tips for the raw-VLM baseline — DocVQA-2026 tunes these
+    # differently than the scaffold tips. For benchmarks with a single
+    # doc category, both are ``_no_tips``.
+    baseline_category_tips_fn: TipsFn = field(default_factory=lambda: get_baseline_category_tips)
     score_fn: ScoreFn = field(default_factory=lambda: _anls_score)
     question_format_hint_fn: HintFn | None = None
 
@@ -100,6 +108,7 @@ MP_DOCVQA_PROFILE = DatasetProfile(
     name="mp-docvqa",
     answer_formatting_rules=MP_DOCVQA_FORMATTING,
     category_tips_fn=_no_tips,
+    baseline_category_tips_fn=_no_tips,
 )
 
 
@@ -167,6 +176,7 @@ MMLONGBENCH_PROFILE = DatasetProfile(
     name="mmlongbench-doc",
     answer_formatting_rules=MMLB_FORMATTING,
     category_tips_fn=_no_tips,
+    baseline_category_tips_fn=_no_tips,
     score_fn=_mmlb_judge_score,
     question_format_hint_fn=_mmlb_question_hint,
 )

@@ -1,0 +1,6 @@
+_target_: docvqa.solvers.no_loop_multi_da_solver.create_no_loop_multi_da_program
+dataset: ${data.dataset}
+profile_name: null
+vlm: ${vlm}
+question_concurrency: 4
+max_pages: 10
