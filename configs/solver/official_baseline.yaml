@@ -1,0 +1,6 @@
+_target_: docvqa.solvers.official_baseline_solver.create_official_baseline_program
+vlm: ${vlm}
+question_concurrency: 4
+# null = send all pages (matches the kit's Gemini/GPT baselines on the
+# results table). Set an integer to truncate (e.g. for API-size limits).
+max_pages: null
