@@ -1,0 +1,11 @@
+_target_: docvqa.solvers.flat_solo_da_solver.create_flat_solo_da_program
+# Profile auto-derived from the dataset id; override with profile_name if needed.
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 30
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+vlm_cropping: true
+use_search: true

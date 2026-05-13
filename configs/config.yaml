@@ -12,6 +12,9 @@ data:
   doc_ids: null
   doc_ids_file: null
   categories: null
+  # When true, the runner uses the dataset profile's score_fn instead
+  # of the ANLS-based default (e.g. Qwen judge for MMLongBench-Doc).
+  use_profile_scoring: false
 
 # Run settings
 run_id: null

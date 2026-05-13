@@ -9,11 +9,22 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Callable, Optional
 
 import logfire
 
-from docvqa.data import Document
+from docvqa.data import Document, Question
 from docvqa.metrics import evaluate_prediction
+
+
+ScoreFn = Callable[[str, Optional[str], Question], tuple[bool, str]]
+
+
+def _default_score(pred: str, gt: str | None, question: Question) -> tuple[bool, str]:
+    """ANLS-based default scorer (DocVQA-2026 behavior)."""
+    if gt is None:
+        return False, pred.strip()
+    return evaluate_prediction(pred, gt)
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +166,7 @@ def _save_summary_md(
 
 
 def _solve_document(
-    solver, document: Document
+    solver, document: Document, score_fn: ScoreFn = _default_score,
 ) -> tuple[DocumentResult, dict[str, list[dict]]]:
     """Run solver on a single document and evaluate predictions."""
     start = time.monotonic()
@@ -170,7 +181,7 @@ def _solve_document(
     for q in document.questions:
         pred = predictions.get(q.question_id, "Unknown")
         if q.answer is not None:
-            is_correct, extracted = evaluate_prediction(pred, q.answer)
+            is_correct, extracted = score_fn(pred, q.answer, q)
         else:
             is_correct, extracted = None, pred.strip()
 
@@ -238,11 +249,18 @@ def evaluate(
     output_dir: Path,
     max_concurrency: int = 1,
     task_timeout_seconds: int = 600,
+    score_fn: ScoreFn | None = None,
 ) -> dict:
     """Run evaluation on all documents with persistence and resumability.
 
+    ``score_fn`` lets callers swap the scoring function per dataset
+    (e.g. Qwen-judge for MMLongBench-Doc); defaults to the ANLS-based
+    :func:`docvqa.metrics.evaluate_prediction`.
+
     Returns summary dict with metrics.
     """
+    if score_fn is None:
+        score_fn = _default_score
     tasks_dir = output_dir / "tasks"
     tasks_dir.mkdir(parents=True, exist_ok=True)
 
@@ -269,7 +287,7 @@ def evaluate(
             doc_span.set_attribute("num_pages", len(doc.images))
             # Use a thread with timeout to prevent hung API calls
             with ThreadPoolExecutor(max_workers=1) as timeout_pool:
-                future = timeout_pool.submit(_solve_document, solver, doc)
+                future = timeout_pool.submit(_solve_document, solver, doc, score_fn)
                 try:
                     result, trajectories = future.result(timeout=task_timeout_seconds)
                 except Exception as e:

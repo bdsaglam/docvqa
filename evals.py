@@ -27,6 +27,7 @@ import litellm
 from omegaconf import DictConfig, OmegaConf
 
 from docvqa.data import load_documents
+from docvqa.datasets.profile import get_profile
 from docvqa.runner import evaluate
 from docvqa.types import LMConfig
 
@@ -94,10 +95,25 @@ def main(cfg: DictConfig) -> None:
         documents = [d for d in documents if d.doc_category in categories]
     print(f"Loaded {len(documents)} documents with {sum(len(d.questions) for d in documents)} questions")
 
-    # Run evaluation
+    # Run evaluation. The dataset profile drives scoring (ANLS for
+    # DocVQA-2026 / MP-DocVQA, Qwen judge for MMLongBench-Doc). Opt in
+    # via cfg.data.use_profile_scoring=true; otherwise fall back to
+    # ANLS for any dataset (matches historical behavior).
     max_concurrency = cfg.get("max_concurrency", 1)
     task_timeout = cfg.get("task_timeout_seconds", 600)
-    summary = evaluate(solver, documents, run_dir, max_concurrency=max_concurrency, task_timeout_seconds=task_timeout)
+    score_fn = None
+    if cfg.data.get("use_profile_scoring"):
+        profile = get_profile(cfg.data.dataset)
+        score_fn = profile.score_fn
+        print(f"Profile scoring ON: {profile.name} ({profile.score_fn.__name__})")
+    summary = evaluate(
+        solver,
+        documents,
+        run_dir,
+        max_concurrency=max_concurrency,
+        task_timeout_seconds=task_timeout,
+        score_fn=score_fn,
+    )
 
     # Print results
     print("\n" + "=" * 60)
