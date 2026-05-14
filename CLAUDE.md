@@ -56,15 +56,56 @@ python scripts/report.py --all --min-questions 80 --recent 7
 4. **High variance**: ~3-4% std across trials — always run 3+ trials
 5. **Per-category tips** in `src/docvqa/prompts.py` help precision-heavy categories
 
+## Cross-benchmark methodology rule (critical)
+
+When reporting baseline-vs-scaffold on **any benchmark other than
+DocVQA-2026**, the baseline must use a **dataset-aware profile** and
+a **fair page budget**, or the scaffold lift double-counts prompt fit
++ truncation as scaffold capability.
+
+Concretely:
+
+- Use `*_da` solver variants (`solver=no_loop_multi_da`,
+  `solver=flat_solo_da`, `solver=leanest_solo_da`). They pull from
+  `docvqa.datasets.profile.get_profile(dataset)` for prompt, tips,
+  per-question hint, and scorer.
+- Pass `data.use_profile_scoring=true` so the runner uses the
+  profile's `score_fn` (e.g. Qwen judge for MMLongBench) instead of
+  ANLS.
+- On long-doc benchmarks, override `solver.max_pages=80` (or the
+  loader's `DEFAULT_MAX_PAGES`) so the raw-VLM baseline can see the
+  evidence pages. The default `max_pages=10` is fine for short-doc
+  benchmarks.
+
+**Empirical evidence (2026-05-14, Qwen 3.5 27B, 200Q val samples):**
+
+| Benchmark | Legacy lift | Fair lift (DA + pages) | Δ from baseline crippling |
+|---|---|---|---|
+| MP-DocVQA (ANLS) | −4.88pp (leanest "regresses") | **~0pp** | +5pp |
+| MMLongBench-Doc (judge) | +26.43pp (leanest) | **+14.81pp** | +11.6pp |
+| MMLongBench-Doc (judge) | +26.60pp (flat_solo) | **+16.84pp** | +9.8pp |
+
+About half the MMLongBench legacy headline came from baseline
+crippling (+5pp from max_pages=10→80, +8pp from DocVQA-2026 prompt →
+MMLongBench profile). The MP-DocVQA legacy "regression" was 100%
+prompt mismatch.
+
+See `docs/experiments/mp-docvqa-qwen27b.md` and
+`docs/experiments/mmlongbench-doc-qwen27b.md` for the full closed-loop
+numbers and `src/docvqa/datasets/profile.py` for the registered
+profiles.
+
 ## Project Structure
 
 | File | Purpose |
 |------|---------|
 | `evals.py` | Hydra entry point |
 | `src/docvqa/solvers/` | Solver implementations |
-| `src/docvqa/prompts.py` | Answer formatting rules + per-category tips |
+| `src/docvqa/solvers/*_da_solver.py` | Dataset-aware variants (profile-driven) |
+| `src/docvqa/datasets/profile.py` | `DatasetProfile` + `get_profile(dataset_id)` |
+| `src/docvqa/prompts.py` | DocVQA-2026 answer-formatting rules + per-category tips |
 | `src/docvqa/data.py` | Dataset loading, OCR integration |
-| `src/docvqa/runner.py` | Eval runner (concurrent, resumable) |
+| `src/docvqa/runner.py` | Eval runner (concurrent, resumable; accepts profile `score_fn`) |
 | `src/docvqa/metrics.py` | ANLS evaluation |
 | `scripts/report.py` | Results report from run IDs |
 
