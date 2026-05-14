@@ -32,6 +32,12 @@ Each experiment file has these sections:
 - When a sweep has multiple cells (e.g. turn budget points), put all
   cells in one file with one section per cell — they're a single
   experiment.
+- **Cross-benchmark cells (anything not DocVQA-2026):** use the
+  dataset-aware solver variants (`*_da`) and pass
+  `data.use_profile_scoring=true`, or the scaffold lift will absorb
+  prompt-mismatch + truncation gains that are equally available to
+  the baseline. See the **Cross-benchmark methodology rule** section
+  in `CLAUDE.md` for the rationale and the 2026-05-14 evidence.
 
 ## Index
 
