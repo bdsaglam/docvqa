@@ -51,5 +51,5 @@ Each experiment file has these sections:
 | [qwen-9b-baseline-scaffold.md](qwen-9b-baseline-scaffold.md) | done (3+3 val trials, lift +6.25pp) |
 | [gemma-4-e4b-baseline-scaffold.md](gemma-4-e4b-baseline-scaffold.md) | done (3+3 val trials, lift +5.83pp) |
 | [gemma-4-31b-baseline-scaffold.md](gemma-4-31b-baseline-scaffold.md) | done (3+3 val trials, lift +25.00pp; vllm triage required) |
-| [mp-docvqa-qwen27b.md](mp-docvqa-qwen27b.md) | done (3+3+3 val trials: no_loop / leanest / flat_solo. leanest −4.88pp, flat_solo −0.65pp n.s. — OCR rescues short-doc scaffold) |
-| [mmlongbench-doc-qwen27b.md](mmlongbench-doc-qwen27b.md) | done (3+3+3 val trials: leanest +26.43pp judge, flat_solo +0.17pp over leanest n.s. — OCR redundant when active perception works) |
+| [mp-docvqa-qwen27b.md](mp-docvqa-qwen27b.md) | done (9 legacy + 9 DA val trials. After DA: all 3 solvers ~73-74% ANLS; scaffold delta = 0. Legacy "regression" was prompt mismatch.) |
+| [mmlongbench-doc-qwen27b.md](mmlongbench-doc-qwen27b.md) | done (9 legacy + 3 ceiling + 9 DA val trials. Legacy lift +26.43pp; fair lift +16.84pp judge. About half the headline was baseline crippling.) |

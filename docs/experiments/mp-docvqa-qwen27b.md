@@ -194,3 +194,61 @@ Sample, loader, dispatch, chain scripts, and OCR data all committed.
   on 1pp docs (−11.4pp); scaffold *wins* +3.4pp on the 11-20pp bucket.
 - flat_solo (scaffold + OCR) matches the baseline (n.s.) — OCR rescues
   +4.23pp on top of leanest. Confirms OCR-as-stability-anchor.
+
+## Dataset-aware re-run (2026-05-13/14)
+
+The original chains above all used the DocVQA-2026 default prompt
+(`ANSWER_FORMATTING_RULES` + DocVQA-2026 category tips). Those rules
+strip commas from numbers, normalize dates to ISO, etc., which silently
+mangled MP-DocVQA's literal-span answers. After rebuilding each solver
+with a per-dataset profile (`MP_DOCVQA_PROFILE`: preserve document's
+own number/currency/date representation, no category tips) and an
+ANLS scorer, all three solvers were re-run on the same 200Q sample.
+
+### Per-trial scores (DA prompts)
+
+| Solver | t1 | t2 | t3 | Mean ± Std |
+|---|---|---|---|---|
+| `no_loop_multi_da` | 73.66 | 75.12 | 73.66 | **74.15% ± 0.84pp** |
+| `leanest_solo_da` | 75.12 | 72.20 | 70.24 | **72.52% ± 2.45pp** |
+| `flat_solo_da` | 73.66 | 70.73 | 75.12 | **73.17% ± 2.30pp** |
+
+### Old prompt vs DA prompt (mean)
+
+| Solver | Legacy prompt | DA prompt | Δ |
+|---|---|---|---|
+| no_loop_multi | 63.74% ± 0.28pp | **74.15% ± 0.84pp** | **+10.41pp** |
+| leanest_solo | 58.86% ± 2.31pp | **72.52% ± 2.45pp** | **+13.66pp** |
+| flat_solo | 63.09% ± 0.97pp | **73.17% ± 2.30pp** | **+10.08pp** |
+
+The DA prompt unlocks ~10–14pp on every solver. The DocVQA-2026
+formatting rules were the limiting factor on MP-DocVQA, not the
+scaffold's reasoning capability.
+
+### Closed-loop scaffold vs baseline (DA prompts)
+
+| Comparison | Δ | Welch t | Significance |
+|---|---|---|---|
+| `leanest_solo_da` vs `no_loop_multi_da` | −1.63pp | t≈−1.1 | n.s. |
+| `flat_solo_da` vs `no_loop_multi_da` | −0.98pp | t≈−0.7 | n.s. |
+| `flat_solo_da` vs `leanest_solo_da` (OCR effect) | +0.65pp | t≈0.3 | n.s. |
+
+**On MP-DocVQA, neither the scaffold nor OCR helps once the baseline
+has a fair prompt.** The "scaffold regression" and "OCR rescues
+scaffold" stories from the legacy run were both prompt-mismatch
+artifacts, equally available to the baseline.
+
+This is consistent with the mechanism described in
+[[feedback_scaffold_lift_scales_with_doc_length]]: MP-DocVQA's short
+docs (67% ≤5pp) don't exercise the scaffold's value props (page
+routing, active perception, iterative reasoning). When the baseline
+already sees the whole doc in one shot, the scaffold's iteration
+overhead can't pay for itself.
+
+### Variance
+
+- Baseline std 0.84pp — near-deterministic.
+- Scaffold stds 2.30pp / 2.45pp — ~3× higher. Three flat_solo_da
+  trials span 70.7-75.1%; two leanest_solo_da trials underperformed
+  every baseline trial. Even when expected accuracy matches the
+  baseline, individual trials spread further.

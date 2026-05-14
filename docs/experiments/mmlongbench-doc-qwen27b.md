@@ -209,7 +209,7 @@ multi-iteration look loops). Total chain: 3×76 + 3×171 ≈ 12.4h wall.
   this is genuine: per-question predictions differ (verified
   via diff) but counts coincide.
 
-## Status
+## Status (legacy run)
 
 Done. 3 baseline + 3 leanest_solo + 3 flat_solo trials = 9 cells, all
 scored with both ANLS and the Qwen judge. Headlines:
@@ -220,7 +220,67 @@ scored with both ANLS and the Qwen judge. Headlines:
 - **OCR does not add to the scaffold here** (Δ flat_solo vs leanest
   +0.17pp judge, n.s.). The scaffold's `look()` channel already
   captures the page evidence that OCR would.
-- Combined with MP-DocVQA (where the scaffold *regresses* on short
-  docs but OCR rescues it), the picture is: **OCR helps when active
-  perception isn't useful (short docs); active perception subsumes
-  OCR when docs are long enough to need page routing.**
+
+## Ceiling pass + dataset-aware re-run (2026-05-13/14)
+
+The legacy baseline at `max_pages=10` is unfair on a 47pp-avg
+benchmark, and the legacy prompt is DocVQA-2026's (no MMLongBench
+format hint, mis-tuned rules). Two follow-up passes correct each:
+
+1. **Ceiling-pass**: `no_loop_multi` (old prompt) with `max_pages=80`.
+   Tests how much of the legacy +26pp lift is a page-budget artifact.
+2. **Dataset-aware**: all three solvers re-run with
+   `MMLONGBENCH_PROFILE` (5-format rules + per-question format hint,
+   no DocVQA-2026 category tips, judge as `score_fn`).
+   Tests how much is a prompt artifact.
+
+### Per-trial judge accuracy
+
+| Run | t1 | t2 | t3 | Mean ± Std |
+|---|---|---|---|---|
+| no_loop_multi (legacy, max_pages=10) | 33.33 | 33.33 | 34.85 | 33.84% ± 0.87pp |
+| no_loop_multi (legacy, **max_pages=80**) | 38.89 | 39.90 | 37.88 | **38.89% ± 1.01pp** |
+| no_loop_multi_da (**DA + max_pages=80**) | 46.46 | 47.47 | 46.97 | **46.97% ± 0.51pp** |
+| leanest_solo (legacy) | 61.62 | 58.08 | 61.11 | 60.27% ± 1.91pp |
+| leanest_solo_da (DA) | 61.11 | 63.13 | 61.11 | **61.78% ± 1.17pp** |
+| flat_solo (legacy) | 60.61 | 60.10 | 60.61 | 60.44% ± 0.29pp |
+| flat_solo_da (DA) | 63.64 | 63.13 | 64.65 | **63.81% ± 0.76pp** |
+
+### Decomposing the legacy lift
+
+| Δ source | Δ on baseline | Δ on lift |
+|---|---|---|
+| Legacy → max_pages=80 | +5.05pp (33.84 → 38.89) | −5.05pp |
+| max_pages=80 → DA prompt | +8.08pp (38.89 → 46.97) | −8.08pp |
+| Subtotal: baseline gains from fair eval | **+13.13pp** | **−13.13pp** |
+
+So the **revised scaffold lift on MMLongBench-Doc** (vs the fair
+baseline `no_loop_multi_da` @ pages=80) is:
+
+| Comparison | Mean Δ | Welch t |
+|---|---|---|
+| `leanest_solo_da` vs `no_loop_multi_da` | **+14.81pp** | t≈18.8 |
+| `flat_solo_da` vs `no_loop_multi_da` | **+16.84pp** | t≈22.7 |
+| `flat_solo_da` vs `leanest_solo_da` (OCR effect) | +2.03pp | t≈2.5 |
+
+**Still significant**, but materially smaller than the legacy +26.43pp
+headline. About half the legacy lift was the baseline being crippled
+by max_pages=10 + a mismatched prompt; the other half is real
+scaffold capability.
+
+OCR's incremental contribution on top of the scaffold is +2pp on the
+DA chain (n.s. at α=0.05 with this n, but the sign is consistent
+across trials) — still small. The active-perception channel
+(`look()`) does most of the work; OCR/BM25 is a minor adjunct on
+long-doc benchmarks.
+
+## Status (closed-loop)
+
+Done. 9 legacy + 3 ceiling-pass + 9 DA cells = 21 cells across 4
+solver/prompt configurations.
+
+**Final headline**: scaffold delivers **+16.84pp judge** over a fair
+DA baseline on MMLongBench-Doc — still the largest scaffold lift we've
+measured, still consistent with the "scaffold lift scales with
+effective document length" mechanism, but the absolute magnitude is
+~10pp lower than the legacy run claimed.

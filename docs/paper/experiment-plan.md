@@ -83,16 +83,71 @@ shelved until RVLM verification finishes.
 
 ### Qwen 27B results — 200Q val sample per benchmark, n=3 trials each
 
-| Benchmark | Baseline (no_loop_multi) | Scaffold no-OCR (leanest_solo) | Scaffold +OCR (flat_solo) |
-|---|---|---|---|
-| MP-DocVQA val | **63.74% ± 0.28pp** (ANLS) | 58.86% ± 2.31pp (**−4.88pp** vs base, t=−3.64) | 63.09% ± 0.97pp (−0.65pp vs base, n.s.) |
-| MMLongBench-Doc val (ANLS) | 15.32% ± 0.29pp | 30.98% ± 1.62pp (**+15.66pp**, t=16.4) | 31.48% ± 0.77pp (+16.16pp, t=27.5) |
-| MMLongBench-Doc val (judge) | 33.84% ± 0.87pp | 60.27% ± 1.91pp (**+26.43pp**, t=21.8) | 60.44% ± 0.29pp (+26.60pp, t=49.8) |
+We report two passes per benchmark:
 
-**OCR's role flips with doc length.** On MP-DocVQA, OCR *rescues* the
-scaffold (+4.23pp leanest→flat_solo, restores baseline parity). On
-MMLongBench-Doc, OCR adds essentially nothing (+0.17pp judge, n.s.) —
-the active-perception `look()` channel already captures what OCR would.
+- **Legacy**: original chains with DocVQA-2026's prompt
+  (`ANSWER_FORMATTING_RULES` + DocVQA-2026 category tips), and the
+  default `no_loop_multi max_pages=10`. Numbers below in italics.
+- **DA (closed-loop)**: per-dataset profile
+  (:mod:`docvqa.datasets.profile`) drives answer-formatting, tips,
+  per-question format hint, and scorer; baseline on MMLongBench-Doc
+  uses `max_pages=80` to match the loader's render cap.
+
+The DA pass is the comparison that isolates *scaffold capability*
+from *prompt mismatch + truncation*.
+
+#### MP-DocVQA val (ANLS)
+
+| Solver | Legacy | DA |
+|---|---|---|
+| no_loop_multi | *63.74% ± 0.28pp* | **74.15% ± 0.84pp** |
+| leanest_solo (no OCR) | *58.86% ± 2.31pp (−4.88pp)* | 72.52% ± 2.45pp (−1.63pp, n.s.) |
+| flat_solo (+OCR) | *63.09% ± 0.97pp (−0.65pp, n.s.)* | 73.17% ± 2.30pp (−0.98pp, n.s.) |
+
+**Legacy → DA shifts the baseline by +10.41pp.** The DocVQA-2026
+rules (strip commas, ISO dates, etc.) silently mangled MP-DocVQA's
+literal-span answers. After the prompt fix, **all three solvers
+converge to ~73-74%; neither the scaffold nor OCR adds anything
+significant**.
+
+#### MMLongBench-Doc val (judge)
+
+| Solver | Legacy | DA |
+|---|---|---|
+| no_loop_multi | *33.84% ± 0.87pp* (pages=10) | **46.97% ± 0.51pp** (pages=80) |
+| leanest_solo (no OCR) | *60.27% ± 1.91pp (+26.43pp)* | 61.78% ± 1.17pp (**+14.81pp**, t=18.8) |
+| flat_solo (+OCR) | *60.44% ± 0.29pp (+26.60pp)* | 63.81% ± 0.76pp (**+16.84pp**, t=22.7) |
+
+**Baseline gains +13.13pp from a fair eval** (max_pages=10→80 = +5pp;
+DocVQA-2026 prompt → MMLongBench-Doc profile = +8pp). Scaffold lift
+shrinks from the legacy +26pp to a fair **+16.84pp** — still the
+largest scaffold lift we've measured, still highly significant, but
+about half the legacy headline was an evaluation artifact. OCR's
+incremental contribution over the scaffold is +2.03pp (consistent
+sign across all 3 trials).
+
+### Revised key finding
+
+**Scaffold lift is real and scales with effective document length** —
+but the legacy numbers significantly *overstated* its magnitude on
+both benchmarks by holding the baseline to an unfair prompt:
+
+- MP-DocVQA (mostly ≤5pp docs): scaffold delta = 0 after fair eval.
+  The "regression" was a prompt mismatch.
+- MMLongBench-Doc (47pp avg): scaffold delta = +16.84pp judge, with
+  ~+2pp incremental from OCR on top. About 35% of the legacy +26pp
+  headline came from baseline crippling.
+
+Practically: for any new benchmark we report on in the paper, we
+should run the baseline with a dataset-aware profile + a fair page
+budget before claiming a scaffold lift, or the comparison risks
+double-counting the prompt-fit + truncation gains as scaffold
+capability.
+
+Full per-trial tables, per-format/per-category breakdowns, and
+variance analysis:
+- `docs/experiments/mp-docvqa-qwen27b.md`
+- `docs/experiments/mmlongbench-doc-qwen27b.md`
 
 Full per-trial / per-format / per-category breakdowns:
 - `docs/experiments/mp-docvqa-qwen27b.md`
