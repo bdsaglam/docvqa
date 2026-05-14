@@ -107,8 +107,25 @@ from *prompt mismatch + truncation*.
 **Legacy → DA shifts the baseline by +10.41pp.** The DocVQA-2026
 rules (strip commas, ISO dates, etc.) silently mangled MP-DocVQA's
 literal-span answers. After the prompt fix, **all three solvers
-converge to ~73-74%; neither the scaffold nor OCR adds anything
-significant**.
+converge to ~73-74% in aggregate; neither the scaffold nor OCR adds
+anything significant pooled**.
+
+**But the per-page-bucket cut tells a different story** (n=3 trials,
+mean accuracy):
+
+| Bucket | n | baseline | leanest_da | flat_da | Δ flat |
+|---|---|---|---|---|---|
+| 1pp | 70 | 63.3% | 56.7% | 59.5% | −3.81pp |
+| 2-5pp | 66 | 84.8% | 83.8% | 80.8% | −4.04pp |
+| 6-10pp | 30 | 86.7% | 77.8% | 80.0% | −6.67pp |
+| 11-20pp | 39 | **65.8%** | 77.8% | 79.5% | **+13.68pp** |
+
+The aggregate ~0 lift is a bucket-mix artifact. The scaffold *wins*
+**+13.68pp on the 11-20pp bucket** — exactly where the baseline's
+`max_pages=10` truncation starts biting (baseline accuracy drops from
+~85% on shorter buckets to 65.8% on 11-20pp). The mechanism survives
+the prompt fix; it just doesn't show in the pooled metric on a
+benchmark with 67% docs ≤5pp.
 
 #### MMLongBench-Doc val (judge)
 
@@ -132,11 +149,16 @@ sign across all 3 trials).
 but the legacy numbers significantly *overstated* its magnitude on
 both benchmarks by holding the baseline to an unfair prompt:
 
-- MP-DocVQA (mostly ≤5pp docs): scaffold delta = 0 after fair eval.
-  The "regression" was a prompt mismatch.
+- MP-DocVQA aggregate ANLS: scaffold delta = 0 after fair eval. **But
+  per-page-bucket, the scaffold still wins +13.68pp on the 11-20pp
+  bucket** where the baseline's max_pages=10 truncation bites — the
+  mechanism is preserved; it just gets diluted in the aggregate by the
+  67% of questions on docs ≤5pp.
 - MMLongBench-Doc (47pp avg): scaffold delta = +16.84pp judge, with
-  ~+2pp incremental from OCR on top. About 35% of the legacy +26pp
-  headline came from baseline crippling.
+  ~+2pp incremental from OCR on top. **Per-category, the lift is
+  dominated by Financial reports (baseline 0% → flat 62.5%, +62.5pp).
+  Excluding that category the aggregate lift is ~0.** Same
+  mechanism: scaffold helps when the raw VLM can't see the evidence.
 
 Practically: for any new benchmark we report on in the paper, we
 should run the baseline with a dataset-aware profile + a fair page
