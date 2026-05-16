@@ -1,10 +1,10 @@
 _target_: docvqa.solvers.official_baseline_solver.create_official_baseline_program
 vlm: ${vlm}
 question_concurrency: 4
-# Qwen 3.5 27B has a 131k context; sending all pages on long docs
-# overflows (saw 180k+ tokens on business_report/comics docs).
-# Default to first 10 pages — matches `no_loop_multi`'s convention
-# and what the underlying model can actually consume. The kit's
-# Gemini/GPT baselines use larger context windows so they don't
-# need this; document the deviation in the experiment file.
-max_pages: 10
+# null = send all pages, matching the kit's published Gemini/GPT
+# baselines. The kit's stated policy is "if a sample fails because
+# input is too large, it counts as a failure" (README §Results).
+# On Qwen 27B (131k context) this causes ~45/80 BadRequestErrors on
+# val long docs that get scored as 'Unknown' — that IS the kit's
+# expected behaviour for a model with this context budget.
+max_pages: null
