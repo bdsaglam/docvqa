@@ -1,6 +1,10 @@
 _target_: docvqa.solvers.official_baseline_solver.create_official_baseline_program
 vlm: ${vlm}
 question_concurrency: 4
-# null = send all pages (matches the kit's Gemini/GPT baselines on the
-# results table). Set an integer to truncate (e.g. for API-size limits).
-max_pages: null
+# Qwen 3.5 27B has a 131k context; sending all pages on long docs
+# overflows (saw 180k+ tokens on business_report/comics docs).
+# Default to first 10 pages — matches `no_loop_multi`'s convention
+# and what the underlying model can actually consume. The kit's
+# Gemini/GPT baselines use larger context windows so they don't
+# need this; document the deviation in the experiment file.
+max_pages: 10
