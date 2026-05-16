@@ -93,15 +93,36 @@ def _extract_final_answer(raw: str) -> str:
     return tail
 
 
+def _downscale(p: PILImage.Image, max_pixels: int) -> PILImage.Image:
+    """Resize page to fit within `max_pixels` total, preserving aspect ratio.
+    Returns original if already under the budget."""
+    cur = p.size[0] * p.size[1]
+    if cur <= max_pixels:
+        return p
+    scale = (max_pixels / cur) ** 0.5
+    new_w = max(1, int(p.size[0] * scale))
+    new_h = max(1, int(p.size[1] * scale))
+    return p.resize((new_w, new_h), PILImage.Resampling.LANCZOS)
+
+
 def _build_messages(
     question: str,
     pages: list[PILImage.Image],
+    max_image_pixels: int | None = None,
 ) -> list[dict[str, Any]]:
-    """Single user message: master prompt + page images + question."""
+    """Single user message: master prompt + page images + question.
+
+    If `max_image_pixels` is set, each page is downscaled to fit that
+    pixel budget. This mirrors what closed-frontier image APIs do
+    internally (Gemini, GPT) so token counts stay in line. Qwen vLLM
+    does not auto-downscale, so we do it here.
+    """
     parts: list[dict[str, Any]] = [
         {"type": "text", "text": MASTER_PROMPT},
     ]
     for p in pages:
+        if max_image_pixels is not None:
+            p = _downscale(p, max_image_pixels)
         formatted = dspy.Image(p).format()
         if isinstance(formatted, list):
             parts.extend(formatted)
@@ -123,11 +144,14 @@ class OfficialBaselineProgram:
         vlm_lm: dspy.LM,
         question_concurrency: int = 4,
         max_pages: int | None = None,
+        max_image_pixels: int | None = None,
     ):
         self.vlm_lm = vlm_lm
         self.question_concurrency = question_concurrency
         # max_pages=None => send all pages. Set a value to truncate.
         self.max_pages = max_pages
+        # max_image_pixels=None => no resize. Set to e.g. 1.5e6 to cap.
+        self.max_image_pixels = max_image_pixels
 
     def solve_document(
         self, document: Document
@@ -164,7 +188,7 @@ class OfficialBaselineProgram:
                     reraise=True,
                 )
                 def _call() -> str:
-                    messages = _build_messages(q.question, pages)
+                    messages = _build_messages(q.question, pages, max_image_pixels=self.max_image_pixels)
                     response: Any = self.vlm_lm.forward(messages=messages)
                     msg = response.choices[0].message
                     text = msg.content
@@ -242,6 +266,7 @@ def create_official_baseline_program(
     vlm: dict[str, Any] | None = None,
     question_concurrency: int = 4,
     max_pages: int | None = None,
+    max_image_pixels: int | None = None,
 ) -> OfficialBaselineProgram:
     vlm_config = (
         LMConfig(
@@ -264,4 +289,5 @@ def create_official_baseline_program(
         vlm_lm=vlm_lm,
         question_concurrency=question_concurrency,
         max_pages=max_pages,
+        max_image_pixels=max_image_pixels,
     )

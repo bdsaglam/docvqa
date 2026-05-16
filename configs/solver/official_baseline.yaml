@@ -1,11 +1,14 @@
 _target_: docvqa.solvers.official_baseline_solver.create_official_baseline_program
 vlm: ${vlm}
 question_concurrency: 4
-# Test split docs are longer than val on average; the strict kit-
-# faithful setting (max_pages=null) produced 160/160 context-overflow
-# failures on test t2 - zero signal. We pivoted to 10-page truncation
-# for the test runs to get a useful number. The val runs at
-# max_pages=null are preserved as the kit-faithful interpretation
-# (21.67% +/- 1.91pp, n=3); test runs use max_pages=10 below.
-# See `docs/experiments/official-baseline-qwen27b.md` for the rationale.
+# Test docs have individual pages up to 246M pixels (maps_5 p0).
+# Even max_pages=10 at native resolution overflows Qwen's 131k
+# context on test - 160/160 errors on t1. The kit's published
+# Gemini/GPT baselines implicitly downscale via their image APIs;
+# Qwen vLLM does not. We downscale per page here to 1.5M pixels
+# (~1200x1250) which is comparable to what closed-frontier image
+# APIs target, AND truncate to first 10 pages.
+# Val kit-faithful results (max_pages=null, no downscale) are
+# preserved as the strict-kit interpretation: 21.67% +/- 1.91pp, n=3.
 max_pages: 10
+max_image_pixels: 1500000
