@@ -59,3 +59,5 @@ Each experiment file has these sections:
 | [gemma-4-31b-baseline-scaffold.md](gemma-4-31b-baseline-scaffold.md) | done (3+3 val trials, lift +25.00pp; vllm triage required) |
 | [mp-docvqa-qwen27b.md](mp-docvqa-qwen27b.md) | done (9 legacy + 9 DA val trials. After DA: all 3 solvers ~73-74% ANLS; scaffold delta = 0. Legacy "regression" was prompt mismatch.) |
 | [mmlongbench-doc-qwen27b.md](mmlongbench-doc-qwen27b.md) | done (9 legacy + 3 ceiling + 9 DA val trials. Legacy lift +26.43pp; fair lift +16.84pp judge. About half the headline was baseline crippling.) |
+| [leanest-test-matched-baseline.md](leanest-test-matched-baseline.md) | done (8 trials, t1 excluded); SC-8 voted test = 36.00% (ICDAR) |
+| [official-baseline-qwen27b.md](official-baseline-qwen27b.md) | val done (n=3, 21.67% ± 1.91pp); test in progress |
