@@ -97,7 +97,46 @@ under the kit's single-call multi-image setup."*
 - BadRequestError → `Unknown` with empty trajectory (visible as
   `trajectories[qid] = []` in result.json)
 
+## Test runs: not viable on Qwen 27B with this method
+
+Multiple attempts (see `output/runs/_excluded.official-baseline-3_5-27b-test-*`):
+
+| Attempt | Setup | Result |
+|---|---|---|
+| t1-allpages | `max_pages=null` (kit-faithful), native res | 143/160 context overflows → 92.5% Unknown |
+| t2-allpages | same | **160/160 overflows** → 100% Unknown |
+| t1-maxpages10 | `max_pages=10`, native res | 160/160 overflows (test pages individually exceed budget; maps_5 p0 = 246M px) |
+| t1-timeout | `max_pages=10`, downscale 1.5M px, `c=24` | 160/160 timeouts after 600s (vLLM saturated) |
+| t1-timeout2 | downscale 1.5M, `c=4 qc=1` | 160/160 timeouts |
+| tiny | `max_pages=3`, downscale 500K, `c=4`, 2 docs only | Hung 5+ min with 0 progress |
+
+**Why test is harder than val:**
+- Test has 48 docs vs val's 25, with larger average page sizes
+  (maps_5 single page = 246M pixels)
+- Even aggressive downscaling produces enough tokens that
+  combined `MASTER_PROMPT` reasoning generation × even small
+  concurrency exceeds the litellm 600s timeout
+- The 2-doc tiny-test hanging suggests something more structural
+  (HF dataset load, DSPy/litellm initialization?) — not investigated
+
+**Decision: stop here.** The val n=3 result (21.67% ± 1.91pp,
+GPT-5 Mini's range) is the locked finding. A test version would
+require either:
+- A model with much larger context (Gemini Pro's 1M+) — not what
+  we have
+- Significant solver re-engineering (image pre-processing pipeline,
+  per-request timeout tuning, batched single-image calls) — out of
+  scope for this paper's anchor baseline
+
+The paper narrative carries with val alone: *"Qwen 3.5 27B + the
+kit's official MASTER_PROMPT lands in GPT-5 Mini's neighborhood on
+val (21.67%); scaffolded versions of the same model achieve
+44.69% val / 38.75% test SC-8 by sidestepping the multi-image
+context bottleneck."* That's the comparison the user asked for.
+
 ## Status
 
 - Val: **done** (n=3, 21.67% ± 1.91pp)
-- Test: in progress (t1 running, target n≥3)
+- Test: **abandoned** — methodology not viable on Qwen 27B without
+  significant solver rework; all 7 attempts excluded under
+  `output/runs/_excluded.official-baseline-3_5-27b-test-*`
