@@ -33,6 +33,7 @@ from typing import Any, Callable
 import litellm
 import logfire
 from pydantic_ai import Agent, RunContext, UsageLimits
+from pydantic_ai.exceptions import UsageLimitExceeded
 from pydantic_ai.messages import (
     ModelRequest,
     ModelResponse,
@@ -410,6 +411,7 @@ class PyaiLeanestSoloDAProgram:
 
                             attempt = 0
                             result = None
+                            usage_overrun_messages: list | None = None
                             while True:
                                 try:
                                     result = await agent.run(
@@ -420,25 +422,39 @@ class PyaiLeanestSoloDAProgram:
                                         ),
                                     )
                                     break
+                                except UsageLimitExceeded as e:
+                                    # Agent burned through tool calls without producing a
+                                    # final answer. Salvage the trajectory + log "Unknown".
+                                    logger.warning(
+                                        "PyAI Q %s: tool-call budget exhausted (%d): %s",
+                                        q.question_id, max_iter, e,
+                                    )
+                                    usage_overrun_messages = list(
+                                        getattr(e, "all_messages", lambda: [])()  # type: ignore[attr-defined]
+                                    )
+                                    break
                                 except Exception as e:
                                     if _is_rate_limit(e) and attempt < 3:
                                         wait = min(30 * (2**attempt), 120)
                                         logger.warning(
                                             "Rate limit, retry %d in %ds: %s",
-                                            attempt + 1,
-                                            wait,
-                                            e,
+                                            attempt + 1, wait, e,
                                         )
                                         await asyncio.sleep(wait)
                                         attempt += 1
                                         continue
                                     raise
 
-                            answer = (result.output or "").strip()
+                            if result is None:
+                                answer = "Unknown"
+                                messages_for_traj = usage_overrun_messages or []
+                            else:
+                                answer = (result.output or "").strip()
+                                messages_for_traj = result.all_messages()
                             if not answer:
                                 answer = "Unknown"
 
-                            trajectory = _messages_to_trajectory(result.all_messages())
+                            trajectory = _messages_to_trajectory(messages_for_traj)
 
                             q_span.set_attribute("num_iterations", len(trajectory))
                             q_span.set_attribute("prediction", answer[:200])

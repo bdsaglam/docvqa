@@ -33,14 +33,6 @@ packages = ["src/docvqa"]
 [tool.uv]
 override-dependencies = ["gepa>=0.1.1"]
 
-[tool.uv.workspace]
-members = [
-    "tmp/pydantic-ai-rlm",
-]
-
-[tool.uv.sources]
-pydantic-ai-rlm = { workspace = true, editable = true }
-
 [dependency-groups]
 dev = [
     "huggingface-hub>=0.36.2",
