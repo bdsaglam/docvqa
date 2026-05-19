@@ -224,6 +224,70 @@ for the runner to `git pull` and execute the chain block above.
 
 ## Open questions for follow-up
 
+### Split calibration check (is test intrinsically harder than val?)
+
+The audit assumes the 8-12pp val→test gap we see across configurations
+is mostly *generalization gap* — i.e., prompts overfitting val. But
+part of it could be **split-difficulty gap** if the test split is
+intrinsically harder than val (longer docs, harder questions). The
+audit's gap-narrowing claim only holds cleanly if the splits are
+calibrated.
+
+**Existing evidence (partial):**
+
+- **Gemini 3 Pro (kit baseline)**: val 37.5% / test **37.5%** — exactly
+  symmetric (per `CLAUDE.md:13`, `docs/experiments/flat-solo-test-matched-baseline.md:104`).
+  Strong "splits equal difficulty" signal — but only for a large-context
+  closed-weight frontier model.
+- **Official-baseline (kit MASTER_PROMPT) on Qwen 27B**:
+  val 21.67% ± 1.91pp (n=3, commit `c5b01c3`); test **abandoned after
+  5 attempts** — Qwen 27B's 131k context overflows on test's larger
+  per-doc page sizes (commit `1ebd365`,
+  `docs/experiments/official-baseline-qwen27b.md`). The abandonment
+  itself is a data point: **test docs are physically larger**, which
+  makes test harder for context-bound models even at fixed difficulty
+  per page.
+
+**Clean follow-up experiment (Qwen 27B, both splits, comparable):**
+
+Run `no_loop_multi` (single-call multi-image baseline, Qwen-compatible
+because it uses page-budget truncation) on both val and test with
+identical settings. Existing knobs handle the context issue:
+
+```bash
+for split in val test; do
+  for i in 1 2 3; do
+    uv run python evals.py \
+      lm=qwen-3_5-27b-vllm-local \
+      vlm=qwen-3_5-27b-vllm-local \
+      lm.enable_thinking=false \
+      solver=no_loop_multi solver.max_pages=10 \
+      data.split=$split data.num_samples=null \
+      max_concurrency=16 \
+      run_id=no-loop-multi-3_5-27b-$split-t$i
+  done
+done
+
+# Compare per-trial mean ± std between val (locally scored) and the
+# test SC-3 ICDAR result.
+# Val anchor: docs/experiments/no-loop-multi-image.md
+```
+
+Predictions:
+- If `no_loop_multi` val and test land within ~2pp of each other →
+  splits are calibrated; the 8-12pp val→test gap on scaffolded
+  solvers is overwhelmingly *generalization gap* (prompts + scaffold
+  overfit val).
+- If val−test > ~5pp at the baseline → test is intrinsically harder;
+  some fraction of the scaffold's apparent val→test gap is split
+  difficulty, not overfitting. Audit conclusions weaken proportionally.
+
+This is a ~10h experiment (3 trials × 2 splits × ~1.5h baseline wall).
+Worth doing before locking the audit's "val→test gap narrowed by
+4.2pp on flat_solo" claim into the paper.
+
+### Other open questions
+
 - Does flat_solo's `look()` only / `batch_look()` only (drop `search`,
   drop `page_texts`) variant beat both v1 and v2? — an even cleaner
   ablation of the OCR contribution on flat_solo.
