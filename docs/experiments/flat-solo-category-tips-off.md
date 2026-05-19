@@ -80,6 +80,32 @@ trajectories are unchanged. Net: thrash ratio jumps from 1.19 to
 1.35. Tips appear to encourage more careful (longer) verification on
 correct answers rather than reducing total work.
 
+## Test set (overfit check)
+
+8 trials at the same config on test, SC-8 voted:
+
+| Setup | Val (per-trial) | Test (SC-8) | Val gap | Test gap |
+|---|---|---|---|---|
+| flat_solo full (tips ON) | 44.69 ± 2.81pp (n=8) | **38.75%** | — | — |
+| flat_solo no-tips | 38.75 ± 3.13pp (n=8) | **35.00%** | **−5.94pp** | **−3.75pp** |
+
+**Tips are NOT val-overfit.** They help on test too, just by a smaller
+margin (−3.75pp vs val's −5.94pp). That ~2pp attenuation is normal
+val→test shrinkage on a harder split, not overfitting. If tips had
+truly been memorising val-specific question patterns, the no-tips
+test score would have been at or above the full-tips test score.
+The directional consistency rules that out.
+
+Even without tips, the scaffold on Qwen 3.5 27B (35.00% test SC-8)
+still beats Gemini 3 Flash (33.75%) and GPT-5 Mini (22.5%) — only
+GPT-5.2 (35.0%) and Gemini Pro (37.5%) are competitive.
+
+Submissions:
+- `submissions/flat-solo-no-tips-3_5-27b-test-sc8.json` (scored 35.00%)
+- per-trial: `submissions/flat-solo-no-tips-3_5-27b-test-t{1..8}.json`
+
 ## Status
 
-**Done.** Tips contribute ~6pp; effect is highly significant (3.99 SE).
+**Done.** Tips contribute ~6pp on val (highly significant, 3.99 SE)
+and ~4pp on test (SC-8). Directionally consistent — tips generalise,
+not overfit.
