@@ -1,0 +1,962 @@
+[
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q1",
+    "answer": "24",
+    "full_answer": "24"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q2",
+    "answer": "Average annual sales \u2013 McDonald's restaurants",
+    "full_answer": "Average annual sales \u2013 McDonald's restaurants"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q3",
+    "answer": "Operating margins",
+    "full_answer": "Operating margins"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q5",
+    "answer": "income",
+    "full_answer": "income"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q6",
+    "answer": "0",
+    "full_answer": "0"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_11_q1",
+    "answer": "219",
+    "full_answer": "219"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q2",
+    "answer": "2017-10-25",
+    "full_answer": "2017-10-25"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q3",
+    "answer": "2.125%",
+    "full_answer": "2.125%"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q4",
+    "answer": "63",
+    "full_answer": "63"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q5",
+    "answer": "completed the authorized $5.0 billion of stock repurchases",
+    "full_answer": "completed the authorized $5.0 billion of stock repurchases"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q2",
+    "answer": "Scope 2",
+    "full_answer": "Scope 2"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q3",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q4",
+    "answer": "Develop",
+    "full_answer": "Develop"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q5",
+    "answer": "Coordination and follow up",
+    "full_answer": "Coordination and follow up"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q6",
+    "answer": "Finance and reporting, People",
+    "full_answer": "Finance and reporting, People"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_7_q1",
+    "answer": "adidas AG",
+    "full_answer": "adidas AG"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_7_q2",
+    "answer": "5:03",
+    "full_answer": "5:03"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_9_q1",
+    "answer": "18",
+    "full_answer": "18"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q2",
+    "answer": "7",
+    "full_answer": "7"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q3",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q6",
+    "answer": "irene, tube, crash, 0",
+    "full_answer": "irene, tube, crash, 0"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q10",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q11",
+    "answer": "James",
+    "full_answer": "James"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q12",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q3",
+    "answer": "Bud",
+    "full_answer": "Bud"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q4",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q8",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q9",
+    "answer": "7",
+    "full_answer": "7"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_15_q2",
+    "answer": "WISHHHH",
+    "full_answer": "WISHHHH"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q10",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q11",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q5",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q6",
+    "answer": "WHAM!",
+    "full_answer": "WHAM!"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q7",
+    "answer": "KNOCK",
+    "full_answer": "KNOCK"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q8",
+    "answer": "TRUE",
+    "full_answer": "TRUE"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q9",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q5",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q6",
+    "answer": "HERE'S MY CAR, LET'S GO!",
+    "full_answer": "HERE'S MY CAR, LET'S GO!"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q1",
+    "answer": "57386910120",
+    "full_answer": "57386910120"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q2",
+    "answer": "56",
+    "full_answer": "56"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q3",
+    "answer": "J",
+    "full_answer": "J"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q1",
+    "answer": "30, 31, 32",
+    "full_answer": "30, 31, 32"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q2",
+    "answer": "0",
+    "full_answer": "0"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q3",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q3",
+    "answer": "1015864-167",
+    "full_answer": "1015864-167"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q4",
+    "answer": "MS3127E-18-32SX",
+    "full_answer": "MS3127E-18-32SX"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q5",
+    "answer": "X",
+    "full_answer": "X"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q3",
+    "answer": "1012534-36: INSULATION SLEEVE (HEAT SHRINKABLE), 1012503: COMPOUND, POTTING, POLYURETHANE, 1012504: PRIMER, METAL PARTS, 1012507-4: TAPE, LACING, 1012534-37: SLEEVE, INSULATION (HEAT SHRINKABLE)",
+    "full_answer": "1012534-36: INSULATION SLEEVE (HEAT SHRINKABLE), 1012503: COMPOUND, POTTING, POLYURETHANE, 1012504: PRIMER, METAL PARTS, 1012507-4: TAPE, LACING, 1012534-37: SLEEVE, INSULATION (HEAT SHRINKABLE)"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q5",
+    "answer": "1010965-1",
+    "full_answer": "1010965-1"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q7",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q1",
+    "answer": "6",
+    "full_answer": "6"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q2",
+    "answer": "3, 6, 6",
+    "full_answer": "3, 6, 6"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q3",
+    "answer": "83",
+    "full_answer": "83"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_8_q1",
+    "answer": "11111100",
+    "full_answer": "11111100"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q1",
+    "answer": "1014034",
+    "full_answer": "1014034"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q2",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q3",
+    "answer": "10",
+    "full_answer": "10"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q2",
+    "answer": "36%",
+    "full_answer": "36%"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q3",
+    "answer": "0.5",
+    "full_answer": "0.5"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q1",
+    "answer": "256",
+    "full_answer": "256"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q2",
+    "answer": "2012",
+    "full_answer": "2012"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q4",
+    "answer": "NextWorth",
+    "full_answer": "NextWorth"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q2",
+    "answer": "8",
+    "full_answer": "8"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q3",
+    "answer": "15",
+    "full_answer": "15"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q4",
+    "answer": "deep genomics",
+    "full_answer": "deep genomics"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q2",
+    "answer": "16.5 billion",
+    "full_answer": "16.5 billion"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q3",
+    "answer": "2012",
+    "full_answer": "2012"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q4",
+    "answer": "iPhone 4S",
+    "full_answer": "iPhone 4S"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q5",
+    "answer": "orange",
+    "full_answer": "orange"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q6",
+    "answer": "camera",
+    "full_answer": "camera"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q7",
+    "answer": "mobile phone",
+    "full_answer": "mobile phone"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q1",
+    "answer": "AMAZON WAREHOUSE",
+    "full_answer": "AMAZON WAREHOUSE"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q3",
+    "answer": "19737",
+    "full_answer": "19737"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q4",
+    "answer": "S0",
+    "full_answer": "S0"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q5",
+    "answer": "D",
+    "full_answer": "D"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_10_q2",
+    "answer": "27",
+    "full_answer": "27"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_12_q2",
+    "answer": "Samarkand",
+    "full_answer": "Samarkand"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q1",
+    "answer": "Atascadero",
+    "full_answer": "Atascadero"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q2",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_6_q1",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_6_q2",
+    "answer": "7.5",
+    "full_answer": "7.5"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_7_q1",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_7_q2",
+    "answer": "Schaffnerey",
+    "full_answer": "Schaffnerey"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q1",
+    "answer": "Ivanhoe",
+    "full_answer": "Ivanhoe"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q2",
+    "answer": "Ainsworth, Copper Queen, Kaslo-Slocan, Nelson, Silver King",
+    "full_answer": "Ainsworth, Copper Queen, Kaslo-Slocan, Nelson, Silver King"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q3",
+    "answer": "beaver, lion",
+    "full_answer": "beaver, lion"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q4",
+    "answer": "Trout Creek",
+    "full_answer": "Trout Creek"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q5",
+    "answer": "Mt. Baldur",
+    "full_answer": "Mt. Baldur"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q7",
+    "answer": "South Fork",
+    "full_answer": "South Fork"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_9_q2",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q1",
+    "answer": "72",
+    "full_answer": "72"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q2",
+    "answer": "Zane",
+    "full_answer": "Zane"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q4",
+    "answer": "9663",
+    "full_answer": "9663"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_5_q1",
+    "answer": "unstable",
+    "full_answer": "unstable"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_5_q2",
+    "answer": "Uroteuthis (Photololigo) duvaucelii (Orbigny, 1835)",
+    "full_answer": "Uroteuthis (Photololigo) duvaucelii (Orbigny, 1835)"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_6_q1",
+    "answer": "450.00",
+    "full_answer": "450.00"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q1",
+    "answer": "Percentage",
+    "full_answer": "Percentage"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q2",
+    "answer": "15",
+    "full_answer": "15"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q3",
+    "answer": "15",
+    "full_answer": "15"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q4",
+    "answer": "Transvaginal/Transanal",
+    "full_answer": "Transvaginal/Transanal"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q1",
+    "answer": "melted",
+    "full_answer": "melted"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q2",
+    "answer": "73",
+    "full_answer": "73"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q3",
+    "answer": "2. Nonreciprocity-enhanced parametric pumping",
+    "full_answer": "2. Nonreciprocity-enhanced parametric pumping"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q4",
+    "answer": "3. A minimal model for nonreciprocal parametric pumping",
+    "full_answer": "3. A minimal model for nonreciprocal parametric pumping"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q3",
+    "answer": "55M",
+    "full_answer": "55M"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q4",
+    "answer": "Bras",
+    "full_answer": "Bras"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q5",
+    "answer": "61.8",
+    "full_answer": "61.8"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q1",
+    "answer": "17412, 297, 200",
+    "full_answer": "17412, 297, 200"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q2",
+    "answer": "Future Directions",
+    "full_answer": "Future Directions"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q1",
+    "answer": "iSPN",
+    "full_answer": "iSPN"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q2",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q3",
+    "answer": "6%",
+    "full_answer": "6%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q4",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q1",
+    "answer": "10",
+    "full_answer": "10"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q2",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q3",
+    "answer": "T",
+    "full_answer": "T"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q1",
+    "answer": "dpp",
+    "full_answer": "dpp"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q2",
+    "answer": "Endpoint Genotyping",
+    "full_answer": "Endpoint Genotyping"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q3",
+    "answer": "+M0, +M100, +M400",
+    "full_answer": "+M0, +M100, +M400"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q4",
+    "answer": "21.43%",
+    "full_answer": "21.43%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q5",
+    "answer": "7",
+    "full_answer": "7"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q2",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q5",
+    "answer": "EPHB3",
+    "full_answer": "EPHB3"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q2",
+    "answer": "our research",
+    "full_answer": "our research"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q1",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q2",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q3",
+    "answer": "8",
+    "full_answer": "8"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q5",
+    "answer": "6",
+    "full_answer": "6"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q6",
+    "answer": "7",
+    "full_answer": "7"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q1",
+    "answer": "Repair",
+    "full_answer": "Repair"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q2",
+    "answer": "Follower",
+    "full_answer": "Follower"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q4",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q5",
+    "answer": "9",
+    "full_answer": "9"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q1",
+    "answer": "10",
+    "full_answer": "10"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q2",
+    "answer": "Zero-phonon = no excitation (elastic scattering)",
+    "full_answer": "Zero-phonon = no excitation (elastic scattering)"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q3",
+    "answer": "neutron wavefunction",
+    "full_answer": "neutron wavefunction"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q4",
+    "answer": "A = L**2",
+    "full_answer": "A = L**2"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q1",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q3",
+    "answer": "Could not convert to a number.",
+    "full_answer": "Could not convert to a number."
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q4",
+    "answer": "Test code",
+    "full_answer": "Test code"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_8_q1",
+    "answer": "Black",
+    "full_answer": "Black"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_8_q2",
+    "answer": "BE",
+    "full_answer": "BE"
+  }
+]
