@@ -9,7 +9,7 @@ ICDAR 2026 DocVQA competition entry. RLM agents with active document perception 
 | Config | Val Score | Test Score |
 |--------|-----------|------------|
 | Flat Solo SC-8 (Qwen 3.6 27B) | **51.2%** | **43.75%** |
-| Flat Solo SC-8 (Qwen 3.5 27B) | 51.2% | 41.0% |
+| Flat Solo SC-8 (Qwen 3.5 27B) | 51.2% | 39.0% |
 | Flat Solo (Qwen 3.5 27B) | 48.8% | 35.6% |
 | Official Gemini 3 Pro baseline | — | 37.5% |
 | Official GPT-5.2 baseline | — | 35.0% |

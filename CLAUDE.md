@@ -7,7 +7,7 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 | Config | Val | Test |
 |--------|-----|------|
 | Flat Solo SC-8 (lean, no-think, Qwen 3.6 27B / Qwen 3.6 27B) | **51.2%** | **43.75%** |
-| Flat Solo SC-8 (lean, no-think, Qwen 3.5 27B / Qwen 3.5 27B) | 51.2% | 41.0% |
+| Flat Solo SC-8 (lean, no-think, Qwen 3.5 27B / Qwen 3.5 27B) | 51.2% | 39.0% |
 | Flat Solo single run (lean, no-think, Qwen 3.5) | 48.8% | 35.6% |
 | Flat Batch (Pro+Flash) | 55.0% | — |
 | Gemini 3 Pro baseline | 37.5% | 37.5% |

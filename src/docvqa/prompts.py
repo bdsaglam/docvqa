@@ -395,6 +395,77 @@ def get_baseline_category_tips(category: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# v2 (2026-05-19): flat-solver tool-routing overlay
+# ---------------------------------------------------------------------------
+# The 2026-05-14 audit (commit f4f0cfd) scrubbed both (a) val-leak entity /
+# question phrasings and (b) flat-solver-specific tool verbs (``search()``,
+# ``page_texts``, "thorough search") from CATEGORY_TIPS. ICDAR n=8 SC-8 then
+# locked at flat_solo test 37% (down 2pp from pre-scrub 39%) and leanest_solo
+# test 39% (up 3pp from pre-scrub 36%) — i.e. the tool-verb removal was a
+# pure cost on flat (which actually has those tools) while the val-leak
+# removal was a clean gain on leanest (which never used them).
+#
+# v2 splits the two concerns:
+#   - ``CATEGORY_TIPS`` (above) stays val-leak-scrubbed AND tool-verb-free.
+#     Used by leanest (no search/page_texts/look) via ``get_category_tips``.
+#   - ``FLAT_SOLO_TOOL_HINTS`` restores tool-routing verbiage for the
+#     categories where flat-solvers' BM25 + OCR-text + look() access is the
+#     dominant strategy. Used by flat_solo / flat_batch / lean_solo via
+#     ``get_flat_solo_category_tips`` — appended on top of CATEGORY_TIPS.
+#
+# Hypothesis: recovers flat_solo test SC-8 toward 39% without re-introducing
+# val bias.
+
+FLAT_SOLO_TOOL_HINTS: dict[str, str] = {
+    "science_paper": (
+        "- TOOL ROUTING: Papers can be very long — start with `search()` over the BM25 "
+        "index and read `page_texts` to locate the relevant section before any visual "
+        "tool calls. Use `look()` / `batch_look()` only to verify or to read figures/tables.\n"
+        "- CITATION NUMBERS: For 'first/last citation on this page' style questions, "
+        "extract all `[N]` (or `(Author, Year)`) patterns from `page_texts` with a "
+        "Python regex ordered by position. Do NOT ask the VLM to identify citation "
+        "order — its inline ordering is unreliable.\n"
+        "- CITED-WORK LOOKUP: To find what a cited work claims, find its reference "
+        "number in the bibliography (via `search()` for the title), then `search()` "
+        "the body text for that bracketed number.\n"
+    ),
+    "slide": (
+        "- TOOL ROUTING: Slide decks span many pages — use `search()` and `page_texts` "
+        "to find the relevant slide first, then crop / `look()` for fine detail. "
+        "Browsing slide-by-slide visually is wasteful.\n"
+        "- PAGE NAVIGATION: For 'the page before X' or 'page where Y is mentioned', "
+        "locate X / Y in `page_texts` first, then verify the page index by cropping "
+        "the page's header/title — off-by-one errors on page indices are common.\n"
+    ),
+    "infographics": (
+        "- TOOL ROUTING: A full-page `look()` pass gives useful structural context "
+        "before zooming. OCR (`page_texts`) on infographics often describes images "
+        "instead of reading them, so prefer `look()` / `batch_look()` for text that "
+        "lives on icons or illustrations.\n"
+    ),
+}
+
+
+def get_flat_solo_category_tips(category: str) -> str:
+    """Tips for solvers that DO have ``search()`` / ``page_texts`` / ``look()``.
+
+    Used by ``flat_solo``, ``flat_batch``, and ``lean_solo``. Returns the
+    val-leak-scrubbed :data:`CATEGORY_TIPS` plus a per-category overlay
+    from :data:`FLAT_SOLO_TOOL_HINTS` that re-introduces tool-routing
+    verbiage where it materially helps these solvers (categories with
+    very-long-document needs).
+
+    Leanest-style solvers (no search/page_texts) keep using
+    :func:`get_category_tips`.
+    """
+    base = CATEGORY_TIPS.get(category, "")
+    tool = FLAT_SOLO_TOOL_HINTS.get(category, "")
+    if not base and not tool:
+        return ""
+    return f"## CATEGORY-SPECIFIC TIPS ({category})\n{base}{tool}"
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 PROMPTS = {

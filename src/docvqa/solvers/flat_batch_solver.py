@@ -26,7 +26,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_category_tips
+from docvqa.prompts import ANSWER_FORMATTING_RULES, get_flat_solo_category_tips
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
@@ -351,7 +351,7 @@ class FlatBatchProgram:
             )
 
             # Build RLM with category-specific instructions
-            tips = get_category_tips(document.doc_category)
+            tips = get_flat_solo_category_tips(document.doc_category)
             instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx)
 

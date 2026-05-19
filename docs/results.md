@@ -7,7 +7,7 @@ Generated: 2026-04-25
 | Config | LLM | VLM | Val Score | Test Score |
 |--------|-----|-----|:---------:|:----------:|
 | Flat Solo SC-8 | Qwen 3.6 27B | Qwen 3.6 27B | **51.2%** | **43.75%** |
-| Flat Solo SC-8 | Qwen 3.5 27B | Qwen 3.5 27B | 51.2% | 41.0% |
+| Flat Solo SC-8 | Qwen 3.5 27B | Qwen 3.5 27B | 51.2% | 39.0% |
 | Flat Solo | Qwen 3.5 27B | Qwen 3.5 27B | 48.8% | 35.6% |
 | Flat Solo mean±std (8 trials) | Qwen 3.5 27B | Qwen 3.5 27B | 44.7±2.6% | — |
 | Flat Solo mean±std (8 trials) | Qwen 3.6 27B | Qwen 3.6 27B | 44.1±3.0% | — |
@@ -28,7 +28,7 @@ Generated: 2026-04-25
 ## Key Findings
 
 - **Solo >> Batch**: ~10pp gap — one question at a time is much better
-- **Flat Solo lean+nothink is best Qwen/Qwen**: 51.2% val (SC-8), 48.8% val peak single, 41% test (SC-8)
+- **Flat Solo lean+nothink is best Qwen/Qwen**: 51.2% val (SC-8), 48.8% val peak single, 39% test (SC-8)
 - **SC-8 voting**: +6.6pp over individual mean on val, +2.5pp over best single run
 - **Val 8-trial stats**: mean 44.7%, std 2.6%, range 40.0-48.8%
 - **rlm_type matters for batch**: lean >> code (+4-6pp) for batch solvers
@@ -158,7 +158,7 @@ Run ID: `flat-solo-qwen35b-val-t1`. Biggest regressions on infographics (−40pp
 ### SC-8 Voting (majority vote with `_clean_text` clustering)
 
 - **Val: 51.2% (41/80)** — matches the 3.5 27B SC-8 val exactly.
-- **Test: 43.75% (70/160)** — **+2.75pp over 3.5 27B** (41.0%) on the held-out test set.
+- **Test: 43.75% (70/160)** — **+4.75pp over 3.5 27B** (39.0%) on the held-out test set.
 
 | Category | SC-8 | Best single | 3.5 27B SC-8 |
 |----------|:----:|:-----------:|:------------:|

@@ -23,7 +23,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_category_tips
+from docvqa.prompts import ANSWER_FORMATTING_RULES, get_flat_solo_category_tips
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
@@ -415,7 +415,7 @@ class FlatSoloProgram:
             if not self.use_search:
                 base_instructions = _strip_search_tool(base_instructions)
             if self.use_category_tips:
-                tips = get_category_tips(document.doc_category)
+                tips = get_flat_solo_category_tips(document.doc_category)
                 instructions = base_instructions + ("\n" + tips if tips else "")
             else:
                 instructions = base_instructions

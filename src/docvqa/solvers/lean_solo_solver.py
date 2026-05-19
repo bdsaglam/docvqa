@@ -20,7 +20,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_category_tips
+from docvqa.prompts import ANSWER_FORMATTING_RULES, get_flat_solo_category_tips
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
@@ -289,7 +289,7 @@ class LeanSoloProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            tips = get_category_tips(document.doc_category)
+            tips = get_flat_solo_category_tips(document.doc_category)
             instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
