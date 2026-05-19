@@ -1,0 +1,10 @@
+_target_: docvqa.solvers.pyai_leanest_solo_da_solver.create_pyai_leanest_solo_da_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+lm: ${lm}
+vlm: ${vlm}
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
+code_timeout: 120.0

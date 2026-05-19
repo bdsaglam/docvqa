@@ -20,6 +20,7 @@ dependencies = [
     "wandb>=0.25.1",
     "gepa>=0.1.1",
     "pypdfium2>=5.8.0",
+    "pydantic-ai-rlm",
 ]
 
 [build-system]
@@ -31,6 +32,14 @@ packages = ["src/docvqa"]
 
 [tool.uv]
 override-dependencies = ["gepa>=0.1.1"]
+
+[tool.uv.workspace]
+members = [
+    "tmp/pydantic-ai-rlm",
+]
+
+[tool.uv.sources]
+pydantic-ai-rlm = { workspace = true, editable = true }
 
 [dependency-groups]
 dev = [
