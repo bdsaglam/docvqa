@@ -180,31 +180,70 @@ def _build_task_instructions(profile: DatasetProfile, vlm_cropping: bool) -> str
 
 
 # ---------------------------------------------------------------------------
-# Solver-local per-category multi-image tip overlay.
+# Solver-local per-category tip handling.
 #
-# Appended AFTER the profile's per-category tips so the agent gets the
-# regular guidance plus pattern-specific nudges where multi-image `look()`
-# beats sequential single-image lookups. Lives in this file (not in
-# prompts.py) so it doesn't affect any other solver.
+# Two modes, both kept in this file (not in prompts.py) so no other solver
+# is affected:
+#
+#   _MI_REPLACE_CATEGORY_TIPS: REPLACES the profile's tip for this category
+#       — used when the existing tip's framing actively pulls the agent
+#       toward single-image idioms (notably "crop X alongside Y" reads as
+#       "one combined crop"). Used for maps, where the previous adoption
+#       smoke confirmed that *appending* multi-image guidance left the
+#       agent's behaviour unchanged.
+#
+#   _MI_CATEGORY_TIPS_EXTRA: APPENDED on top of the profile's tip — used
+#       where the profile's tip doesn't conflict with multi-image use,
+#       and a nudge is enough.
 # ---------------------------------------------------------------------------
 
-_MI_CATEGORY_TIPS_EXTRA: dict[str, str] = {
+_MI_REPLACE_CATEGORY_TIPS: dict[str, str] = {
     "maps": (
-        "## MULTI-IMAGE TIPS (maps)\n"
-        "- LEGEND SYMBOL COUNTING / LOCATING: Don't describe a map symbol in words ("
-        "'a small triangle with a dot') — crop the legend symbol and pass it together with the "
-        "map region in one call:\n"
-        "    legend = pages[0].crop((lx, ly, lx+200, ly+200))\n"
-        "    region = pages[0].crop((rx, ry, rx+800, ry+800))\n"
-        "    look([legend, region], 'Count how many times the symbol from the first image appears in the second.')\n"
-        "- ROAD-TYPE MATCHING: Crop the legend's road-style entries and the specific road segment, "
-        "pass both, and ask the VLM to match them visually: "
-        "look([legend_crop, road_crop], 'Which legend entry does the road style in the second image match?'). "
-        "Solid-vs-dashed and thin-vs-thick are hard to convey in English but easy to compare side by side.\n"
-        "- ROUTE TRACING: For 'how many X along this route' questions, crop successive route segments "
-        "and pass them in order so the VLM can see continuity: "
-        "look([seg_1, seg_2, seg_3], 'How many towns lie along the highlighted route across these three segments? List each.').\n"
+        "## CATEGORY-SPECIFIC TIPS (maps)\n"
+        "- COARSE-TO-FINE: Start with a full-page view of the map for rough layout, then zoom into "
+        "areas of interest (~800px crops), then tighter (~400px) for small text. Each step refines "
+        "the previous.\n"
+        "- SHOW LEGEND ENTRIES, DON'T DESCRIBE THEM: Whenever a question depends on matching a map "
+        "element against the legend (road type, point symbol, region shading, contour style), DO NOT "
+        "translate the legend entry into words. Crop the legend entry AND the candidate region and "
+        "pass them TOGETHER to one look() call:\n"
+        "    legend_road  = pages[0].crop((lx, ly, lx+220, ly+40))\n"
+        "    road_segment = pages[0].crop((rx, ry, rx+400, ry+150))\n"
+        "    look([legend_road, road_segment], 'Which legend entry from the first image does the line style in the second image match?')\n"
+        "  Solid-vs-dashed and thin-vs-thick are easy to misread when described in English, but "
+        "easy for the VLM to compare side by side.\n"
+        "- LEGEND-SYMBOL COUNTING: For 'how many X are on the map' where X is keyed in the legend, "
+        "crop the legend symbol AND the region to search and let the VLM count by visual similarity:\n"
+        "    legend_sym = pages[0].crop((lx, ly, lx+120, ly+120))\n"
+        "    region     = pages[0].crop((rx, ry, rx+800, ry+800))\n"
+        "    look([legend_sym, region], 'Count how many instances of the symbol from the first image appear in the second.')\n"
+        "  If a single region is too large, use the tile pattern below and pass the same legend "
+        "symbol with each tile.\n"
+        "- COUNTING WITHOUT A LEGEND: For 'how many X on the map' without a keyed symbol, NEVER "
+        "count from a full-page view — small objects are invisible at low resolution. Instead:\n"
+        "    1. Pick a tile size so individual objects are clearly visible (large objects → 3x3 grid; "
+        "medium → 4x4 or 5x5; small dots → 6x6 or more), with ~15% overlap between tiles.\n"
+        "    2. Per-tile, ask the VLM: 'List every [object] visible in this tile, with each one's "
+        "relative position (top/bottom/left/right/center) and any distinguishing label nearby.'\n"
+        "    3. In code, collect across tiles and deduplicate near tile boundaries by matching "
+        "positions or labels.\n"
+        "- LOCATE INDEPENDENTLY: Find each landmark with simple per-tile queries ('what labels are "
+        "visible here?', 'is feature X present in this tile?'). Record approximate pixel positions "
+        "using tile offset + relative position within the tile.\n"
+        "- REASON WITH MATH: Compute spatial relationships in Python — distances, directions, "
+        "relative positions — using the coordinates you collected. Basic vector math gives reliable "
+        "answers with explicit error bounds.\n"
+        "- GRID COORDINATES: Cross-reference TWO sources — (1) crop the actual grid cell on the map "
+        "to see what's there, and (2) look up the same coordinate in any feature index/legend that "
+        "lists entries by grid coordinate. Pass both crops in one look() call so the VLM compares "
+        "them directly; disagreement between the two is usually an indexing-error trap.\n"
+        "- ROUTE TRACING: For 'how many X along this route' questions, crop successive route "
+        "segments and pass them in one call so the VLM can see continuity:\n"
+        "    look([seg_1, seg_2, seg_3], 'How many towns lie along the highlighted route across these three segments? List each one in order.')\n"
     ),
+}
+
+_MI_CATEGORY_TIPS_EXTRA: dict[str, str] = {
     "comics": (
         "## MULTI-IMAGE TIPS (comics)\n"
         "- PANEL / CHARACTER COMPARISON: When asking whether the same character or object appears "
@@ -240,8 +279,22 @@ _MI_CATEGORY_TIPS_EXTRA: dict[str, str] = {
 }
 
 
-def _mi_category_extras(category: str) -> str:
-    return _MI_CATEGORY_TIPS_EXTRA.get(category, "")
+def _mi_category_tips(category: str, profile_tip: str) -> str:
+    """Per-category tip section for this solver.
+
+    If the category is in ``_MI_REPLACE_CATEGORY_TIPS``, return that string
+    (the profile's tip is dropped). Otherwise return the profile's tip with
+    any ``_MI_CATEGORY_TIPS_EXTRA`` appended.
+    """
+    if category in _MI_REPLACE_CATEGORY_TIPS:
+        return _MI_REPLACE_CATEGORY_TIPS[category]
+    extras = _MI_CATEGORY_TIPS_EXTRA.get(category, "")
+    parts: list[str] = []
+    if profile_tip:
+        parts.append(profile_tip)
+    if extras:
+        parts.append(extras)
+    return "\n".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -519,13 +572,11 @@ class FlatSoloDAMIProgram:
             base_instructions = _build_task_instructions(self.profile, self.vlm_cropping)
             if not self.use_search:
                 base_instructions = _strip_search_tool(base_instructions)
-            tips = self.profile.category_tips_fn(document.doc_category)
-            mi_extras = _mi_category_extras(document.doc_category)
+            profile_tip = self.profile.category_tips_fn(document.doc_category)
+            mi_tip = _mi_category_tips(document.doc_category, profile_tip)
             instructions = base_instructions
-            if tips:
-                instructions += "\n" + tips
-            if mi_extras:
-                instructions += "\n" + mi_extras
+            if mi_tip:
+                instructions += "\n" + mi_tip
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, use_search=self.use_search)
             if self.vlm_cropping:
                 sandbox_code = _build_sandbox_code_mi(tmpdir, len(document.images), use_search=self.use_search)
