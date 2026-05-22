@@ -60,13 +60,18 @@ _CROPPING_BODY_MI = (
     "## TOOLS\n"
     "- search(query, k=5) -> list[dict]: BM25 search over OCR text. Returns [{page, score, text}]. "
     "Useful for multi-page documents to locate relevant pages. For single-page docs, read `page_texts` directly.\n"
-    "- look(images, query) -> str: "
-    "Send one or more PIL Images to the VLM with a single query. `images` is either a single PIL Image "
-    "or a list of PIL Images. When a list is passed, the VLM sees all of them together in one call and "
-    "can reason across them (the agent decides what to ask: cross-reference, comparison, locate one "
-    "within another, follow a sequence, etc). Each image can be a page (e.g. `pages[0]`), a crop "
-    "(e.g. `pages[0].crop((left, top, right, bottom))`), or any processed PIL image. "
-    "Full pages are downscaled — for fine details, crop first using PIL.\n"
+    "- look(images, query) -> str: Send one or more PIL Images to the VLM with a single query. "
+    "`images` is either a single PIL Image or a list of PIL Images.\n"
+    "    USE A LIST WHEN IT IS EASIER TO **SHOW** THE VLM SOMETHING THAN TO DESCRIBE IT IN WORDS.\n"
+    "    Concrete patterns:\n"
+    "      - Legend / key matching:  look([legend_crop, region_crop], 'Count instances of the symbol from the first image in the second.')\n"
+    "      - Pairwise comparison:    look([chart_a, chart_b],          'Which of these two charts shows higher growth?')\n"
+    "      - Few-shot identification:look([example_1, example_2, target], 'Find another instance of the kind of object shown in the first two images, inside the last image.')\n"
+    "      - Cross-page check:       look([cite_crop, source_crop],    'Is the value cited in the first image the same as in the source on the second?')\n"
+    "      - Reference disambiguation: look([blurry_target, cand_a, cand_b], 'Which of the candidate images matches the first?')\n"
+    "      - Sequence / before-after: look([panel_1, panel_2],          'What changed between the first and second image?')\n"
+    "    Each image can be a page (`pages[i]`), a crop (`pages[i].crop((l,t,r,b))`), or any processed PIL image. "
+    "Full pages are downscaled — for fine details, crop first.\n"
     "- batch_look(requests) -> list[str]: Parallel VLM calls. "
     "Input: list of (images, query) tuples, where `images` is a single PIL Image or a list. "
     "Returns: list of answers in same order. "
@@ -87,6 +92,13 @@ _CROPPING_BODY_MI = (
     "## GUIDELINES\n"
     "- Full-page `look` gives a broad overview. For fine details, crop first: `look(pages[i].crop((l,t,r,b)), query)`.\n"
     "- Use `pages[i].size` to get dimensions for cropping.\n"
+    "- SHOW, DON'T DESCRIBE: When a question hinges on visual similarity, identity, comparison, or "
+    "matching against a key (a shape from a legend, an icon, a chart's profile, a character across "
+    "panels, a value-and-its-citation), pass both/all images to a SINGLE `look([...], query)` call "
+    "instead of describing one in English and asking the VLM to find it in another. The VLM is "
+    "much more reliable at 'is this the same thing as that?' with both images in front of it than "
+    "at finding 'a small triangle with a dot'. Reach for the list form whenever you catch yourself "
+    "translating visual properties into words for the VLM.\n"
     "- Ask the VLM ONE focused question per call. For single-image calls, extract a raw fact and "
     "count/compare/compute in Python. For multi-image calls, the question should be about the "
     "relationship across the images (e.g. comparison, identification across, sequence) — not "
@@ -137,6 +149,12 @@ _PAGE_ONLY_BODY_MI = (
     "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
 
     "## GUIDELINES\n"
+    "- SHOW, DON'T DESCRIBE: When a question hinges on whether something on one page matches "
+    "something on another (a cited value vs its source page, an icon vs its key page, a character "
+    "across panels), pass both/all pages to a SINGLE `look([p1, p2], query)` call instead of "
+    "describing one page in English and asking about the other. The VLM is more reliable at "
+    "'is this the same as that?' with both pages in front of it. Reach for the list form whenever "
+    "you catch yourself translating visual properties into words for the VLM.\n"
     "- Ask the VLM ONE focused question per call. For single-page calls, extract a raw fact and "
     "count/compare/compute in Python. For multi-page calls, the question should be about the "
     "relationship across the pages (e.g. comparison, identification across, sequence) — not "
@@ -159,6 +177,71 @@ _PAGE_ONLY_BODY_MI = (
 def _build_task_instructions(profile: DatasetProfile, vlm_cropping: bool) -> str:
     body = _CROPPING_BODY_MI if vlm_cropping else _PAGE_ONLY_BODY_MI
     return body + profile.answer_formatting_rules
+
+
+# ---------------------------------------------------------------------------
+# Solver-local per-category multi-image tip overlay.
+#
+# Appended AFTER the profile's per-category tips so the agent gets the
+# regular guidance plus pattern-specific nudges where multi-image `look()`
+# beats sequential single-image lookups. Lives in this file (not in
+# prompts.py) so it doesn't affect any other solver.
+# ---------------------------------------------------------------------------
+
+_MI_CATEGORY_TIPS_EXTRA: dict[str, str] = {
+    "maps": (
+        "## MULTI-IMAGE TIPS (maps)\n"
+        "- LEGEND SYMBOL COUNTING / LOCATING: Don't describe a map symbol in words ("
+        "'a small triangle with a dot') — crop the legend symbol and pass it together with the "
+        "map region in one call:\n"
+        "    legend = pages[0].crop((lx, ly, lx+200, ly+200))\n"
+        "    region = pages[0].crop((rx, ry, rx+800, ry+800))\n"
+        "    look([legend, region], 'Count how many times the symbol from the first image appears in the second.')\n"
+        "- ROAD-TYPE MATCHING: Crop the legend's road-style entries and the specific road segment, "
+        "pass both, and ask the VLM to match them visually: "
+        "look([legend_crop, road_crop], 'Which legend entry does the road style in the second image match?'). "
+        "Solid-vs-dashed and thin-vs-thick are hard to convey in English but easy to compare side by side.\n"
+        "- ROUTE TRACING: For 'how many X along this route' questions, crop successive route segments "
+        "and pass them in order so the VLM can see continuity: "
+        "look([seg_1, seg_2, seg_3], 'How many towns lie along the highlighted route across these three segments? List each.').\n"
+    ),
+    "comics": (
+        "## MULTI-IMAGE TIPS (comics)\n"
+        "- PANEL / CHARACTER COMPARISON: When asking whether the same character or object appears "
+        "in two panels, pass both panels in one call: "
+        "look([panel_a, panel_b], 'Is the character on the right of the first panel the same as the one in the centre of the second?'). "
+        "Costume, colour, and pose are easier to compare visually than to translate to words.\n"
+        "- LAYOUT SURVEY: For multi-page comics, pass several pages at once for a high-level read: "
+        "look([pages[0], pages[1], pages[2]], 'For each page in order, list the story titles and panel-layout structure.')\n"
+        "- DIALOGUE-TO-CHARACTER ATTRIBUTION: When a question maps a quote to a character that "
+        "appears across multiple panels, pass the candidate panels together rather than describing "
+        "the speaker repeatedly.\n"
+    ),
+    "infographics": (
+        "## MULTI-IMAGE TIPS (infographics)\n"
+        "- ICON / KEY MATCHING: If the infographic uses small icons as a key, crop a key entry "
+        "together with the section that uses it and ask the VLM to confirm the match directly. "
+        "Avoid describing the icon ('blue circle with arrow') in English.\n"
+        "- SECTION COMPARISON: For 'which section has more X' / 'which group is larger' questions, "
+        "crop both sections and pass them in one call rather than reading each separately and "
+        "combining noisy verbal estimates.\n"
+    ),
+    "science_paper": (
+        "## MULTI-IMAGE TIPS (science_paper)\n"
+        "- FIGURE / TABLE CROSS-CHECK: When verifying that a number cited in the body matches a "
+        "figure or table, crop both the body sentence and the source figure/table and pass them "
+        "together: look([body_crop, table_crop], 'Does the value cited in the first image match the value shown in the second?'). "
+        "More reliable than two separate OCR reads + string compare.\n"
+        "- CAPTION VS FIGURE: For questions about whether a caption matches a figure or sub-figure, "
+        "crop both and have the VLM compare them in one call.\n"
+        "- CROSS-FIGURE PATTERN MATCHING: When the question asks 'which figure shows behaviour X', "
+        "crop candidate figures and pass them together so the VLM can pick directly.\n"
+    ),
+}
+
+
+def _mi_category_extras(category: str) -> str:
+    return _MI_CATEGORY_TIPS_EXTRA.get(category, "")
 
 
 # ---------------------------------------------------------------------------
@@ -437,7 +520,12 @@ class FlatSoloDAMIProgram:
             if not self.use_search:
                 base_instructions = _strip_search_tool(base_instructions)
             tips = self.profile.category_tips_fn(document.doc_category)
-            instructions = base_instructions + ("\n" + tips if tips else "")
+            mi_extras = _mi_category_extras(document.doc_category)
+            instructions = base_instructions
+            if tips:
+                instructions += "\n" + tips
+            if mi_extras:
+                instructions += "\n" + mi_extras
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, use_search=self.use_search)
             if self.vlm_cropping:
                 sandbox_code = _build_sandbox_code_mi(tmpdir, len(document.images), use_search=self.use_search)
