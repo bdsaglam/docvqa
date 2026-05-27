@@ -62,7 +62,7 @@ Currently retained in `docs/experiments/` (baselines + in-flight):
 | [no-loop-multi-image.md](no-loop-multi-image.md) | raw-VLM multi-image baseline (`raw_vlm_multi`); n=3 tips-on + n=3 tips-off val cells. Headline baseline for the model-axis lift figure. |
 | [official-baseline-qwen27b.md](official-baseline-qwen27b.md) | competition-kit prompt verbatim; val n=3 = 21.67% ± 1.91pp. Test abandoned (Qwen 27B context overflow on long test docs). Context for the paper's baseline-comparison section. |
 | [split-calibration-no-loop-multi.md](split-calibration-no-loop-multi.md) | val SC-8 20.0% / test SC-8 11.0% on `raw_vlm_multi`; **9pp split-difficulty floor**. Anchors the val→test gap discussion. |
-| [unified-category-tips-ablation.md](unified-category-tips-ablation.md) | `rvlm_unified` ablation: all 8 category tips concatenated. **Currently running** (n=1 val on amax7). Tests whether per-document category metadata is required. |
+| [unified-category-tips-ablation.md](unified-category-tips-ablation.md) | `rvlm_unified` ablation: all 8 category tips concatenated. **n=1 val 45.0%** (Δ +2.2pp vs per-category baseline, inside noise → promotion-favoring; n=2 pending per D-008). |
 
 ## Archive
 

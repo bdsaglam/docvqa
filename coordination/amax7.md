@@ -8,25 +8,7 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` unified-tips n=1 val (task #25)  — started 2026-05-28T22:30+03
-
-Tmux session `unified-tips-t1`. `max_concurrency=32` (per c=32 dispatch).
-Tests whether per-document category metadata is required. If Δ ≈ 0pp vs
-rvlm headline, we **promote unified to default** and many downstream
-cells get cleaner (no `doc_category` dependence).
-
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=rvlm_unified \
-  data.split=val data.num_samples=null \
-  max_concurrency=32 \
-  run_id=rvlm-unified-val-t1
-```
-
-- Expected wall: ~30-40min (c=32 faster than the earlier c=16 estimate)
-- Compare to: `rvlm` (proposed method) headline val per-trial mean ~42.8%
+(none)
 
 ## Queued
 
@@ -70,7 +52,20 @@ uv run python evals.py \
 
 ## Done
 
-(none yet under new naming)
+### `[✓]` unified-tips n=1 val (task #25) — 2026-05-28
+
+run_id: `rvlm-unified-val-t1` · **45.0%** (36/80) on Qwen 3.5 27B local,
+c=32. Per-category: infographics 80%, comics 60%, eng_drawing 50%,
+slide 50%, science_poster 50%, business_report 40%, science_paper 30%,
+**maps 0%**.
+
+Δ vs per-category-dispatch baseline per-trial mean (rvlm legacy
+`leanest_solo` n=8 = 42.8%): **+2.2pp**, well inside trial-noise band
+(~3pp std). Lands in the "Δ ≈ 0pp → promote unified to default" cell of
+the decision rules; needs n=2 to confirm before promoting.
+
+Writeup updated at `docs/experiments/unified-category-tips-ablation.md`.
+Next: file n=2 trial if promotion is the direction the paper wants.
 
 ## Decision rules (set in advance)
 

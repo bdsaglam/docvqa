@@ -87,13 +87,34 @@ baseline, same model + prompt scrub.
 
 ## Per-trial table (n=1 first; escalate per D-008)
 
-| Trial | run_id | host | Score | Correct/total | Wall | Sandbox errors |
+| Trial | run_id | host | Score | Correct/total | Wall | Notes |
 |---|---|---|---|---|---|---|
-| t1 | `rvlm-unified-val-t1` | TBD | TBD | TBD | TBD | TBD |
+| t1 | `rvlm-unified-val-t1` | amax7 | **45.0%** | 36/80 | ~52min | c=32; tmux `unified-tips-t1`; finished 2026-05-28T01:59 |
+
+Per-category (n=1):
+
+| Category | Acc | Correct/total |
+|---|---|---|
+| infographics | 80.0% | 8/10 |
+| comics | 60.0% | 6/10 |
+| engineering_drawing | 50.0% | 5/10 |
+| science_poster | 50.0% | 5/10 |
+| slide | 50.0% | 5/10 |
+| business_report | 40.0% | 4/10 |
+| science_paper | 30.0% | 3/10 |
+| maps | 0.0% | 0/10 |
 
 ## Summary
 
-Pending first trial.
+n=1: **45.0% overall.** Comparison anchor (rvlm per-category per-trial
+mean from legacy `leanest_solo` n=8 = **42.8%**) → Δ = **+2.2pp**,
+inside the ±3pp trial-noise band. Per the pre-set decision table this
+lands in the "Δ ≈ 0pp → **promote unified to default**" cell.
+
+Caveat: n=1 only. Per D-008 we need n=2 to confirm direction before
+acting. The maps=0% category is the obvious red flag — needs
+inspection to confirm it's a per-trial noise effect on a 1-page,
+counting-heavy category rather than a unified-prompt failure mode.
 
 ## Observations / caveats
 
@@ -126,7 +147,5 @@ ablation table. The narrative direction depends on outcome:
 
 ## Status
 
-**Solver built** (2026-05-28). Solver imports OK; sanity-check confirms
-`_UNIFIED_TIPS` length 10,735 chars across all 8 categories. **n=1
-val cell NOT YET LAUNCHED.** Target host: amax1 (idle while amax7
-finishes Phase 2 refactor).
+**n=1 done** (2026-05-28; amax7, c=32). Direction = promotion-favoring
+(+2.2pp inside noise). **n=2 pending** per D-008 before headline action.
