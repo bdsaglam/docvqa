@@ -26,7 +26,7 @@ You have read access to this repo. Skim these files before searching:
 
 - `/home/baris/repos/docvqa/CLAUDE.md` — project overview, best results, infra
 - `/home/baris/repos/docvqa/docs/results.md` — full experiment results
-- `/home/baris/repos/docvqa/docs/dataset.md` — dataset description
+- `/home/baris/repos/docvqa/docs/datasets/` — dataset descriptions
 - `/home/baris/repos/docvqa/docs/solvers/` — solver design docs
 - `/home/baris/repos/docvqa/src/docvqa/solvers/` — actual solver implementations
 - `/home/baris/repos/docvqa/src/docvqa/prompts.py` — prompts and tool descriptions

@@ -34,7 +34,7 @@ for i in $(seq 1 "${TRIALS}"); do
     lm.enable_thinking=false \
     solver=raw_vlm_multi \
     data.split=val data.num_samples=null \
-    max_concurrency=8 \
+    max_concurrency=24 \
     run_id=raw-vlm-multi-${SHORT}-val-t$i || { echo "BASELINE t$i FAILED"; exit 1; }
 done
 echo "=== BASELINE CHAIN DONE ==="
@@ -48,7 +48,7 @@ for i in $(seq 1 "${TRIALS}"); do
     lm.enable_thinking=false \
     solver=${SOLVER} \
     data.split=val data.num_samples=null \
-    max_concurrency=8 \
+    max_concurrency=24 \
     run_id=${SOLVER}-${SHORT}-val-t$i || { echo "SCAFFOLD t$i FAILED"; exit 1; }
 done
 echo "=== SCAFFOLD CHAIN DONE ==="
