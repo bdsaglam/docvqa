@@ -8,7 +8,22 @@ cell at a time; replan after each result.
 
 ## In progress
 
-(none)
+### `[→]` unified-tips n=2..n=8 val (task #28) — started 2026-05-28T02:10+03
+
+User opted to skip the D-008 n=2 escalation step and run all 8 trials
+directly. t1 = 45.0%. The paired-conditions rvlm baseline runs on amax1
+in parallel (see coordination/amax1.md cell #1) — same model, prompts,
+c, paired by trial number.
+
+```bash
+tmux new-session -d -s unified-tips-chain bash scripts/run_unified_tips_chain.sh
+# Resumes-on-crash: bash scripts/run_unified_tips_chain.sh (it skips
+# completed run_ids).
+```
+
+- Expected wall: ~7 × ~50min ≈ 6h (Qwen 3.5 27B vllm, c=32)
+- Compare per-trial-pair against `rvlm-val-t{1..8}` on amax1
+- Decision gate: see `docs/experiments/unified-category-tips-ablation.md`
 
 ## Queued
 

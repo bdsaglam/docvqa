@@ -14,7 +14,35 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## Queued
 
-### 1. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
+### 1. `[ ]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
+
+**Priority over model-axis cells below.** amax7 is running `rvlm_unified`
+t2..t8 to escalate the unified-tips ablation to n=8 (t1 = 45.0%). We have
+no current-prompt n=8 baseline for `rvlm` itself at c=32 — the legacy
+per-trial mean of 42.8% comes from pre-rename `leanest_solo` n=8 on older
+prompts. Without a matched-conditions `rvlm` baseline, the within-trial
+comparison for the unified-tips decision (promote vs keep) is weaker.
+
+This cell locks the matched-conditions baseline so the unified-vs-rvlm
+comparison is clean (same model, same prompts, same c, paired t1..t8
+trials).
+
+```bash
+# Bring up Qwen 3.5 27B vllm on amax1 (matching amax7's localhost:8927).
+# Then:
+tmux new-session -d -s rvlm-paired bash scripts/run_rvlm_paired_baseline.sh
+# Resumes-on-crash: bash scripts/run_rvlm_paired_baseline.sh (it skips
+# completed run_ids).
+```
+
+- Expected wall: ~7h (8 × ~50min)
+- Compare to: `rvlm_unified` t1..t8 from amax7 (paired by trial number)
+- All trials use `solver=rvlm`, `data.split=val`, `data.num_samples=null`,
+  `max_concurrency=32`, `lm.enable_thinking=false`. Identical to amax7's
+  unified-tips chain modulo `solver`.
+- run_ids: `rvlm-val-t1` through `rvlm-val-t8`.
+
+### 2. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
 
 Re-run on clean prompts (D-009). Original 2026-05-09 cells used
 pre-scrub prompts. Direction is robust (+5.83pp lift in original n=3);
@@ -29,7 +57,7 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-e4b-vllm-local 4-e4
 - Expected wall: ~2-3h (baseline + scaffold)
 - Expected direction: lift sign preserved (~+5pp baseline → scaffold)
 
-### 2. `[ ]` Qwen 3.5 9B baseline + scaffold n=1 val (task #8 part 2)
+### 3. `[ ]` Qwen 3.5 9B baseline + scaffold n=1 val (task #8 part 2)
 
 ```bash
 TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh qwen-3_5-9b-vllm-local 3_5-9b
@@ -38,7 +66,7 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh qwen-3_5-9b-vllm-local 3_5-
 - Expected wall: ~2-3h
 - Expected direction: lift sign preserved (~+6pp from original n=3)
 
-### 3. `[ ]` Gemma 4 31B baseline + scaffold n=1 val (task #8 part 3)
+### 4. `[ ]` Gemma 4 31B baseline + scaffold n=1 val (task #8 part 3)
 
 ```bash
 # Per docs/experiments/gemma-4-31b-baseline-scaffold.md: needs

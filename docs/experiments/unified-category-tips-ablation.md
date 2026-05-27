@@ -147,5 +147,14 @@ ablation table. The narrative direction depends on outcome:
 
 ## Status
 
-**n=1 done** (2026-05-28; amax7, c=32). Direction = promotion-favoring
-(+2.2pp inside noise). **n=2 pending** per D-008 before headline action.
+**n=1 done** (2026-05-28; amax7, c=32). User opted to skip D-008's n=2
+intermediate step and escalate directly to **n=8**.
+
+- amax7: `rvlm_unified` t2..t8 in tmux `unified-tips-chain` (ETA ~6h).
+- amax1: paired-conditions `rvlm` baseline t1..t8 in tmux `rvlm-paired`
+  (queued in `coordination/amax1.md` cell #1).
+
+Comparison will be per-trial-pair on identical model / prompts / c, plus
+mean ± std across the 8-trial set. The 42.8% legacy per-trial mean (used
+for the n=1 sanity check) gets replaced by this fresh paired baseline
+once the chain finishes.
