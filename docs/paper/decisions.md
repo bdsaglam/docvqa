@@ -618,6 +618,40 @@ look()" per D-006), but **no new `rvlm_full` cells are queued**.
 
 ---
 
+## D-012: Two-host coordination workflow
+
+- **Date:** 2026-05-28
+- **Status:** accepted
+
+**Decision.** amax7 (adaptive) and amax1 (throughput) share this repo
+via per-host queue files in `coordination/`. amax7 runs critical-path
+cells where a result might change the plan; amax1 runs side-tracks
+where the direction is already known and only magnitudes need locking.
+Per-cell workflow: pull → pick a `[ ]` queued cell → mark `[→]` with
+timestamp → commit/push (advertises the lock) → run → mark `[✓]` with
+run_id + one-line result → commit/push. One in-progress cell per host.
+
+**Reasoning.**
+
+- D-008 trial-budget escalation works best with two parallel queues:
+  one host iterates adaptively while the other knocks out side-tracks.
+- Without explicit coordination, both hosts risk duplicating cells or
+  colliding on run_id namespace.
+
+**Implications.**
+
+- `coordination/README.md` — protocol details.
+- `coordination/amax7.md` / `coordination/amax1.md` — per-host queues.
+- `coordination/cleanup-runs.md` — disk hygiene procedure for
+  `output/runs/` and `/tmp/`. The `/tmp/` leak (≈559 GB of dspy/litellm
+  image-crop tempfiles on amax7) is fixed going forward by per-run
+  `TMPDIR` in `evals.py:_setup_run_tmpdir` (atexit-cleaned).
+- `CLAUDE.md` inlines the convention so every session picks up the
+  workflow at start.
+- Commit messages for coord changes: `coord: <host> <action> <cell>`.
+
+---
+
 ## How to add entries
 
 1. Allocate next D-NNN id.
