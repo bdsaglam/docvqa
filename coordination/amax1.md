@@ -10,11 +10,12 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-(none)
+### 1. `[→]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
 
-## Queued
-
-### 1. `[ ]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
+Claimed 2026-05-27T23:11Z. tmux session `rvlm-paired`, c=24 (user
+override of default c=32; concurrency affects wall-time/load, not
+per-question accuracy, so the paired comparison stays valid). run_ids
+`rvlm-val-t1`..`rvlm-val-t8`.
 
 **Priority over model-axis cells below.** amax7 is running `rvlm_unified`
 t2..t8 to escalate the unified-tips ablation to n=8 (t1 = 45.0%). We have
@@ -41,6 +42,8 @@ tmux new-session -d -s rvlm-paired bash scripts/run_rvlm_paired_baseline.sh
   `max_concurrency=32`, `lm.enable_thinking=false`. Identical to amax7's
   unified-tips chain modulo `solver`.
 - run_ids: `rvlm-val-t1` through `rvlm-val-t8`.
+
+## Queued
 
 ### 2. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
 
