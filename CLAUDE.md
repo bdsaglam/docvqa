@@ -12,12 +12,6 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 > `docs/paper/decisions.md` (D-006/D-007/D-008) and
 > `docs/paper/README.md` for the full framing.
 >
-> **Two-host coordination.** amax7 (adaptive) and amax1 (throughput)
-> share this repo via per-host queue files in
-> [`coordination/`](coordination/README.md). Pick a cell, mark
-> in-progress, commit, push, run, mark done, commit, push, pull. Don't
-> claim cells you can't start immediately.
->
 > Operating principles flowing from this:
 > - **Prompt parity (D-007).** Every paper solver passes the same
 >   prompt audit standard.
@@ -31,6 +25,81 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 >   only after the paper headline locks.
 > - **No prompt-iteration narrative in the paper.** No v1/v2/scrub
 >   history; no engineering solver names. Readers see the end-state.
+
+## Two-host coordination convention
+
+Two hosts share this repo:
+
+- **amax7** = **adaptive** host. Runs critical-path experiments whose
+  result might change the experiment plan. One cell at a time; replan
+  after each result. Has Qwen 3.5 27B vllm at `localhost:8927`.
+- **amax1** = **throughput** host. Runs side-track experiments where
+  the direction is already known and we just need to lock numbers. No
+  adaptive iteration; brings up its own per-model vllm containers as
+  needed.
+
+### File layout
+
+```
+coordination/
+├── README.md       # full protocol details
+├── amax7.md        # adaptive host's queue
+└── amax1.md        # throughput host's queue
+```
+
+Each host file has three sections: `## In progress`, `## Queued`,
+`## Done`. Each cell is one experiment (one solver × one split × n=1).
+
+### Per-cell workflow
+
+A "unit of work" is one experiment cell. For each cell:
+
+1. **Pull latest:** `git pull --rebase`
+2. **Pick** the first `[ ]` queued cell in your host file. Don't claim
+   cells you can't start immediately — one in-progress cell per host
+   at a time.
+3. **Mark `[→]`** with an ISO timestamp (and tmux session if running
+   in background).
+4. **Commit + push** the host file. This advertises the lock so the
+   other host doesn't accidentally duplicate.
+5. **Run the experiment.**
+6. **Mark `[✓]`** with the run_id and a one-line result, or **`[✗]`**
+   with the failure mode.
+7. **Commit + push** the updated host file + any new run artifacts to
+   share (run dirs in `output/runs/` are gitignored; share via the
+   one-line result, plus submission JSONs and experiment docs when
+   applicable).
+8. **Loop.**
+
+### Which host runs what
+
+- **Critical-path** (amax7): cells where a surprising result would
+  trigger a paper-framing revision. Examples: the unified-tips ablation
+  (could change the default method); the M+OCR clean cell (locks the
+  paper's OCR-extension number); the direct_vlm cell (alt-architecture
+  evidence for prediction 3).
+- **Side-tracks** (amax1): cells where the direction is robust and we
+  just need clean magnitudes. Examples: model-axis re-runs (Gemma E4B,
+  Qwen 9B, Gemma 31B) on clean prompts — original n=3 data showed the
+  lift; the re-runs just lock magnitudes.
+- **If amax1 hits a surprise:** halt the queue and append a
+  `## NOTE FOR AMAX7` section to `coordination/amax1.md`. amax7 reads
+  on its next pull and decides whether to redirect.
+
+### Conventions
+
+- **Status legend:** `[ ]` queued, `[→]` in progress, `[✓]` done,
+  `[✗]` failed, `[~]` deferred.
+- **Trial budget per D-008:** cells default to n=1. If n=1 matches
+  expectations, the queue owner files n=2 as a follow-up cell at file
+  time. n=8 only after the paper headline locks.
+- **Run IDs use new solver names** (`rvlm-*`, `rvlm-ocr-*`,
+  `raw-vlm-multi-*`, etc.). Historical IDs (`leanest-*`, `flat-solo-*`)
+  stay as they were; D-010 doesn't backfill.
+- **Commit messages for coord changes:** `coord: <host> <action>
+  <cell-name>`, e.g., `coord: amax1 done gemma-e4b-baseline-val-t1`.
+- **Never claim or in-progress two cells at once on one host.** That
+  invites push/pull conflicts on the host file.
 
 ## Best Results
 
