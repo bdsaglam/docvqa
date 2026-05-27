@@ -1,6 +1,6 @@
 defaults:
   - lm: qwen-3_5-27b-vllm-local
-  - solver: flat_solo
+  - solver: rvlm
   - vlm: qwen-3_5-27b-vllm-local
   - _self_
 
