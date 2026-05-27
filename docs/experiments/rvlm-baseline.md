@@ -1,5 +1,12 @@
 # RVLM baseline — direct image manipulation, no agent sub-loop
 
+> **Note (D-010, 2026-05-27):** This file uses the original engineering
+> name `rvlm` for what is now called **`direct_vlm`** in the codebase.
+> The post-rename `rvlm` is the proposed method (formerly
+> `leanest_solo`). All file paths, run IDs, and `solver=...` invocations
+> in this document refer to the OLD name — historical record per D-010.
+> See `docs/paper/decisions.md` D-010 for the full rename map.
+
 ## Paper angle
 
 The other Qwen 3.5 27B configs we run sit at two ends of a spectrum:

@@ -62,3 +62,11 @@ Each experiment file has these sections:
 | [leanest-test-matched-baseline.md](leanest-test-matched-baseline.md) | done (8 trials, t1 excluded); SC-8 voted test = 36.00% (ICDAR) |
 | [official-baseline-qwen27b.md](official-baseline-qwen27b.md) | val done (n=3, 21.67% ± 1.91pp); test abandoned (not viable on Qwen 27B, see file) |
 | [unified-category-tips-ablation.md](unified-category-tips-ablation.md) | solver built (`rvlm_unified`); n=1 val pending on amax1 — tests whether per-document category metadata is required |
+| [rvlm-baseline.md](rvlm-baseline.md) | smoke done (2-doc 0/5 = expected — no perception); SC-8 chain pending. **Note (D-010, 2026-05-27):** This file documents what was called `rvlm` at the time — under the new naming this solver is **`direct_vlm`**. The current `rvlm` solver is the proposed method (formerly `leanest_solo`). |
+| [split-calibration-no-loop-multi.md](split-calibration-no-loop-multi.md) | done. val SC-8 20.0% / test SC-8 11.0% — **9pp split-difficulty floor** on Qwen 3.5 27B `no_loop_multi` (now `raw_vlm_multi`). Anchors the val→test gap discussion. |
+
+## Archive
+
+Outdated / shelved experiments live in [`archive/`](archive/). They're
+kept for reproducibility but are NOT part of the paper's evidence chain
+under D-006. See [archive/README.md](archive/README.md) for the index.
