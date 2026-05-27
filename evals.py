@@ -9,8 +9,11 @@ Usage:
 
 from __future__ import annotations
 
+import atexit
 import importlib
+import os
 import shutil
+import tempfile
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -35,6 +38,31 @@ litellm.drop_params = True
 litellm.request_timeout = 300  # 5min timeout for all LLM calls
 
 
+def _setup_run_tmpdir(run_dir: Path) -> Path:
+    """Scope all tempfile.* calls (and child-process tempfiles via TMPDIR)
+    to a per-run directory; auto-clean at process exit.
+
+    Solves the /tmp leak where dspy/litellm/PIL crop saves accumulate as
+    `/tmp/tmp*.png` and `/tmp/tmpXXX/page_*.png` across runs. The auto-clean
+    runs on normal exit, SIGINT/SIGTERM (Python catches and runs atexit),
+    but NOT on SIGKILL — in that case the dir survives under
+    `<run_dir>/tmp/` and can be cleaned periodically.
+    """
+    tmp_root = run_dir / "tmp"
+    tmp_root.mkdir(parents=True, exist_ok=True)
+    os.environ["TMPDIR"] = str(tmp_root)
+    tempfile.tempdir = str(tmp_root)
+
+    def _cleanup() -> None:
+        try:
+            shutil.rmtree(tmp_root, ignore_errors=True)
+        except Exception:
+            pass
+
+    atexit.register(_cleanup)
+    return tmp_root
+
+
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
@@ -45,6 +73,13 @@ def main(cfg: DictConfig) -> None:
         run_dir = Path("output/runs") / cfg.run_id
     run_dir.mkdir(parents=True, exist_ok=True)
     print(f"Run directory: {run_dir}")
+
+    # Scope all tempfile.* calls to <run_dir>/tmp/ + auto-clean at exit.
+    # Prevents /tmp leaks (dspy/litellm/PIL crop saves were accumulating
+    # at ~5GB/full-val run; see coordination/cleanup-runs.md for the leak
+    # story and prior cleanup).
+    tmp_root = _setup_run_tmpdir(run_dir)
+    print(f"TMPDIR (auto-cleaned at exit): {tmp_root}")
 
     # Save config for reproducibility
     (run_dir / "config.yaml").write_text(OmegaConf.to_yaml(cfg))

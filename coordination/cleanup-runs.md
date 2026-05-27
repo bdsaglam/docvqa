@@ -1,4 +1,42 @@
-# Cleaning up `output/runs/` (run-dir disk cleanup)
+# Cleaning up disk usage
+
+Two leak sources to manage: `output/runs/` (per-run outputs) and `/tmp/`
+(image-crop tempfiles and logfire spools). This doc covers both. The
+per-run TMPDIR fix in `evals.py` prevents new `/tmp/` leaks for runs
+started after 2026-05-28; the section here covers historical cleanup.
+
+## `/tmp/` cleanup (image-crop leaks + logfire spools)
+
+Before the fix, dspy/litellm/PIL saved image crops as `/tmp/tmp*.png` —
+hundreds of thousands of files accumulated to 559 GB on amax7. Logfire's
+network-retry spool dirs (`/tmp/logfire-retryer-*`) added another 12 GB.
+
+**Prevention (already in code):** `evals.py` now scopes `TMPDIR` to
+`<run_dir>/tmp/` and registers an `atexit` cleanup. Runs that exit
+normally (or via SIGINT/SIGTERM) clean themselves up. Only SIGKILL
+leaves the per-run tmp dir behind — those land under `output/runs/<id>/tmp/`
+and can be cleaned with the regular `output/runs/` sweep.
+
+**Historical cleanup (one-time, safe):**
+
+```bash
+# Logfire retry spool dirs — these are buffered logs to the Logfire
+# backend; deleting only loses queued logs, no project data.
+rm -rf /tmp/logfire-retryer-*
+
+# /tmp/tmpXXX dirs older than 1 day — the "active eval tempdirs" filter.
+# Currently-running evals have recently-modified tempdirs and are spared.
+find /tmp -maxdepth 1 -type d -name "tmp*" -mtime +1 -exec rm -rf {} +
+
+# /tmp/tmp*.png files older than 1 day — the bulk of the 559 GB leak.
+find /tmp -maxdepth 1 -type f -name "tmp*.png" -mtime +1 -delete
+```
+
+amax7 freed 574 GB with the three commands above on 2026-05-28. amax1
+can run them too; it's safe as long as no eval has been running with
+output to /tmp for more than 24 hours.
+
+## `output/runs/` cleanup
 
 `output/runs/` accumulates fast — each Qwen 27B full-val run is ~289MB,
 each smoke ~52MB, and exploratory date-stamped runs add up. Periodic
