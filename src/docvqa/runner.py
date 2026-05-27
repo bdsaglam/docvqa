@@ -99,8 +99,10 @@ def _save_result(
             data["logfire_url"] = (
                 f"{logfire_project_url}?q=trace_id%3D%27{result.trace_id}%27"
             )
-    if trajectories:
-        data["trajectories"] = trajectories
+    # NOTE: trajectories are intentionally NOT embedded here. They can be
+    # huge (base64 images in REPL/VLM traces — RVLM result.json hit 1.7GB
+    # for a single doc), are redundant with summary.md + logfire, and are
+    # never read back on resume (_load_completed only reads questions/ids).
     (doc_dir / "result.json").write_text(json.dumps(data, indent=2))
 
     # Save document page images

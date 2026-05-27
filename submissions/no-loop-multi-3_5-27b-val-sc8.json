@@ -1,0 +1,482 @@
+[
+  {
+    "category": "business_report",
+    "question_id": "business_report_1_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_1_q2",
+    "answer": "NVIDIA Jetson AGX for deployment\u2014 and development stacks like NVIDIA Isaac GR00T for humanoid robots, NVIDIA Metropolis for vision AI, and NVIDIA DRIVE for autonomous vehicles",
+    "full_answer": "NVIDIA Jetson AGX for deployment\u2014 and development stacks like NVIDIA Isaac GR00T for humanoid robots, NVIDIA Metropolis for vision AI, and NVIDIA DRIVE for autonomous vehicles"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_2_q1",
+    "answer": "10403",
+    "full_answer": "10403"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_3_q1",
+    "answer": "ESG Ratings",
+    "full_answer": "ESG Ratings"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_3_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q1",
+    "answer": "Common, Capital",
+    "full_answer": "Common, Capital"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q2",
+    "answer": "YouTube Music and Premium",
+    "full_answer": "YouTube Music and Premium"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q5",
+    "answer": "research, development",
+    "full_answer": "research, development"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q1",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_2_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_3_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q1",
+    "answer": "can of powder",
+    "full_answer": "can of powder"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q2",
+    "answer": "Jingle Jangle Comics",
+    "full_answer": "Jingle Jangle Comics"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q1",
+    "answer": "Direction D",
+    "full_answer": "Direction D"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q2",
+    "answer": "12",
+    "full_answer": "12"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q3",
+    "answer": "237, 183, 192, 239, 241",
+    "full_answer": "237, 183, 192, 239, 241"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_2_q1",
+    "answer": "16",
+    "full_answer": "16"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_2_q2",
+    "answer": "1004546-1",
+    "full_answer": "1004546-1"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q1",
+    "answer": "64, 4",
+    "full_answer": "64, 4"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q2",
+    "answer": "2.50",
+    "full_answer": "2.50"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_3_q3",
+    "answer": "15",
+    "full_answer": "15"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_4_q1",
+    "answer": "3.70 in",
+    "full_answer": "3.70 in"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_4_q2",
+    "answer": "0.598 in",
+    "full_answer": "0.598 in"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_1_q1",
+    "answer": "1999",
+    "full_answer": "1999"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_1_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q1",
+    "answer": "10",
+    "full_answer": "10"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q2",
+    "answer": "1.25 USD",
+    "full_answer": "1.25 USD"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q3",
+    "answer": "Ndjamena",
+    "full_answer": "Ndjamena"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q4",
+    "answer": "Osaka",
+    "full_answer": "Osaka"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q5",
+    "answer": "Copenhagen",
+    "full_answer": "Copenhagen"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q6",
+    "answer": "Osaka",
+    "full_answer": "Osaka"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q7",
+    "answer": "Moscow",
+    "full_answer": "Moscow"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q8",
+    "answer": "Geneva",
+    "full_answer": "Geneva"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_1_q1",
+    "answer": "Mons Esquilinus",
+    "full_answer": "Mons Esquilinus"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_1_q2",
+    "answer": "P. PORTVENSIS",
+    "full_answer": "P. PORTVENSIS"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q1",
+    "answer": "Macadam & Gravel",
+    "full_answer": "Macadam & Gravel"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q2",
+    "answer": "Bourne",
+    "full_answer": "Bourne"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q3",
+    "answer": "28",
+    "full_answer": "28"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q4",
+    "answer": "Raynham",
+    "full_answer": "Raynham"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_2_q5",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q1",
+    "answer": "10",
+    "full_answer": "10"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q2",
+    "answer": "22",
+    "full_answer": "22"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q3",
+    "answer": "35",
+    "full_answer": "35"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q1",
+    "answer": "17",
+    "full_answer": "17"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q2",
+    "answer": "InternVL",
+    "full_answer": "InternVL"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q4",
+    "answer": "[113]",
+    "full_answer": "[113]"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q5",
+    "answer": "[106]",
+    "full_answer": "[106]"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_1_q7",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_2_q1",
+    "answer": "activations",
+    "full_answer": "activations"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_3_q1",
+    "answer": "226",
+    "full_answer": "226"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_3_q2",
+    "answer": "CC3M, TextCaps, ShareGPT-4V, DenseFusion-1M, Object 365, OpenMathInstruct",
+    "full_answer": "CC3M, TextCaps, ShareGPT-4V, DenseFusion-1M, Object 365, OpenMathInstruct"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q1",
+    "answer": "30.2%",
+    "full_answer": "30.2%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q2",
+    "answer": "30.2%",
+    "full_answer": "30.2%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q3",
+    "answer": "TexTok-256 + DiT-XL",
+    "full_answer": "TexTok-256 + DiT-XL"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q4",
+    "answer": "256",
+    "full_answer": "256"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_1_q5",
+    "answer": "content",
+    "full_answer": "content"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q1",
+    "answer": "540000",
+    "full_answer": "540000"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q2",
+    "answer": "OBQA",
+    "full_answer": "OBQA"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q3",
+    "answer": "+1.4, +0.2",
+    "full_answer": "+1.4, +0.2"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q4",
+    "answer": "36.2",
+    "full_answer": "36.2"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_2_q5",
+    "answer": "36.1",
+    "full_answer": "36.1"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_1_q1",
+    "answer": "201425",
+    "full_answer": "201425"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_1_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_2_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q2",
+    "answer": "Takeaways",
+    "full_answer": "Takeaways"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q4",
+    "answer": "SDG 2.3.1",
+    "full_answer": "SDG 2.3.1"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  }
+]

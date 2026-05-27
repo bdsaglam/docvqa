@@ -1,0 +1,962 @@
+[
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_10_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_11_q1",
+    "answer": "172",
+    "full_answer": "172"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q2",
+    "answer": "2017-06-28",
+    "full_answer": "2017-06-28"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_14_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q4",
+    "answer": "115 Risk factors",
+    "full_answer": "115 Risk factors"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_4_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_7_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_7_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "business_report",
+    "question_id": "business_report_9_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q2",
+    "answer": "1",
+    "full_answer": "1"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q3",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_10_q6",
+    "answer": "david, tank, crack, 6",
+    "full_answer": "david, tank, crack, 6"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q10",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q11",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q12",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q8",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_13_q9",
+    "answer": "4",
+    "full_answer": "4"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_15_q2",
+    "answer": "WISHHHH",
+    "full_answer": "WISHHHH"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q10",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q11",
+    "answer": "8",
+    "full_answer": "8"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q5",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q6",
+    "answer": "WHAMM!",
+    "full_answer": "WHAMM!"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q7",
+    "answer": "APOLLO",
+    "full_answer": "APOLLO"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q8",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_1_q9",
+    "answer": "1",
+    "full_answer": "1"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q5",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "comics",
+    "question_id": "comics_4_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q1",
+    "answer": "57386910560",
+    "full_answer": "57386910560"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q2",
+    "answer": "56",
+    "full_answer": "56"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_10_q3",
+    "answer": "C",
+    "full_answer": "C"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q1",
+    "answer": "65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1",
+    "full_answer": "65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q2",
+    "answer": "1",
+    "full_answer": "1"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_11_q3",
+    "answer": "11",
+    "full_answer": "11"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q3",
+    "answer": "1015864-172",
+    "full_answer": "1015864-172"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q4",
+    "answer": "MS3127E-24-61PY",
+    "full_answer": "MS3127E-24-61PY"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_12_q5",
+    "answer": "MS3127E-24-61SX, MS3127E-24-61PY",
+    "full_answer": "MS3127E-24-61SX, MS3127E-24-61PY"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q3",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q5",
+    "answer": "2014643-001, 2014643-002, 2014643-003, 2014643-004, 2014643-005, 2014643-006, 2014643-007, 2014643-008, 2014643-009",
+    "full_answer": "2014643-001, 2014643-002, 2014643-003, 2014643-004, 2014643-005, 2014643-006, 2014643-007, 2014643-008, 2014643-009"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q6",
+    "answer": "Based on the provided document, specifically the \"LIST OF MATERIALS\" on Page 2 (Sheet 6 of 30) and the schematic on Page 8 (Sheet 30 of 30):\n\n1.  **Identify the plugs:**\n    *   **Plug covered with its own socket:** Item 11 in the List of Materials is \"CONNECTOR, PLUG, ELECTRICAL (P16)\". The description for Item 14 states \"CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965\". Item 11 has Part No. 1010965-1. This corresponds to connector P16.\n    *   **Plug seen in view B-B:** The schematic on Page 8 shows \"VIEW B-B\" pointing to connector **P15** (labeled \"56 P15\").\n\n2.  **Identify the connections:**\n    *   We need the connections between **P16** and **P15**.\n    *   Looking at the wiring tables (e.g., Page 3, Sheet 9 of 30), we look for rows where the \"CIRCUIT PT FROM (A) TO (B)\" column lists P16 and P15.\n    *   The connections are listed sequentially by Lead Ident (C 1, C 2, etc.).\n    *   **Connection 1:** Lead **C 1L** connects **P12-63** to **P15-3**. (Wait, looking for P16).\n    *   Let's re-examine the wiring tables for P16 to P15 connections.\n    *   **Sheet 9 (Page 3):**\n        *   Lead **C 1L**: P12-63 to P15-3.\n        *   Lead **C 1R**: P12-39 to P15-1.\n        *   Lead **C 1W**: P12-64 to P15-2.\n        *   Lead **C 2L**: P12-34 to P15-14.\n        *   Lead **C 2R**: P12-60 to P15-12.\n        *   Lead **C 2W**: P12-65 to P15-13.\n        *   Lead **C 3A**: P12-30 to P12-30 (Shield).\n    *   Let's look for P16.\n    *   **Sheet 10 (Page 4):**\n        *   Lead **C 3L**: P12-81 to P15-01.\n        *   Lead **C 3R**: P12-56 to P15-59.\n        *   Lead **C 3W**: P12-57 to P15-60.\n    *   **Sheet 11 (Page 4):**\n        *   Lead **C 6A**: P12-47 to P12-47.\n        *   Lead **C 6R**: P12-72 to P15-35.\n        *   Lead **C 6Y**: P12-71 to P15-36.\n    *   **Sheet 12 (Page 4):**\n        *   Lead **C 8Y**: P12-78 to P19-84.\n    *   **Sheet 13 (Page 4):**\n        *   Lead **C 11A**: P12-30 to P12-30.\n        *   Lead **C 11B**: P19-C3 to P19-C3.\n        *   Lead **C 11K**: P12-15 to P19-83.\n        *   Lead **C 11Y**: P12-31 to P19-A3.\n    *   **Sheet 14 (Page 5):**\n        *   Lead **C 13K**: P12-57 to P19-A8.\n        *   Lead **C 13Y**: P12-43 to P19-38.\n    *   **Sheet 15 (Page 5):**\n        *   Lead **C 16R**: P12-9 to P19-K4.\n        *   Lead **C 16Y**: P12-27 to P19-H4.\n    *   **Sheet 16 (Page 5):**\n        *   Lead **C 20G**: P12-19 to P19-22.\n        *   Lead **C 20R**: P12-8 to P19-M22.\n        *   Lead **C 20Y**: P12-7 to P19-22.\n    *   **Sheet 17 (Page 5):**\n        *   Lead **C 23Y**: P12-2 to P19-F17.\n        *   Lead **C 24R**: P12-82 to P19-G13.\n        *   Lead **C 24Y**: P12-58 to P19-H13.\n    *   **Sheet 18 (Page 6):**\n        *   Lead **C 28B**: P19-D25 to P19-D25.\n        *   Lead **C 28L**: None.\n        *   Lead **C 28K**: P15-5 to P19-D23.\n        *   Lead **C 28W**: P15-4 to P19-D24.\n    *   **Sheet 19 (Page 6):**\n        *   Lead **C 30R**: P15-33 to P19-C25.\n        *   Lead **C 30W**: P15-32 to P19-D25.\n        *   Lead **C 34R**: P15-40 to P19-K20.\n        *   Lead **C 34Y**: P15-39 to P19-H20.\n        *   Lead **C 35R**: P15-42 to P19-H21.\n        *   Lead **C 35Y**: P15-41 to P19-K21.\n        *   Lead **C 36R**: P15-52 to P19-K22.\n        *   Lead **C 36Y**: P15-51 to P19-K23.\n    *   **Sheet 20 (Page 6):**\n        *   Lead **C 37G**: P16-24 to P19-K15.\n        *   Lead **C 37R**: P16-25 to P19-H17.\n        *   Lead **C 37Y**: P16-23 to P19-H18.\n        *   Lead **C 38R**: P16-21 to P19-H16.\n        *   Lead **C 38Y**: P16-22 to P19-H19.\n        *   Lead **C 39F**: P15-8 to P19-G10.\n        *   Lead **C 39Y**: P15-9 to P19-G9.\n        *   Lead **C 40K**: P15-10 to P19-K9.\n        *   Lead **C 40Y**: P15-11 to P19-H9.\n    *   **Sheet 21 (Page 6):**\n        *   Lead **C 41R**: P16-5 to P19-H2.\n        *   Lead **C 41Y**: P16-8 to P19-G2.\n        *   Lead **C 42R**: P16-7 to P19-H1.\n        *   Lead **C 42Y**: P16-9 to P19-G1.\n        *   Lead **C 43R**: P16-14 to P19-H6.\n        *   Lead **C 43Y**: P16-15 to P19-K6.\n        *   Lead **C 44**: P16-16 to P19-K8.\n        *   Lead **C 45R**: P16-17 to P19-K7.\n    *   **Sheet 22 (Page 7):**\n        *   Lead **C 45Y**: P16-18 to P19-H7.\n        *   Lead **C 46G**: P16-12 to P19-K17.\n        *   Lead **C 46R**: P16-10 to P19-K19.\n        *   Lead **C 46Y**: P16-11 to P19-K18.\n        *   Lead **C 47R**: P16-2 to P19-G11.\n        *   Lead **C 47Y**: P16-4 to P19-G12.\n        *   Lead **C 48R**: P16-3 to P19-H11.\n        *   Lead **C 48Y**: P16-5 to P19-H12.\n    *   **Sheet 23 (Page 7):**\n        *   Lead **C 49R**: P15-38 to P19-F16.\n        *   Lead **C 49Y**: P15-37 to P19-G16.\n        *   Lead **C 50**: P16-13 to P19-D1.\n        *   Lead **C 51**: P15-25 to P19-H5.\n        *   Lead **C 52**: P16-20 to P19-K5.\n        *   Lead **C 53**: P16-19 to P19-F1.\n        *   Lead **C 54R**: P16-27 to P19-H10.\n        *   Lead **C 54Y**: P16-28 to P19-K10.\n        *   Lead **C 55R**: P16-33 to P19-A20.\n    *   **Sheet 24 (Page 7):**\n        *   Lead **C 55Y**: P16-34 to P19-B20.\n        *   Lead **C 56R**: P16-35 to P19-B19.\n        *   Lead **C 56Y**: P16-36 to P19-A19.\n        *   Lead **C 57R**: P16-37 to P19-A22.\n        *   Lead **C 57Y**: P16-38 to P19-B22.\n        *   Lead **C 58R**: P16-39 to P19-B21.\n    *   **Sheet 25 (Page 7):**\n        *   Lead **C 58Y**: P16-40 to P19-A21.\n        *   Lead **C 59R**: P16-41 to P19-A18.\n        *   Lead **C 59Y**: P16-42 to P19-B18.\n        *   Lead **C 60R**: P16-43 to P19-B17.\n        *   Lead **C 60Y**: P16-44 to P19-A17.\n        *   Lead **C 61R**: P16-45 to P19-B20.\n    *   **Sheet 26 (Page 8):**\n        *   Lead **C 61Y**: P16-46 to P19-B21.\n        *   Lead **C 62R**: P16-47 to P19-D17.\n        *   Lead **C 62Y**: P16-48 to P19-D18.\n        *   Lead **C 63R**: P16-51 to P19-A16.\n        *   Lead **C 63Y**: P16-52 to P19-B16.\n        *   Lead **C 64R**: P16-53 to P19-C15.\n    *   **Sheet 27 (Page 8):**\n        *   Lead **C 64Y**: P16-54 to P19-B15.\n        *   Lead **C 65R**: P16-55 to P19-B14.\n        *   Lead **C 65Y**: P16-56 to P19-C14.\n        *   Lead **C 66R**: P16-57 to P19-C13.\n        *   Lead **C 66Y**: P16-58 to P19-B13.\n        *   Lead **C 67**: P16-1 to P19-D12.\n        *   Lead **C 74G**: P15-22 to P19-G25.\n    *   **Sheet 28 (Page 8):**\n        *   Lead **C 74N**: P15-21 to P19-G24.\n        *   Lead **C 74R**: P15-19 to P19-F25.\n        *   Lead **C 74Y**: P15-20 to P19-F24.\n        *   Lead **C 76**: P16-59 to P19-F15.\n        *   Lead **C 77A**: P12-65 to P12-65.\n        *   Lead **C 77B**: P19-D7 to P19-D7.\n        *   Lead **C 77L**: None.\n        *   Lead **C 77R**: P12-40 to P19-D5.\n        *   Lead **C 77W**: P17-21 to P19-J6.\n        *   Lead **C 78A**: P12-79 to P12-79.\n    *   **Sheet 29 (Page 8):**\n        *   Lead **C 78B**: P19-F7 to P19-F7.\n        *   Lead **C 78L**: None.\n        *   Lead **C 78R**: P12-32 to P19-F5.\n        *   Lead **C 78W**: P12-55 to P19-F6.\n        *   Lead **C 79A**: P12-62 to P12-62.\n        *   Lead **C 79B**: P19-G7 to P19-G7.\n        *   Lead **C 79L**: None.\n        *   Lead **C 79R**: P12-36 to P19-G5.\n        *   Lead **C 79W**: P12-20 to P19-G6.\n\n    Wait, I am looking for connections between **P16** and **P15**.\n    Let's re-scan the tables specifically for \"P16\" and \"P15\" in the same row.\n    *   **Sheet 9:** No P16.\n    *   **Sheet 10:** No P16.\n    *   **Sheet 11:** No P16.\n    *   **Sheet 12:** No P16.\n    *   **Sheet 13:** No P16.\n    *   **Sheet 14:** No P16.\n    *   **Sheet 15:** No P16.\n    *   **Sheet 16:** No P16.\n    *   **Sheet 17:** No P16.\n    *   **Sheet 18:** No P16.\n    *   **Sheet 19:** No P16.\n    *   **Sheet 20:**\n        *   Lead **C 37G**: P16-24 to P19-K15.\n        *   Lead **C 37R**: P16-25 to P19-H17.\n        *   Lead **C 37Y**: P16-23 to P19-H18.\n        *   Lead **C 38R**: P16-21 to P19-H16.\n        *   Lead **C 38Y**: P16-22 to P19-H19.\n        *   Lead **C 39F**: P15-8 to P19-G10.\n        *   Lead **C 39Y**: P15-9 to P19-G9.\n        *   Lead **C 40K**: P15-10 to P19-K9.\n        *   Lead **C 40Y**: P15-11 to P19-H9.\n    *   **Sheet 21:**\n        *   Lead **C 41R**: P16-5 to P19-H2.\n        *   Lead **C 41Y**: P16-8 to P19-G2.\n        *   Lead **C 42R**: P16-7 to P19-H1.\n        *   Lead **C 42Y**: P16-9 to P19-G1.\n        *   Lead **C 43R**: P16-14 to P19-H6.\n        *   Lead **C 43Y**: P16-15 to P19-K6.\n        *   Lead **C 44**: P16-16 to P19-K8.\n        *   Lead **C 45R**: P16-17 to P19-K7.\n    *   **Sheet 22:**\n        *   Lead **C 45Y**: P16-18 to P19-H7.\n        *   Lead **C 46G**: P16-12 to P19-K17.\n        *   Lead **C 46R**: P16-10 to P19-K19.\n        *   Lead **C 46Y**: P16-11 to P19-K18.\n        *   Lead **C 47R**: P16-2 to P19-G11.\n        *   Lead **C 47Y**: P16-4 to P19-G12.\n        *   Lead **C 48R**: P16-3 to P19-H11.\n        *   Lead **C 48Y**: P16-5 to P19-H12.\n    *   **Sheet 23:**\n        *   Lead **C 50**: P16-13 to P19-D1.\n        *   Lead **C 52**: P16-20 to P19-K5.\n        *   Lead **C 53**: P16-19 to P19-F1.\n        *   Lead **C 54R**: P16-27 to P19-H10.\n        *   Lead **C 54Y**: P16-28 to P19-K10.\n        *   Lead **C 55R**: P16-33 to P19-A20.\n    *   **Sheet 24:**\n        *   Lead **C 55Y**: P16-34 to P19-B20.\n        *   Lead **C 56R**: P16-35 to P19-B19.\n        *   Lead **C 56Y**: P16-36 to P19-A19.\n        *   Lead **C 57R**: P16-37 to P19-A22.\n        *   Lead **C 57Y**: P16-38 to P19-B22.\n        *   Lead **C 58R**: P16-39 to P19-B21.\n    *   **Sheet 25:**\n        *   Lead **C 58Y**: P16-40 to P19-A21.\n        *   Lead **C 59R**: P16-41 to P19-A18.\n        *   Lead **C 59Y**: P16-42 to P19-B18.\n        *   Lead **C 60R**: P16-43 to P19-B17.\n        *   Lead **C 60Y**: P16-44 to P19-A17.\n        *   Lead **C 61R**: P16-45 to P19-B20.\n    *   **Sheet 26:**\n        *   Lead **C 61Y**: P16-46 to P19-B21.\n        *   Lead **C 62R**: P16-47 to P19-D17.\n        *   Lead **C 62Y**: P16-48 to P19-D18.\n        *   Lead **C 63R**: P16-51 to P19-A16.\n        *   Lead **C 63Y**: P16-52 to P19-B16.\n        *   Lead **C 64R**: P16-53 to P19-C15.\n    *   **Sheet 27:**\n        *   Lead **C 64Y**: P16-54 to P19-B15.\n        *   Lead **C 65R**: P16-55 to P19-B14.\n        *   Lead **C 65Y**: P16-56 to P19-C14.\n        *   Lead **C 66R**: P16-57 to P19-C13.\n        *   Lead **C 66Y**: P16-58 to P19-B13.\n        *   Lead **C 67**: P16-1 to P19-D12.\n    *   **Sheet 28:**\n        *   Lead **C 76**: P16-59 to P19-F15.\n\n    It seems there are no direct connections between P16 and P15 listed in the wiring tables. The connections are P16 to P19, P15 to P19, P12 to P15, etc.\n    Let's re-read the question carefully. \"fourth listed connection between the plug covered with its own socket, and the plug seen in view B-B\".\n    Maybe \"plug covered with its own socket\" is not P16.\n    Item 11: CONNECTOR, PLUG, ELECTRICAL (P16). Part No 1010965-1.\n    Item 14: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965.\n    So P16 is the plug with its own socket.\n    View B-B shows P15.\n    Are there connections between P16 and P15?\n    Let's check the schematic on Page 8 again.\n    The schematic shows P12, P15, P16, P19.\n    Wires connect P12 to P15, P12 to P16, P12 to P19, P15 to P19, P16 to P19.\n    Is there a wire directly from P16 to P15?\n    Looking at the schematic, there is a wire from P16 (top right) going to P19 (bottom right).\n    There is a wire from P15 (bottom left) going to P19 (bottom right).\n    There is a wire from P12 (top left) going to P15 (bottom left).\n    There is a wire from P12 (top left) going to P16 (top right).\n    There is a wire from P12 (top left) going to P19 (bottom right).\n    It seems P16 and P15 are not directly connected. They are both connected to P12 and P19.\n    Perhaps the question implies a path? Or maybe I missed a connection.\n    Let's check the List of Materials again.\n    Item 1: Wire per 1010789-006, 22AWG, YEL, 5 FT TOT LG.\n    Item 2: Wire per 1010789-016, 26 AWG, YEL, 10 FT TOT LG.\n    Item 3: Wire per 1010789-008, 22AWG, YEL, RED, 30 FT TOT LG.\n    Item 4: Wire per 1010789-017, 26 AWG, YEL, RED, 25 FT TOT LG.\n    Item 5: Wire per 1010789-009, 22 AWG, YEL, RED, GRN, 5 FT TOT LG.\n    Item 6: Wire per 1010789-019, 26 AWG, YEL, RED, GRN, BRN, 5 FT TOT LG.\n    Item 7: Wire per 1010707-1, RED JKT, 29 AWG, RED, WHT, BLUE, 26 FT TOT LG.\n    Item 8: Wire per 1010789-015, 26 AWG, YEL, RED, YEL JKT, 40 FT TOT LG.\n    Item 9: Wire per 1010789-002, 24 AWG, BLK, 35 FT TOT LG.\n\n    Let's look at the wiring tables again. Maybe I missed a row.\n    Let's search for \"P16\" and \"P15\" in the same row.\n    I don't see any.\n    Maybe the question refers to the connections *of* the plug covered with its own socket (P16) and the plug seen in view B-B (P15) to a common point?\n    Or maybe \"plug covered with its own socket\" refers to something else.\n    Item 12: CONNECTOR, PLUG, ELECTRICAL (P15). Part No 1010965-2.\n    Item 14: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965.\n    So P15 also has a socket supplied with it?\n    Item 14 says \"CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965\".\n    Item 11 is P16, Part No 1010965-1.\n    Item 12 is P15, Part No 1010965-2.\n    So both P15 and P16 are connectors of type 1010965, which come with sockets.\n    The question says \"the plug covered with its own socket\". This could refer to either P15 or P16.\n    But it also says \"and the plug seen in view B-B\". View B-B shows P15.\n    So the first plug must be P16.\n    So we are looking for connections between P16 and P15.\n    Since there are no direct connections, maybe the question is about the connections *from* P16 and *from* P15 to a common connector, like P12 or P19.\n    Let's assume the question means \"connections between the plug covered with its own socket (P16) and the plug seen in view B-B (P15) [via a common connector]\".\n    Or maybe \"between\" means the set of connections involving both.\n    Let's list the connections for P16 and P15.\n    P16 connections (to P19):\n    C 37G, C 37R, C 37Y, C 38R, C 38Y, C 41R, C 41Y, C 42R, C 42Y, C 43R, C 43Y, C 44, C 45R, C 45Y, C 46G, C 46R, C 46Y, C 47R, C 47Y, C 48R, C 48Y, C 50, C 52, C 53, C 54R, C 54Y, C 55R, C 55Y, C 56R, C 56Y, C 57R, C 57Y, C 58R, C 58Y, C 59R, C 59Y, C 60R, C 60Y, C 61R, C 61Y, C 62R, C 62Y, C 63R, C 63Y, C 64R, C 64Y, C 65R, C 65Y, C 66R, C 66Y, C 67, C 76.\n    P15 connections (to P19):\n    C 39F, C 39Y, C 40K, C 40Y, C 49R, C 49Y, C 51, C 55R (wait, C 55R is P16-33 to P19-A20), C 55Y (P16-34 to P19-B20).\n    Let's re-check P15 connections.\n    Sheet 18: C 28K (P15-5 to P19-D23), C 28W (P15-4 to P19-D24).\n    Sheet 19: C 30R (P15-33 to P19-C25), C 30W (P15-32 to P19-D25), C 34R (P15-40 to P19-K20), C 34Y (P15-39 to P19-H20), C 35R (P15-42 to P19-H21), C 35Y (P15-41 to P19-K21), C 36R (P15-52 to P19-K22), C 36Y (P15-51 to P19-K23).\n    Sheet 20: C 39F (P15-8 to P19-G10), C 39Y (P15-9 to P19-G9), C 40K (P15-10 to P19-K9), C 40Y (P15-11 to P19-H9).\n    Sheet 23: C 49R (P15-38 to P19-F16), C 49Y (P15-37 to P19-G16), C 51 (P15-25 to P19-H5).\n    Sheet 27: C 74G (P15-22 to P19-G25).\n    Sheet 28: C 74N (P15-21 to P19-G24), C 74R (P15-19 to P19-F25), C 74Y (P15-20 to P19-F24).\n\n    This is getting complicated. Let's reconsider the question.\n    \"fourth listed connection between the plug covered with its own socket, and the plug seen in view B-B\"\n    Maybe \"plug covered with its own socket\" is P12?\n    Item 10: CONNECTOR, PLUG, ELECTRICAL (P12). Part No 1010929-001.\n    Item 13: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010929.\n    So P12 is a plug with its own socket.\n    View B-B shows P15.\n    So we are looking for connections between P12 and P15.\n    Let's list the connections between P12 and P15.\n    Sheet 9:\n    C 1L: P12-63 to P15-3.\n    C 1R: P12-39 to P15-1.\n    C 1W: P12-64 to P15-2.\n    C 2L: P12-34 to P15-14.\n    C 2R: P12-60 to P15-12.\n    C 2W: P12-65 to P15-13.\n    Sheet 10:\n    C 3L: P12-81 to P15-01.\n    C 3R: P12-56 to P15-59.\n    C 3W: P12-57 to P15-60.\n    Sheet 11:\n    C 6R: P12-72 to P15-35.\n    C 6Y: P12-71 to P15-36.\n    Sheet 12:\n    C 8Y: P12-78 to P19-84. (Not P15)\n    Sheet 13:\n    C 11K: P12-15 to P19-83. (Not P15)\n    C 11Y: P12-31 to P19-A3. (Not P15)\n    Sheet 14:\n    C 13K: P12-57 to P19-A8. (Not P15)\n    C 13Y: P12-43 to P19-38. (Not P15)\n    Sheet 15:\n    C 16R: P12-9 to P19-K4. (Not P15)\n    C 16Y: P12-27 to P19-H4. (Not P15)\n    Sheet 16:\n    C 20G: P12-19 to P19-22. (Not P15)\n    C 20R: P12-8 to P19-M22. (Not P15)\n    C 20Y: P12-7 to P19-22. (Not P15)\n    Sheet 17:\n    C 23Y: P12-2 to P19-F17. (Not P15)\n    C 24R: P12-82 to P19-G13. (Not P15)\n    C 24Y: P12-58 to P19-H13. (Not P15)\n    Sheet 18:\n    C 28K: P15-5 to P19-D23. (Not P12)\n    C 28W: P15-4 to P19-D24. (Not P12)\n    Sheet 19:\n    C 30R: P15-33 to P19-C25. (Not P12)\n    C 30W: P15-32 to P19-D25. (Not P12)\n    C 34R: P15-40 to P19-K20. (Not P12)\n    C 34Y: P15-39 to P19-H20. (Not P12)\n    C 35R: P15-42 to P19-H21. (Not P12)\n    C 35Y: P15-41 to P19-K21. (Not P12)\n    C 36R: P15-52 to P19-K22. (Not P12)\n    C 36Y: P15-51 to P19-K23. (Not P12)\n    Sheet 20:\n    C 39F: P15-8 to P19-G10. (Not P12)\n    C 39Y: P15-9 to P19-G9. (Not P12)\n    C 40K: P15-10 to P19-K9. (Not P12)\n    C 40Y: P15-11 to P19-H9. (Not P12)\n    Sheet 23:\n    C 49R: P15-38 to P19-F16. (Not P12)\n    C 49Y: P15-37 to P19-G16. (Not P12)\n    C 51: P15-25 to P19-H5. (Not P12)\n    Sheet 27:\n    C 74G: P15-22 to P19-G25. (Not P12)\n    Sheet 28:\n    C 74N: P15-21 to P19-G24. (Not P12)\n    C 74R: P15-19 to P19-F25. (Not P12)\n    C 74Y: P15-20 to P19-F24. (Not P12)\n\n    So the connections between P12 and P15 are:\n    1. C 1L (P12-63 to P15-3)\n    2. C 1R (P12-39 to P15-1)\n    3. C 1W (P12-64 to P15-2)\n    4. C 2L (P12-34 to P15-14)\n    5. C 2R (P12-60 to P15-12)\n    6. C 2W (P12-65 to P15-13)\n    7. C 3L (P12-81 to P15-01)\n    8. C 3R (P12-56 to P15-59)\n    9. C 3W (P12-57 to P15-60)\n    10. C 6R (P12-72 to P15-35)\n    11. C 6Y (P12-71 to P15-36)\n\n    The fourth listed connection is **C 2L**.\n    Now we need the color of the cable for C 2L.\n    The \"WIRE LEAD IDENT\" is C 2L.\n    The \"WIRE MATL ITEM\" is 9.\n    Item 9 in the List of Materials (Sheet 6) is \"WIRE PER 1010789-002, 24 AWG, BLK, 35 FT TOT LG\".\n    The color is **BLK** (Black).\n\n    Let's double check.\n    \"plug covered with its own socket\" -> P12 (Item 10, Part No 1010929-001, Item 13 says socket supplied with 1010929).\n    \"plug seen in view B-B\" -> P15 (View B-B points to P15).\n    Connections between P12 and P15:\n    1. C 1L\n    2. C 1R\n    3. C 1W\n    4. C 2L\n    The fourth connection is C 2L.\n    Wire Material Item for C 2L is 9.\n    Item 9 description: \"WIRE PER 1010789-002, 24 AWG, BLK, 35 FT TOT LG\".\n    Color is Black.\n\n    Let's verify the \"plug covered with its own socket\" part.\n    Item 10: CONNECTOR, PLUG, ELECTRICAL (P12). Part No 1010929-001.\n    Item 13: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010929.\n    This confirms P12 is the plug with its own socket.\n    View B-B clearly points to P15.\n    The connections are listed in the wiring tables.\n    The order is by Lead Ident.\n    C 1L, C 1R, C 1W, C 2L...\n    Fourth is C 2L.\n    Wire Item 9 is Black.\n\n    Answer: Black",
+    "full_answer": "Based on the provided document, specifically the \"LIST OF MATERIALS\" on Page 2 (Sheet 6 of 30) and the schematic on Page 8 (Sheet 30 of 30):\n\n1.  **Identify the plugs:**\n    *   **Plug covered with its own socket:** Item 11 in the List of Materials is \"CONNECTOR, PLUG, ELECTRICAL (P16)\". The description for Item 14 states \"CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965\". Item 11 has Part No. 1010965-1. This corresponds to connector P16.\n    *   **Plug seen in view B-B:** The schematic on Page 8 shows \"VIEW B-B\" pointing to connector **P15** (labeled \"56 P15\").\n\n2.  **Identify the connections:**\n    *   We need the connections between **P16** and **P15**.\n    *   Looking at the wiring tables (e.g., Page 3, Sheet 9 of 30), we look for rows where the \"CIRCUIT PT FROM (A) TO (B)\" column lists P16 and P15.\n    *   The connections are listed sequentially by Lead Ident (C 1, C 2, etc.).\n    *   **Connection 1:** Lead **C 1L** connects **P12-63** to **P15-3**. (Wait, looking for P16).\n    *   Let's re-examine the wiring tables for P16 to P15 connections.\n    *   **Sheet 9 (Page 3):**\n        *   Lead **C 1L**: P12-63 to P15-3.\n        *   Lead **C 1R**: P12-39 to P15-1.\n        *   Lead **C 1W**: P12-64 to P15-2.\n        *   Lead **C 2L**: P12-34 to P15-14.\n        *   Lead **C 2R**: P12-60 to P15-12.\n        *   Lead **C 2W**: P12-65 to P15-13.\n        *   Lead **C 3A**: P12-30 to P12-30 (Shield).\n    *   Let's look for P16.\n    *   **Sheet 10 (Page 4):**\n        *   Lead **C 3L**: P12-81 to P15-01.\n        *   Lead **C 3R**: P12-56 to P15-59.\n        *   Lead **C 3W**: P12-57 to P15-60.\n    *   **Sheet 11 (Page 4):**\n        *   Lead **C 6A**: P12-47 to P12-47.\n        *   Lead **C 6R**: P12-72 to P15-35.\n        *   Lead **C 6Y**: P12-71 to P15-36.\n    *   **Sheet 12 (Page 4):**\n        *   Lead **C 8Y**: P12-78 to P19-84.\n    *   **Sheet 13 (Page 4):**\n        *   Lead **C 11A**: P12-30 to P12-30.\n        *   Lead **C 11B**: P19-C3 to P19-C3.\n        *   Lead **C 11K**: P12-15 to P19-83.\n        *   Lead **C 11Y**: P12-31 to P19-A3.\n    *   **Sheet 14 (Page 5):**\n        *   Lead **C 13K**: P12-57 to P19-A8.\n        *   Lead **C 13Y**: P12-43 to P19-38.\n    *   **Sheet 15 (Page 5):**\n        *   Lead **C 16R**: P12-9 to P19-K4.\n        *   Lead **C 16Y**: P12-27 to P19-H4.\n    *   **Sheet 16 (Page 5):**\n        *   Lead **C 20G**: P12-19 to P19-22.\n        *   Lead **C 20R**: P12-8 to P19-M22.\n        *   Lead **C 20Y**: P12-7 to P19-22.\n    *   **Sheet 17 (Page 5):**\n        *   Lead **C 23Y**: P12-2 to P19-F17.\n        *   Lead **C 24R**: P12-82 to P19-G13.\n        *   Lead **C 24Y**: P12-58 to P19-H13.\n    *   **Sheet 18 (Page 6):**\n        *   Lead **C 28B**: P19-D25 to P19-D25.\n        *   Lead **C 28L**: None.\n        *   Lead **C 28K**: P15-5 to P19-D23.\n        *   Lead **C 28W**: P15-4 to P19-D24.\n    *   **Sheet 19 (Page 6):**\n        *   Lead **C 30R**: P15-33 to P19-C25.\n        *   Lead **C 30W**: P15-32 to P19-D25.\n        *   Lead **C 34R**: P15-40 to P19-K20.\n        *   Lead **C 34Y**: P15-39 to P19-H20.\n        *   Lead **C 35R**: P15-42 to P19-H21.\n        *   Lead **C 35Y**: P15-41 to P19-K21.\n        *   Lead **C 36R**: P15-52 to P19-K22.\n        *   Lead **C 36Y**: P15-51 to P19-K23.\n    *   **Sheet 20 (Page 6):**\n        *   Lead **C 37G**: P16-24 to P19-K15.\n        *   Lead **C 37R**: P16-25 to P19-H17.\n        *   Lead **C 37Y**: P16-23 to P19-H18.\n        *   Lead **C 38R**: P16-21 to P19-H16.\n        *   Lead **C 38Y**: P16-22 to P19-H19.\n        *   Lead **C 39F**: P15-8 to P19-G10.\n        *   Lead **C 39Y**: P15-9 to P19-G9.\n        *   Lead **C 40K**: P15-10 to P19-K9.\n        *   Lead **C 40Y**: P15-11 to P19-H9.\n    *   **Sheet 21 (Page 6):**\n        *   Lead **C 41R**: P16-5 to P19-H2.\n        *   Lead **C 41Y**: P16-8 to P19-G2.\n        *   Lead **C 42R**: P16-7 to P19-H1.\n        *   Lead **C 42Y**: P16-9 to P19-G1.\n        *   Lead **C 43R**: P16-14 to P19-H6.\n        *   Lead **C 43Y**: P16-15 to P19-K6.\n        *   Lead **C 44**: P16-16 to P19-K8.\n        *   Lead **C 45R**: P16-17 to P19-K7.\n    *   **Sheet 22 (Page 7):**\n        *   Lead **C 45Y**: P16-18 to P19-H7.\n        *   Lead **C 46G**: P16-12 to P19-K17.\n        *   Lead **C 46R**: P16-10 to P19-K19.\n        *   Lead **C 46Y**: P16-11 to P19-K18.\n        *   Lead **C 47R**: P16-2 to P19-G11.\n        *   Lead **C 47Y**: P16-4 to P19-G12.\n        *   Lead **C 48R**: P16-3 to P19-H11.\n        *   Lead **C 48Y**: P16-5 to P19-H12.\n    *   **Sheet 23 (Page 7):**\n        *   Lead **C 49R**: P15-38 to P19-F16.\n        *   Lead **C 49Y**: P15-37 to P19-G16.\n        *   Lead **C 50**: P16-13 to P19-D1.\n        *   Lead **C 51**: P15-25 to P19-H5.\n        *   Lead **C 52**: P16-20 to P19-K5.\n        *   Lead **C 53**: P16-19 to P19-F1.\n        *   Lead **C 54R**: P16-27 to P19-H10.\n        *   Lead **C 54Y**: P16-28 to P19-K10.\n        *   Lead **C 55R**: P16-33 to P19-A20.\n    *   **Sheet 24 (Page 7):**\n        *   Lead **C 55Y**: P16-34 to P19-B20.\n        *   Lead **C 56R**: P16-35 to P19-B19.\n        *   Lead **C 56Y**: P16-36 to P19-A19.\n        *   Lead **C 57R**: P16-37 to P19-A22.\n        *   Lead **C 57Y**: P16-38 to P19-B22.\n        *   Lead **C 58R**: P16-39 to P19-B21.\n    *   **Sheet 25 (Page 7):**\n        *   Lead **C 58Y**: P16-40 to P19-A21.\n        *   Lead **C 59R**: P16-41 to P19-A18.\n        *   Lead **C 59Y**: P16-42 to P19-B18.\n        *   Lead **C 60R**: P16-43 to P19-B17.\n        *   Lead **C 60Y**: P16-44 to P19-A17.\n        *   Lead **C 61R**: P16-45 to P19-B20.\n    *   **Sheet 26 (Page 8):**\n        *   Lead **C 61Y**: P16-46 to P19-B21.\n        *   Lead **C 62R**: P16-47 to P19-D17.\n        *   Lead **C 62Y**: P16-48 to P19-D18.\n        *   Lead **C 63R**: P16-51 to P19-A16.\n        *   Lead **C 63Y**: P16-52 to P19-B16.\n        *   Lead **C 64R**: P16-53 to P19-C15.\n    *   **Sheet 27 (Page 8):**\n        *   Lead **C 64Y**: P16-54 to P19-B15.\n        *   Lead **C 65R**: P16-55 to P19-B14.\n        *   Lead **C 65Y**: P16-56 to P19-C14.\n        *   Lead **C 66R**: P16-57 to P19-C13.\n        *   Lead **C 66Y**: P16-58 to P19-B13.\n        *   Lead **C 67**: P16-1 to P19-D12.\n        *   Lead **C 74G**: P15-22 to P19-G25.\n    *   **Sheet 28 (Page 8):**\n        *   Lead **C 74N**: P15-21 to P19-G24.\n        *   Lead **C 74R**: P15-19 to P19-F25.\n        *   Lead **C 74Y**: P15-20 to P19-F24.\n        *   Lead **C 76**: P16-59 to P19-F15.\n        *   Lead **C 77A**: P12-65 to P12-65.\n        *   Lead **C 77B**: P19-D7 to P19-D7.\n        *   Lead **C 77L**: None.\n        *   Lead **C 77R**: P12-40 to P19-D5.\n        *   Lead **C 77W**: P17-21 to P19-J6.\n        *   Lead **C 78A**: P12-79 to P12-79.\n    *   **Sheet 29 (Page 8):**\n        *   Lead **C 78B**: P19-F7 to P19-F7.\n        *   Lead **C 78L**: None.\n        *   Lead **C 78R**: P12-32 to P19-F5.\n        *   Lead **C 78W**: P12-55 to P19-F6.\n        *   Lead **C 79A**: P12-62 to P12-62.\n        *   Lead **C 79B**: P19-G7 to P19-G7.\n        *   Lead **C 79L**: None.\n        *   Lead **C 79R**: P12-36 to P19-G5.\n        *   Lead **C 79W**: P12-20 to P19-G6.\n\n    Wait, I am looking for connections between **P16** and **P15**.\n    Let's re-scan the tables specifically for \"P16\" and \"P15\" in the same row.\n    *   **Sheet 9:** No P16.\n    *   **Sheet 10:** No P16.\n    *   **Sheet 11:** No P16.\n    *   **Sheet 12:** No P16.\n    *   **Sheet 13:** No P16.\n    *   **Sheet 14:** No P16.\n    *   **Sheet 15:** No P16.\n    *   **Sheet 16:** No P16.\n    *   **Sheet 17:** No P16.\n    *   **Sheet 18:** No P16.\n    *   **Sheet 19:** No P16.\n    *   **Sheet 20:**\n        *   Lead **C 37G**: P16-24 to P19-K15.\n        *   Lead **C 37R**: P16-25 to P19-H17.\n        *   Lead **C 37Y**: P16-23 to P19-H18.\n        *   Lead **C 38R**: P16-21 to P19-H16.\n        *   Lead **C 38Y**: P16-22 to P19-H19.\n        *   Lead **C 39F**: P15-8 to P19-G10.\n        *   Lead **C 39Y**: P15-9 to P19-G9.\n        *   Lead **C 40K**: P15-10 to P19-K9.\n        *   Lead **C 40Y**: P15-11 to P19-H9.\n    *   **Sheet 21:**\n        *   Lead **C 41R**: P16-5 to P19-H2.\n        *   Lead **C 41Y**: P16-8 to P19-G2.\n        *   Lead **C 42R**: P16-7 to P19-H1.\n        *   Lead **C 42Y**: P16-9 to P19-G1.\n        *   Lead **C 43R**: P16-14 to P19-H6.\n        *   Lead **C 43Y**: P16-15 to P19-K6.\n        *   Lead **C 44**: P16-16 to P19-K8.\n        *   Lead **C 45R**: P16-17 to P19-K7.\n    *   **Sheet 22:**\n        *   Lead **C 45Y**: P16-18 to P19-H7.\n        *   Lead **C 46G**: P16-12 to P19-K17.\n        *   Lead **C 46R**: P16-10 to P19-K19.\n        *   Lead **C 46Y**: P16-11 to P19-K18.\n        *   Lead **C 47R**: P16-2 to P19-G11.\n        *   Lead **C 47Y**: P16-4 to P19-G12.\n        *   Lead **C 48R**: P16-3 to P19-H11.\n        *   Lead **C 48Y**: P16-5 to P19-H12.\n    *   **Sheet 23:**\n        *   Lead **C 50**: P16-13 to P19-D1.\n        *   Lead **C 52**: P16-20 to P19-K5.\n        *   Lead **C 53**: P16-19 to P19-F1.\n        *   Lead **C 54R**: P16-27 to P19-H10.\n        *   Lead **C 54Y**: P16-28 to P19-K10.\n        *   Lead **C 55R**: P16-33 to P19-A20.\n    *   **Sheet 24:**\n        *   Lead **C 55Y**: P16-34 to P19-B20.\n        *   Lead **C 56R**: P16-35 to P19-B19.\n        *   Lead **C 56Y**: P16-36 to P19-A19.\n        *   Lead **C 57R**: P16-37 to P19-A22.\n        *   Lead **C 57Y**: P16-38 to P19-B22.\n        *   Lead **C 58R**: P16-39 to P19-B21.\n    *   **Sheet 25:**\n        *   Lead **C 58Y**: P16-40 to P19-A21.\n        *   Lead **C 59R**: P16-41 to P19-A18.\n        *   Lead **C 59Y**: P16-42 to P19-B18.\n        *   Lead **C 60R**: P16-43 to P19-B17.\n        *   Lead **C 60Y**: P16-44 to P19-A17.\n        *   Lead **C 61R**: P16-45 to P19-B20.\n    *   **Sheet 26:**\n        *   Lead **C 61Y**: P16-46 to P19-B21.\n        *   Lead **C 62R**: P16-47 to P19-D17.\n        *   Lead **C 62Y**: P16-48 to P19-D18.\n        *   Lead **C 63R**: P16-51 to P19-A16.\n        *   Lead **C 63Y**: P16-52 to P19-B16.\n        *   Lead **C 64R**: P16-53 to P19-C15.\n    *   **Sheet 27:**\n        *   Lead **C 64Y**: P16-54 to P19-B15.\n        *   Lead **C 65R**: P16-55 to P19-B14.\n        *   Lead **C 65Y**: P16-56 to P19-C14.\n        *   Lead **C 66R**: P16-57 to P19-C13.\n        *   Lead **C 66Y**: P16-58 to P19-B13.\n        *   Lead **C 67**: P16-1 to P19-D12.\n    *   **Sheet 28:**\n        *   Lead **C 76**: P16-59 to P19-F15.\n\n    It seems there are no direct connections between P16 and P15 listed in the wiring tables. The connections are P16 to P19, P15 to P19, P12 to P15, etc.\n    Let's re-read the question carefully. \"fourth listed connection between the plug covered with its own socket, and the plug seen in view B-B\".\n    Maybe \"plug covered with its own socket\" is not P16.\n    Item 11: CONNECTOR, PLUG, ELECTRICAL (P16). Part No 1010965-1.\n    Item 14: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965.\n    So P16 is the plug with its own socket.\n    View B-B shows P15.\n    Are there connections between P16 and P15?\n    Let's check the schematic on Page 8 again.\n    The schematic shows P12, P15, P16, P19.\n    Wires connect P12 to P15, P12 to P16, P12 to P19, P15 to P19, P16 to P19.\n    Is there a wire directly from P16 to P15?\n    Looking at the schematic, there is a wire from P16 (top right) going to P19 (bottom right).\n    There is a wire from P15 (bottom left) going to P19 (bottom right).\n    There is a wire from P12 (top left) going to P15 (bottom left).\n    There is a wire from P12 (top left) going to P16 (top right).\n    There is a wire from P12 (top left) going to P19 (bottom right).\n    It seems P16 and P15 are not directly connected. They are both connected to P12 and P19.\n    Perhaps the question implies a path? Or maybe I missed a connection.\n    Let's check the List of Materials again.\n    Item 1: Wire per 1010789-006, 22AWG, YEL, 5 FT TOT LG.\n    Item 2: Wire per 1010789-016, 26 AWG, YEL, 10 FT TOT LG.\n    Item 3: Wire per 1010789-008, 22AWG, YEL, RED, 30 FT TOT LG.\n    Item 4: Wire per 1010789-017, 26 AWG, YEL, RED, 25 FT TOT LG.\n    Item 5: Wire per 1010789-009, 22 AWG, YEL, RED, GRN, 5 FT TOT LG.\n    Item 6: Wire per 1010789-019, 26 AWG, YEL, RED, GRN, BRN, 5 FT TOT LG.\n    Item 7: Wire per 1010707-1, RED JKT, 29 AWG, RED, WHT, BLUE, 26 FT TOT LG.\n    Item 8: Wire per 1010789-015, 26 AWG, YEL, RED, YEL JKT, 40 FT TOT LG.\n    Item 9: Wire per 1010789-002, 24 AWG, BLK, 35 FT TOT LG.\n\n    Let's look at the wiring tables again. Maybe I missed a row.\n    Let's search for \"P16\" and \"P15\" in the same row.\n    I don't see any.\n    Maybe the question refers to the connections *of* the plug covered with its own socket (P16) and the plug seen in view B-B (P15) to a common point?\n    Or maybe \"plug covered with its own socket\" refers to something else.\n    Item 12: CONNECTOR, PLUG, ELECTRICAL (P15). Part No 1010965-2.\n    Item 14: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965.\n    So P15 also has a socket supplied with it?\n    Item 14 says \"CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010965\".\n    Item 11 is P16, Part No 1010965-1.\n    Item 12 is P15, Part No 1010965-2.\n    So both P15 and P16 are connectors of type 1010965, which come with sockets.\n    The question says \"the plug covered with its own socket\". This could refer to either P15 or P16.\n    But it also says \"and the plug seen in view B-B\". View B-B shows P15.\n    So the first plug must be P16.\n    So we are looking for connections between P16 and P15.\n    Since there are no direct connections, maybe the question is about the connections *from* P16 and *from* P15 to a common connector, like P12 or P19.\n    Let's assume the question means \"connections between the plug covered with its own socket (P16) and the plug seen in view B-B (P15) [via a common connector]\".\n    Or maybe \"between\" means the set of connections involving both.\n    Let's list the connections for P16 and P15.\n    P16 connections (to P19):\n    C 37G, C 37R, C 37Y, C 38R, C 38Y, C 41R, C 41Y, C 42R, C 42Y, C 43R, C 43Y, C 44, C 45R, C 45Y, C 46G, C 46R, C 46Y, C 47R, C 47Y, C 48R, C 48Y, C 50, C 52, C 53, C 54R, C 54Y, C 55R, C 55Y, C 56R, C 56Y, C 57R, C 57Y, C 58R, C 58Y, C 59R, C 59Y, C 60R, C 60Y, C 61R, C 61Y, C 62R, C 62Y, C 63R, C 63Y, C 64R, C 64Y, C 65R, C 65Y, C 66R, C 66Y, C 67, C 76.\n    P15 connections (to P19):\n    C 39F, C 39Y, C 40K, C 40Y, C 49R, C 49Y, C 51, C 55R (wait, C 55R is P16-33 to P19-A20), C 55Y (P16-34 to P19-B20).\n    Let's re-check P15 connections.\n    Sheet 18: C 28K (P15-5 to P19-D23), C 28W (P15-4 to P19-D24).\n    Sheet 19: C 30R (P15-33 to P19-C25), C 30W (P15-32 to P19-D25), C 34R (P15-40 to P19-K20), C 34Y (P15-39 to P19-H20), C 35R (P15-42 to P19-H21), C 35Y (P15-41 to P19-K21), C 36R (P15-52 to P19-K22), C 36Y (P15-51 to P19-K23).\n    Sheet 20: C 39F (P15-8 to P19-G10), C 39Y (P15-9 to P19-G9), C 40K (P15-10 to P19-K9), C 40Y (P15-11 to P19-H9).\n    Sheet 23: C 49R (P15-38 to P19-F16), C 49Y (P15-37 to P19-G16), C 51 (P15-25 to P19-H5).\n    Sheet 27: C 74G (P15-22 to P19-G25).\n    Sheet 28: C 74N (P15-21 to P19-G24), C 74R (P15-19 to P19-F25), C 74Y (P15-20 to P19-F24).\n\n    This is getting complicated. Let's reconsider the question.\n    \"fourth listed connection between the plug covered with its own socket, and the plug seen in view B-B\"\n    Maybe \"plug covered with its own socket\" is P12?\n    Item 10: CONNECTOR, PLUG, ELECTRICAL (P12). Part No 1010929-001.\n    Item 13: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010929.\n    So P12 is a plug with its own socket.\n    View B-B shows P15.\n    So we are looking for connections between P12 and P15.\n    Let's list the connections between P12 and P15.\n    Sheet 9:\n    C 1L: P12-63 to P15-3.\n    C 1R: P12-39 to P15-1.\n    C 1W: P12-64 to P15-2.\n    C 2L: P12-34 to P15-14.\n    C 2R: P12-60 to P15-12.\n    C 2W: P12-65 to P15-13.\n    Sheet 10:\n    C 3L: P12-81 to P15-01.\n    C 3R: P12-56 to P15-59.\n    C 3W: P12-57 to P15-60.\n    Sheet 11:\n    C 6R: P12-72 to P15-35.\n    C 6Y: P12-71 to P15-36.\n    Sheet 12:\n    C 8Y: P12-78 to P19-84. (Not P15)\n    Sheet 13:\n    C 11K: P12-15 to P19-83. (Not P15)\n    C 11Y: P12-31 to P19-A3. (Not P15)\n    Sheet 14:\n    C 13K: P12-57 to P19-A8. (Not P15)\n    C 13Y: P12-43 to P19-38. (Not P15)\n    Sheet 15:\n    C 16R: P12-9 to P19-K4. (Not P15)\n    C 16Y: P12-27 to P19-H4. (Not P15)\n    Sheet 16:\n    C 20G: P12-19 to P19-22. (Not P15)\n    C 20R: P12-8 to P19-M22. (Not P15)\n    C 20Y: P12-7 to P19-22. (Not P15)\n    Sheet 17:\n    C 23Y: P12-2 to P19-F17. (Not P15)\n    C 24R: P12-82 to P19-G13. (Not P15)\n    C 24Y: P12-58 to P19-H13. (Not P15)\n    Sheet 18:\n    C 28K: P15-5 to P19-D23. (Not P12)\n    C 28W: P15-4 to P19-D24. (Not P12)\n    Sheet 19:\n    C 30R: P15-33 to P19-C25. (Not P12)\n    C 30W: P15-32 to P19-D25. (Not P12)\n    C 34R: P15-40 to P19-K20. (Not P12)\n    C 34Y: P15-39 to P19-H20. (Not P12)\n    C 35R: P15-42 to P19-H21. (Not P12)\n    C 35Y: P15-41 to P19-K21. (Not P12)\n    C 36R: P15-52 to P19-K22. (Not P12)\n    C 36Y: P15-51 to P19-K23. (Not P12)\n    Sheet 20:\n    C 39F: P15-8 to P19-G10. (Not P12)\n    C 39Y: P15-9 to P19-G9. (Not P12)\n    C 40K: P15-10 to P19-K9. (Not P12)\n    C 40Y: P15-11 to P19-H9. (Not P12)\n    Sheet 23:\n    C 49R: P15-38 to P19-F16. (Not P12)\n    C 49Y: P15-37 to P19-G16. (Not P12)\n    C 51: P15-25 to P19-H5. (Not P12)\n    Sheet 27:\n    C 74G: P15-22 to P19-G25. (Not P12)\n    Sheet 28:\n    C 74N: P15-21 to P19-G24. (Not P12)\n    C 74R: P15-19 to P19-F25. (Not P12)\n    C 74Y: P15-20 to P19-F24. (Not P12)\n\n    So the connections between P12 and P15 are:\n    1. C 1L (P12-63 to P15-3)\n    2. C 1R (P12-39 to P15-1)\n    3. C 1W (P12-64 to P15-2)\n    4. C 2L (P12-34 to P15-14)\n    5. C 2R (P12-60 to P15-12)\n    6. C 2W (P12-65 to P15-13)\n    7. C 3L (P12-81 to P15-01)\n    8. C 3R (P12-56 to P15-59)\n    9. C 3W (P12-57 to P15-60)\n    10. C 6R (P12-72 to P15-35)\n    11. C 6Y (P12-71 to P15-36)\n\n    The fourth listed connection is **C 2L**.\n    Now we need the color of the cable for C 2L.\n    The \"WIRE LEAD IDENT\" is C 2L.\n    The \"WIRE MATL ITEM\" is 9.\n    Item 9 in the List of Materials (Sheet 6) is \"WIRE PER 1010789-002, 24 AWG, BLK, 35 FT TOT LG\".\n    The color is **BLK** (Black).\n\n    Let's double check.\n    \"plug covered with its own socket\" -> P12 (Item 10, Part No 1010929-001, Item 13 says socket supplied with 1010929).\n    \"plug seen in view B-B\" -> P15 (View B-B points to P15).\n    Connections between P12 and P15:\n    1. C 1L\n    2. C 1R\n    3. C 1W\n    4. C 2L\n    The fourth connection is C 2L.\n    Wire Material Item for C 2L is 9.\n    Item 9 description: \"WIRE PER 1010789-002, 24 AWG, BLK, 35 FT TOT LG\".\n    Color is Black.\n\n    Let's verify the \"plug covered with its own socket\" part.\n    Item 10: CONNECTOR, PLUG, ELECTRICAL (P12). Part No 1010929-001.\n    Item 13: CONTACT, SOCKET SUPPLIED WITH CONNECTOR 1010929.\n    This confirms P12 is the plug with its own socket.\n    View B-B clearly points to P15.\n    The connections are listed in the wiring tables.\n    The order is by Lead Ident.\n    C 1L, C 1R, C 1W, C 2L...\n    Fourth is C 2L.\n    Wire Item 9 is Black.\n\n    Answer: Black"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_1_q7",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q1",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q2",
+    "answer": "16, 19",
+    "full_answer": "16, 19"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_6_q3",
+    "answer": "04",
+    "full_answer": "04"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_8_q1",
+    "answer": "10101010",
+    "full_answer": "10101010"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q1",
+    "answer": "1014065-3",
+    "full_answer": "1014065-3"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q2",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "engineering_drawing",
+    "question_id": "engineering_drawing_9_q3",
+    "answer": "6",
+    "full_answer": "6"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q1",
+    "answer": "4.6",
+    "full_answer": "4.6"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q2",
+    "answer": "36%",
+    "full_answer": "36%"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_2_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q1",
+    "answer": "128",
+    "full_answer": "128"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q2",
+    "answer": "2012",
+    "full_answer": "2012"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_5_q4",
+    "answer": "NextWorth",
+    "full_answer": "NextWorth"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q2",
+    "answer": "11",
+    "full_answer": "11"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q3",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_6_q4",
+    "answer": "deep genomics",
+    "full_answer": "deep genomics"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q2",
+    "answer": "10000000000",
+    "full_answer": "10000000000"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q3",
+    "answer": "1996",
+    "full_answer": "1996"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q4",
+    "answer": "iPhone 4S",
+    "full_answer": "iPhone 4S"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q5",
+    "answer": "Green",
+    "full_answer": "Green"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q6",
+    "answer": "mobile phone",
+    "full_answer": "mobile phone"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_7_q7",
+    "answer": "mobile phone",
+    "full_answer": "mobile phone"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q3",
+    "answer": "100",
+    "full_answer": "100"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q4",
+    "answer": "S1",
+    "full_answer": "S1"
+  },
+  {
+    "category": "infographics",
+    "question_id": "infographics_8_q5",
+    "answer": "F",
+    "full_answer": "F"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_10_q2",
+    "answer": "30",
+    "full_answer": "30"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_12_q2",
+    "answer": "Samarkand",
+    "full_answer": "Samarkand"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_3_q2",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_5_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_6_q1",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_6_q2",
+    "answer": "45.74",
+    "full_answer": "45.74"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_7_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_7_q2",
+    "answer": "Zeug Haus",
+    "full_answer": "Zeug Haus"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q1",
+    "answer": "286 Vancouver",
+    "full_answer": "286 Vancouver"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q2",
+    "answer": "Nelson Mining Camp",
+    "full_answer": "Nelson Mining Camp"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q3",
+    "answer": "Lion, Beaver",
+    "full_answer": "Lion, Beaver"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q4",
+    "answer": "Kootenay River",
+    "full_answer": "Kootenay River"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q5",
+    "answer": "Mt. Baldur",
+    "full_answer": "Mt. Baldur"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_8_q7",
+    "answer": "Midas Cr",
+    "full_answer": "Midas Cr"
+  },
+  {
+    "category": "maps",
+    "question_id": "maps_9_q2",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q2",
+    "answer": "Zane",
+    "full_answer": "Zane"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_4_q4",
+    "answer": "3215",
+    "full_answer": "3215"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_5_q1",
+    "answer": "unstable",
+    "full_answer": "unstable"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_5_q2",
+    "answer": "Uroteuthis (Photololigo) duvaucelii (Orbigny, 1835)",
+    "full_answer": "Uroteuthis (Photololigo) duvaucelii (Orbigny, 1835)"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_6_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q2",
+    "answer": "15",
+    "full_answer": "15"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q3",
+    "answer": "90",
+    "full_answer": "90"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_7_q4",
+    "answer": "Transvaginal/Transanal",
+    "full_answer": "Transvaginal/Transanal"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q1",
+    "answer": "melted",
+    "full_answer": "melted"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q2",
+    "answer": "60",
+    "full_answer": "60"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q3",
+    "answer": "Simulating nonreciprocal Coulomb clusters",
+    "full_answer": "Simulating nonreciprocal Coulomb clusters"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_8_q4",
+    "answer": "FORCES IN DUSTY PLASMA",
+    "full_answer": "FORCES IN DUSTY PLASMA"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q2",
+    "answer": "53.2",
+    "full_answer": "53.2"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q3",
+    "answer": "34M",
+    "full_answer": "34M"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "science_paper",
+    "question_id": "science_paper_9_q5",
+    "answer": "61.8",
+    "full_answer": "61.8"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q1",
+    "answer": "17412, 297",
+    "full_answer": "17412, 297"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q2",
+    "answer": "Future Directions",
+    "full_answer": "Future Directions"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_3_q3",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q1",
+    "answer": "dSPN",
+    "full_answer": "dSPN"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q2",
+    "answer": "20 Hz",
+    "full_answer": "20 Hz"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q3",
+    "answer": "4%",
+    "full_answer": "4%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_4_q4",
+    "answer": "67",
+    "full_answer": "67"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q1",
+    "answer": "12",
+    "full_answer": "12"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q2",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q3",
+    "answer": "R",
+    "full_answer": "R"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_5_q4",
+    "answer": "Microbiomeanalyst [89]",
+    "full_answer": "Microbiomeanalyst [89]"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q1",
+    "answer": "0.82",
+    "full_answer": "0.82"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q2",
+    "answer": "Melt Curve Genotyping",
+    "full_answer": "Melt Curve Genotyping"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q3",
+    "answer": "F0 +M0, F100 +M0, F0 +M100, F100 +M100, F400 +M0, F400 +M400, F0 +M400",
+    "full_answer": "F0 +M0, F100 +M0, F0 +M100, F100 +M100, F400 +M0, F400 +M400, F0 +M400"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q4",
+    "answer": "0.00%",
+    "full_answer": "0.00%"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_6_q5",
+    "answer": "2",
+    "full_answer": "2"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q1",
+    "answer": "Metastatic squamous cell carcinoma",
+    "full_answer": "Metastatic squamous cell carcinoma"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q2",
+    "answer": "11",
+    "full_answer": "11"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q3",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "science_poster",
+    "question_id": "science_poster_7_q5",
+    "answer": "TNC",
+    "full_answer": "TNC"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_3_q2",
+    "answer": "ICRA",
+    "full_answer": "ICRA"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q2",
+    "answer": "3",
+    "full_answer": "3"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q5",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_4_q6",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_5_q5",
+    "answer": "8",
+    "full_answer": "8"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_6_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q1",
+    "answer": "5",
+    "full_answer": "5"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q3",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_7_q4",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_8_q1",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  },
+  {
+    "category": "slide",
+    "question_id": "slide_8_q2",
+    "answer": "Unknown",
+    "full_answer": "Unknown"
+  }
+]

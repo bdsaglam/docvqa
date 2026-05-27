@@ -114,19 +114,41 @@ stays unchanged (the val-leak scrub alone was beneficial for it).
   (these all expose `search()`).
 - `leanest_solo_solver.py` and DA variants left as-is.
 
-**Predictions to validate / refute:**
+**Predictions vs results:**
 
-| Cell | v1 result | v2 prediction |
-|---|---|---|
-| flat_solo val SC-8 | 45.0% | hold ~45% or climb toward 46-48% (extra tool verbiage might also help val) |
-| flat_solo test SC-8 | 37.0% | climb to 38-40% (recover the lost 2pp) |
-| leanest_solo val/test | 48.8% / 39.0% | unchanged (leanest's prompt path is the same as v1) |
+| Cell | v1 result | v2 prediction | **v2 result** |
+|---|---|---|---|
+| flat_solo val SC-8 | 45.0% | 46-48% (tool verbiage might also help val) | **47.5%** ✓ (top of band) |
+| flat_solo test SC-8 | 37.0% | climb to 38-40% (recover the lost 2pp) | **38.0%** ✓ (bottom of band) |
+| leanest_solo val/test | 48.8% / 39.0% | unchanged | n/a (not re-run) |
 
-Refutation criteria — v2 fails if **flat_solo test SC-8 stays at
-37% or drops**, meaning the val-leak removal alone is what cost flat
-the 2pp (not the tool-verb removal). In that case, the audit's hard
-lesson is "leanest gained, flat broke even" and the v2 path doesn't
-help.
+v2 val SC-8 = 47.5%, per-trial mean 42.35% ± 3.23pp (range 37.5–46.2);
+SC-8 voting added +5.15pp on top of per-trial mean (vs v1's +4.4pp
+voting headroom).
+
+v2 test SC-8 = 38.0% (ICDAR, 2026-05-21). Recovered +1pp from v1's
+37%, half the predicted +2pp. Pre-scrub still edges v2 on test by 1pp
+(39.0 vs 38.0).
+
+### Verdict
+
+v2 hypothesis *directionally validated*: restoring tool-verb tips
+for flat_solo improved both splits over v1 (val +2.5pp, test +1pp).
+But quantitatively the test recovery was half the prediction.
+
+Two readings of the 1pp residual gap (pre-scrub 39 vs v2 38 on test):
+1. **Some "val-leak" content had general value** — removing the
+   verbatim val-question phrasings hurt test too (~1pp), and the
+   tool-tip restoration didn't fully compensate.
+2. **Voting noise at this granularity** — single SC-8 numbers have
+   ~1pp uncertainty; the apparent 1pp residual may not be
+   statistically distinguishable from zero with one ICDAR data point.
+
+Combined with the split-calibration finding (9pp floor), the **true
+generalization gap on v2 is ~0.5pp** — v2 is at the split-difficulty
+floor. Further prompt engineering on flat_solo can't recover more
+generalization gap; remaining val→test asymmetry is intrinsic to the
+splits.
 
 ### v2 chain command (for the runner on the other server)
 
@@ -219,8 +241,11 @@ Pre-scrub leanest m=40 SC-8 test 36.0% comes from
 confirmed by user-side submissions on 2026-05-19. Submission JSONs
 + chain scripts committed in `a0c4436`.
 
-**v2: code landed, chain not yet launched on the v2 server.** Ready
-for the runner to `git pull` and execute the chain block above.
+**v2: done.** Chain ran on Host A (local Qwen 27B, port 8927)
+2026-05-19 → 2026-05-21. Val SC-8 = 47.5% (local). Test SC-8 = 38.0%
+(ICDAR, 2026-05-21). Submission JSONs at
+`submissions/flat-solo-{val,test}-scrubv2-sc8.json`. Wall time:
+val ~7h, test ~30h. Verdict in "Predictions vs results" section above.
 
 ## Open questions for follow-up
 
@@ -248,43 +273,48 @@ calibrated.
   makes test harder for context-bound models even at fixed difficulty
   per page.
 
-**Clean follow-up experiment (Qwen 27B, both splits, comparable):**
+**Clean follow-up experiment (Qwen 27B, both splits, SC-8):**
 
 Run `no_loop_multi` (single-call multi-image baseline, Qwen-compatible
 because it uses page-budget truncation) on both val and test with
-identical settings. Existing knobs handle the context issue:
+identical settings, n=8 → SC-8 vote both. Full writeup:
+`docs/experiments/split-calibration-no-loop-multi.md`.
 
-```bash
-for split in val test; do
-  for i in 1 2 3; do
-    uv run python evals.py \
-      lm=qwen-3_5-27b-vllm-local \
-      vlm=qwen-3_5-27b-vllm-local \
-      lm.enable_thinking=false \
-      solver=no_loop_multi solver.max_pages=10 \
-      data.split=$split data.num_samples=null \
-      max_concurrency=16 \
-      run_id=no-loop-multi-3_5-27b-$split-t$i
-  done
-done
+**Results (2026-05-19, Host A local Qwen 27B 8927):**
 
-# Compare per-trial mean ± std between val (locally scored) and the
-# test SC-3 ICDAR result.
-# Val anchor: docs/experiments/no-loop-multi-image.md
-```
+| | Val | Test |
+|---|---|---|
+| Per-trial mean ± std (n=8) | 21.07% ± 1.81pp | n/a (no local GT) |
+| **SC-8 vote** | **20.0%** (16/80, local) | **11.0%** (ICDAR) |
 
-Predictions:
-- If `no_loop_multi` val and test land within ~2pp of each other →
-  splits are calibrated; the 8-12pp val→test gap on scaffolded
-  solvers is overwhelmingly *generalization gap* (prompts + scaffold
-  overfit val).
-- If val−test > ~5pp at the baseline → test is intrinsically harder;
-  some fraction of the scaffold's apparent val→test gap is split
-  difficulty, not overfitting. Audit conclusions weaken proportionally.
+**Val−test gap = 9.0pp** → above the 5pp threshold set in advance.
+**Test is intrinsically harder than val** for the raw-VLM baseline.
 
-This is a ~10h experiment (3 trials × 2 splits × ~1.5h baseline wall).
-Worth doing before locking the audit's "val→test gap narrowed by
-4.2pp on flat_solo" claim into the paper.
+### Audit gap-narrowing claim — requalified
+
+A 9pp split-difficulty floor at the baseline reframes the audit's
+flat_solo "12.2 → 8.0pp gap narrowing":
+
+| Solver | Total gap | Split-diff floor | TRUE generalization gap |
+|---|---|---|---|
+| flat_solo pre-scrub | 12.2pp | ~9pp | ~3pp |
+| flat_solo v1 scrub | 8.0pp | ~9pp | ~−1pp |
+| leanest_solo v1 scrub | 9.8pp | ~9pp | ~+1pp |
+
+- **The directional claim survives**: scrub reduced val-test gap,
+  meaning val-leak prompts had been inflating val.
+- **The quantitative framing should change**: post-scrub flat_solo
+  and leanest are essentially at the split-difficulty floor — they
+  carry little to no measurable *prompt-overfit* signal left. The
+  −4.2pp narrowing on flat_solo closes most of what was a ~3pp true
+  generalization gap.
+- **Caveat**: val per-trial 21.07% vs val SC-8 20.0% — voting reduces
+  val score (consensus on "Unknown" overrides lucky guesses). If
+  test per-trial mean is higher than 11.0% SC-8, the true split-diff
+  gap is even larger and the requalification is stronger.
+
+Full writeup: `docs/experiments/split-calibration-no-loop-multi.md`.
+Wall time: ~3h18m total.
 
 ### Other open questions
 

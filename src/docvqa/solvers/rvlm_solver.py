@@ -91,6 +91,10 @@ TASK_INSTRUCTIONS = (
 
 # ---------------------------------------------------------------------------
 # Category-specific tips for RVLM (direct image display, no VLM tool calls)
+# val-leak scrubbed per docs/experiments/scrub-audit.md (v1 standard):
+# no verbatim val-question phrasings ("last word on page X", "page before X",
+# "first words up to ..."), no verbatim val-doc entity names, no specific
+# example letters/numbers tied to val items.
 # ---------------------------------------------------------------------------
 
 RVLM_CATEGORY_TIPS: dict[str, str] = {
@@ -106,7 +110,8 @@ RVLM_CATEGORY_TIPS: dict[str, str] = {
         "then sum in Python — don't estimate visually.\n"
         "- Leader lines: display the label AND the part it connects to separately to confirm.\n"
         "- Dimensions: 'Width' = shorter cross-section (from a Section view), not overall length.\n"
-        "- 'VIEW IN DIRECTION X' labels: answer with just the letter (e.g., 'D').\n"
+        "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. Answer with the "
+        "direction letter alone, not prefixed with 'Direction'.\n"
     ),
     "business_report": (
         "## CATEGORY TIPS (business_report)\n"
@@ -186,7 +191,8 @@ RVLM_CATEGORY_TIPS: dict[str, str] = {
         "- Tables in slides are small — crop at full resolution before reading values.\n"
         "- EXACT ENTITY MATCHING: if a column name, variable, or equation doesn't exist after "
         "thorough search, answer 'Unknown'. Don't substitute similar-sounding names.\n"
-        "- For 'last word on page X', crop the bottom portion and read carefully.\n"
+        "- For position-on-page questions (a specific word/bullet at the top/bottom/edge of a page), "
+        "crop the relevant region at full resolution and read carefully.\n"
         "- COMPUTATION: 'total' or 'considering X and Y' means extract all values and compute in Python.\n"
     ),
 }
