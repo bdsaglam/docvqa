@@ -2,6 +2,24 @@
 
 ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 
+> **Paper framing pivot (2026-05-27, D-006).** The paper is now framed
+> around a **visual context-budget hypothesis** — mid-sized open VLMs
+> are perception-budget-bound, not reasoning-bound; recursive perception
+> (RLM with VLM sub-call) is the fix. **Proposed method = OCR-free RLM**
+> (currently `leanest_solo`). **OCR/search is an extension**, requires
+> a new solver (clean fork of leanest, distinct from `flat_solo` which
+> conflates OCR with a `look()` ergonomic wrapper). See
+> `docs/paper/decisions.md` (D-006/D-007/D-008) and
+> `docs/paper/README.md` for the full framing.
+>
+> Operating principles flowing from this:
+> - **Per-solver inline prompts (D-007).** Each solver owns its prompts
+>   inline; only `ANSWER_FORMATTING_RULES` is shared.
+> - **Trial-budget escalation (D-008).** New cells: n=1 → n=2 → n=8
+>   only after the paper headline locks.
+> - **No prompt-iteration narrative in the paper.** No v1/v2/scrub
+>   history; no engineering solver names. Readers see the end-state.
+
 ## Best Results
 
 | Config | Val | Test |

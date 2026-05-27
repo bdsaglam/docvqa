@@ -32,54 +32,93 @@ RLM into the multimodal document setting where the "context too long"
 problem is acute (many pages, dense images, tables, infographics) and
 showing that this lifts every model class.
 
-## Headline claim (working version)
+## Headline claim (per D-006, 2026-05-27)
 
-Applying RLM to document VQA — a code-capable LLM in a REPL with OCR
-retrieval and a VLM sub-call — delivers double-digit accuracy improvements
-across model classes (≤8B / 8–35B / >35B), requiring no specialized
-document encoder, no proprietary OCR, and no domain-specific training.
+**Mid-sized open VLMs are bottlenecked by visual context budget on
+document VQA, not by reasoning capacity.** The right architectural fix
+is recursive perception — letting the main agent ration its
+high-resolution VLM calls — rather than scaling model size or training
+data. This is a focused application of the Recursive Language Models
+paradigm (Zhang et al., 2025), with the recursive sub-call specialized
+as a VLM. The proposed method is **OCR-free**: a code-capable LLM in
+a REPL whose only tool is a recursive `batch_look` call to a VLM. OCR
+retrieval is reported as an **extension**, not a contribution; it
+matters on long-doc benchmarks and not on moderate-doc ones.
 
-Current evidence (val/test, ICDAR 2026 DocVQA, **mean ± std across
-independent trials** — no self-consistency voting; see `decisions.md` D-003):
+Three falsifiable predictions (with the supporting data):
 
-- **Qwen 3.6 27B (open):** **44.1% val ± 3.0pp** (8 trials, range
-  40.0–47.5%). Test mean across the 8 trials needs to be computed
-  (currently only SC-8 test 43.75% is summarized in
-  `docs/results.md:144-187`).
-- **Gemini 3 Pro (closed):** baseline 37.5% test (official); with scaffold
-  59.4% test (single trial — needs ≥3-trial replication).
-  (`docs/results.md:15`, `docs/results.md:23`)
-- **Gemini 3 Flash:** baseline 33.75% test; with scaffold ~50% (mentioned;
-  needs trials and to land in `docs/results.md`).
+1. **Model-size axis.** Lift scales with model code-writing capability.
+   Supported: E4B +5.83pp, 9B +6.25pp, 27B +20.94pp, 31B +25.00pp.
+2. **Document-length axis.** Lift scales with effective doc length.
+   Supported: MMLongBench-Doc +16.84pp judge, MP-DocVQA 11-20pp bucket
+   +13.68pp, DocVQA-2026 +20.94pp.
+3. **Mechanism axis.** Removing the recursive VLM sub-call (but keeping
+   REPL + agent loop) collapses the lift. **Not yet measured — the
+   critical missing experiment** (task list #9).
 
-## Strawman abstract (v1 — to be refined)
+Current headline numbers (Qwen 3.5 27B, n=8 SC-8, val-leak-scrubbed
+prompts):
+
+- **OCR-free method (proposed):** val 48.8% / **test 39.0%** ICDAR
+- **OCR-extension (legacy `flat_solo`, confounded):** val 47.5% / test 38.0%
+- **Raw-VLM baseline:** val 20.0% / test 11.0%
+
+Split-calibration check: the val→test gap is dominated by
+split-difficulty (~9pp floor at the no-scaffold baseline), not by
+prompt overfitting. Post-scrub headline cells sit at the floor — no
+measurable generalization gap remains.
+
+## Solver taxonomy (per D-006)
+
+The paper measures four cells; engineering names are placeholders, paper
+names picked later.
+
+| Engineering name | Paper role | Tool surface |
+|---|---|---|
+| `leanest_solo` | **Proposed method (M)** | `batch_look` only |
+| `<m_ocr>` (TBD, new fork) | **+OCR extension** | `batch_look` + `search` + `page_texts` |
+| `rvlm` | **Alternative angle** | REPL with `display()` — single multimodal model, no sub-call |
+| `no_loop_multi` | **Raw-VLM baseline** | one forward pass, no scaffold |
+| `official_baseline` | **Competition baseline** | kit MASTER_PROMPT |
+
+The legacy `flat_solo` is *not* the clean OCR extension (it bundles
+`look()` ergonomic wrapper with the OCR channel). A new fork of
+`leanest_solo` is built that adds OCR/search only. Existing `flat_solo`
+data lives in `docs/experiments/` for reproducibility but does not
+anchor a paper number.
+
+## Strawman abstract (per D-006)
 
 > Document visual question answering remains hard for general-purpose
-> multimodal models even at frontier scale, with leading proprietary models
-> below 40% on the ICDAR 2026 DocVQA challenge test set. The challenge is
-> a context-rot problem in disguise: documents have many pages, dense
-> images, and fine detail that overwhelm a multimodal model's context
-> window when fed raw. We apply the Recursive Language Model paradigm
-> (Zhang et al., 2025) to this setting: a code-capable LLM operates in a
-> REPL where the document is symbolically accessible via OCR retrieval,
-> and a VLM is exposed as a recursive sub-call for visual perception of
-> regions the main agent chooses to inspect. The resulting method is
-> model-agnostic and lifts performance substantially across the model
-> size spectrum — it lifts open ≤8B models (Qwen 3.5 9B, Gemma) into
-> competitive range, turns an open 27B model into a competitive entry in
-> the ICDAR 2026 8–35B tier, and lifts frontier closed models (Gemini 3
-> Pro+Flash) by 20+ percentage points on the test set. We use no
-> specialized document encoder, no proprietary OCR, and no domain-specific
-> training. All scores are reported as mean ± std across independent
-> trials. We validate generality across N additional benchmarks and
-> ablate the method's components, isolating the contribution of OCR
-> retrieval, the VLM sub-call, and turn budget.
+> multimodal models even at frontier scale — leading proprietary models
+> sit below 40% on the ICDAR 2026 DocVQA challenge test set. We show
+> that this is a *visual context-budget* problem: mid-sized open VLMs
+> have ample reasoning capacity but cannot allocate their finite visual
+> context across many-page documents with dense fine-grained content.
+> We apply the Recursive Language Models paradigm (Zhang et al., 2025)
+> with the recursive sub-call specialized as a VLM — a code-capable
+> main agent in a REPL invokes batched VLM perception of pages or
+> arbitrary crops, rationing its visual budget per question. The method
+> uses no symbolic retrieval channel in its core form; on
+> moderate-length-document benchmarks this is sufficient, and on
+> long-document benchmarks an OCR retrieval extension provides an
+> additional lift. We validate three predictions: lift scales with
+> model code-writing capability across four open models (4B–31B);
+> lift scales with effective document length across three benchmarks
+> (DocVQA-2026, MP-DocVQA, MMLongBench-Doc); and removing the
+> recursive sub-call (but keeping the REPL and agent loop) collapses
+> the lift to the raw-VLM baseline. All scores are reported as mean ±
+> std across independent trials. The result is a single architectural
+> addition that lifts a 27B open model into competitive range with
+> closed frontier models on document VQA, requiring no specialized
+> document encoder, no proprietary OCR, and no domain-specific
+> training.
 
 Open in this draft:
-- Method name (placeholder: "RLM-DocVQA" or similar)
-- Confirmed multi-trial numbers with error bars (replace single-trial 59.4%)
-- Number of benchmarks (decide after lit review)
-- "≤8B" claim depends on small-model experiments landing
+- Paper name for the method (placeholder: M)
+- Final ablation table layout (waiting on VLM-sub-call-off result)
+- Whether OCR-extension cells get re-run with the clean M+OCR fork
+  before the draft locks
 
 ## Target venue & deadline
 
@@ -119,39 +158,66 @@ TODO — user to decide. Top candidates:
   notes and obsidian paths (no paper files copied into repo)
 - (later: `outline.md`, `figures/`, `draft.md`)
 
-## Status tracker
+## Status tracker (updated 2026-05-27 for D-006 pivot)
 
-- [ ] Strawman abstract reviewed (RLM framing applied 2026-05-01)
-- [ ] Method name picked
-- [ ] Target venue / deadline picked
+### Framing & planning
+- [x] Headline reframed around visual-context-budget hypothesis (D-006)
+- [x] Per-solver inline prompts principle accepted (D-007)
+- [x] Trial-budget escalation policy accepted (D-008)
 - [x] RLM-focused lit review delivered → `lit-review-1.md`
 - [x] DocVQA-focused lit review delivered → `lit-review-2.md`
-- [x] Related-works index updated from both lit reviews (2026-05-01)
-- [x] RVLM positioning decided: **concurrent work** (D-005)
-- [x] MADQA framing decided: verify + use as baseline (D-005)
-- [ ] Verify RVLM (arXiv:2603.24224) on arXiv; download to obsidian
-- [ ] Verify MADQA (arXiv:2603.12180) on arXiv; download to obsidian; user reads
-- [ ] Verify other lit-review citations before they land in the paper
-- [ ] Read ARIAL (arXiv:2511.18192) — closest agentic-DocVQA competitor
-- [ ] Pick a method name that clearly differs from "Recursive Vision-Language Model" (D-005)
-- [ ] Benchmark + baseline picks finalized after RVLM/MADQA reads
-- [ ] Experiment plan signed off
-- [ ] Matched-baseline runs (Qwen 27B without scaffold) on ICDAR val/test
-- [ ] Multi-trial Gemini 3 Pro test replication (≥3 trials)
-- [ ] Small-model runs (≤8B: Qwen 3.5 9B, Gemma)
-- [ ] Generality experiments on second benchmark
-- [ ] Ablations (no-loop baseline, OCR on/off, VLM sub-call on/off, VLM cropping on/off, turn budget, category tips)
-- [ ] Compute multi-trial test mean ± std for Qwen 3.6 27B (replace SC-8 number)
-- [ ] Error analysis + qualitative trace examples
+- [x] Prompt-parity audit done (2026-05-27 — `aa857907bec1c90ba`, `a3c24b9c9f1e6688b`)
+- [ ] Method/paper name picked
+- [ ] Target venue / deadline picked
+- [ ] Verify RVLM (arXiv:2603.24224) + MADQA (arXiv:2603.12180) + ARIAL (arXiv:2511.18192) — deferred until experiments lock
+
+### Code refactor (D-007, in flight)
+- [ ] Reconcile RVLM_CATEGORY_TIPS asymmetries with canonical (task #18)
+- [ ] Inline category tips per-solver — drop shared dict (task #4)
+- [ ] Guard `get_profile()` against unknown-id fallback
+- [ ] Rename engineering solver concepts to paper-facing names (later)
+
+### Experiments — locked headline cells (n=8 with clean prompts)
+- [x] Raw-VLM baseline (`no_loop_multi`): val 20.0% / test 11.0% — split-calibration anchor
+- [x] OCR-free method (`leanest_solo` scrubbed): val 48.8% / test 39.0%
+- [x] Cross-benchmark generality on MP-DocVQA + MMLongBench-Doc (Qwen 27B, n=3, DA profile)
+- [x] Model-size lift signs across E4B/9B/27B/31B (with pre-scrub prompts; see caveat)
+
+### Experiments — pending under new framing
+- [ ] Build new M+OCR solver (clean fork of leanest with OCR/search, no `look()`) — task #13
+- [ ] Run M+OCR on DocVQA-2026 val + test — task #14
+- [ ] Re-do MMLongBench-Doc + MP-DocVQA OCR-extension cells with M+OCR — task #15
+- [ ] Build VLM-sub-call-off ablation (fork of leanest minus batch_look) — task #7
+- [ ] Run VLM-sub-call-off ablation — **critical for prediction 3** — task #9
+- [ ] Re-run model-axis cells (Gemma E4B, Qwen 9B, Gemma 31B) on clean prompts — task #8
+- [ ] Halt + reconcile + restart RVLM chain — task #17
+- [ ] Decide flat_solo's paper role (drop vs appendix) — task #16
+
+### Writing
+- [ ] Draft new abstract — task #11
+- [ ] Restructure experiment-plan.md around D-006 — task #5
 - [ ] First draft
+- [ ] Error analysis + qualitative trace examples
 
 ## Working principles
 
-- **Variance discipline:** ≥3 trials per headline number, std reported, no
-  single-trial headlines. Reuse multi-trial setup from `docs/results.md:144`.
-- **Verify before claiming:** numbers in this directory cite run IDs from
-  `docs/results.md`. Don't drift from source.
-- **Update this README's status tracker** as work lands. This file is the
-  project ground truth.
-- **Plan changes go here**, not in conversation. If we change scope or
-  drop an experiment, update `experiment-plan.md` with a dated note.
+- **Hypothesis-first.** Frame, ablations, and figures derive from the
+  three predictions in D-006. Competition optimizations (SC voting,
+  FLAT_SOLO_TOOL_HINTS, multi-image extension) are out of scope.
+- **Prompt parity (D-007).** All solvers in the paper pass the same
+  audit standard. Per-solver inline prompts — no shared dict across
+  solvers. Only `ANSWER_FORMATTING_RULES` is shared.
+- **Trial-budget escalation (D-008).** n=1 first, n=2 if direction
+  holds, n=8 only after the paper headline locks. Variance discipline
+  (≥3 trials for headline numbers, mean ± std) preserved.
+- **Verify before claiming:** numbers cite run IDs from
+  `docs/results.md` and `docs/experiments/*.md`. Don't drift.
+- **No prompt-iteration narrative in the paper.** Readers see the
+  end-state, not the v1/v2/scrub history.
+- **No engineering solver names in the paper.** `leanest_solo`,
+  `flat_solo`, `rvlm`, etc. are development names. Paper-facing names
+  picked separately.
+- **Update this README's status tracker** as work lands. This file is
+  the project ground truth.
+- **Plan changes go here**, not in conversation. Update
+  `experiment-plan.md` with a dated note when scope shifts.
