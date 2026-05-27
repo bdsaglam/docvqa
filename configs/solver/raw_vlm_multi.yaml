@@ -1,4 +1,4 @@
-_target_: docvqa.solvers.no_loop_multi_da_solver.create_no_loop_multi_da_program
+_target_: docvqa.solvers.raw_vlm_multi_solver.create_raw_vlm_multi_program
 dataset: ${data.dataset}
 profile_name: null
 vlm: ${vlm}

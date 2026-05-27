@@ -33,7 +33,7 @@ from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
-from docvqa.solvers.flat_solo_solver import (
+from docvqa.solvers.rvlm_full_solver import (
     RunContext,
     _build_signature,
     _format_page_texts,

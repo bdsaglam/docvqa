@@ -494,6 +494,84 @@ system with DocVQA-2026 as the default profile.
 
 ---
 
+## D-010: Solver renames — behavior-based engineering names
+
+- **Date:** 2026-05-27
+- **Status:** accepted
+
+**Decision.** Rename solvers from history-based to behavior-based
+names. The current names trace development lineage (`flat_solo` →
+`lean_solo` → `leanest_solo` reads as "started big, stripped down")
+rather than describing what each solver actually does.
+
+### Rename map
+
+| Current | New | Role in paper |
+|---|---|---|
+| `leanest_solo` | **`rvlm`** | proposed method — code-LM in REPL + recursive VLM sub-call |
+| `leanest_ocr` | **`rvlm_ocr`** | proposed method + OCR extension |
+| `flat_solo` | **`rvlm_full`** (if kept per task #16) | kitchen-sink: rvlm + look + OCR |
+| `rvlm` (current) | **`direct_vlm`** | single multimodal model in REPL — no sub-call, "direct" perception via `display()` |
+| `no_loop_multi` | **`raw_vlm_multi`** | raw VLM baseline, multi-image |
+| `no_loop` | **`raw_vlm_single`** | raw VLM baseline, single-image |
+| `repl_only` | unchanged | documentation-only ablation; REPL with no perception |
+| `official_baseline` | unchanged | competition kit prompt, verbatim |
+
+Coupled with the D-009 merge: each `*_solo` ← `*_da` pair becomes a
+single DA-by-default solver under the new name. The new names absorb
+the merge.
+
+### Why these names
+
+- **`rvlm` (proposed method).** Recursive Language Model applied to
+  VLM. Code-writing LLM in REPL invoking a VLM as a recursive sub-call.
+  The name describes the architecture directly. Note D-005 caveat:
+  "RVLM" is also the name of a concurrent arXiv paper
+  (arXiv:2603.24224); this is an **engineering name only** — the
+  paper-facing method name still needs to differ to avoid reviewer
+  confusion, per D-005's pick-a-different-name implication.
+- **`direct_vlm` (single-model alt angle).** Pairs lexically with
+  `rvlm` along the architectural axis: recursive vs direct. In the
+  current `rvlm` solver, a single multimodal model perceives images
+  directly via `display()` into its own context — no delegation, no
+  sub-call. "Direct" is the absence-of-recursion property that
+  distinguishes it from `rvlm`.
+- **`rvlm_ocr`, `rvlm_full`.** Compose with `rvlm` to indicate
+  extensions: OCR-channel only (`rvlm_ocr`) and kitchen-sink with
+  `look()` + OCR (`rvlm_full`).
+- **`raw_vlm_*`.** The "raw" prefix marks unscaffolded baselines —
+  one VLM call, no scaffold. Renames from history-suggestive
+  `no_loop_*`.
+
+### What stays as old names
+
+- Historical docs in `docs/experiments/*.md` keep the old names —
+  they record what happened at the time. Same principle as git commit
+  messages.
+- Existing run IDs in `output/runs/leanest-solo-*`, `flat-solo-*`,
+  etc. keep their old names. New runs use new names.
+- The `CLAUDE.md` "Best Results" table currently shows
+  "Flat Solo SC-8" etc.; updated separately (entry-by-entry choice on
+  whether to backport new names or note both).
+
+### Implications
+
+- File renames in `src/docvqa/solvers/`. Order matters: rename current
+  `rvlm_solver.py` → `direct_vlm_solver.py` BEFORE renaming
+  `leanest_solo_da_solver.py` → `rvlm_solver.py`, to avoid clobbering
+  the `rvlm_solver.py` namespace.
+- Config renames in `configs/solver/`. Each `*_da.yaml` is dropped
+  after the merge folds its content into the single merged config.
+- Class and factory-function renames throughout the codebase
+  (`LeanestSoloDAProgram` → `RvlmProgram`, etc.).
+- Hydra solver-config choice names change (`solver=leanest_solo` →
+  `solver=rvlm`). Run scripts in `scripts/` need updating where they
+  reference solver= choices.
+- Update `paper/README.md` solver taxonomy table and `experiment-plan.md`
+  to use new names. CLAUDE.md updated entry-by-entry.
+
+---
+
 ## How to add entries
 
 1. Allocate next D-NNN id.

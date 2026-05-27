@@ -72,24 +72,32 @@ split-difficulty (~9pp floor at the no-scaffold baseline), not by
 prompt overfitting. Post-scrub headline cells sit at the floor — no
 measurable generalization gap remains.
 
-## Solver taxonomy (per D-006)
+## Solver taxonomy (per D-006, names per D-010)
 
-The paper measures four cells; engineering names are placeholders, paper
-names picked later.
+The paper measures a small set of cells; engineering names below are
+post-rename (D-010, 2026-05-27). Paper-facing method names still TBD.
 
 | Engineering name | Paper role | Tool surface |
 |---|---|---|
-| `leanest_solo` | **Proposed method (M)** | `batch_look` only |
-| `<m_ocr>` (TBD, new fork) | **+OCR extension** | `batch_look` + `search` + `page_texts` |
-| `rvlm` | **Alternative angle** | REPL with `display()` — single multimodal model, no sub-call |
-| `no_loop_multi` | **Raw-VLM baseline** | one forward pass, no scaffold |
-| `official_baseline` | **Competition baseline** | kit MASTER_PROMPT |
+| **`rvlm`** | **Proposed method (M)** | `batch_look` only — recursive VLM sub-call |
+| **`rvlm_ocr`** | **+OCR extension** | `batch_look` + `search` + `page_texts` (no `look()`) |
+| **`rvlm_full`** | Kitchen-sink (appendix, role TBD per task #16) | `batch_look` + `look` + `search` + `page_texts` |
+| **`direct_vlm`** | **Alternative angle** | Single multimodal model in REPL — no sub-call, direct perception via `display()` |
+| **`raw_vlm_multi`** | **Raw-VLM baseline (multi-image)** | one forward pass, no scaffold |
+| **`raw_vlm_single`** | Raw-VLM baseline (single-image) | one forward pass, no scaffold |
+| **`repl_only`** | Documentation only (not a paper cell) | REPL + agent loop, no perception |
+| **`official_baseline`** | **Competition baseline** | kit MASTER_PROMPT, verbatim |
 
-The legacy `flat_solo` is *not* the clean OCR extension (it bundles
-`look()` ergonomic wrapper with the OCR channel). A new fork of
-`leanest_solo` is built that adds OCR/search only. Existing `flat_solo`
-data lives in `docs/experiments/` for reproducibility but does not
-anchor a paper number.
+**Naming notes** (D-010):
+- "rvlm" is the engineering name only; paper-facing method name avoids
+  collision with arXiv:2603.24224 ("Recursive Vision-Language Model")
+  concurrent work per D-005.
+- `rvlm_full` is the merged successor to legacy `flat_solo`/`flat_solo_da`
+  — it bundles OCR + `look()` ergonomic wrapper and is therefore *not*
+  the clean OCR extension. The clean extension is `rvlm_ocr`.
+- Historical docs in `docs/experiments/*.md` and existing run IDs
+  retain old names (`leanest-solo-val-*`, `flat-solo-test-*`, etc.) per
+  D-010.
 
 ## Strawman abstract (per D-006)
 

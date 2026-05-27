@@ -21,11 +21,16 @@ A dataset is a good generality target only if it passes all of:
    content, and/or many pages. This is the exact mechanism the paper
    claims (rationed recursive VLM perception). If a raw VLM already
    nails it in one forward pass, there is no lift to demonstrate.
-3. **Non-circular.** Not drawn from the same source as DocVQA-2026's 8
-   categories (`business_report, comics, engineering_drawing,
-   infographics, maps, science_paper, science_poster, slide`, from
-   `VLR-CVC` = CVC/UAB). Using same-source data measures generality on
-   the headline benchmark itself.
+3. **Non-circular (no document *reuse*).** The test is literal document/
+   image overlap with DocVQA-2026's 8 categories (`business_report,
+   comics, engineering_drawing, infographics, maps, science_paper,
+   science_poster, slide`, from `VLR-CVC` = CVC/UAB), **not** shared
+   authorship. CVC/UAB is central to the entire DocVQA field — MP-DocVQA
+   and MMLongBench-Doc share its lineage yet are accepted because their
+   documents are separate. Reuse risk is highest for a benchmark that is
+   the *canonical source* of a DocVQA-2026 category (infographics →
+   InfographicVQA; slide → SlideVQA). Default to verify-then-use, not
+   exclude-on-lineage.
 4. **Axis coverage (bonus).** Extends one of D-006's three predictions:
    model-size, **document-length** (the thin axis — only 3 benchmarks
    today), or simply adds a distinct document type for the perception
@@ -68,8 +73,109 @@ A dataset is a good generality target only if it passes all of:
 **Bottom line:** the non-circularity constraint removes every clean
 document-VQA fit, because DocVQA-2026 is deliberately comprehensive
 (8 doc types). Nothing in this list is a strong candidate. The best
-generality evidence comes from **off-list long-document benchmarks**
-(see final section).
+generality evidence comes from the **related-works benchmark pool**
+(next section), not from `tmp/datasets.md`.
+
+---
+
+## Benchmarks from the related-works library (the relevant pool)
+
+`docs/paper/related-works/` indexes the document-VQA benchmarks the
+field actually uses — a *better* pool than `tmp/datasets.md` for
+generality experiments. Two reasons: several are **multi-page** (the
+document-length axis, D-006 prediction 2, where we currently have only
+3 benchmarks), and several are what our **direct competitors report
+on**, which enables head-to-head positioning rather than standalone
+lift.
+
+Already handled: DocVQA-SP (lean-exclude, below), InfographicVQA
+(circular, below), ChartQA (skill overlap, below), **MP-DocVQA +
+MMLongBench-Doc** (in use — the two length-axis legs). New candidates
+surfaced here:
+
+| Benchmark | arXiv | Pages | Reuse risk | Competitor reports on it | Verdict |
+|---|---|---|---|---|---|
+| DUDE | 2305.08455 | multi (→70+) | low | — | ✅ strong |
+| MADQA | 2603.12180 | doc collections | low (fresh docs) | MADQA (our planned baseline) | ✅ strong; regime favors OCR ext. |
+| SlideVQA | 2301.04883 | multi (slides) | **high** (slide cat.) | SlideAgent | ⚠️ verify reuse |
+| VisualMRC | 2101.11272 | single | low | — | ⚠️ conditional |
+| ST-VQA | 1905.13648 | single (scene) | low | — | ⚠️ redundant w/ TextVQA |
+
+### DUDE (2305.08455) — ✅ strong candidate
+
+Document Understanding Dataset and Evaluation (Van Landeghem et al.,
+ICCV 2023). Multi-domain, multi-industry documents spanning single page
+to 70+ pages, with extractive + abstractive + list + unanswerable
+answers. **The best generality benchmark available to us:** it hits the
+document-length axis *and* the perception mechanism (diverse dense
+layouts), it's a recognized standard, and its document collection is
+distinct from DocVQA-2026 (shares CVC organizers, but its own docs — low
+reuse risk; no single DocVQA-2026 category maps onto it). Caveat:
+abstractive + list + unanswerable answers mean it needs the profile
+`score_fn`, not plain ANLS (per the cross-benchmark methodology rule in
+`CLAUDE.md`). Recommend adding it.
+
+### MADQA (2603.12180) — ✅ strong + strategic, with a framing tension
+
+Borchmann et al., *Strategic Navigation or Stochastic Search?*
+**Verified from the PDF (2026-05-27):** 2,250 human-authored questions
+over 800 heterogeneous PDFs, framed as document-**collection** QA
+(corpus retrieval + cross-page/cross-doc multi-hop subsets). Metric is
+LLM-judged **Accuracy** plus a novel **Kuiper effort-calibration**
+statistic — not ANLS. Best system *Gemini 3 Pro BM25 MLLM Agent* =
+82.2%; ~18% oracle gap; the paper's thesis is that **retrieval, not
+reasoning, is the bottleneck**. Reuse risk **explicitly low** — the
+paper advertises *fresh documents not recycled from existing
+benchmarks*. Collection-scale, so strong on the context-budget
+mechanism.
+
+**Two tensions to position against, not gloss (per CLAUDE.md "surface
+blind spots"):**
+
+1. **Regime favors our OCR *extension*, not our OCR-free core.** MADQA is
+   collection-scale retrieval — exactly where our own data says OCR/search
+   helps (MMLongBench-Doc, MP-DocVQA long bucket) and where a pure
+   visual-perception core would look retrieval-bound. Leading here with
+   the OCR-free method risks a weak number; we'd lead with the extension.
+2. **They already tested unconstrained RLM and found it cost-catastrophic.**
+   §5: "constrained agency … avoids the catastrophic effort overhead of
+   RLMs." They run RLM citing the *same* Zhang et al. 2025 paper we
+   instantiate — e.g. Claude 4.5 Sonnet RLM burned 270M input tokens /
+   ~$850 and still lost to its BM25-agent counterpart. This **supports**
+   our "focused/constrained instantiation" framing (D-005) but also
+   **pre-empts any "constraining RLM helps" claim** — that's their result.
+   Our defensible delta is the *visual* sub-call specialization + the
+   perception-budget hypothesis on benchmarks where visual perception
+   (not collection retrieval) is the bottleneck.
+
+Verdict: include as benchmark + baseline (D-005 stands), but lead with
+the OCR extension and frame explicitly against their RLM-efficiency
+result. Read the full PDF before drafting the positioning paragraph.
+
+### SlideVQA (2301.04883) — ⚠️ candidate, verify slide-document reuse
+
+Tanaka et al. (AAAI 2023). Multi-page slide-deck QA with multi-hop
+reasoning — good length + perception fit, and SlideAgent (a related-works
+competitor) reports on slide tasks, giving positioning value. **But**
+DocVQA-2026 has a `slide` category and SlideVQA is *the* canonical
+slide-QA dataset — highest document-reuse risk after InfographicVQA. Use
+only after confirming DocVQA-2026's slide documents aren't drawn from
+SlideVQA.
+
+### VisualMRC (2101.11272) — ⚠️ conditional
+
+Tanaka et al. (AAAI 2021). Single web-page screenshots, abstractive
+machine reading comprehension. Distinct domain (web pages), low reuse
+risk. But single-image → no document-length axis, and web pages are only
+moderately perception-dense → weak mechanism stress. A domain-breadth
+point at best, not headline.
+
+### ST-VQA (1905.13648) — ⚠️ conditional, redundant with TextVQA
+
+Biten et al. (ICCV 2019); the original ANLS source. Scene-text VQA on
+natural images — the same out-of-domain "reads fine scene text" probe
+role as TextVQA. CVC-authored but natural-scene domain (low reuse risk).
+Pick TextVQA *or* ST-VQA, not both.
 
 ---
 
@@ -222,5 +328,16 @@ evidence already in flight:
 
 Both are distinct datasets from DocVQA-2026 (non-circular), and both
 exercise the document-length axis a single-image benchmark cannot.
-Candidates to round out coverage if more breadth is wanted, all
-non-circular and on-mechanism: **DUDE**, **SlideVQA**, **TAT-DQA**.
+
+**Ranked plan for additional benchmarks** (drawn from the related-works
+pool, not `tmp/datasets.md`):
+
+1. **MP-DocVQA + MMLongBench-Doc** — in use, the two length-axis legs.
+2. **DUDE** — best new add: multi-page, diverse, standard, low reuse risk.
+3. **MADQA** — strategically strongest (competitor benchmark + planned
+   baseline), gated on arXiv verification + a read.
+4. **SlideVQA** — usable only after confirming no slide-document reuse.
+5. **TextVQA** *or* **ST-VQA** — one optional out-of-domain perception
+   probe; not headline.
+
+`tmp/datasets.md` contributes nothing beyond the optional TextVQA probe.

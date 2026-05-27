@@ -1,50 +1,49 @@
 """REPL-only ablation per D-006 prediction 3.
 
-Fork of ``leanest_solo_solver`` with the VLM sub-call (``batch_look``)
-removed. The agent retains the REPL + Python execution + ``SUBMIT``
-affordance but has NO image perception (and no OCR text channel — by
-design, this is a *pure* no-perception ablation, not an "OCR-only" one).
+Fork of :mod:`docvqa.solvers.rvlm_solver` with the VLM sub-call
+(``batch_look``) removed. The agent retains the REPL + Python execution +
+``SUBMIT`` affordance but has NO image perception (and no OCR text channel
+— by design, this is a *pure* no-perception ablation, not an "OCR-only"
+one).
 
 Predicted behavior: the agent collapses to roughly the no-loop baseline
 (~17-25% val on DocVQA-2026), because it cannot see the document. This
 tests whether the recursive VLM sub-call is the load-bearing mechanism
-of the scaffold (predictions 1 & 2 in D-006 already vary lift along
-the model-size and document-length axes).
+of the scaffold.
 
-Per D-007 (2026-05-27), this solver owns its category-tip prompts
-inline (``CATEGORY_TIPS`` below). The shared dicts in
-``docvqa.prompts`` are deprecated for paper solvers — do not import
-them here. The tips are reconciled from leanest's reconciled dict
-with all vision-channel references (``batch_look``, crop, zoom, tile,
-pixel sizes, etc.) stripped. What remains is the semantic shell that's
-still meaningful without perception (e.g. UNKNOWN rules, named-entity
-match, PART vs ITEM number, "broken down into" semantics). Some
-categories collapse to near-empty after stripping — that's expected
-for an ablation; no re-tuning is done.
+Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`
+per D-009 (DocVQA-2026 default). Per-category tips come from
+``profile.category_tips_fn`` — much of that semantic content is *also*
+useless without perception (e.g., "crop the legend"), but the
+ablation deliberately inherits whatever the dataset profile gives so
+the only thing this solver changes vs ``rvlm`` is the tool surface.
+
+``ANSWER_FORMATTING_RULES`` comes from ``profile.answer_formatting_rules``,
+not from :mod:`docvqa.prompts`.
 """
 
 from __future__ import annotations
 
 import logging
 import math
+from typing import Any
 
 import dspy
 import logfire
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from docvqa.data import Document
-from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES
+from docvqa.data import Document, Question
+from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Prompt
+# Prompt body (formatting rules substituted from the profile)
 # ---------------------------------------------------------------------------
 
-TASK_INSTRUCTIONS = (
+_TASK_BODY = (
     "You are a Document Visual Question Answering agent operating under a "
     "REPL-only configuration: you have Python code execution and a SUBMIT "
     "affordance, but NO image perception tools are available in this run.\n\n"
@@ -80,114 +79,18 @@ TASK_INSTRUCTIONS = (
     "- SUBMIT a single answer string.\n"
     '- Example: SUBMIT(answer="Unknown")\n'
     "- If an answer is genuinely warranted, it must follow these formatting rules:\n\n"
-
-    + ANSWER_FORMATTING_RULES
 )
 
 
-# ---------------------------------------------------------------------------
-# Category-specific tips (owned inline per D-007).
-#
-# Derived from leanest's reconciled CATEGORY_TIPS with all vision-channel
-# references stripped (no `batch_look`, no crop, no zoom, no tile, no
-# pixel sizes, no per-region perception verbs). What remains is the
-# semantic shell that's still meaningful without perception: named-entity
-# match rules, ontology hints (PART vs ITEM number), UNKNOWN rules,
-# percentage-point semantics, "broken down into" semantics, literal vs
-# figurative qualifiers, etc.
-#
-# Some categories collapse to near-empty after stripping (e.g. maps,
-# science_poster, infographics). That's expected — this is an ablation,
-# not a re-tuned solver. We keep the keys present for parity with
-# leanest's surface; an empty value would mean "no semantic content
-# survives without perception."
-#
-# REPL-only tool surface: REPL + SUBMIT. No `batch_look()`, no `look()`,
-# no `search()`, no `page_texts`. References to those tools are NOT in
-# this dict.
-# ---------------------------------------------------------------------------
-
-CATEGORY_TIPS: dict[str, str] = {
-    "engineering_drawing": (
-        "- BOM has two parallel numbering systems: ITEM NUMBERS (sequential index in the parts list) and "
-        "PART / IDENTIFYING NUMBERS (the actual hardware identifier, often alphanumeric with dashes). "
-        "Questions about 'part number' / 'identifying number' refer to the latter; 'item number' refers to the former.\n"
-        "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. The answer is the direction letter alone, "
-        "not prefixed with 'Direction'.\n"
-        "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), "
-        "not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) are valid answers.\n"
-        "- Without perception, you cannot read part numbers, BOM rows, or dimension values. SUBMIT 'Unknown' for "
-        "any question that requires reading the drawing.\n"
-    ),
-    "business_report": (
-        "- 'Broken down into' refers to immediate sub-categories only, not sub-sub-categories.\n"
-        "- TEXT TRUNCATION: When a question asks for a phrase truncated at a punctuation boundary "
-        "(first words before a punctuation mark, first sentence, etc.), the underlying passage must come from "
-        "the document. Without perception, that passage is not available — SUBMIT 'Unknown'.\n"
-        "- Without perception, you cannot read tables, chart values, or text passages. SUBMIT 'Unknown' for "
-        "any question that requires extracting a value or phrase from the report.\n"
-    ),
-    "comics": (
-        "- LITERAL VS FIGURATIVE: When a question contains qualifiers like 'in reality', 'actually', or 'truly', "
-        "the answer likely contradicts the surface label/title shown in the panel. Distinguishing the two still "
-        "requires reading the panels, which is not available here.\n"
-        "- Without perception, you cannot identify characters, count events, or read dialogue. SUBMIT 'Unknown' "
-        "for any question that requires inspecting the comic.\n"
-    ),
-    "maps": (
-        "- Without perception, you cannot count objects on the map, identify landmarks, read legends, or "
-        "determine grid coordinates. SUBMIT 'Unknown' for any question that requires inspecting the map.\n"
-    ),
-    "science_paper": (
-        "- If a question references a specific entity (layer number, model variant, dataset name) that requires "
-        "checking the document, and the document is not accessible, answer 'Unknown' — do not extrapolate from "
-        "a similar-sounding entity, and do not draw on outside knowledge of the paper or its authors.\n"
-        "- CITED PAPER FINDINGS: To find what a cited work claims, you would need the bibliography and the body "
-        "text. Without perception, neither is accessible — SUBMIT 'Unknown' rather than hallucinating from "
-        "the cited work's title or your training knowledge.\n"
-        "- Without perception, you cannot read citations, abstracts, ablation tables, or figures. SUBMIT "
-        "'Unknown' for any question that requires reading the paper.\n"
-    ),
-    "science_poster": (
-        "- 'Percentage improvement' refers to the absolute difference in percentage points (e.g., 80% − 50% "
-        "= 30 percentage points), not the relative change. (Definitional — independent of perception.)\n"
-        "- GROUPED BAR CHARTS: A 'set of columns' / 'group of bars' refers to the bars at one x-axis position "
-        "(one category, one benchmark), not all bars of one color across positions. (Definitional.)\n"
-        "- Without perception, you cannot read chart values, table cells, or annotations. SUBMIT 'Unknown' "
-        "for any question that requires extracting a value from the poster.\n"
-    ),
-    "infographics": (
-        "- SYSTEMATIC ENUMERATION: When a question asks for a first/last/only item that has or lacks some "
-        "property, the answer requires enumerating items in the document. Without perception, that enumeration "
-        "is not possible — SUBMIT 'Unknown'.\n"
-        "- Without perception, you cannot read icons, sections, or data points. SUBMIT 'Unknown' for any "
-        "question that requires inspecting the infographic.\n"
-    ),
-    "slide": (
-        "- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation "
-        "that requires checking the slide, and the slide is not accessible, answer 'Unknown'. Do NOT "
-        "substitute a similar-sounding name.\n"
-        "- COMPUTATION: When a question says 'total', 'sum', or 'considering X and Y', the underlying values "
-        "must come from the slides. Without perception, those values are not accessible — SUBMIT 'Unknown'.\n"
-        "- Without perception, you cannot read slide titles, tables, or body text. SUBMIT 'Unknown' for any "
-        "question that requires reading the deck.\n"
-    ),
-}
-
-
-def _get_category_tips(category: str) -> str:
-    """Get per-category tips for a document type. Returns empty string if none."""
-    tips = CATEGORY_TIPS.get(category, "")
-    if tips:
-        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tips}"
-    return ""
+def _build_task_instructions(profile: DatasetProfile) -> str:
+    return _TASK_BODY + profile.answer_formatting_rules
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _build_signature(instructions: str = TASK_INSTRUCTIONS) -> dspy.Signature:
+def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
         "question": (
             str,
@@ -225,15 +128,23 @@ class ReplOnlyProgram:
 
     def __init__(
         self,
+        profile: DatasetProfile,
         max_iterations: int = 20,
         rlm_type: str = "lean",
         page_factor: float = 1.5,
         question_concurrency: int = 1,
     ):
+        self.profile = profile
         self.max_iterations = max_iterations
         self.rlm_type = rlm_type
         self.page_factor = page_factor
         self.question_concurrency = question_concurrency
+
+    def _per_question_prefix(self, q: Question) -> str:
+        if self.profile.question_format_hint_fn is None:
+            return ""
+        hint = self.profile.question_format_hint_fn(q)
+        return f"\n{hint}\n" if hint else ""
 
     def solve_document(self, document: Document) -> tuple[dict[str, str], dict[str, list[dict]]]:
         """Solve all questions for a document, one question at a time, with no perception."""
@@ -243,19 +154,22 @@ class ReplOnlyProgram:
         page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
         max_iter = self.max_iterations + int(page_bonus)
 
-        tips = _get_category_tips(document.doc_category)
-        instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
+        base_instructions = _build_task_instructions(self.profile)
+        tips = self.profile.category_tips_fn(document.doc_category)
+        instructions = base_instructions + ("\n" + tips if tips else "")
         tools = _create_tools()
         sandbox_code = _build_sandbox_code()
 
-        def _solve_question(q):
+        def _solve_question(q: Question):
             """Solve a single question. Returns (question_id, answer, trajectory)."""
             with logfire.span(
                 "solve_repl_only",
                 doc_id=document.doc_id,
                 question_id=q.question_id,
                 question=q.question[:200],
+                profile=self.profile.name,
             ) as q_span:
+                question_text = q.question + self._per_question_prefix(q)
                 RLMClass = {"code": CodeRLM, "lean": LeanRLM, "thinking": ThinkingRLM}.get(self.rlm_type, RLM)
                 rlm = RLMClass(
                     signature=_build_signature(instructions),
@@ -266,8 +180,8 @@ class ReplOnlyProgram:
                     sandbox_code=sandbox_code,
                 )
                 logger.info(
-                    "REPL-only (%s) Q %s: max_iterations=%d (page_bonus=%d)",
-                    self.rlm_type, q.question_id, max_iter, int(page_bonus),
+                    "REPL-only [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                    self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                 )
 
                 def _is_rate_limit(e: BaseException) -> bool:
@@ -284,7 +198,7 @@ class ReplOnlyProgram:
                 )
                 def _solve_one():
                     return rlm(
-                        question=q.question,
+                        question=question_text,
                         doc_info=doc_info,
                     )
 
@@ -299,12 +213,13 @@ class ReplOnlyProgram:
                 q_span.set_attribute("prediction", answer[:200])
 
                 if q.answer is not None:
-                    is_correct, extracted = evaluate_prediction(answer, q.answer)
+                    is_correct, extracted = self.profile.score_fn(answer, q.answer, q)
                     q_span.set_attribute("is_correct", is_correct)
                     q_span.set_attribute("ground_truth", q.answer[:200])
                     q_span.set_attribute("extracted_answer", extracted[:200])
                     logger.info(
-                        "REPL-only Q %s: %s (GT=%s, PRED=%s)",
+                        "REPL-only[%s] Q %s: %s (GT=%s, PRED=%s)",
+                        self.profile.name,
                         q.question_id,
                         "CORRECT" if is_correct else "WRONG",
                         q.answer[:40],
@@ -314,10 +229,8 @@ class ReplOnlyProgram:
                 return q.question_id, answer, trajectory
 
         # Run questions with configurable concurrency
-        predictions = {}
-        trajectories = {}
-        correct_count = 0
-        scored_count = 0
+        predictions: dict[str, str] = {}
+        trajectories: dict[str, list[dict]] = {}
 
         if self.question_concurrency <= 1:
             for q in document.questions:
@@ -336,18 +249,19 @@ class ReplOnlyProgram:
                     trajectories[qid] = trajectory
 
         # Score
+        correct = 0
+        scored = 0
         for q in document.questions:
             if q.answer is not None:
-                scored_count += 1
-                is_correct, _ = evaluate_prediction(predictions[q.question_id], q.answer)
-                if is_correct:
-                    correct_count += 1
+                scored += 1
+                if self.profile.score_fn(predictions[q.question_id], q.answer, q)[0]:
+                    correct += 1
 
-        if scored_count > 0:
+        if scored > 0:
             logger.info(
-                "REPL-only doc %s: %d/%d = %.1f%%",
-                document.doc_id, correct_count, scored_count,
-                100 * correct_count / scored_count,
+                "REPL-only [%s] doc %s: %d/%d = %.1f%%",
+                self.profile.name, document.doc_id, correct, scored,
+                100 * correct / scored,
             )
 
         return predictions, trajectories
@@ -358,13 +272,31 @@ class ReplOnlyProgram:
 # ---------------------------------------------------------------------------
 
 def create_repl_only_program(
+    profile_name: str | None = None,
+    dataset: str | None = None,
     max_iterations: int = 20,
     rlm_type: str = "lean",
     page_factor: float = 1.5,
     question_concurrency: int = 4,
+    vlm: dict[str, Any] | None = None,  # unused — REPL-only has no perception
 ) -> ReplOnlyProgram:
     """Factory for the REPL-only solver. No VLM is configured or used."""
+    from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
+
+    if profile_name is not None:
+        for p in _PROFILES.values():
+            if p.name == profile_name:
+                profile = p
+                break
+        else:
+            profile = get_profile(profile_name)
+    elif dataset is not None:
+        profile = get_profile(dataset)
+    else:
+        profile = get_profile("VLR-CVC/DocVQA-2026")
+
     return ReplOnlyProgram(
+        profile=profile,
         max_iterations=max_iterations,
         rlm_type=rlm_type,
         page_factor=page_factor,

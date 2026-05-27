@@ -1,17 +1,27 @@
-"""Leanest+OCR solver — M+OCR extension cell per D-006.
+"""RVLM+OCR solver — RVLM with an OCR retrieval channel (M+OCR extension per D-006).
 
-Tool surface = leanest's ``batch_look`` + OCR's ``search`` + ``page_texts`` in
-scope. **No** single-image ``look()`` registration: callers wanting a single
-visual query use ``batch_look([(image, query)])[0]`` (same idiom as leanest).
+Tool surface = ``batch_look`` (the RVLM recursive sub-call) plus ``search``
+(BM25 over OCR text) and ``page_texts`` in scope. **No** single-image
+``look()`` registration: callers wanting a single visual query use
+``batch_look([(image, query)])[0]`` (same idiom as rvlm).
 
-This is a clean fork of ``leanest_solo_solver``. Distinct from
-``flat_solo_solver``, which confounds the OCR extension with a single-image
-``look()`` ergonomic wrapper.
+This is a clean fork of :mod:`docvqa.solvers.rvlm_solver`. Distinct from
+:mod:`docvqa.solvers.rvlm_full_solver`, which confounds the OCR extension
+with a single-image ``look()`` ergonomic wrapper.
 
-Per D-007 (docs/paper/decisions.md, 2026-05-27), this solver owns its
-category-tip prompts inline (``CATEGORY_TIPS`` + ``TOOL_HINTS`` below). The
-shared dicts in ``docvqa.prompts`` are deprecated for paper solvers — do not
-import them here.
+Engineering name per D-010 (paper-facing name TBD).
+
+Per D-009 (docs/paper/decisions.md, 2026-05-27):
+- Tool-agnostic semantic content (per-category tips, answer-formatting
+  rules) comes from the dataset profile.
+- This solver owns its tool-surface documentation (``TASK_INSTRUCTIONS``)
+  and an optional per-category :data:`TOOL_HINTS` overlay (the OCR-routing
+  fragments for science_paper / slide / infographics where BM25 +
+  page_texts is the dominant strategy). Tips composition at the call site
+  is ``profile.category_tips_fn(cat) + TOOL_HINTS.get(cat, "")``.
+- ``ANSWER_FORMATTING_RULES`` is read from
+  ``profile.answer_formatting_rules`` — not imported from
+  :mod:`docvqa.prompts`.
 """
 
 from __future__ import annotations
@@ -27,9 +37,8 @@ import dspy
 import logfire
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from docvqa.data import Document
-from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES
+from docvqa.data import Document, Question
+from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
@@ -38,10 +47,10 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Prompt
+# Prompt body (formatting rules substituted from the profile)
 # ---------------------------------------------------------------------------
 
-TASK_INSTRUCTIONS = (
+_TASK_BODY = (
     "You are a Document Visual Question Answering agent. You answer a question about a document by "
     "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
 
@@ -103,172 +112,21 @@ TASK_INSTRUCTIONS = (
     "- SUBMIT a single answer string.\n"
     '- Example: SUBMIT(answer="42")\n'
     "- The answer must follow these formatting rules:\n\n"
-
-    + ANSWER_FORMATTING_RULES
 )
 
 
+def _build_task_instructions(profile: DatasetProfile) -> str:
+    return _TASK_BODY + profile.answer_formatting_rules
+
+
 # ---------------------------------------------------------------------------
-# Category-specific tips (owned inline per D-007).
-# Copied from leanest_solo_solver (the reconciled source-of-truth as of
-# 2026-05-27 — val-leak-scrubbed, Leader-lines included, TEXT TRUNCATION
-# bullet present on business_report, COUNTING-OBJECTS bullet on maps,
-# CITED PAPER FINDINGS bullet on science_paper).
+# Per-category tool-routing overlay (solver-owned per D-009).
 #
-# Tool-surface translation: all visual references stay as `batch_look()`
-# (we do not register `look()`). Where flat_solo's FLAT_SOLO_TOOL_HINTS
-# adds an OCR-routing overlay (science_paper, slide, infographics), we
-# include a `TOOL_HINTS` overlay below — adapted to use `batch_look()`
-# instead of `look()` so the wording matches the actual tool surface.
+# Semantic content comes from the dataset profile. This overlay adds the
+# BM25+page_texts routing fragments for categories where that strategy is
+# dominant (mirrors flat_solo's FLAT_SOLO_TOOL_HINTS, adapted to use
+# `batch_look()` instead of `look()` to match the rvlm+OCR tool surface).
 # ---------------------------------------------------------------------------
-
-CATEGORY_TIPS: dict[str, str] = {
-    "engineering_drawing": (
-        "- PRECISION IS CRITICAL: Crop tables and labels at full resolution before reading values.\n"
-        "- BOM has two parallel numbering systems: ITEM NUMBERS (sequential index in the parts list) and "
-        "PART / IDENTIFYING NUMBERS (the actual hardware identifier, often alphanumeric with dashes). "
-        "Questions about 'part number' / 'identifying number' refer to the latter; 'item number' refers to the former.\n"
-        "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. The answer is the direction letter alone, "
-        "not prefixed with 'Direction'.\n"
-        "- For counting parts in the BOM (clamps, bolts, etc.), read the QTY column row-by-row and sum in code — "
-        "don't estimate visually.\n"
-        "- VLM OCR CONFUSION: Part numbers are almost always digits + dashes. If the VLM reads letters like I, O, l "
-        "where digits 1, 0 would be expected, re-read at higher zoom. Common confusions: I↔1, O↔0, l↔1.\n"
-        "- For labels or numbers adjacent to a specific schematic or view, crop tightly around that view rather "
-        "than relying on a single full-page query — small text gets lost at thumbnail resolution.\n"
-        "- LEADER LINES: when a label points to a part via a leader line, use `batch_look` on the label region "
-        "and the pointed-to region in two separate crops to verify the connection — don't rely on a single "
-        "full-page query that may mis-associate label and part by proximity.\n"
-        "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), "
-        "not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) are valid answers.\n"
-    ),
-    "business_report": (
-        "- Crop tables at full resolution before reading numbers or labels — dense tables are hard to read at thumbnail zoom.\n"
-        "- Multiple tables may contain similar-looking data. Verify the table's title/header matches the question's "
-        "subject before extracting values.\n"
-        "- For YoY / period-over-period calculations, extract raw values from the table first, then compute "
-        "differences in Python — do not rely on the VLM for arithmetic.\n"
-        "- CHART VALUES: VLM readings of bar/line chart values vary between calls. Use the first clear reading "
-        "rather than re-querying the same chart to 'verify' — repeated reads add noise, not signal.\n"
-        "- 'Broken down into' refers to immediate sub-categories only, not sub-sub-categories.\n"
-        "- TEXT TRUNCATION: When a question asks for a phrase truncated at a punctuation boundary "
-        "(first words before a punctuation mark, first sentence, etc.), read the full passage with "
-        "`batch_look` and do the truncation in Python — the VLM over-shortens when asked to truncate directly.\n"
-        "- PICTOGRAMS: When looking for a described pictogram among many, crop each icon individually and ask the "
-        "VLM to describe it, rather than asking a single yes/no filtering question across all icons at once.\n"
-        "- If a qualitative description (e.g., an adjective) does not appear in the table, look in the surrounding "
-        "text paragraphs or footnotes.\n"
-    ),
-    "comics": (
-        "- STORY MAP FIRST: For multi-story anthologies, build a story index before answering — scan each page "
-        "to get (story title, page range, key characters). Match question keywords to the correct story.\n"
-        "- COUNTING EVENTS: For 'how many times X happens', query panel-by-panel with HIGHLY SPECIFIC inclusion "
-        "criteria — e.g., 'Is someone physically [exact action] in this panel? Exclude mentions in past-tense "
-        "dialogue, near-misses, and aftermath.' Then count the positive panels in code.\n"
-        "- VERIFY COUNTS: The VLM over-attributes actions in busy panels — it infers events from context clues "
-        "(sound effects, weapons, postures) even when no action is depicted. After collecting candidates, "
-        "re-examine each one with a tight crop and a disconfirming question ('Did this action ACTUALLY occur, or "
-        "is it a near-miss / different action / aftermath?'). Expect many initial candidates to be false positives.\n"
-        "- PANEL-BY-PANEL: When you need extractable events, ask 'what happens in each panel?' explicitly. "
-        "Generic 'describe the page' queries miss the panel structure that makes events countable.\n"
-        "- LITERAL VS FIGURATIVE: When a question contains qualifiers like 'in reality', 'actually', or 'truly', "
-        "the answer likely contradicts the surface label/title shown in the panel — distinguish what something "
-        "is called from what it factually is.\n"
-        "- CHARACTER IDENTIFICATION: Use the exact term that appears in the speech bubbles. When the VLM gives "
-        "conflicting answers about a small object or character, use narrative context (story setting, nearby "
-        "objects, character role) to disambiguate.\n"
-    ),
-    "maps": (
-        "- COARSE-TO-FINE: Start with a full-page view of the map for rough layout, then zoom into areas of "
-        "interest (~800px crops), then tighter (~400px) for small text. Each step refines the previous.\n"
-        "- COUNTING OBJECTS ON MAPS: For 'how many X are on the map', NEVER try to count from a full-page view — "
-        "small objects are invisible at low resolution. Instead:\n"
-        "  1. Estimate the object size relative to the map and pick a grid size so each tile shows individual "
-        "objects clearly (large objects → 3x3; medium → 4x4 or 5x5; small dots/pins/symbols → 6x6 or more).\n"
-        "  2. Split the map into tiles with ~15% overlap between adjacent tiles.\n"
-        "  3. Per-tile, use `batch_look` to ask the VLM: 'List every [object] visible in this tile, with each "
-        "one's relative position (top/bottom/left/right/center) and any distinguishing label nearby.'\n"
-        "  4. In code, collect across tiles and deduplicate objects near tile boundaries by checking similar "
-        "positions or matching labels.\n"
-        "  5. Count the deduplicated list.\n"
-        "- LOCATE INDEPENDENTLY: Find each landmark/feature with simple per-tile queries ('what labels are "
-        "visible here?', 'is feature X present in this tile?'). Record approximate pixel positions using tile "
-        "offset + relative position within the tile.\n"
-        "- REASON WITH MATH: Compute spatial relationships in Python — distances, directions, relative "
-        "positions — using the coordinates you collected. Basic vector math gives reliable answers with "
-        "explicit error bounds.\n"
-        "- LEGEND + ROAD TYPES: Crop the legend early. For road-type questions, crop the specific road segment "
-        "at HIGH resolution alongside the legend and ask the VLM to compare the line style directly. Small "
-        "differences (solid vs dashed, thin vs thick) are easy to misread at low resolution.\n"
-        "- GRID COORDINATES: Cross-reference TWO sources — (1) crop the actual grid cell on the map to see "
-        "what's there, and (2) look up the same coordinate in any feature index/legend that lists entries by "
-        "grid coordinate. Disagreement between the two is usually an indexing-error trap.\n"
-    ),
-    "science_paper": (
-        "- Papers can be long — locate the relevant section first (abstract, headings, figure/table captions) "
-        "before reading in detail.\n"
-        "- CITATION NUMBERS: For 'first/last citation on this page' style questions, treat citations as text "
-        "patterns ([N], (Author, Year)) and enumerate them yourself in order rather than asking the VLM to "
-        "identify them — VLM ordering of inline references is unreliable. Distinguish body-text citations from "
-        "table headers and figure captions, which are often numbered separately.\n"
-        "- CITED PAPER FINDINGS: To find what a cited work claims, first find its reference number in the "
-        "bibliography (crop the references section), then locate the place(s) in body text where that number "
-        "is discussed. If the cited paper's actual content isn't in this document, answer 'Unknown' rather "
-        "than hallucinating from the title or context.\n"
-        "- ABLATION STUDIES: Papers often contain multiple ablation studies on different components. Verify "
-        "the section you're reading is about the specific component the question asks about, not a different "
-        "subsystem.\n"
-        "- If a question references a specific entity (layer number, model variant, dataset name) that does "
-        "not appear anywhere in the document after thorough inspection, answer 'Unknown' — do not extrapolate "
-        "from a similar-sounding entity.\n"
-    ),
-    "science_poster": (
-        "- Posters are dense single-page documents. Crop specific sections at full resolution for precise values.\n"
-        "- CHART ANNOTATIONS: If a chart has numeric labels printed directly on bars/lines, read those labels "
-        "rather than estimating from bar heights — printed labels are exact, visual estimates are noisy.\n"
-        "- For table values and percentages, crop the specific cell at full resolution before reading.\n"
-        "- 'Percentage improvement' refers to the absolute difference in percentage points (e.g., 80% − 50% "
-        "= 30 percentage points), not the relative change.\n"
-        "- COLOR-CODED VALUES: For questions about colored numbers in a table (red, blue, highlighted), crop "
-        "the table at maximum resolution and enumerate all candidates of that color before selecting — VLM "
-        "color recall across an entire table is unreliable, but per-cell color checks are accurate.\n"
-        "- GROUPED BAR CHARTS: A 'set of columns' / 'group of bars' refers to the bars at one x-axis position "
-        "(one category, one benchmark), not all bars of one color across positions.\n"
-    ),
-    "infographics": (
-        "- Infographics mix text, icons, and illustrations — a full-page view gives useful structural context "
-        "before zooming in.\n"
-        "- For precise numbers or dates, crop the specific data point at full resolution. For identifying "
-        "broad visual elements (icons, sections, themes), a full-page view suffices.\n"
-        "- SYSTEMATIC ENUMERATION: When a question asks for a first/last/only item that has or lacks some "
-        "property, enumerate ALL items and their status before answering. Don't stop after finding two or "
-        "three candidates — the answer hinges on which one is at the boundary.\n"
-    ),
-    "slide": (
-        "- Slide decks can span many pages. Locate the relevant slide first by skimming titles/headers, then "
-        "read in detail.\n"
-        "- PAGE NAVIGATION: When a question refers to 'the page before X' or 'the page that contains Y', "
-        "first locate X or Y, then verify the page index by cropping the page's header/title. Off-by-one "
-        "errors on page indexing are common — double-check before submitting a page number or page-specific "
-        "content.\n"
-        "- For position-on-page questions (a specific word/bullet at the top/bottom/edge of a page), crop "
-        "the relevant region at full resolution and read carefully.\n"
-        "- Tables on slides are often small; crop at full resolution to read cell values.\n"
-        "- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation "
-        "that does not appear anywhere in the document after thorough inspection, answer 'Unknown'. Do NOT "
-        "substitute a similar-sounding name.\n"
-        "- COMPUTATION: When a question says 'total', 'sum', or 'considering X and Y', extract all "
-        "referenced values and compute in Python explicitly. Show the values entering the calculation "
-        "before submitting.\n"
-    ),
-}
-
-
-# Tool-routing overlay (M+OCR variant). Mirrors flat_solo's FLAT_SOLO_TOOL_HINTS
-# for the three categories where BM25 + page_texts dominance materially helps,
-# but every reference to `look()` is rewritten as `batch_look()` to match the
-# leanest+OCR tool surface. Appended on top of CATEGORY_TIPS by
-# `_get_category_tips`.
 
 TOOL_HINTS: dict[str, str] = {
     "science_paper": (
@@ -300,13 +158,19 @@ TOOL_HINTS: dict[str, str] = {
 }
 
 
-def _get_category_tips(category: str) -> str:
-    """Get per-category tips for leanest+OCR (CATEGORY_TIPS + TOOL_HINTS overlay)."""
-    base = CATEGORY_TIPS.get(category, "")
+def _get_category_tips(profile: DatasetProfile, category: str) -> str:
+    """Compose profile semantic tips + this solver's OCR-routing overlay."""
+    base = profile.category_tips_fn(category)
     tool = TOOL_HINTS.get(category, "")
     if not base and not tool:
         return ""
-    return f"## CATEGORY-SPECIFIC TIPS ({category})\n{base}{tool}"
+    if base and tool:
+        # profile.category_tips_fn already returns the wrapped block; append
+        # the tool overlay inside the same section.
+        return base + tool
+    if tool:
+        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
+    return base
 
 
 # ---------------------------------------------------------------------------
@@ -325,7 +189,7 @@ def _format_page_texts(page_texts: list[str]) -> list[str]:
     return [t.strip() or "[No text extracted - use batch_look() for visual content]" for t in page_texts]
 
 
-def _build_signature(instructions: str = TASK_INSTRUCTIONS) -> dspy.Signature:
+def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
         "question": (
             str,
@@ -447,20 +311,21 @@ def batch_look(requests):
 
 
 # ---------------------------------------------------------------------------
-# LeanestOcrProgram
+# RvlmOcrProgram
 # ---------------------------------------------------------------------------
 
-class LeanestOcrProgram:
-    """Leanest+OCR solver — each question solved independently.
+class RvlmOcrProgram:
+    """RVLM+OCR solver — each question solved independently.
 
-    Tool surface: `batch_look()` (from leanest) + `search()` + `page_texts`
-    (from OCR). No `look()` is registered — that ergonomic wrapper is what
-    distinguishes this solver from `flat_solo`, the prior M+OCR variant.
+    Tool surface: ``batch_look()`` (from rvlm) + ``search()`` + ``page_texts``
+    (from OCR). No ``look()`` is registered — that ergonomic wrapper is what
+    distinguishes this solver from ``rvlm_full``, the kitchen-sink variant.
     """
 
     def __init__(
         self,
         vlm_lm: dspy.LM,
+        profile: DatasetProfile,
         max_iterations: int = 20,
         rlm_type: str = "lean",
         page_factor: float = 1.5,
@@ -468,6 +333,7 @@ class LeanestOcrProgram:
         batch_concurrency: int = 8,
     ):
         self.vlm_lm = vlm_lm
+        self.profile = profile
         self.max_iterations = max_iterations
         self.rlm_type = rlm_type
         self.page_factor = page_factor
@@ -487,6 +353,12 @@ class LeanestOcrProgram:
                 "Output ONLY the concise answer. If the information is missing, output 'Unknown'.",
             )
         )
+
+    def _per_question_prefix(self, q: Question) -> str:
+        if self.profile.question_format_hint_fn is None:
+            return ""
+        hint = self.profile.question_format_hint_fn(q)
+        return f"\n{hint}\n" if hint else ""
 
     def solve_document(self, document: Document) -> tuple[dict[str, str], dict[str, list[dict]]]:
         """Solve all questions for a document, one question at a time."""
@@ -518,19 +390,22 @@ class LeanestOcrProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            tips = _get_category_tips(document.doc_category)
-            instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
+            base_instructions = _build_task_instructions(self.profile)
+            tips = _get_category_tips(self.profile, document.doc_category)
+            instructions = base_instructions + ("\n" + tips if tips else "")
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, self.batch_concurrency)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
-            def _solve_question(q):
+            def _solve_question(q: Question):
                 """Solve a single question. Returns (question_id, answer, trajectory)."""
                 with logfire.span(
-                    "solve_leanest_ocr",
+                    "solve_rvlm_ocr",
                     doc_id=document.doc_id,
                     question_id=q.question_id,
                     question=q.question[:200],
+                    profile=self.profile.name,
                 ) as q_span:
+                    question_text = q.question + self._per_question_prefix(q)
                     RLMClass = {"code": CodeRLM, "lean": LeanRLM, "thinking": ThinkingRLM}.get(self.rlm_type, RLM)
                     rlm = RLMClass(
                         signature=_build_signature(instructions),
@@ -541,8 +416,8 @@ class LeanestOcrProgram:
                         sandbox_code=sandbox_code,
                     )
                     logger.info(
-                        "Leanest+OCR (%s) Q %s: max_iterations=%d (page_bonus=%d)",
-                        self.rlm_type, q.question_id, max_iter, int(page_bonus),
+                        "RVLM+OCR [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                        self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
                     def _is_rate_limit(e: BaseException) -> bool:
@@ -559,7 +434,7 @@ class LeanestOcrProgram:
                     )
                     def _solve_one():
                         return rlm(
-                            question=q.question,
+                            question=question_text,
                             doc_info=doc_info,
                             page_texts=page_texts,
                         )
@@ -575,12 +450,13 @@ class LeanestOcrProgram:
                     q_span.set_attribute("prediction", answer[:200])
 
                     if q.answer is not None:
-                        is_correct, extracted = evaluate_prediction(answer, q.answer)
+                        is_correct, extracted = self.profile.score_fn(answer, q.answer, q)
                         q_span.set_attribute("is_correct", is_correct)
                         q_span.set_attribute("ground_truth", q.answer[:200])
                         q_span.set_attribute("extracted_answer", extracted[:200])
                         logger.info(
-                            "Solo Q %s: %s (GT=%s, PRED=%s)",
+                            "RVLM+OCR[%s] Q %s: %s (GT=%s, PRED=%s)",
+                            self.profile.name,
                             q.question_id,
                             "CORRECT" if is_correct else "WRONG",
                             q.answer[:40],
@@ -590,10 +466,8 @@ class LeanestOcrProgram:
                     return q.question_id, answer, trajectory
 
             # Run questions with configurable concurrency
-            predictions = {}
-            trajectories = {}
-            correct_count = 0
-            scored_count = 0
+            predictions: dict[str, str] = {}
+            trajectories: dict[str, list[dict]] = {}
 
             if self.question_concurrency <= 1:
                 for q in document.questions:
@@ -603,7 +477,7 @@ class LeanestOcrProgram:
             else:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
                 max_w = min(self.question_concurrency, len(document.questions))
-                logger.info("Leanest+OCR: running %d questions with concurrency=%d", len(document.questions), max_w)
+                logger.info("RVLM+OCR: running %d questions with concurrency=%d", len(document.questions), max_w)
                 with ThreadPoolExecutor(max_workers=max_w) as pool:
                     futures = {pool.submit(_solve_question, q): q for q in document.questions}
                     for future in as_completed(futures):
@@ -612,18 +486,18 @@ class LeanestOcrProgram:
                         trajectories[qid] = trajectory
 
             # Score
+            correct = 0
+            scored = 0
             for q in document.questions:
                 if q.answer is not None:
-                    scored_count += 1
-                    is_correct, _ = evaluate_prediction(predictions[q.question_id], q.answer)
-                    if is_correct:
-                        correct_count += 1
-
-            if scored_count > 0:
+                    scored += 1
+                    if self.profile.score_fn(predictions[q.question_id], q.answer, q)[0]:
+                        correct += 1
+            if scored > 0:
                 logger.info(
-                    "Leanest+OCR doc %s: %d/%d = %.1f%%",
-                    document.doc_id, correct_count, scored_count,
-                    100 * correct_count / scored_count,
+                    "RVLM+OCR [%s] doc %s: %d/%d = %.1f%%",
+                    self.profile.name, document.doc_id, correct, scored,
+                    100 * correct / scored,
                 )
 
             return predictions, trajectories
@@ -633,14 +507,31 @@ class LeanestOcrProgram:
 # Factory for hydra instantiation
 # ---------------------------------------------------------------------------
 
-def create_leanest_ocr_program(
+def create_rvlm_ocr_program(
+    profile_name: str | None = None,
+    dataset: str | None = None,
     max_iterations: int = 20,
     vlm: dict[str, Any] | None = None,
     rlm_type: str = "lean",
     page_factor: float = 1.5,
     question_concurrency: int = 4,
     batch_concurrency: int = 8,
-) -> LeanestOcrProgram:
+) -> RvlmOcrProgram:
+    """Hydra factory. See ``rvlm_solver.create_rvlm_program``."""
+    from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
+
+    if profile_name is not None:
+        for p in _PROFILES.values():
+            if p.name == profile_name:
+                profile = p
+                break
+        else:
+            profile = get_profile(profile_name)
+    elif dataset is not None:
+        profile = get_profile(dataset)
+    else:
+        profile = get_profile("VLR-CVC/DocVQA-2026")
+
     vlm_config = LMConfig(
         model=vlm["model"],
         api_base=vlm.get("api_base"),
@@ -656,8 +547,9 @@ def create_leanest_ocr_program(
 
     vlm_lm = vlm_config.to_dspy_lm()
 
-    return LeanestOcrProgram(
+    return RvlmOcrProgram(
         vlm_lm=vlm_lm,
+        profile=profile,
         max_iterations=max_iterations,
         rlm_type=rlm_type,
         page_factor=page_factor,

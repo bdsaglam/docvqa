@@ -1,0 +1,7 @@
+_target_: docvqa.solvers.raw_vlm_single_solver.create_raw_vlm_single_program
+dataset: ${data.dataset}
+profile_name: null
+vlm: ${vlm}
+question_concurrency: 4
+max_height: 16384
+use_category_tips: true

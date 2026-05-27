@@ -51,7 +51,7 @@ from pydantic_ai_rlm.utils import format_repl_result
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
-from docvqa.solvers.leanest_solo_da_solver import _build_task_instructions
+from docvqa.solvers.rvlm_solver import _build_task_instructions
 from docvqa.types import LMConfig
 
 logger = logging.getLogger(__name__)

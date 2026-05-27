@@ -61,3 +61,4 @@ Each experiment file has these sections:
 | [mmlongbench-doc-qwen27b.md](mmlongbench-doc-qwen27b.md) | done (9 legacy + 3 ceiling + 9 DA val trials. Legacy lift +26.43pp; fair lift +16.84pp judge. About half the headline was baseline crippling.) |
 | [leanest-test-matched-baseline.md](leanest-test-matched-baseline.md) | done (8 trials, t1 excluded); SC-8 voted test = 36.00% (ICDAR) |
 | [official-baseline-qwen27b.md](official-baseline-qwen27b.md) | val done (n=3, 21.67% ± 1.91pp); test abandoned (not viable on Qwen 27B, see file) |
+| [unified-category-tips-ablation.md](unified-category-tips-ablation.md) | solver built (`rvlm_unified`); n=1 val pending on amax1 — tests whether per-document category metadata is required |

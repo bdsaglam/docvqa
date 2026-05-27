@@ -32,7 +32,7 @@ from docvqa.metrics import evaluate_prediction
 from docvqa.prompts import CATEGORY_TIPS
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
-from docvqa.solvers.flat_solo_solver import TASK_INSTRUCTIONS as SEED_TASK_INSTRUCTIONS
+from docvqa.solvers.rvlm_full_solver import TASK_INSTRUCTIONS as SEED_TASK_INSTRUCTIONS
 from docvqa.types import LMConfig
 
 logger = logging.getLogger(__name__)

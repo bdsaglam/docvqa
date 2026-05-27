@@ -70,23 +70,40 @@ on arXiv before they land in the paper.
 
 ### MADQA — Borchmann et al. *Strategic Navigation or Stochastic Search?*
 
-- **Citation:** Borchmann, Ł., et al. *Strategic Navigation or
-  Stochastic Search? How Agents and Humans Reason Over Document
-  Collections.* arXiv:2603.12180 (2026). **(needs verification)**
-- **Position:** **planned baseline + benchmark** (D-005). Reportedly
-  introduces the MADQA benchmark for multimodal agentic doc QA *and*
-  warns that "unconstrained" RLMs are an "efficiency catastrophe."
-- **Why this matters for us:** their critique is exactly what our
-  paper's "focused instantiation" framing answers. We engage with it
-  directly rather than reinventing the framing.
+- **Citation:** Borchmann, Ł., Van Landeghem, J., Turski, M., et al.
+  *Strategic Navigation or Stochastic Search? How Agents and Humans
+  Reason Over Document Collections.* arXiv:2603.12180 (Mar 2026).
+  **Verified from PDF 2026-05-27.** (Snowflake / Instabase / Oxford /
+  HuggingFace / UNC / CVC.)
+- **What it actually is:** a document-**collection** QA benchmark —
+  2,250 human-authored questions over 800 heterogeneous PDFs, with
+  cross-page/cross-doc multi-hop subsets. Metric: LLM-judged **Accuracy**
+  + a novel **Kuiper effort-calibration** statistic (accuracy–effort
+  trade-off), not ANLS. Best system *Gemini 3 Pro BM25 MLLM Agent*
+  82.2%; ~18% oracle gap; **thesis: retrieval, not reasoning, is the
+  bottleneck.** Documents are advertised as **fresh, not recycled** from
+  existing benchmarks → low reuse risk with DocVQA-2026.
+- **The RLM critique (verified wording).** Not "efficiency catastrophe"
+  verbatim — that was a lit-review paraphrase. The paper says constrained
+  agency "avoids the **catastrophic effort overhead of RLMs**" (§5), runs
+  unconstrained RLM **citing the same Zhang et al. 2025 paper we
+  instantiate**, and shows e.g. *Claude 4.5 Sonnet RLM* burning 270M
+  input tokens / ~$850 while losing to its BM25-agent counterpart.
+- **Why this matters — and the tension.** Their result *supports* our
+  "focused/constrained instantiation" framing (D-005) but also
+  **pre-empts a "constraining RLM helps" contribution** — that is their
+  finding, not ours. MADQA's regime is also collection-scale retrieval,
+  where our **OCR extension** (not the OCR-free core) is what's relevant.
+  Our defensible delta narrows to: the *visual* sub-call specialization +
+  the perception-budget hypothesis, on benchmarks where visual
+  perception (not collection retrieval) is the bottleneck.
 - **Action items:**
-  1. Verify arXiv:2603.12180 exists. Download to obsidian; user reads.
-  2. Add MADQA to the benchmark candidate list in
-     `experiment-plan.md` (done).
-  3. Add their **constrained-agent baseline** to our experiment
-     baselines (done in experiment-plan.md baseline shortlist).
-  4. Frame our paper as the affirmative case for "constrained RLM
-     works" on multimodal documents.
+  1. ~~Verify arXiv exists~~ done; downloaded to `related-works/`.
+  2. Read full PDF before drafting the positioning paragraph (user).
+  3. Use as benchmark + baseline; **lead with the OCR extension** on it.
+  4. Reframe our affirmative case from "constrained RLM works" (taken) to
+     "**visual** recursive perception is the load-bearing fix where
+     perception, not retrieval, bounds the model."
 
 ---
 
@@ -139,12 +156,21 @@ This is the cluster most likely to challenge our novelty. Sourced from
 `lit-review-2.md` — all need verification.
 
 - **ARIAL: An Agentic Framework for Document VQA with Precise Answer
-  Localization.** Mohammadshirazi et al. arXiv:2511.18192 (NeurIPS 2025).
-  **(needs verification)** Reportedly achieves **0.887 ANLS on DocVQA**
-  via a modular pipeline (TrOCR + retrieval + answer generation) with
-  pixel-grounded localization. **This is the most direct competitor we
-  surfaced.** Position: our delta is the RLM framing (REPL + recursive
-  sub-call) and the multi-page / multi-doc-type focus.
+  Localization.** Neogi, Kulshrestha, Ramnath. arXiv:2511.18192
+  (Dec 2025). **Verified from PDF 2026-05-27.** Evaluates on **four
+  single-page benchmarks — DocVQA, FUNSD, CORD, SROIE** — reporting
+  **88.7 ANLS on DocVQA** (FUNSD 90.0, CORD 85.5, SROIE 93.1) plus
+  mAP@IoU answer localization. Pipeline: DB+TrOCR OCR → MiniLM retrieval
+  → **fine-tuned Gemma 3-27B** QA → box grounding, orchestrated by a
+  LLaMA 4 Scout planner. **Two caveats for head-to-head use: ARIAL
+  fine-tunes its QA model on 70k DocVQA/CORD/FUNSD pairs, and all four
+  benchmarks are single-page.** Only DocVQA-SP overlaps our space (we
+  lean-exclude it; see `candidate-datasets.md`), and the fine-tuning
+  breaks parity with our training-free method. Our delta: RLM framing
+  (REPL + recursive VLM sub-call), multi-page / multi-doc-type focus,
+  no training. (Author note: `related-works.md` previously credited
+  "Mohammadshirazi et al." — that's the DLaVA prior work ARIAL builds
+  on, not ARIAL's byline.)
 - **VISOR: Agentic Visual Retrieval-Augmented Generation via Iterative
   Search and Over-horizon Reasoning.** Wu et al. arXiv:2604.09508
   (2026). **(needs verification)** Iterative visual RAG with structured
@@ -287,7 +313,7 @@ Direct-prompt (no scaffold) — the "raw model" comparison.
 | Benchmark | Best reported | Method | Notes |
 |---|---|---|---|
 | DocVQA (original) | 0.971 ANLS | Qwen3-VL 235B | self-reported, near-saturation |
-| DocVQA (original) | 0.887 ANLS | ARIAL (agentic) | ⚠ closest-style competitor |
+| DocVQA (original) | 0.887 ANLS | ARIAL (agentic) | ⚠ fine-tuned, single-page; verified |
 | MP-DocVQA | 0.8458 ANLS | AVIR Framework | retrieval-augmented |
 | MMLongBench-Doc | ~44.9% F1 | GPT-4o | long-context, hard |
 | InfographicVQA (ICDAR'21) | 0.6120 ANLS | Applica.ai | task-specific winner |

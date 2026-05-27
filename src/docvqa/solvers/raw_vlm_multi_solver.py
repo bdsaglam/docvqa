@@ -1,12 +1,15 @@
-"""Dataset-aware no_loop_multi baseline.
+"""Raw-VLM multi-image baseline. One forward pass, all pages as separate images.
 
-A clone of :mod:`docvqa.solvers.no_loop_multi_solver` with a
-:class:`docvqa.datasets.profile.DatasetProfile` injected via the
-constructor, so the baseline gets the same dataset-tuned answer
-formatting, category tips, per-question format hint, and judge
-scoring as ``flat_solo_da``. This keeps the
-baseline-vs-scaffold delta cleanly attributable to the scaffold
-itself rather than to a prompt mismatch.
+Direct VLM Q&A with native multi-image input — pages are interleaved with
+``[Page i]`` labels and the question. No agent loop, no tools, no scaffold.
+This is the unaided multi-image baseline for the scaffold-vs-raw lift.
+
+Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`;
+DocVQA-2026 default. The profile drives answer formatting, baseline
+category tips, per-question format hint, and (for the runner) scoring.
+
+Engineering name per D-010 (formerly ``no_loop_multi`` / ``no_loop_multi_da``;
+paper-facing name TBD).
 """
 
 from __future__ import annotations
@@ -61,7 +64,7 @@ def _build_messages(
     return [{"role": "user", "content": parts}]
 
 
-class NoLoopMultiDAProgram:
+class RawVlmMultiProgram:
     """Dataset-aware direct VLM Q&A baseline."""
 
     def __init__(
@@ -100,7 +103,7 @@ class NoLoopMultiDAProgram:
 
         def _solve_question(q: Question):
             with logfire.span(
-                "solve_no_loop_multi_da",
+                "solve_raw_vlm_multi",
                 doc_id=document.doc_id,
                 question_id=q.question_id,
                 question=q.question[:200],
@@ -138,7 +141,7 @@ class NoLoopMultiDAProgram:
                 try:
                     answer = _call() or "Unknown"
                 except Exception as e:
-                    logger.warning("NoLoopMultiDA failed for Q '%s': %s", q.question_id, e)
+                    logger.warning("RawVlmMulti failed for Q '%s': %s", q.question_id, e)
                     answer = "Unknown"
 
                 if not answer:
@@ -152,7 +155,7 @@ class NoLoopMultiDAProgram:
                     q_span.set_attribute("ground_truth", q.answer[:200])
                     q_span.set_attribute("extracted_answer", extracted[:200])
                     logger.info(
-                        "NoLoopMultiDA[%s] Q %s: %s (GT=%s, PRED=%s)",
+                        "RawVlmMulti[%s] Q %s: %s (GT=%s, PRED=%s)",
                         self.profile.name,
                         q.question_id,
                         "CORRECT" if is_correct else "WRONG",
@@ -190,7 +193,7 @@ class NoLoopMultiDAProgram:
                     correct += 1
         if scored > 0:
             logger.info(
-                "NoLoopMultiDA[%s] doc %s: %d/%d = %.1f%%",
+                "RawVlmMulti[%s] doc %s: %d/%d = %.1f%%",
                 self.profile.name,
                 document.doc_id,
                 correct,
@@ -201,14 +204,14 @@ class NoLoopMultiDAProgram:
         return predictions, trajectories
 
 
-def create_no_loop_multi_da_program(
+def create_raw_vlm_multi_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     vlm: dict[str, Any] | None = None,
     question_concurrency: int = 4,
     max_pages: int = 10,
-) -> NoLoopMultiDAProgram:
-    """Hydra factory. See ``flat_solo_da_solver.create_flat_solo_da_program``."""
+) -> RawVlmMultiProgram:
+    """Hydra factory. See ``rvlm_full_solver.create_rvlm_full_program``."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:
@@ -240,7 +243,7 @@ def create_no_loop_multi_da_program(
         else LMConfig()
     )
     vlm_lm = vlm_config.to_dspy_lm()
-    return NoLoopMultiDAProgram(
+    return RawVlmMultiProgram(
         vlm_lm=vlm_lm,
         profile=profile,
         question_concurrency=question_concurrency,

@@ -1,7 +1,9 @@
-_target_: docvqa.solvers.repl_only_solver.create_repl_only_program
+_target_: docvqa.solvers.rvlm_ocr_solver.create_rvlm_ocr_program
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 25
+vlm: ${vlm}
 rlm_type: lean
 page_factor: 1.5
 question_concurrency: 4
+batch_concurrency: 8
