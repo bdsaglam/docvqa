@@ -13,8 +13,14 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 > `docs/paper/README.md` for the full framing.
 >
 > Operating principles flowing from this:
-> - **Per-solver inline prompts (D-007).** Each solver owns its prompts
->   inline; only `ANSWER_FORMATTING_RULES` is shared.
+> - **Prompt parity (D-007).** Every paper solver passes the same
+>   prompt audit standard.
+> - **Semantic-per-profile, tool-routing-per-solver (D-009, refines
+>   D-007).** Tool-agnostic per-category content lives in the dataset
+>   profile (`datasets/profile.py`); tool-routing lives in the solver
+>   (`TASK_INSTRUCTIONS` + optional per-category overlay). All paper
+>   solvers are dataset-aware by default — `solo`/`_da` pairs are
+>   being merged.
 > - **Trial-budget escalation (D-008).** New cells: n=1 → n=2 → n=8
 >   only after the paper headline locks.
 > - **No prompt-iteration narrative in the paper.** No v1/v2/scrub

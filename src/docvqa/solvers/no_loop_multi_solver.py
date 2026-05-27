@@ -11,6 +11,11 @@ Truncation policy: take the first ``max_pages`` pages. Documents longer than
 that are *not* downscaled — we send the head at native resolution, which is
 the most defensible "raw VLM with limited budget" framing. Strided sampling or
 relevance-aware selection would itself be an agent decision.
+
+Per D-007 (docs/paper/decisions.md, 2026-05-27), this solver owns its
+category-tip prompts inline (`BASELINE_CATEGORY_TIPS` below). The shared
+dicts in ``docvqa.prompts`` are deprecated for paper solvers — do not
+import them here.
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_baseline_category_tips
+from docvqa.prompts import ANSWER_FORMATTING_RULES
 from docvqa.types import LMConfig
 
 logger = logging.getLogger(__name__)
@@ -40,6 +45,104 @@ TASK_INSTRUCTIONS = (
     "- The answer must follow these formatting rules:\n\n"
     + ANSWER_FORMATTING_RULES
 )
+
+
+# ---------------------------------------------------------------------------
+# Category-specific tips (owned inline per D-007).
+# Single-shot baseline surface — no REPL, no tools, no agent loop. Only
+# semantic and question-interpretation hints survive; tool-routing verbs
+# (crop/zoom/search/REPL/Python/batch_look) are stripped.
+# Reconciled with paper-solver canonical content on 2026-05-27.
+# ---------------------------------------------------------------------------
+
+BASELINE_CATEGORY_TIPS: dict[str, str] = {
+    "engineering_drawing": (
+        "- BOM has two parallel numbering systems: ITEM NUMBERS (sequential index in the parts list) and "
+        "PART / IDENTIFYING NUMBERS (the actual hardware identifier, often alphanumeric with dashes). "
+        "Questions about 'part number' / 'identifying number' refer to the latter; 'item number' refers to "
+        "the former.\n"
+        "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. The answer is the direction letter "
+        "alone, not prefixed with 'Direction'.\n"
+        "- OCR CONFUSION: Part numbers are almost always digits + dashes. Common confusions: I↔1, O↔0, l↔1.\n"
+        "- LEADER LINES: when a label points to a part via a leader line, verify each label is correctly "
+        "associated with the part it connects to — follow the line, not just proximity on the page.\n"
+        "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section "
+        "view), not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) "
+        "are valid answers.\n"
+    ),
+    "business_report": (
+        "- Multiple tables may contain similar-looking data. Verify the table you're reading matches the "
+        "question's subject before extracting values.\n"
+        "- 'Broken down into' refers to immediate sub-categories only, not sub-sub-categories.\n"
+        "- TEXT TRUNCATION: For a phrase truncated at a punctuation boundary (first words before a "
+        "punctuation mark, first sentence, etc.), read the full passage and do the truncation yourself — "
+        "do not over-shorten.\n"
+        "- If a qualitative description (e.g., an adjective) does not appear in a table, it may be in "
+        "surrounding text paragraphs or footnotes.\n"
+    ),
+    "comics": (
+        "- For multi-story anthologies, each story has its own title, page range, and characters. Match "
+        "question keywords to the correct story.\n"
+        "- LITERAL VS FIGURATIVE: When a question contains qualifiers like 'in reality', 'actually', or "
+        "'truly', the answer likely contradicts the surface label/title — distinguish what something is "
+        "called from what it factually is.\n"
+        "- CHARACTER IDENTIFICATION: Use the exact term that appears in the speech bubbles when available.\n"
+        "- For COUNTING EVENTS, use strict inclusion criteria — exclude near-misses, past events referenced "
+        "in dialogue, and aftermath. Sound effects or weapons in a panel do not by themselves prove an "
+        "action occurred.\n"
+    ),
+    "maps": (
+        "- LEGEND: Map symbols and line styles are defined in the legend. For road-type questions, compare "
+        "the line style of the specific road segment to legend entries.\n"
+        "- COUNTING OBJECTS ON MAPS: For 'how many X are on the map', do not estimate from a single glance — "
+        "scan the map systematically (region by region), list each candidate object with an approximate "
+        "position, then count the unique objects.\n"
+        "- GRID COORDINATES: Cross-reference what is visible in the grid cell with any feature index that "
+        "lists entries by grid coordinate.\n"
+    ),
+    "science_paper": (
+        "- CITATION NUMBERS: Citations appear as [N] (or (Author, Year)) in body text. Distinguish body-text "
+        "citations from table headers and figure captions, which are often numbered separately.\n"
+        "- CITED PAPER FINDINGS: To find what a cited work claims, locate the reference number in the "
+        "bibliography, then find where that number is discussed in the body text. If the cited paper's "
+        "actual content isn't in this document, answer 'Unknown' rather than hallucinating from the title.\n"
+        "- ABLATION STUDIES: Papers often have multiple ablation studies on different components. Verify "
+        "the section you're reading is about the specific component the question asks about, not a "
+        "different subsystem.\n"
+        "- If a question references a specific entity (layer number, model variant, dataset name) that "
+        "does not appear in the document, answer 'Unknown' — do not extrapolate from a similar-sounding "
+        "entity.\n"
+    ),
+    "science_poster": (
+        "- CHART ANNOTATIONS: If a chart has numeric labels printed directly on bars/lines, use those "
+        "labels rather than estimating from bar heights.\n"
+        "- 'Percentage improvement' refers to the absolute difference in percentage points (e.g., 80% − "
+        "50% = 30 percentage points), not the relative change.\n"
+        "- GROUPED BAR CHARTS: A 'set of columns' / 'group of bars' refers to the bars at one x-axis "
+        "position (one category, one benchmark), not all bars of one color across positions.\n"
+    ),
+    "infographics": (
+        "- SYSTEMATIC ENUMERATION: When a question asks for a first/last/only item that has or lacks some "
+        "property, enumerate ALL items and their status before answering — don't stop after finding a few.\n"
+    ),
+    "slide": (
+        "- PAGE NAVIGATION: When a question refers to 'the page before X' or 'the page that contains Y', "
+        "locate X or Y in the document, then take the page directly preceding or containing it. Off-by-one "
+        "errors on page indexing are common — verify by checking page headers/titles.\n"
+        "- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation "
+        "that does not exist in the document, answer 'Unknown'. Do NOT substitute a similar-sounding name.\n"
+        "- COMPUTATION: When a question says 'total', 'sum', or 'considering X and Y', extract all "
+        "referenced values and compute the result explicitly before deciding.\n"
+    ),
+}
+
+
+def _get_category_tips(category: str) -> str:
+    """Get baseline-adapted tips for a single-shot VLM call (no agent verbs)."""
+    tips = BASELINE_CATEGORY_TIPS.get(category, "")
+    if tips:
+        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tips}"
+    return ""
 
 
 def _build_messages(
@@ -89,7 +192,7 @@ class NoLoopMultiProgram:
             + (" (truncated to first N pages)" if truncated else "")
         )
         if self.use_category_tips:
-            tips = get_baseline_category_tips(document.doc_category)
+            tips = _get_category_tips(document.doc_category)
             instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
         else:
             instructions = TASK_INSTRUCTIONS

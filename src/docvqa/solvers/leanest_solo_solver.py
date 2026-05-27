@@ -2,6 +2,11 @@
 
 No page text, no search. The agent works purely from visual perception
 via batch_look(), encouraging efficient parallel VLM reads.
+
+Per D-007 (docs/paper/decisions.md, 2026-05-27), this solver owns its
+category-tip prompts inline (`CATEGORY_TIPS` below). The shared dicts in
+``docvqa.prompts`` are deprecated for paper solvers — do not import them
+here.
 """
 
 from __future__ import annotations
@@ -18,7 +23,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
-from docvqa.prompts import ANSWER_FORMATTING_RULES, get_category_tips
+from docvqa.prompts import ANSWER_FORMATTING_RULES
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.types import LMConfig
 
@@ -82,6 +87,166 @@ TASK_INSTRUCTIONS = (
 
     + ANSWER_FORMATTING_RULES
 )
+
+
+# ---------------------------------------------------------------------------
+# Category-specific tips (owned inline per D-007).
+# Reconciled with rvlm_solver / no_loop_multi_solver / no_loop_solver /
+# flat_solo_solver tips on 2026-05-27. Semantic content is the same across
+# paper solvers; only tool-surface phrasing differs.
+#
+# Leanest tool surface: `batch_look()` only. No `look()`, no `search()`,
+# no `page_texts`. References to those tools are NOT in this dict.
+# ---------------------------------------------------------------------------
+
+CATEGORY_TIPS: dict[str, str] = {
+    "engineering_drawing": (
+        "- PRECISION IS CRITICAL: Crop tables and labels at full resolution before reading values.\n"
+        "- BOM has two parallel numbering systems: ITEM NUMBERS (sequential index in the parts list) and "
+        "PART / IDENTIFYING NUMBERS (the actual hardware identifier, often alphanumeric with dashes). "
+        "Questions about 'part number' / 'identifying number' refer to the latter; 'item number' refers to the former.\n"
+        "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. The answer is the direction letter alone, "
+        "not prefixed with 'Direction'.\n"
+        "- For counting parts in the BOM (clamps, bolts, etc.), read the QTY column row-by-row and sum in code — "
+        "don't estimate visually.\n"
+        "- VLM OCR CONFUSION: Part numbers are almost always digits + dashes. If the VLM reads letters like I, O, l "
+        "where digits 1, 0 would be expected, re-read at higher zoom. Common confusions: I↔1, O↔0, l↔1.\n"
+        "- For labels or numbers adjacent to a specific schematic or view, crop tightly around that view rather "
+        "than relying on a single full-page query — small text gets lost at thumbnail resolution.\n"
+        "- LEADER LINES: when a label points to a part via a leader line, use `batch_look` on the label region "
+        "and the pointed-to region in two separate crops to verify the connection — don't rely on a single "
+        "full-page query that may mis-associate label and part by proximity.\n"
+        "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), "
+        "not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) are valid answers.\n"
+    ),
+    "business_report": (
+        "- Crop tables at full resolution before reading numbers or labels — dense tables are hard to read at thumbnail zoom.\n"
+        "- Multiple tables may contain similar-looking data. Verify the table's title/header matches the question's "
+        "subject before extracting values.\n"
+        "- For YoY / period-over-period calculations, extract raw values from the table first, then compute "
+        "differences in Python — do not rely on the VLM for arithmetic.\n"
+        "- CHART VALUES: VLM readings of bar/line chart values vary between calls. Use the first clear reading "
+        "rather than re-querying the same chart to 'verify' — repeated reads add noise, not signal.\n"
+        "- 'Broken down into' refers to immediate sub-categories only, not sub-sub-categories.\n"
+        "- TEXT TRUNCATION: When a question asks for a phrase truncated at a punctuation boundary "
+        "(first words before a punctuation mark, first sentence, etc.), read the full passage with "
+        "`batch_look` and do the truncation in Python — the VLM over-shortens when asked to truncate directly.\n"
+        "- PICTOGRAMS: When looking for a described pictogram among many, crop each icon individually and ask the "
+        "VLM to describe it, rather than asking a single yes/no filtering question across all icons at once.\n"
+        "- If a qualitative description (e.g., an adjective) does not appear in the table, look in the surrounding "
+        "text paragraphs or footnotes.\n"
+    ),
+    "comics": (
+        "- STORY MAP FIRST: For multi-story anthologies, build a story index before answering — scan each page "
+        "to get (story title, page range, key characters). Match question keywords to the correct story.\n"
+        "- COUNTING EVENTS: For 'how many times X happens', query panel-by-panel with HIGHLY SPECIFIC inclusion "
+        "criteria — e.g., 'Is someone physically [exact action] in this panel? Exclude mentions in past-tense "
+        "dialogue, near-misses, and aftermath.' Then count the positive panels in code.\n"
+        "- VERIFY COUNTS: The VLM over-attributes actions in busy panels — it infers events from context clues "
+        "(sound effects, weapons, postures) even when no action is depicted. After collecting candidates, "
+        "re-examine each one with a tight crop and a disconfirming question ('Did this action ACTUALLY occur, or "
+        "is it a near-miss / different action / aftermath?'). Expect many initial candidates to be false positives.\n"
+        "- PANEL-BY-PANEL: When you need extractable events, ask 'what happens in each panel?' explicitly. "
+        "Generic 'describe the page' queries miss the panel structure that makes events countable.\n"
+        "- LITERAL VS FIGURATIVE: When a question contains qualifiers like 'in reality', 'actually', or 'truly', "
+        "the answer likely contradicts the surface label/title shown in the panel — distinguish what something "
+        "is called from what it factually is.\n"
+        "- CHARACTER IDENTIFICATION: Use the exact term that appears in the speech bubbles. When the VLM gives "
+        "conflicting answers about a small object or character, use narrative context (story setting, nearby "
+        "objects, character role) to disambiguate.\n"
+    ),
+    "maps": (
+        "- COARSE-TO-FINE: Start with a full-page view of the map for rough layout, then zoom into areas of "
+        "interest (~800px crops), then tighter (~400px) for small text. Each step refines the previous.\n"
+        "- COUNTING OBJECTS ON MAPS: For 'how many X are on the map', NEVER try to count from a full-page view — "
+        "small objects are invisible at low resolution. Instead:\n"
+        "  1. Estimate the object size relative to the map and pick a grid size so each tile shows individual "
+        "objects clearly (large objects → 3x3; medium → 4x4 or 5x5; small dots/pins/symbols → 6x6 or more).\n"
+        "  2. Split the map into tiles with ~15% overlap between adjacent tiles.\n"
+        "  3. Per-tile, use `batch_look` to ask the VLM: 'List every [object] visible in this tile, with each "
+        "one's relative position (top/bottom/left/right/center) and any distinguishing label nearby.'\n"
+        "  4. In code, collect across tiles and deduplicate objects near tile boundaries by checking similar "
+        "positions or matching labels.\n"
+        "  5. Count the deduplicated list.\n"
+        "- LOCATE INDEPENDENTLY: Find each landmark/feature with simple per-tile queries ('what labels are "
+        "visible here?', 'is feature X present in this tile?'). Record approximate pixel positions using tile "
+        "offset + relative position within the tile.\n"
+        "- REASON WITH MATH: Compute spatial relationships in Python — distances, directions, relative "
+        "positions — using the coordinates you collected. Basic vector math gives reliable answers with "
+        "explicit error bounds.\n"
+        "- LEGEND + ROAD TYPES: Crop the legend early. For road-type questions, crop the specific road segment "
+        "at HIGH resolution alongside the legend and ask the VLM to compare the line style directly. Small "
+        "differences (solid vs dashed, thin vs thick) are easy to misread at low resolution.\n"
+        "- GRID COORDINATES: Cross-reference TWO sources — (1) crop the actual grid cell on the map to see "
+        "what's there, and (2) look up the same coordinate in any feature index/legend that lists entries by "
+        "grid coordinate. Disagreement between the two is usually an indexing-error trap.\n"
+    ),
+    "science_paper": (
+        "- Papers can be long — locate the relevant section first (abstract, headings, figure/table captions) "
+        "before reading in detail.\n"
+        "- CITATION NUMBERS: For 'first/last citation on this page' style questions, treat citations as text "
+        "patterns ([N], (Author, Year)) and enumerate them yourself in order rather than asking the VLM to "
+        "identify them — VLM ordering of inline references is unreliable. Distinguish body-text citations from "
+        "table headers and figure captions, which are often numbered separately.\n"
+        "- CITED PAPER FINDINGS: To find what a cited work claims, first find its reference number in the "
+        "bibliography (crop the references section), then locate the place(s) in body text where that number "
+        "is discussed. If the cited paper's actual content isn't in this document, answer 'Unknown' rather "
+        "than hallucinating from the title or context.\n"
+        "- ABLATION STUDIES: Papers often contain multiple ablation studies on different components. Verify "
+        "the section you're reading is about the specific component the question asks about, not a different "
+        "subsystem.\n"
+        "- If a question references a specific entity (layer number, model variant, dataset name) that does "
+        "not appear anywhere in the document after thorough inspection, answer 'Unknown' — do not extrapolate "
+        "from a similar-sounding entity.\n"
+    ),
+    "science_poster": (
+        "- Posters are dense single-page documents. Crop specific sections at full resolution for precise values.\n"
+        "- CHART ANNOTATIONS: If a chart has numeric labels printed directly on bars/lines, read those labels "
+        "rather than estimating from bar heights — printed labels are exact, visual estimates are noisy.\n"
+        "- For table values and percentages, crop the specific cell at full resolution before reading.\n"
+        "- 'Percentage improvement' refers to the absolute difference in percentage points (e.g., 80% − 50% "
+        "= 30 percentage points), not the relative change.\n"
+        "- COLOR-CODED VALUES: For questions about colored numbers in a table (red, blue, highlighted), crop "
+        "the table at maximum resolution and enumerate all candidates of that color before selecting — VLM "
+        "color recall across an entire table is unreliable, but per-cell color checks are accurate.\n"
+        "- GROUPED BAR CHARTS: A 'set of columns' / 'group of bars' refers to the bars at one x-axis position "
+        "(one category, one benchmark), not all bars of one color across positions.\n"
+    ),
+    "infographics": (
+        "- Infographics mix text, icons, and illustrations — a full-page view gives useful structural context "
+        "before zooming in.\n"
+        "- For precise numbers or dates, crop the specific data point at full resolution. For identifying "
+        "broad visual elements (icons, sections, themes), a full-page view suffices.\n"
+        "- SYSTEMATIC ENUMERATION: When a question asks for a first/last/only item that has or lacks some "
+        "property, enumerate ALL items and their status before answering. Don't stop after finding two or "
+        "three candidates — the answer hinges on which one is at the boundary.\n"
+    ),
+    "slide": (
+        "- Slide decks can span many pages. Locate the relevant slide first by skimming titles/headers, then "
+        "read in detail.\n"
+        "- PAGE NAVIGATION: When a question refers to 'the page before X' or 'the page that contains Y', "
+        "first locate X or Y, then verify the page index by cropping the page's header/title. Off-by-one "
+        "errors on page indexing are common — double-check before submitting a page number or page-specific "
+        "content.\n"
+        "- For position-on-page questions (a specific word/bullet at the top/bottom/edge of a page), crop "
+        "the relevant region at full resolution and read carefully.\n"
+        "- Tables on slides are often small; crop at full resolution to read cell values.\n"
+        "- EXACT ENTITY MATCHING: If a question references a specific column name, variable, or equation "
+        "that does not appear anywhere in the document after thorough inspection, answer 'Unknown'. Do NOT "
+        "substitute a similar-sounding name.\n"
+        "- COMPUTATION: When a question says 'total', 'sum', or 'considering X and Y', extract all "
+        "referenced values and compute in Python explicitly. Show the values entering the calculation "
+        "before submitting.\n"
+    ),
+}
+
+
+def _get_category_tips(category: str) -> str:
+    """Get per-category tips for a document type. Returns empty string if none."""
+    tips = CATEGORY_TIPS.get(category, "")
+    if tips:
+        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tips}"
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -224,7 +389,7 @@ class LeanestSoloProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            tips = get_category_tips(document.doc_category)
+            tips = _get_category_tips(document.doc_category)
             instructions = TASK_INSTRUCTIONS + ("\n" + tips if tips else "")
             tools = _create_tools(self.vlm_predict, self.vlm_lm, self.batch_concurrency)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))

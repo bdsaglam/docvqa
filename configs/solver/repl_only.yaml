@@ -1,0 +1,5 @@
+_target_: docvqa.solvers.repl_only_solver.create_repl_only_program
+max_iterations: 25
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4

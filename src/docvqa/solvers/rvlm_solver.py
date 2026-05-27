@@ -3,6 +3,11 @@
 No VLM tool calls (look/batch_look) needed. The agent calls display(image) to
 show a PIL Image inline, and sees it in the next iteration as a native image
 in the LLM message. This only works with multimodal LLMs (e.g., Gemini Pro).
+
+Per D-007 (docs/paper/decisions.md, 2026-05-27), this solver owns its
+category-tip prompts inline (`RVLM_CATEGORY_TIPS` below). The shared dicts
+in ``docvqa.prompts`` are deprecated for paper solvers — do not import them
+here.
 """
 
 from __future__ import annotations
@@ -121,6 +126,10 @@ RVLM_CATEGORY_TIPS: dict[str, str] = {
         "- CHART VALUES: Do NOT re-display the same chart to 'verify' — your readings vary between "
         "displays. Use the first clear reading.\n"
         "- 'Broken down into' = immediate sub-categories only, not sub-sub-categories.\n"
+        "- TEXT TRUNCATION: When a question asks for a phrase truncated at a punctuation boundary "
+        "(first words before a punctuation mark, first sentence, etc.), display the relevant passage "
+        "region in full and do the truncation textually in your reasoning — do not rely on the visual "
+        "estimate of where the text ends or ask yourself to truncate while reading.\n"
         "- Pictograms: display each icon individually at high zoom and describe it, rather than "
         "scanning all icons at once.\n"
         "- Qualitative descriptions (adjectives) may be in footnotes or body text, not in tables.\n"
@@ -146,6 +155,19 @@ RVLM_CATEGORY_TIPS: dict[str, str] = {
         "## CATEGORY TIPS (maps)\n"
         "- COARSE-TO-FINE: display full page first for rough layout, then crop ~800px regions, "
         "then ~400px for small text. Each step refines the previous.\n"
+        "- COUNTING OBJECTS ON MAPS: For 'how many X are on the map', NEVER try to count from a "
+        "full-page display — small objects are invisible at low resolution. Instead:\n"
+        "  1. Estimate the object size relative to the map and pick a grid size so each tile shows "
+        "individual objects clearly (large objects → 3x3; medium → 4x4 or 5x5; small dots/pins/symbols "
+        "→ 6x6 or more).\n"
+        "  2. Split the map into tiles with ~15% overlap between adjacent tiles, using "
+        "`pages[i].crop((l,t,r,b))` for each tile.\n"
+        "  3. For each tile, `display(pages[i].crop((l,t,r,b)))` and in your reasoning list every "
+        "[object] visible in that tile, with each one's relative position (top/bottom/left/right/center) "
+        "and any distinguishing label nearby.\n"
+        "  4. In Python code, collect the per-tile lists and deduplicate objects near tile boundaries "
+        "by checking similar positions or matching labels.\n"
+        "  5. Count the deduplicated list and SUBMIT.\n"
         "- LOCATE INDEPENDENTLY: For each landmark, crop a tile and list what's visible. "
         "Record approximate positions using tile offsets + relative position.\n"
         "- Compute spatial relationships in Python using collected coordinates — distances, "
@@ -161,6 +183,10 @@ RVLM_CATEGORY_TIPS: dict[str, str] = {
         "- CITATION NUMBERS: display the relevant paragraph at full resolution and read [N] "
         "patterns directly.\n"
         "- Distinguish body text citations from table headers and figure captions.\n"
+        "- CITED PAPER FINDINGS: To find what a cited work claims, first display the bibliography "
+        "page(s) to locate its reference number, then display the place(s) in body text where that "
+        "number is discussed. If the cited paper's actual content isn't directly available in this "
+        "document, answer 'Unknown' rather than hallucinating from the title or context.\n"
         "- Ablation studies: papers often have multiple — verify the section matches the specific "
         "component the question asks about.\n"
         "- If a specific entity (layer number, model variant) isn't found after thorough search, "

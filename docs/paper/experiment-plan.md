@@ -1,35 +1,95 @@
-# Experiment Plan — DocVQA Scaffold Paper
+# Experiment Plan — DocVQA Paper (post-D-006 pivot)
 
-## Headline claims to support
+> **2026-05-27 restructure.** This file was significantly reframed per
+> D-006 (visual-context-budget hypothesis). Prior versions framed the
+> work as a "competition scaffold." See `docs/paper/decisions.md` D-006
+> through D-008 for the decision chain. Section §A (model-size axis)
+> and §B (document-length axis) keep their empirical tables but the
+> narrative around them is now hypothesis-shaped. Section §C
+> reorganized around the proposed method (`leanest_solo`, OCR-free) as
+> the headline configuration. Some sections still carry legacy framing
+> language pending cleanup.
 
-1. **RLM applied to DocVQA lifts every model class.** Applying the RLM
-   paradigm — REPL + symbolic OCR access + VLM as recursive sub-call —
-   delivers double-digit accuracy gains on document VQA across small
-   (≤8B), mid (8–35B), and frontier (>35B, closed) models.
-2. **Generality across benchmarks.** Gains hold beyond ICDAR 2026 DocVQA.
-3. **Component contributions.** The REPL/symbolic-access channel (OCR
-   retrieval), the VLM sub-call, and turn budget each contribute
-   meaningfully — or surprisingly don't, which is also a paper-worthy
-   finding. Mirrors the ablation structure of the RLM paper. (SC dropped
-   from method per `decisions.md` D-003 — we report mean ± std across
-   independent trials instead.)
+## Headline claim (D-006)
 
-## Variance discipline (applies everywhere)
+**Mid-sized open VLMs are bottlenecked by visual context budget on
+document VQA, not by reasoning capacity.** Recursive perception
+(RLM with VLM sub-call) gives the main agent the ability to ration its
+high-resolution VLM calls per question, lifting accuracy to
+frontier-level without scaling model size or training data.
 
-- **≥3 trials per headline number.** Report mean ± std.
-- **No SC voting in headline numbers** (per `decisions.md` D-003) — we
-  report the per-trial mean and its variance, not the voted score.
-- Single-trial numbers in `docs/results.md` (e.g., 59.4% Pro+Flash test,
-  35B variant) **must be replicated** before being headlined.
-- Use the existing 8-trial setup at `docs/results.md:144` as the template.
-- For Qwen 3.6 27B test: compute the 8-trial test mean ± std from the
-  individual per-trial test scores (currently summarized only as SC-8
-  43.75% in `docs/results.md:161`).
+Three falsifiable predictions support the hypothesis:
 
-## A. Model generality (claim 1)
+1. **Model-size axis (§A).** Lift scales with model code-writing
+   capability — the recursive sub-call is invoked via code, so models
+   that write better code extract more.
+2. **Document-length axis (§B).** Lift scales with effective document
+   length — longer docs exhaust the raw VLM's visual budget; the
+   recursive sub-call sidesteps it.
+3. **Mechanism axis (§C).** Removing the recursive VLM sub-call (but
+   keeping the REPL + agent loop) collapses the lift back to baseline.
 
-We span the size spectrum, hitting all three competition tiers plus a
-small-open and an alt-frontier point.
+The proposed method is the **OCR-free** variant (current engineering
+name: `leanest_solo`; paper-facing name TBD). OCR/search is reported as
+an **extension** (currently a new fork of leanest must be built — the
+legacy `flat_solo` confounds OCR with a `look()` ergonomic wrapper and
+is not the clean extension cell).
+
+Out of scope for the paper (per D-006):
+
+- SC voting framing (already D-003)
+- `FLAT_SOLO_TOOL_HINTS` / "v2" overlay history
+- Multi-image extension (`flat_solo_da_mi`) — shelved
+- GEPA-based prompt optimization — shelved
+- pyai port — shelved
+- Per-category tips presented as a method contribution (kept as an
+  ablation row only)
+- Engineering solver names (`leanest_solo`, `flat_solo`, `rvlm`) — paper
+  uses different names selected later
+
+## Variance discipline + escalation policy (D-008)
+
+- **Trial-budget escalation:** new cells start at n=1, escalate to n=2
+  if the n=1 direction holds, escalate to n=8 only after the paper
+  headline framing locks. Avoids burning compute through pivots.
+- **Variance reporting:** ≥3 trials per headline number, mean ± std.
+  No single-trial headlines (Gemini Pro/Flash single-trial numbers are
+  reported with the credits-exhausted caveat per D-006).
+- **No SC voting in headline numbers** (D-003) — SC-8 lives in
+  appendix-only contexts as a competition tactic.
+- Cells already at n=8 with clean prompts stay at n=8 (Qwen 27B
+  leanest scrubbed, no_loop_multi split-calibration, MMLongBench-Doc
+  DA, MP-DocVQA DA). These are paper-grade.
+
+## Cross-solver prompt parity (D-007)
+
+All solvers reported in the paper pass the same prompt-parity audit
+standard. Each solver owns its category tips inline; only
+`ANSWER_FORMATTING_RULES` is shared via `src/docvqa/prompts.py`.
+
+Refactor in flight: `CATEGORY_TIPS` / `BASELINE_CATEGORY_TIPS` /
+`FLAT_SOLO_TOOL_HINTS` move from `prompts.py` into each paper solver's
+own file. RVLM_CATEGORY_TIPS reconciled with canonical content
+(missing TEXT TRUNCATION / COUNTING-OBJECTS / CITED PAPER FINDINGS
+bullets propagated in; Leader-lines bullet propagated to all solvers).
+DA profiles (per-benchmark) already follow the principle and pass
+audit (2026-05-27).
+
+## A. Model-size axis (prediction 1)
+
+> **Prediction.** Lift scales with model code-writing capability.
+> Mechanism: the recursive sub-call is invoked via code, so models that
+> write better tool-call code extract more from the scaffold.
+>
+> **Caveat (2026-05-27, D-007).** The n=3 cells in the table below
+> were run 2026-05-09/10 with **pre-scrub `CATEGORY_TIPS`**. The lift
+> direction is robust (same prompts for baseline and scaffold), but the
+> absolute numbers may shift 2–4pp under post-scrub prompts. Re-runs
+> at n=1 → n=2 escalation are scheduled (task #8) before paper
+> headlines lock; existing numbers carry a "pre-scrub prompts" footnote
+> in the interim.
+
+We span the size spectrum across two open model families.
 
 | Model | Tier | Baseline (val, n=3) | Scaffold (val, n=3) | Lift | Status |
 |---|---|---|---|---|---|
@@ -74,7 +134,21 @@ Notes:
   defensive; now load-bearing. Plan ≥3 trials baseline + ≥3 trials
   scaffold.
 
-## B. Benchmark generality (claim 2)
+## B. Document-length axis (prediction 2)
+
+> **Prediction.** Lift scales with effective document length. Mechanism:
+> longer docs exhaust the raw VLM's visual context budget; the
+> recursive sub-call lets the agent ration perception across pages.
+> Falsifiable: a benchmark with mostly short docs should show small or
+> zero lift; a long-doc benchmark should show large lift.
+>
+> **Caveat (2026-05-27, D-006).** The OCR-extension cells below were
+> run with the legacy `flat_solo` solver, which confounds OCR with a
+> single-image `look()` ergonomic wrapper. The clean OCR-extension
+> story requires a new fork of `leanest_solo` that adds `search` +
+> `page_texts` only, without `look`. Build + run is scheduled (tasks
+> #13–15). Until then, OCR-extension cells carry a "confounded with
+> `look()`" footnote.
 
 **Picks:** MP-DocVQA (Tito et al., PR 2023) + MMLongBench-Doc
 (NeurIPS 2024). DocVQA-2026 reuses InfographicVQA/SlideVQA/DocVQA-original
@@ -246,11 +320,35 @@ We do **not** need to re-implement every prior method. Reporting
 published numbers alongside ours on the same benchmark is sufficient
 for context.
 
-## C. Ablations (claim 3)
+## C. Active-perception mechanism (prediction 3) + supporting ablations
 
-| Ablation | Description | RLM-paper parallel | Status |
-|---|---|---|---|
-| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | "no-REPL baseline" in RLM | **DONE** — Qwen 3.5 27B val, n=3 with matched tips: **21.25% ± 1.25pp** (composite); **23.75% ± 2.17pp** (multi-image native-res, max_pages=10). vs scaffold 44.69%: composite gap −23.4pp (19.1 SE), multi gap −20.9pp (13.1 SE). See `docs/experiments/no-loop-baseline.md` and `no-loop-multi-image.md`. |
+> **Prediction.** The lift comes specifically from *active, iterative*
+> VLM sub-calls — the agent choosing what region to inspect, at what
+> resolution, across multiple turns — not from giving more compute to
+> a single VLM call. Three independent ablations triangulate this,
+> already measured.
+>
+> **Triangulation evidence:**
+>
+> | Component of active perception | Ablation | Result | Reading |
+> |---|---|---|---|
+> | Region selection (cropping) | flat_solo cropping-off | **−7.81pp** | choosing what to perceive matters |
+> | Iteration count | turn budget m=5 vs m=30 | **−15pp** at m=5 | the mechanism is iterative, not one-shot |
+> | Recursive sub-call structure | leanest 48.8% vs no_loop_multi 20.0% | **+28.8pp** | recursive agent↔VLM dominates one-shot |
+>
+> Reframed (2026-05-27) from an earlier "REPL-only" framing that
+> predicted full collapse if `batch_look` was removed. The REPL-only
+> solver was built and smoke-tested (0/5 on 2 docs — agent SUBMITs
+> "Unknown" immediately because it has no perception). The result is
+> obvious — "no perception → no answer" — and tests a strawman. The
+> three ablations above are the sharper test of active perception as
+> the mechanism. REPL-only stays as `src/docvqa/solvers/repl_only_solver.py`
+> for documentation; it is not a paper cell.
+
+| Ablation | Description | Status |
+|---|---|---|
+| **VLM sub-call on/off** | Fork of leanest with `batch_look` removed. The load-bearing test. | **NOT DONE** — tasks #7/#9 |
+| **No-loop baseline** | Direct VLM Q&A — single forward pass, no REPL, no tools, no agent. Most modern models are thinking models, so CoT is implicit; this is the "raw model" point. | **DONE** — Qwen 3.5 27B val, n=3 with matched tips: **21.25% ± 1.25pp** (composite); **23.75% ± 2.17pp** (multi-image native-res, max_pages=10). vs scaffold 44.69%: composite gap −23.4pp (19.1 SE), multi gap −20.9pp (13.1 SE). See `docs/experiments/no-loop-baseline.md` and `no-loop-multi-image.md`. |
 | **OCR on/off** | Full method vs no-OCR variant (existing Leanest solver, `solver=leanest_solo`). Removes the symbolic exploration channel; main agent must rely on VLM sub-call alone. | "REPL without symbolic context access" — partial analogue | **DONE** — Qwen 3.5 27B val n=3: **40.00% ± 0.00pp** (vs flat_solo 44.69%: OCR + cropping add +4.7pp; vs no_loop_multi+tips 23.75%: agent-loop + VLM-tool channel adds +16.3pp). See `docs/experiments/leanest-ocr-off.md`. Caveat: leanest→flat_solo delta also includes cropping; not a pure OCR ablation. |
 | **VLM sub-call on/off** | Full method vs OCR-only (no VLM tool). Removes the recursive sub-call; agent must reason from OCR text alone. | "REPL without sub-calling" — direct analogue | not done |
 | **Search tool on/off** | Full method vs no-`search()` tool: BM25 retrieval removed but `page_texts` still in scope so the agent can scan OCR manually. Isolates "BM25 retrieval" from "raw OCR text in scope". Cleaner OCR-channel ablation than leanest→flat_solo (which also bundles tool structure). | not in RLM paper | **DONE** — n=8: **42.50% ± 3.90pp** vs 44.69% baseline; gap **−2.19pp (t=1.29) — NOT significant**. BM25 is largely redundant given `page_texts` in scope; agent compensates via `re.search()` regex over OCR text. See `docs/experiments/flat-solo-search-off.md`. |
@@ -390,60 +488,119 @@ parallel since it needs no GPU, then B2, then B3 (depends on lit
 review). B0 and B1 can run side-by-side — B1 is API-bound and won't
 contend with sandbox CPU/RAM.
 
-## Risk-ranked execution order
+## Risk-ranked execution order (post-D-006)
 
-Run experiments in the order most likely to **falsify the paper first**.
-Items map onto Host A (Qwen 3.5 27B anchor) or Host B (Group
-B0/B1/B2/B3) per the *Server split* section above.
+Ordered by which experiment most likely **falsifies the paper's three
+predictions**. Each step is gated by D-008 escalation (n=1 first, n=2 if
+direction holds, n=8 only after the paper headline locks).
 
-1. **Qwen 27B baseline (no scaffold) on val + test** — locks the
-   matched-baseline figure. Cheap. If lift is small, the paper's spine
-   is at risk. *(Host B / Group B0)*
-2. ~~**No-loop ablation on Qwen 27B**~~ — **DONE 2026-05-08** *(Host B / Group B0)*. Qwen 3.5 27B val with matched tips, n=3: composite 21.25% ± 1.25pp; multi-image 23.75% ± 2.17pp. vs scaffold 44.69%: gap −20.9 to −23.4pp (13–19 SE). Claim "scaffold matters" cleared even against the strongest fair raw-VLM control.
-3. ~~Gemini 3 Pro test replication~~ — **dropped, out of API credits.**
-   The 59.4% scaffold and 37.5% baseline numbers are single-trial and
-   cannot be replicated. Treat with caveat in paper (see §A note).
-4. **Second benchmark — Qwen 27B baseline + scaffold** — kills
-   "generality" claim if it fails. Run after lit review picks the
-   benchmark.
-5. ~~**Small-model runs (Qwen 3.5 9B, Gemma)**~~ — **DONE 2026-05-09/10** *(Host B / Group B2)*. All three cells (Qwen 9B, Gemma E4B, Gemma 31B) baseline + scaffold n=3 each on val. Headline lifts: 9B +6.25pp, E4B +5.83pp, 31B +25.00pp — all significant. Gemma 31B required vllm `--tensor-parallel-size 4 --enforce-eager` to survive scaffold load (multimodal-embedding bug in TP=2; see `gemma-4-31b-baseline-scaffold.md` triage section). Model-axis claim survives across both ≤8B and 8–35B tiers, and across two model families (Qwen, Gemma).
-6. **OCR on/off ablation** — clean comparison vs Leanest solver.
-7. **VLM cropping on/off ablation** — page-only variant vs full
-   arbitrary-image variant. Isolates the active-perception contribution.
-8. **Second benchmark — frontier model with scaffold** — strengthens
-   generality on harder model class. *(Host B / Group B3)*
-9. **Turn budget curve** — feeds the efficiency story. **Done** (Qwen 3.5
-   27B val): peak at m=30 (44.69% ± 2.81pp); m=10/20/40 each ~3–4pp
-   lower. See section C results table. *(Host A — done)*
-10. **Category tips ablation** — defensive. *(Host A — in flight, lane: `tips-off`)*
-11. **Alt-frontier model (GPT-5 / Claude)** — **promoted from defensive
-    to load-bearing** (Gemini dropped → only frontier datapoint we
-    can multi-trial). *(Host B / Group B1)*
+### Critical path
 
-If steps 1–2 or step 4 fail or weaken substantially, **stop and reframe**
-before spending compute on later steps. (Step 3 was Gemini Pro
-replication — now dropped; the paper cannot rely on a multi-trial Pro
-number, so the falsification gate moves to step 11 — alt-frontier.)
+1. **Solver-architecture merge** — merge `*_solo` ← `*_da` solver
+   pairs into DA-by-default; move tool-agnostic content into
+   DocVQA-2026 profile per D-009. Refactor-first prevents technical
+   debt across all subsequent runs. *Tasks #20, #21, #22.*
+2. **Build new M+OCR solver** (DA-by-default) = fork of `leanest_solo`
+   + `search` + `page_texts`, no `look`. Required for the clean
+   OCR-extension cell (current `flat_solo` data is confounded with
+   `look()`). *Task #13.*
+3. **Run M+OCR on DocVQA-2026 val** (prediction 2 mechanism check
+   on the moderate-doc benchmark). Predicted ≈ leanest (OCR is neutral
+   on moderate-length docs). *Task #14. Host A 8927.*
+4. **Re-run model-axis cells with synchronized prompts** (Gemma E4B,
+   Qwen 9B, Gemma 31B) — current numbers used pre-scrub prompts. Lift
+   sign should be preserved; absolute magnitudes may shift 2–4pp.
+   *Task #8. Host B.*
+5. **Re-do MMLongBench-Doc + MP-DocVQA OCR-extension cells with M+OCR**
+   (prediction 2 long-doc evidence, clean version). *Task #15.*
+6. **Restart RVLM chain** with reconciled prompts (alternative-angle
+   datapoint). *Task #19. Other host.*
 
-## Required figures (preliminary — refine after lit review)
+**Dropped from critical path 2026-05-27:** the REPL-only ablation
+(prediction 3 strawman). Reframing to active-perception mechanism is
+already supported by existing ablations (cropping, turn budget,
+leanest-vs-no_loop_multi).
 
-1. **Headline bar chart** — model × {baseline, scaffold}, showing lift
-   across the size spectrum.
-2. **Benchmark generality grid** — benchmark × {baseline, scaffold} on
-   key models.
-3. **Per-category breakdown** — already have data.
-4. **Turn budget curve** — accuracy vs max turns.
-5. **Qualitative diagram** — agent trace walkthrough on one example.
-6. **Ablation table** — full vs no-OCR vs no-VLM vs no-cropping vs no-tips vs no-loop, on Qwen 27B.
+### Done — keep
+
+- **No-loop baseline (raw VLM)** — done, n=8 SC-8 split-calibration:
+  val 20.0% / test 11.0%. Anchors the split-difficulty floor.
+- **OCR-free vs OCR-extension legacy comparison** — done on `flat_solo`
+  (confounded). Result: post-scrub OCR-free wins on test by 1pp.
+  Re-do with clean M+OCR (item #5 above) for the paper number.
+- **Model-size axis trends** — done at n=3 pre-scrub. Direction is
+  robust; re-runs in item #4 lock absolute numbers.
+- **MMLongBench-Doc + MP-DocVQA at n=3 DA** — done. Doc-length
+  prediction supported; OCR-extension cells need re-running per item #5.
+- **Turn-budget sweep, cropping ablation, search ablation, tips
+  ablation** — all done on `flat_solo`. Transfer to leanest since the
+  ablated components are present in both. Cropping −7.81pp, search
+  n.s., tips −5.94pp.
+
+### Out — D-006
+
+- Gemini 3 Pro/Flash multi-trial replication — credits exhausted;
+  single-trial numbers carry caveat per D-006.
+- Alt-frontier (GPT-5 / Claude) — deferred; closed-frontier story
+  rests on the Gemini single-trial caveat + the open-model
+  multi-trial axis.
+- SC-8 voting curve, multi-image extension, GEPA, pyai port — out of
+  scope per D-006.
+
+### Falsification gates (when to stop and reframe)
+
+- If item #1 (VLM-sub-call-off) does **not** collapse to baseline:
+  prediction 3 fails; the scaffold's load-bearing mechanism is
+  something other than the recursive sub-call. Major reframe required.
+- If item #4 model-axis re-runs reverse the lift sign on any cell:
+  prediction 1's monotonicity weakens. Re-examine.
+- If item #5 long-doc OCR-extension shows zero lift under M+OCR:
+  prediction 2 weakens; the OCR contribution may have been a
+  `look()`-wrapper artifact.
+
+## Required figures (post-D-006)
+
+1. **Headline figure: model-size axis (prediction 1)** — for each model
+   (E4B / 9B / 27B / 31B): bar chart of {raw VLM baseline, proposed
+   method (M)}. Lift labels per pair.
+2. **Doc-length axis (prediction 2)** — scaffold lift vs effective
+   document length across benchmarks (DocVQA-2026, MMLongBench-Doc,
+   MP-DocVQA per-bucket). Either scatter or grouped bar.
+3. **Mechanism table (prediction 3)** — Qwen 27B on val:
+   {raw VLM, REPL-only (VLM-sub-call-off), M (full), M+OCR}.
+   The VLM-sub-call-off row is the load-bearing test.
+4. **Ablation table** — M with each component ablated: cropping off,
+   tips off, search off (for M+OCR variant), turn budget sweep.
+   On Qwen 27B val.
+5. **Qualitative diagram** — agent trace walkthrough on one
+   representative success and one failure.
+6. **Per-category breakdown** — appendix table.
+
+Out of the figure list (per D-006):
+- The competition-tactic ablations (FLAT_SOLO_TOOL_HINTS, multi-image,
+  GEPA) — out of scope.
+- SC voting curves — out of scope.
+- Alt-frontier datapoint — deferred.
 
 ## Open questions for the user
 
-- Method name? (placeholder: "the scaffold")
-- Target venue + deadline?
-- Compute budget — how aggressively to span the model axis (drop
-  alt-frontier or Gemma if tight)?
-- Which 2 benchmarks (defer to lit review)?
-- ~~Which Gemma size?~~ — **resolved 2026-05-09**: ran both E4B (≤8B tier) and 31B (8–35B tier). Each adds a non-Qwen point at its respective tier.
+- Paper name for the proposed method (placeholder: M).
+- Target venue + deadline (TBD; top candidates EMNLP / ACL-Findings /
+  TMLR per `paper/README.md`).
+- Whether to also report the legacy `flat_solo` (M + OCR + `look()`)
+  as an appendix "kitchen-sink" cell (task #16).
+- Whether to include the split-calibration paragraph in the
+  evaluation section (would pre-empt reviewer questions about
+  val→test asymmetry).
+- Whether the model-axis re-runs (task #8) escalate to n=8 once n=1/n=2
+  confirms the direction, or whether n=2 is sufficient with the
+  pre-scrub n=3 used as the third data point.
+
+Resolved (kept for provenance):
+- ~~Which Gemma size?~~ — both ran (E4B for ≤8B, 31B for 8–35B), 2026-05-09.
+- ~~Method name picking~~ — deferred until experiments lock (D-006).
+- ~~Alt-frontier model~~ — deferred per D-006.
+- ~~Multi-trial Gemini Pro replication~~ — dropped, credits exhausted.
 
 ## Cross-references
 

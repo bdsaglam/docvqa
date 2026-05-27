@@ -52,9 +52,13 @@ Three falsifiable predictions (with the supporting data):
 2. **Document-length axis.** Lift scales with effective doc length.
    Supported: MMLongBench-Doc +16.84pp judge, MP-DocVQA 11-20pp bucket
    +13.68pp, DocVQA-2026 +20.94pp.
-3. **Mechanism axis.** Removing the recursive VLM sub-call (but keeping
-   REPL + agent loop) collapses the lift. **Not yet measured — the
-   critical missing experiment** (task list #9).
+3. **Active-perception mechanism.** The lift comes specifically from
+   *active, iterative* VLM sub-calls — the agent choosing what region
+   to inspect, at what resolution, across multiple turns — not from
+   giving more compute to a single VLM call. Three ablations
+   triangulate this, all already measured: cropping-off −7.81pp,
+   m=5 turn budget −15pp vs m=30, leanest 48.8% vs no_loop_multi 20.0%
+   on val SC-8.
 
 Current headline numbers (Qwen 3.5 27B, n=8 SC-8, val-leak-scrubbed
 prompts):

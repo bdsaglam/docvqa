@@ -1,17 +1,30 @@
 # Related Works — DocVQA Scaffold Paper
 
-Running index of papers relevant to this work. Paper PDFs / notes are kept
-in obsidian, not copied into this repo. Each entry: citation, obsidian
+Running index of papers relevant to this work. Each entry: citation, obsidian
 path (if downloaded), and a short note on the connection.
+
+**Local library (2026-05-27).** Every paper indexed here is now downloaded
+to [`related-works/`](related-works/) — one `{shorthand}-{arxiv_id}/` folder
+each, with `notes.md` (connection note), `overview.md`, `paper.md`, and the
+PDF. See [`related-works/README.md`](related-works/README.md) for the index.
 
 **Last updated:** 2026-05-01, from `lit-review-1.md` (RLM-focused) and
 `lit-review-2.md` (DocVQA-focused).
 
 **Verification status.** Most entries below come from the lit-review
-agents; they have **not been independently verified**. Entries flagged
-**(needs verification)** are high-stakes — verify against arXiv before
-acting on them in the paper. Lit reviews are known to fabricate
-plausible-looking citations.
+agents. Entries flagged **(needs verification)** are high-stakes — verify
+against arXiv before acting on them in the paper. Lit reviews are known to
+fabricate plausible-looking citations.
+
+> **Existence check done (2026-05-27).** While downloading the library, all
+> 33 arXiv IDs were probed against `arxiv.org/abs/{id}` and every returned
+> title matched the claim here — **no fabricated citations.** Two IDs were
+> corrected (Toolformer → `2302.04761`; VideoAtlas → `2603.17948`; the
+> Nourbakhsh groundedness paper → `2503.19120`). **This only verifies that
+> the paper exists with the stated title** — the load-bearing *claims*
+> attributed to each entry (reported ANLS/F1 numbers, framing like MADQA's
+> "efficiency catastrophe") are **still unverified**, so the per-entry
+> `(needs verification)` flags stay until someone reads the PDF.
 
 Convention:
 - **Foundational** — the paper our work directly builds on.

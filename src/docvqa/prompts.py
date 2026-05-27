@@ -149,6 +149,13 @@ V3 = (
 
 # ---------------------------------------------------------------------------
 # Per-category tips — injected dynamically based on document type
+#
+# DEPRECATED per D-007 (2026-05-27): each paper solver now owns its prompts
+# inline (see leanest_solo_solver.py, rvlm_solver.py, no_loop_multi_solver.py,
+# no_loop_solver.py, flat_solo_solver.py). These dicts are kept for
+# shelved-solver backward-compat (flat_solo_da_mi, flat_solo_gepa,
+# pyai_leanest_solo_da, lean_solo, flat_batch). Do NOT import these into new
+# solvers. See docs/paper/decisions.md.
 # ---------------------------------------------------------------------------
 
 CATEGORY_TIPS: dict[str, str] = {
@@ -165,6 +172,9 @@ CATEGORY_TIPS: dict[str, str] = {
         "where digits 1, 0 would be expected, re-read at higher zoom. Common confusions: I↔1, O↔0, l↔1.\n"
         "- For labels or numbers adjacent to a specific schematic or view, crop tightly around that view rather "
         "than relying on a single full-page query — small text gets lost at thumbnail resolution.\n"
+        "- LEADER LINES: when a label points to a part via a leader line, query the label and the part it "
+        "connects to separately (e.g., crop the label region and the pointed-to region in two separate "
+        "look()/batch_look() calls) to verify the connection — don't rely on a single full-page query.\n"
         "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section view), "
         "not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) are valid answers.\n"
     ),
@@ -314,6 +324,8 @@ BASELINE_CATEGORY_TIPS: dict[str, str] = {
         "- 'VIEW IN DIRECTION X' labels indicate a viewing direction. The answer is the direction letter "
         "alone, not prefixed with 'Direction'.\n"
         "- OCR CONFUSION: Part numbers are almost always digits + dashes. Common confusions: I↔1, O↔0, l↔1.\n"
+        "- LEADER LINES: when a label points to a part via a leader line, verify each label is correctly "
+        "associated with the part it connects to — follow the line, not just proximity on the page.\n"
         "- DIMENSIONS: 'Width' typically refers to the shorter cross-sectional dimension (from a Section "
         "view), not the longest overall dimension (which is 'Length'). Dimensions tagged 'REF' (reference) "
         "are valid answers.\n"

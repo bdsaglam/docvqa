@@ -211,9 +211,24 @@ Three falsifiable predictions support the hypothesis:
    (the context-budget hypothesis itself). Supported by MMLongBench-Doc
    +16.84pp judge, MP-DocVQA 11-20pp bucket +13.68pp, DocVQA-2026
    +20.94pp.
-3. **Mechanism axis.** Removing the recursive VLM sub-call (but keeping
-   the REPL + agent loop) collapses the lift. **Not yet measured — the
-   critical missing experiment.**
+3. **Active-perception mechanism.** The lift comes specifically from
+   *active, iterative* VLM sub-calls — the agent choosing what region
+   to inspect, at what resolution, across multiple turns — not from
+   giving more compute to a single VLM call. Three ablations triangulate
+   this: cropping-off −7.81pp (active region selection matters);
+   m=5 turn budget −15pp vs m=30 (iteration matters); leanest 48.8%
+   vs no_loop_multi 20.0% (the recursive sub-call carries +28.8pp over
+   one-shot). All measured; no new experiment needed.
+
+   *Earlier draft of prediction 3* called for a "REPL-only" cell
+   (REPL + agent loop with the VLM sub-call removed). Built and smoke-
+   tested 2026-05-27 (`src/docvqa/solvers/repl_only_solver.py`); on a
+   2-doc smoke the agent SUBMITs "Unknown" in 1 iteration per question
+   (0/5). The result is mechanistically obvious — "no perception → no
+   answer" — and tests a strawman rather than a sharp prediction. The
+   reframing above uses the three existing ablations as the mechanism
+   evidence instead. The REPL-only solver code stays in the tree as
+   documentation; it is not a paper cell.
 
 The proposed method is the **OCR-free** variant (current engineering
 name: `leanest_solo`). The **OCR-extension** variant is reported as an
@@ -270,7 +285,13 @@ ergonomic wrapper.
 ## D-007: Per-solver inline prompts (DRY-undo) + prompt-parity rule
 
 - **Date:** 2026-05-27
-- **Status:** accepted
+- **Status:** accepted (prompt-parity portion); **partially revised by D-009**
+  — the "per-solver inline CATEGORY_TIPS" implementation was found to
+  over-apply the principle by baking tool-routing into 5 redundant
+  per-solver inline dicts. D-009 refines: tool-agnostic semantic
+  content per-dataset (in profile); tool-routing per-solver (in
+  solver's `TASK_INSTRUCTIONS` + optional overlay). The parity rule
+  carries forward unchanged.
 
 **Decision.** Move category-tip prompts out of `src/docvqa/prompts.py`
 into each solver's own file. Each solver owns its prompts inline — no
@@ -364,6 +385,112 @@ wasted compute when a pivot or revision is still possible.
   rather than full n=8; escalate based on direction.
 - Variance discipline rule in `experiment-plan.md` updated to reflect
   escalation, not blanket n=8.
+
+---
+
+## D-009: Refine D-007 — split semantic-per-profile from tool-routing-per-solver
+
+- **Date:** 2026-05-27
+- **Status:** accepted
+- **Supersedes:** the per-solver-inline-CATEGORY_TIPS portion of D-007.
+  The parity rule (all paper solvers audited to the same standard) is
+  preserved.
+
+**Decision.** Split prompt ownership along two axes:
+
+- **Tool-agnostic semantic content** (per-dataset, per-category) lives
+  in the dataset profile (`src/docvqa/datasets/profile.py`). Example:
+  "for engineering drawings, verify each label is correctly associated
+  with the part it connects to" is dataset-level guidance.
+- **Tool-routing** (per-solver) lives in the solver — in
+  `TASK_INSTRUCTIONS` for documenting the tool surface, plus an
+  optional per-category overlay for tool-routing examples (similar to
+  the old `FLAT_SOLO_TOOL_HINTS`). Example: "use `batch_look` to
+  inspect the region" is solver-level.
+- **Shared:** nothing per-category. `ANSWER_FORMATTING_RULES` is now
+  considered part of the dataset profile, not a globally shared
+  constant.
+
+All paper solvers become **dataset-aware by default**. The
+`solo`/`_da` distinction is dropped; merged solvers use the profile
+system with DocVQA-2026 as the default profile.
+
+**Reasoning.**
+
+- D-007 (2026-05-27 earlier) was applied as "every solver has its own
+  inline CATEGORY_TIPS dict." That over-shot the actual problem.
+- The problem D-007 was solving (v1/v2 mess from prompt-scrub audit)
+  was specifically about **tool-routing verbs leaking between
+  solvers** when stripped for one solver's needs. Removing
+  `search()` references from CATEGORY_TIPS to clean up leanest's dead
+  references accidentally removed them for flat_solo (where they
+  steered real tools).
+- Tool-routing IS the cross-solver coupling problem; semantic content
+  is not. Telling the agent "count carefully" is dataset-level
+  guidance — it should be the same advice regardless of whether the
+  solver uses `batch_look`, `display()`, or single-shot.
+- The 2026-05-27 inline refactor produced 5 redundant copies of the
+  same dataset-level semantic content across solver files (with
+  tool-routing baked in differently per copy). That's exactly the
+  duplication research code should avoid.
+- The DA solvers (`*_da`) already do the right split via the profile
+  system. Generalizing this everywhere — making it the default — is
+  the cleanest end state.
+- Cross-benchmark eval (MP-DocVQA, MMLongBench-Doc) becomes
+  first-class: solvers are dataset-parameterized, not
+  DocVQA-2026-coupled.
+
+**Implications.**
+
+- **Profile changes** (`src/docvqa/datasets/profile.py`):
+  - DocVQA-2026 profile owns the canonical per-category semantic
+    content (currently scattered across 5 solver files). Move the
+    tool-agnostic content from `leanest_solo_solver.py`'s inline
+    `CATEGORY_TIPS` into the profile (since leanest's version has the
+    minimal tool routing of the five).
+  - Strip tool-routing verbs from the moved content (`batch_look`
+    references become tool-agnostic phrasings like "inspect the
+    relevant region").
+  - The 4 reconciled bullets (Leader-lines, TEXT TRUNCATION,
+    COUNTING-OBJECTS protocol, CITED PAPER FINDINGS) all live in the
+    DocVQA-2026 profile now.
+  - `ANSWER_FORMATTING_RULES` content moves into the DocVQA-2026
+    profile's `answer_formatting_rules` slot (it already is — just
+    the source-of-truth moves from `prompts.py` to the profile).
+- **Solver changes:**
+  - Merge `leanest_solo` ← `leanest_solo_da` into a single
+    DA-by-default solver. Same pattern for `no_loop_multi` ←
+    `no_loop_multi_da` and other paired solvers.
+  - New solvers (`leanest_ocr`, `repl_only`) made DA-by-default at
+    creation. Drop inline `CATEGORY_TIPS` from them; replace with
+    `profile.category_tips_fn()` calls.
+  - Each solver keeps `TASK_INSTRUCTIONS` (documenting its tool
+    surface) and an optional per-category tool-routing overlay (for
+    OCR-bearing solvers, this is the `FLAT_SOLO_TOOL_HINTS`-equivalent
+    that's solver-owned).
+  - `rvlm_solver.py` becomes DA-capable.
+- **`src/docvqa/prompts.py`:** can be reduced to nothing once
+  back-compat is no longer needed. For now, keep the DEPRECATED block
+  for shelved solvers; remove later.
+- **Audit standard preserved:** parity rule from D-007 still applies —
+  every paper solver passes the same audit. Now the parity question
+  is "do the solvers correctly inherit from the profile?" instead of
+  "are the 5 inline dicts consistent?" — easier to audit since
+  there's only one source-of-truth.
+
+**Migration plan** (task #21, #22):
+
+1. Move tool-agnostic content from leanest_solo's inline
+   `CATEGORY_TIPS` into DocVQA-2026 profile. Strip tool-routing.
+2. Merge `leanest_solo_solver.py` ← `leanest_solo_da_solver.py`.
+   Keep DA structure. Default profile = DocVQA-2026.
+3. Same merge for `no_loop_multi`, and for the two new solvers
+   (`leanest_ocr`, `repl_only`) at creation.
+4. Update `rvlm_solver.py` to be DA-capable (currently DocVQA-2026
+   only).
+5. Update hydra configs to expose the dataset parameter.
+6. Smoke test: every solver runs on DocVQA-2026, and at least leanest
+   runs on MMLongBench-Doc and MP-DocVQA (verifies the DA path).
 
 ---
 
