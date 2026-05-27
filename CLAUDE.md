@@ -12,6 +12,12 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 > `docs/paper/decisions.md` (D-006/D-007/D-008) and
 > `docs/paper/README.md` for the full framing.
 >
+> **Two-host coordination.** amax7 (adaptive) and amax1 (throughput)
+> share this repo via per-host queue files in
+> [`coordination/`](coordination/README.md). Pick a cell, mark
+> in-progress, commit, push, run, mark done, commit, push, pull. Don't
+> claim cells you can't start immediately.
+>
 > Operating principles flowing from this:
 > - **Prompt parity (D-007).** Every paper solver passes the same
 >   prompt audit standard.
