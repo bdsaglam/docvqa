@@ -14,7 +14,7 @@ for i in 1 2 3; do
     lm=$MODEL_TAG \
     vlm=$MODEL_TAG \
     lm.enable_thinking=false \
-    solver=no_loop_multi \
+    solver=raw_vlm_multi \
     data.split=val data.num_samples=null \
     max_concurrency=8 \
     run_id=no-loop-multi-tips-${SHORT}-val-t$i || { echo "BASELINE t$i FAILED"; exit 1; }
@@ -28,7 +28,7 @@ for i in 1 2 3; do
     lm=$MODEL_TAG \
     vlm=$MODEL_TAG \
     lm.enable_thinking=false \
-    solver=flat_solo \
+    solver=rvlm_full \
     data.split=val data.num_samples=null \
     max_concurrency=8 \
     run_id=flat-solo-${SHORT}-val-t$i || { echo "SCAFFOLD t$i FAILED"; exit 1; }

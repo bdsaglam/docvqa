@@ -33,12 +33,40 @@ MODEL_SHORT = {
 }
 
 SOLVER_SHORT = {
-    "docvqa.solvers.flat_solo_solver.create_flat_solo_program": "Flat Solo",
-    "docvqa.solvers.leanest_solo_solver.create_leanest_solo_program": "Leanest Solo",
+    # Current (D-010, 2026-05-27 onwards — see docs/paper/decisions.md)
+    "docvqa.solvers.rvlm_solver.create_rvlm_program": "RVLM",
+    "docvqa.solvers.rvlm_ocr_solver.create_rvlm_ocr_program": "RVLM+OCR",
+    "docvqa.solvers.rvlm_full_solver.create_rvlm_full_program": "RVLM full",
+    "docvqa.solvers.rvlm_unified_solver.create_rvlm_unified_program": "RVLM unified",
+    "docvqa.solvers.direct_vlm_solver.create_direct_vlm_program": "Direct VLM",
+    "docvqa.solvers.raw_vlm_multi_solver.create_raw_vlm_multi_program": "Raw VLM multi",
+    "docvqa.solvers.raw_vlm_single_solver.create_raw_vlm_single_program": "Raw VLM single",
+    "docvqa.solvers.repl_only_solver.create_repl_only_program": "REPL only",
+    # Legacy targets — pre-2026-05-27 run configs reference these targets;
+    # the *_solver.py files no longer exist post-D-010. Labels are tagged
+    # "(legacy)" to disambiguate from the post-rename targets above.
+    # NOTE: legacy `rvlm_solver.create_rvlm_program` referred to a different
+    # solver (single multimodal model) — that solver is now called
+    # `direct_vlm`. The current `rvlm_solver` is the proposed method
+    # (formerly `leanest_solo`). Run configs from before D-010 with
+    # `rvlm_solver.create_rvlm_program` target are mis-labeled by this
+    # table; check the run_id or commit date to disambiguate.
+    "docvqa.solvers.flat_solo_solver.create_flat_solo_program": "Flat Solo (legacy)",
+    "docvqa.solvers.flat_solo_da_solver.create_flat_solo_da_program": "Flat Solo DA (legacy)",
+    "docvqa.solvers.leanest_solo_solver.create_leanest_solo_program": "Leanest Solo (legacy)",
+    "docvqa.solvers.leanest_solo_da_solver.create_leanest_solo_da_program": "Leanest Solo DA (legacy)",
+    "docvqa.solvers.leanest_ocr_solver.create_leanest_ocr_program": "Leanest OCR (legacy)",
+    "docvqa.solvers.no_loop_multi_solver.create_no_loop_multi_program": "No-loop Multi (legacy)",
+    "docvqa.solvers.no_loop_multi_da_solver.create_no_loop_multi_da_program": "No-loop Multi DA (legacy)",
+    "docvqa.solvers.no_loop_solver.create_no_loop_program": "No-loop Single (legacy)",
+    # Shelved / kept as-is
     "docvqa.solvers.lean_solo_solver.create_lean_solo_program": "Lean Solo",
     "docvqa.solvers.flat_batch_solver.create_flat_batch_program": "Flat Batch",
     "docvqa.solvers.routing_solver.create_routing_solver": "Routing",
-    "docvqa.solvers.rvlm_solver.create_rvlm_program": "RVLM",
+    "docvqa.solvers.official_baseline_solver.create_official_baseline_program": "Official baseline",
+    "docvqa.solvers.pyai_leanest_solo_da_solver.create_pyai_leanest_solo_da_program": "PyAI Leanest DA",
+    "docvqa.solvers.flat_solo_gepa_solver.create_flat_solo_gepa_program": "Flat Solo GEPA",
+    "docvqa.solvers.flat_solo_da_mi_solver.create_flat_solo_da_mi_program": "Flat Solo DA MI",
 }
 
 MODEL_SHORT["gemini/gemma-4-31b-it"] = "Gemma4 31B"
