@@ -28,12 +28,14 @@ import math
 import os
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from typing import Any, Callable
 
 import litellm
 import logfire
-from pydantic_ai import Agent, RunContext, UsageLimits
+from pydantic_ai import Agent, RunContext, UsageLimits, capture_run_messages
 from pydantic_ai.exceptions import UsageLimitExceeded
+from pydantic_graph import End
 from pydantic_ai.messages import (
     ModelRequest,
     ModelResponse,
@@ -55,17 +57,35 @@ from docvqa.types import LMConfig
 logger = logging.getLogger(__name__)
 
 
+class _AnswerCarrier:
+    """Captures the answer when the agent calls SUBMIT() inside the REPL.
+
+    Why: pydantic-ai's "structured output via terminal tool" pattern lets the
+    agent click `submit` on its first turn with answer='Unknown', skipping all
+    the exploration work. The dspy variant doesn't have this failure mode
+    because its SUBMIT is a Python function the agent has to compose code to
+    call — which adds enough friction that the agent only does it after
+    actually investigating. We replicate that here.
+    """
+
+    __slots__ = ("answer",)
+
+    def __init__(self) -> None:
+        self.answer: str | None = None
+
+
 # ---------------------------------------------------------------------------
 # REPL: pages + batch_look injected globals
 # ---------------------------------------------------------------------------
 
 
 class _PagesREPL(REPLEnvironment):
-    """REPLEnvironment with ``pages`` and ``batch_look`` injected.
+    """REPLEnvironment with ``pages``, ``batch_look``, and ``SUBMIT`` injected.
 
-    The base class still gets a placeholder ``context=""`` (the load step
-    is cheap and we don't want to fight the parent's init). The agent is
-    told to ignore ``context`` and only use ``pages`` / ``batch_look``.
+    Mirrors the dspy LeanRLM contract: the agent has to write Python that
+    calls ``SUBMIT(answer=...)`` to deliver a final answer. The call captures
+    the answer in ``carrier``; the surrounding execute_code wrapper detects
+    a non-None carrier and tells the agent to stop.
     """
 
     def __init__(
@@ -73,9 +93,29 @@ class _PagesREPL(REPLEnvironment):
         pages_dir: str,
         num_pages: int,
         batch_look_impl: Callable[[list[tuple[str, str]]], list[str]],
+        carrier: _AnswerCarrier,
         config: RLMConfig | None = None,
     ) -> None:
-        super().__init__(context="", config=config)
+        # Bypass REPLEnvironment.__init__ entirely. Its constructor calls
+        # os.getcwd() — and its execute() does a process-wide os.chdir into
+        # self.temp_dir, then back. With multiple concurrent REPLs (one per
+        # question, asyncio tasks sharing one process), these flips race:
+        # REPL A chdir's into its tempdir, REPL B then deletes its OWN
+        # tempdir but the process CWD pointer can get invalidated; the next
+        # os.getcwd() raises FileNotFoundError and the doc crashes. We
+        # reimplement the parent's state setup here without touching CWD,
+        # and override _temp_working_directory below to be a no-op.
+        import threading as _threading
+        safe_cwd = os.environ.get("HOME", "/") or "/"
+        self.config = config or RLMConfig()
+        self.original_cwd = safe_cwd
+        self.temp_dir = tempfile.mkdtemp(prefix="rlm_repl_")
+        self._lock = _threading.Lock()
+        self.locals = {}
+        self.globals = {"__builtins__": self._create_builtins()}
+        if self.config.sub_model:
+            self._setup_llm_query()
+        self._load_context("")
         from PIL import Image as PILImage
 
         PILImage.MAX_IMAGE_PIXELS = 500_000_000
@@ -95,8 +135,30 @@ class _PagesREPL(REPLEnvironment):
                 paths.append((tmp.name, query))
             return batch_look_impl(paths)
 
+        def _SUBMIT(answer: str = "") -> None:
+            """Submit the final answer. Call this once you're confident.
+
+            After this call the agent should stop calling tools and end its turn.
+            """
+            carrier.answer = str(answer)
+            print(f"[SUBMITTED] {answer!r}")
+
         self.globals["pages"] = pages
         self.globals["batch_look"] = _batch_look
+        self.globals["SUBMIT"] = _SUBMIT
+
+    @contextmanager  # type: ignore[misc]
+    def _temp_working_directory(self):  # type: ignore[override]
+        """Override the parent's process-wide chdir dance.
+
+        The parent's version flips ``os.chdir`` to ``self.temp_dir`` for the
+        duration of an execute() call, then flips back. With multiple
+        concurrent REPLs in the same process (one per question), these flips
+        race and one REPL can leave the process chdir'd into a tempdir that
+        another REPL is about to delete. The next ``os.getcwd()`` then raises
+        FileNotFoundError. We don't need per-REPL CWD anyway, so just no-op.
+        """
+        yield
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +256,8 @@ _EXECUTE_DESC = (
     "- `pages`: list of PIL Image objects, one per document page (0-indexed).\n"
     "- `batch_look(requests)`: vision tool. Input: list of (image, query) tuples "
     "where image is any PIL Image (a page or a crop). Returns: list of str answers, same order.\n"
+    "- `SUBMIT(answer='...')`: call this when you have the final answer. "
+    "The orchestrator captures it and ends the run.\n"
     "- Variables persist between executions. Use `print()` to see results.\n"
     "## Notes\n"
     "- ALL visual queries must go through `batch_look`. The agent does NOT see image bytes directly.\n"
@@ -203,7 +267,7 @@ _EXECUTE_DESC = (
 
 
 def _create_toolset(
-    repl: _PagesREPL, code_timeout: float
+    repl: _PagesREPL, carrier: _AnswerCarrier, code_timeout: float
 ) -> FunctionToolset[RLMDependencies]:
     toolset: FunctionToolset[RLMDependencies] = FunctionToolset()
 
@@ -215,7 +279,14 @@ def _create_toolset(
                 loop.run_in_executor(None, repl.execute, code),
                 timeout=code_timeout,
             )
-            return format_repl_result(result)
+            formatted = format_repl_result(result)
+            if carrier.answer is not None:
+                return (
+                    formatted
+                    + "\n\n[ANSWER RECEIVED — stop calling tools and end your turn. "
+                    + "Any further tool calls are wasted.]"
+                )
+            return formatted
         except TimeoutError:
             return f"Error: Code execution timed out after {code_timeout} seconds."
         except Exception as e:  # noqa: BLE001 — surface to agent
@@ -330,6 +401,79 @@ class PyaiLeanestSoloDAProgram:
         self.model_settings = OpenAIChatModelSettings(**settings_kwargs)
         self.model = OpenAIChatModel(model_id, provider=provider)
 
+    async def _extract_fallback(
+        self, question_text: str, messages: list
+    ) -> str:
+        """Last-resort answer extraction from the trajectory's observations.
+
+        Mirrors LeanRLM._extract_fallback. We concatenate every
+        ToolReturnPart's content (i.e. all execute_code outputs the agent
+        saw), and ask the LLM to compose the answer in a single call.
+        """
+        observations: list[str] = []
+        for m in messages:
+            if isinstance(m, ModelRequest):
+                for p in m.parts:
+                    if isinstance(p, ToolReturnPart):
+                        out = p.content if isinstance(p.content, str) else str(p.content)
+                        if out:
+                            observations.append(out[:5000])
+        joined = "\n\n---\n\n".join(observations[-30:]) or "(no observations recorded)"
+        prompt = (
+            "Below are the OBSERVATIONS from a document-VQA agent's exploration of "
+            "a document. Based ONLY on these observations, give the final answer "
+            "to the QUESTION.\n\n"
+            "CRITICAL OUTPUT RULES:\n"
+            "- Output ONLY the answer value — 1 to 5 words, on a single line.\n"
+            "- NO preamble, no 'The answer is...', no quotes, no explanation.\n"
+            "- If the observations don't contain the answer, output your best guess "
+            "based on what you have, not a refusal.\n"
+            "- For 'how many' questions, output a single integer.\n"
+            "- For names/items, output the exact phrase from the document.\n\n"
+            f"QUESTION: {question_text}\n\n"
+            f"OBSERVATIONS:\n{joined}\n\n"
+            "FINAL ANSWER:"
+        )
+        kwargs: dict[str, Any] = {
+            "model": self.lm_cfg.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": self.lm_cfg.temperature,
+            "timeout": 300,
+            "max_tokens": 256,
+        }
+        if self.lm_cfg.api_base:
+            kwargs["api_base"] = self.lm_cfg.api_base
+        if self.lm_cfg.api_key:
+            kwargs["api_key"] = self.lm_cfg.api_key
+        extra_body: dict[str, Any] = {}
+        if self.lm_cfg.enable_thinking is not None:
+            extra_body["chat_template_kwargs"] = {
+                "enable_thinking": self.lm_cfg.enable_thinking
+            }
+        if extra_body:
+            kwargs["extra_body"] = extra_body
+        try:
+            resp = await litellm.acompletion(**kwargs)
+            msg = resp.choices[0].message  # type: ignore[union-attr]
+            content = (
+                msg.content
+                or getattr(msg, "reasoning_content", None)
+                or ""
+            )
+            # Keep just the first non-empty line so verbose preambles
+            # ("The information required...") get stripped to nothing
+            # rather than poisoning the answer field.
+            for line in content.splitlines():
+                line = line.strip().strip("\"'.,;:")
+                if line and not line.lower().startswith((
+                    "the answer", "answer:", "final answer", "based on",
+                )):
+                    return line
+            return content.strip()
+        except Exception as e:  # noqa: BLE001
+            logger.warning("Extract fallback failed: %s", e)
+            return ""
+
     def _per_question_prefix(self, q: Question) -> str:
         if self.profile.question_format_hint_fn is None:
             return ""
@@ -339,14 +483,40 @@ class PyaiLeanestSoloDAProgram:
     def solve_document(
         self, document: Document
     ) -> tuple[dict[str, str], dict[str, list[dict]]]:
-        return asyncio.run(self._solve_document_async(document))
+        import traceback as _tb
+        try:
+            return asyncio.run(self._solve_document_async(document))
+        except Exception as e:
+            logger.error(
+                "Doc %s crashed in solve_document:\n%s",
+                document.doc_id, _tb.format_exc(),
+            )
+            preds = {q.question_id: "Unknown" for q in document.questions}
+            return preds, {}
 
     async def _solve_document_async(
         self, document: Document
     ) -> tuple[dict[str, str], dict[str, list[dict]]]:
         with tempfile.TemporaryDirectory() as tmpdir:
+            # Force-decode each page in case HF returned lazy PIL refs whose
+            # backing file handles get closed by GC under fd pressure on long
+            # runs. .copy() detaches from the file.
             for i, img in enumerate(document.images):
-                img.save(os.path.join(tmpdir, f"page_{i}.png"), format="PNG")
+                try:
+                    if hasattr(img, "load"):
+                        img.load()
+                    snap = img.copy()
+                    snap.save(os.path.join(tmpdir, f"page_{i}.png"), format="PNG")
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(
+                        "Doc %s page %d: image load/save failed (%s); "
+                        "saving 1x1 placeholder so the doc doesn't crash the run",
+                        document.doc_id, i, e,
+                    )
+                    from PIL import Image as PILImage
+                    PILImage.new("RGB", (1, 1)).save(
+                        os.path.join(tmpdir, f"page_{i}.png"), format="PNG"
+                    )
 
             doc_info = f"Category: {document.doc_category}, Pages: {len(document.images)}"
             num_pages = len(document.images)
@@ -374,20 +544,27 @@ class PyaiLeanestSoloDAProgram:
                         question=q.question[:200],
                         profile=self.profile.name,
                     ) as q_span:
-                        repl = _PagesREPL(tmpdir, num_pages, batch_look_impl)
+                        carrier = _AnswerCarrier()
+                        repl = _PagesREPL(tmpdir, num_pages, batch_look_impl, carrier)
                         try:
-                            toolset = _create_toolset(repl, self.code_timeout)
+                            toolset = _create_toolset(repl, carrier, self.code_timeout)
                             agent_instructions = (
                                 instructions
                                 + f"\n\nDocument info: {doc_info}\n\n"
                                 + "## EXECUTION\n"
-                                + "Use the `execute_code` tool repeatedly to write Python that inspects "
-                                + "pages and calls batch_look. Variables persist across calls.\n"
-                                + f"You have up to {max_iter} tool calls. When you are confident, "
-                                + "stop calling tools and emit ONLY the final answer string as your reply "
-                                + "(no preamble, no JSON, no markdown — just the answer)."
+                                + "You have ONE tool: `execute_code`. Use it iteratively to write Python "
+                                + "that inspects pages and calls batch_look. Variables persist across calls.\n"
+                                + "ALWAYS wrap batch_look in print(...) so you can see the result, e.g. "
+                                + "`for ans in batch_look(reqs): print(ans)`. Naked expressions may be "
+                                + "swallowed.\n"
+                                + f"You have up to {max_iter} execute_code calls. "
+                                + "When you have the answer, write a final execute_code call that does "
+                                + "`SUBMIT(answer='<your answer>')`. This is the ONLY way to deliver the "
+                                + "answer — emitting plain text instead will NOT count. Do real "
+                                + "exploration before submitting; don't submit 'Unknown' until you have "
+                                + "looked at enough pages to be sure."
                             )
-                            agent: Agent[RLMDependencies, str] = Agent(
+                            agent = Agent(
                                 self.model,
                                 deps_type=RLMDependencies,
                                 toolsets=[toolset],
@@ -401,58 +578,87 @@ class PyaiLeanestSoloDAProgram:
                                 context="(unused — work via `pages` and `batch_look` in execute_code)"
                             )
 
-                            def _is_rate_limit(e: BaseException) -> bool:
+                            def _is_retryable(e: BaseException) -> bool:
                                 s = str(e)
+                                t = type(e).__name__
                                 return (
                                     "429" in s
-                                    or "RateLimit" in type(e).__name__
+                                    or "RateLimit" in t
                                     or "RESOURCE_EXHAUSTED" in s
+                                    or "ClosedResource" in t
+                                    or "Connection error" in s
+                                    or "ConnectionError" in t
+                                    or "ConnectTimeout" in t
+                                    or "ReadTimeout" in t
                                 )
 
+                            # Drive the agent manually with Agent.iter so we
+                            # can break early when SUBMIT() lands in carrier
+                            # and so we can fall through to an extract pass
+                            # if the agent never submits (mirrors dspy's
+                            # LeanRLM._extract_fallback path).
                             attempt = 0
-                            result = None
-                            usage_overrun_messages: list | None = None
+                            messages_for_traj: list = []
+                            last_result = None
+                            stopped_via_text = False
                             while True:
                                 try:
-                                    result = await agent.run(
-                                        question_text,
-                                        deps=deps,
-                                        usage_limits=UsageLimits(
-                                            tool_calls_limit=max_iter
-                                        ),
-                                    )
+                                    with capture_run_messages() as captured:
+                                        async with agent.iter(
+                                            question_text,
+                                            deps=deps,
+                                            usage_limits=UsageLimits(
+                                                tool_calls_limit=max_iter + 5
+                                            ),
+                                        ) as run:
+                                            async for node in run:
+                                                if isinstance(node, End):
+                                                    stopped_via_text = True
+                                                    break
+                                                if carrier.answer is not None:
+                                                    break
+                                            last_result = run.result
+                                        messages_for_traj = list(captured)
                                     break
                                 except UsageLimitExceeded as e:
-                                    # Agent burned through tool calls without producing a
-                                    # final answer. Salvage the trajectory + log "Unknown".
                                     logger.warning(
                                         "PyAI Q %s: tool-call budget exhausted (%d): %s",
                                         q.question_id, max_iter, e,
                                     )
-                                    usage_overrun_messages = list(
-                                        getattr(e, "all_messages", lambda: [])()  # type: ignore[attr-defined]
-                                    )
+                                    messages_for_traj = list(captured)
                                     break
                                 except Exception as e:
-                                    if _is_rate_limit(e) and attempt < 3:
-                                        wait = min(30 * (2**attempt), 120)
+                                    if _is_retryable(e) and attempt < 3:
+                                        wait = min(15 * (2**attempt), 90)
                                         logger.warning(
-                                            "Rate limit, retry %d in %ds: %s",
+                                            "Transient error, retry %d in %ds: %s",
                                             attempt + 1, wait, e,
                                         )
                                         await asyncio.sleep(wait)
                                         attempt += 1
                                         continue
-                                    raise
+                                    # Non-retryable / out of retries: log and bail
+                                    # to "Unknown" rather than crashing the doc.
+                                    logger.warning(
+                                        "PyAI Q %s: giving up after error: %s",
+                                        q.question_id, e,
+                                    )
+                                    break
 
-                            if result is None:
-                                answer = "Unknown"
-                                messages_for_traj = usage_overrun_messages or []
+                            # Decide the final answer.
+                            if carrier.answer is not None:
+                                answer = carrier.answer.strip()
+                            elif stopped_via_text and last_result is not None:
+                                answer = str(last_result.output or "").strip()
                             else:
-                                answer = (result.output or "").strip()
-                                messages_for_traj = result.all_messages()
+                                answer = ""
+
                             if not answer:
-                                answer = "Unknown"
+                                # Extract fallback: re-ask the LLM with the
+                                # trajectory's collected text as context.
+                                answer = await self._extract_fallback(
+                                    question_text, messages_for_traj
+                                ) or "Unknown"
 
                             trajectory = _messages_to_trajectory(messages_for_traj)
 

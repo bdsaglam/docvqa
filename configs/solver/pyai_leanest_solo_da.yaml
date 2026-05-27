@@ -5,6 +5,6 @@ max_iterations: 25
 lm: ${lm}
 vlm: ${vlm}
 page_factor: 1.5
-question_concurrency: 4
-batch_concurrency: 8
+question_concurrency: 2
+batch_concurrency: 4
 code_timeout: 120.0
