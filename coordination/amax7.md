@@ -8,12 +8,9 @@ cell at a time; replan after each result.
 
 ## In progress
 
-(none)
+### `[→]` unified-tips n=1 val (task #25)  — started 2026-05-28T22:30+03
 
-## Queued
-
-### 1. `[ ]` unified-tips n=1 val (task #25)
-
+Tmux session `unified-tips-t1`. `max_concurrency=32` (per c=32 dispatch).
 Tests whether per-document category metadata is required. If Δ ≈ 0pp vs
 rvlm headline, we **promote unified to default** and many downstream
 cells get cleaner (no `doc_category` dependence).
@@ -24,14 +21,16 @@ uv run python evals.py \
   lm.enable_thinking=false \
   solver=rvlm_unified \
   data.split=val data.num_samples=null \
-  max_concurrency=16 \
+  max_concurrency=32 \
   run_id=rvlm-unified-val-t1
 ```
 
-- Expected wall: ~50min
+- Expected wall: ~30-40min (c=32 faster than the earlier c=16 estimate)
 - Compare to: `rvlm` (proposed method) headline val per-trial mean ~42.8%
 
-### 2. `[ ]` rvlm_ocr n=1 val (task #14)
+## Queued
+
+### 1. `[ ]` rvlm_ocr n=1 val (task #14)
 
 Locks the clean OCR-extension number. Current `rvlm_full` legacy data is
 confounded with `look()` ergonomic wrapper. This is the clean cell.
@@ -50,7 +49,7 @@ uv run python evals.py \
 - Compare to: `rvlm` val (OCR-free); expect approximately equal on
   DocVQA-2026 (moderate-length docs).
 
-### 3. `[ ]` direct_vlm n=1 val (task #19)
+### 2. `[ ]` direct_vlm n=1 val (task #19)
 
 Alternative architecture data point. Tests whether single-multimodal-model
 REPL can match the recursive sub-call structure. Important for the
