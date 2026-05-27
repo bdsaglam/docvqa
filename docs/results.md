@@ -13,19 +13,21 @@ shown only where they anchor an ICDAR submission).
 
 ## Solver taxonomy (engineering names)
 
-| Name | Role |
-|---|---|
-| `rvlm` | proposed method — REPL + recursive VLM `batch_look` sub-call |
-| `rvlm_ocr` | +OCR extension (clean; no `look()` confound) |
-| `rvlm_full` | kitchen-sink (rvlm + `look()` + OCR); **deferred per D-011**, appendix-only |
-| `rvlm_unified` | ablation: rvlm with all 8 category tips concatenated |
-| `direct_vlm` | single multimodal LLM with `display()` (alt angle) |
-| `raw_vlm_multi` | raw-VLM baseline, multi-image |
-| `raw_vlm_single` | raw-VLM baseline, single-image |
-| `repl_only` | documentation: REPL with no perception |
+| Name | Legacy name (pre-D-010) | Role |
+|---|---|---|
+| `rvlm` | `leanest_solo` | proposed method — REPL + recursive VLM `batch_look` sub-call |
+| `rvlm_ocr` | — (new, no legacy predecessor) | +OCR extension (clean; no `look()` confound) |
+| `rvlm_full` | `flat_solo` / `flat_solo_da` | kitchen-sink (rvlm + `look()` + OCR); **deferred per D-011**, appendix-only |
+| `rvlm_unified` | — (new ablation) | rvlm with all 8 category tips concatenated |
+| `direct_vlm` | `rvlm` (the *old* rvlm; semantic shift per D-010) | single multimodal LLM with `display()` (alt angle) |
+| `raw_vlm_multi` | `no_loop_multi` / `no_loop_multi_da` | raw-VLM baseline, multi-image |
+| `raw_vlm_single` | `no_loop` | raw-VLM baseline, single-image |
+| `repl_only` | — (new ablation) | documentation: REPL with no perception |
 
 See `docs/paper/README.md` for paper-cell taxonomy and full names.
-Paper-facing method names TBD per D-005.
+Paper-facing method names TBD per D-005. Legacy names appear in
+historical run IDs (`leanest-*`, `flat-solo-*`, `no-loop-*`) and in
+`archive/docs/results.md`; D-010 doesn't backfill those.
 
 ## Official baselines (ICDAR 2026 — for context)
 
