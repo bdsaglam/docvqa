@@ -572,6 +572,52 @@ the merge.
 
 ---
 
+## D-011: Deprioritize `rvlm_full` (kitchen-sink) cells
+
+- **Date:** 2026-05-28
+- **Status:** accepted
+
+**Decision.** Defer the `rvlm_full` (kitchen-sink: `batch_look` +
+`look` + `search` + `page_texts`) cells from the paper's critical
+path. The `look()` ergonomic wrapper alongside `batch_look()` is
+unlikely to make a meaningful difference; the OCR/search channel
+already accounts for the kitchen-sink lift. Existing `rvlm_full` data
+from the prompt-scrub audit and the MMLB/MPDV legacy DA cells stays as
+supporting evidence (footnoted as "kitchen-sink, confounded with
+look()" per D-006), but **no new `rvlm_full` cells are queued**.
+
+**Reasoning.**
+
+- Capability test: `look(image, query)` is essentially sugar for
+  `batch_look([(image, query)])[0]`. Both call the same VLM with the
+  same prompt path. The ergonomic difference is whether the agent
+  writes `look(crop, q)` or `batch_look([(crop, q)])[0]`.
+- The leanest_solo (now rvlm) prompt already documents the single-call
+  idiom (`batch_look([(image, query)])[0]`), so removing `look()`
+  doesn't restrict capability — only ergonomic. Likely <1pp effect.
+- Adding a paper cell to test this ergonomic effect adds compute cost
+  with low expected information value.
+- The paper's OCR-extension story rests on `rvlm_ocr` (clean fork:
+  batch_look + search + page_texts, no look). That cell is the right
+  test for prediction 2.
+
+**Implications.**
+
+- Resolves task #16 (rvlm_full's paper role): **drop from headline,
+  keep existing data as footnote/appendix only**.
+- No queued rvlm_full cells in `coordination/amax7.md` or
+  `coordination/amax1.md`.
+- `docs/results.md`, `docs/paper/README.md`, `docs/paper/experiment-plan.md`
+  mark rvlm_full as "deferred / appendix-only."
+- Existing `flat-solo-da-mmlb-remote-*` and `flat-solo-da-mpdv-remote-*`
+  run dirs (the rvlm_full DA cells on MMLB/MPDV) stay until `rvlm_ocr`
+  DA cells supersede them (task #15); then deletable.
+- Solver source files `rvlm_full_solver.py` + config + doc stay in the
+  live codebase (not archived). Reactivation is cheap if a reviewer
+  asks for the look-vs-batch_look isolation experiment.
+
+---
+
 ## How to add entries
 
 1. Allocate next D-NNN id.

@@ -81,7 +81,7 @@ post-rename (D-010, 2026-05-27). Paper-facing method names still TBD.
 |---|---|---|
 | **`rvlm`** | **Proposed method (M)** | `batch_look` only — recursive VLM sub-call |
 | **`rvlm_ocr`** | **+OCR extension** | `batch_look` + `search` + `page_texts` (no `look()`) |
-| **`rvlm_full`** | Kitchen-sink (appendix, role TBD per task #16) | `batch_look` + `look` + `search` + `page_texts` |
+| **`rvlm_full`** | Kitchen-sink — **deferred per D-011**, appendix-only if cited | `batch_look` + `look` + `search` + `page_texts` |
 | **`direct_vlm`** | **Alternative angle** | Single multimodal model in REPL — no sub-call, direct perception via `display()` |
 | **`raw_vlm_multi`** | **Raw-VLM baseline (multi-image)** | one forward pass, no scaffold |
 | **`raw_vlm_single`** | Raw-VLM baseline (single-image) | one forward pass, no scaffold |

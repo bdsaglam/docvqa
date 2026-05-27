@@ -15,6 +15,9 @@ done, commits + pushes, then the other host pulls before its next pick.
   experiments where the direction is already known and we just need to
   lock numbers. No adaptive iteration; if a cell shows an unexpected
   direction, **halt and write a note here** for amax7 to triage.
+- [`cleanup-runs.md`](cleanup-runs.md) — procedure for deleting obsolete
+  `output/runs/` dirs to free disk. amax7 ran this 2026-05-28 and freed
+  39GB. amax1 should do the same when disk pressure builds.
 
 ## Workflow (per unit of work)
 

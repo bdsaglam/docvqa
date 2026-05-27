@@ -17,7 +17,7 @@ shown only where they anchor an ICDAR submission).
 |---|---|
 | `rvlm` | proposed method — REPL + recursive VLM `batch_look` sub-call |
 | `rvlm_ocr` | +OCR extension (clean; no `look()` confound) |
-| `rvlm_full` | kitchen-sink (rvlm + `look()` + OCR); appendix role TBD (#16) |
+| `rvlm_full` | kitchen-sink (rvlm + `look()` + OCR); **deferred per D-011**, appendix-only |
 | `rvlm_unified` | ablation: rvlm with all 8 category tips concatenated |
 | `direct_vlm` | single multimodal LLM with `display()` (alt angle) |
 | `raw_vlm_multi` | raw-VLM baseline, multi-image |
@@ -41,7 +41,7 @@ Paper-facing method names TBD per D-005.
 | Cell | Solver | n | Val per-trial | Val SC-8 | Test SC-8 | Notes |
 |---|---|---|---|---|---|---|
 | **rvlm post-scrub** | rvlm | 8 | 42.81 ± 4.42pp | **48.8%** | **39.0%** | proposed method, paper headline |
-| rvlm_full post-scrub | rvlm_full | 8 | 42.35 ± 3.23pp | 47.5% | 38.0% | kitchen-sink; not the clean OCR cell |
+| rvlm_full post-scrub | rvlm_full | 8 | 42.35 ± 3.23pp | 47.5% | 38.0% | **deferred per D-011**; existing data stays as footnote |
 | raw_vlm_multi (baseline) | raw_vlm_multi | 8 | 21.07 ± 1.81pp | 20.0% | **11.0%** | split-difficulty anchor |
 
 **Val→test gap:** rvlm 9.8pp, raw_vlm_multi 9.0pp. The 9pp baseline gap
