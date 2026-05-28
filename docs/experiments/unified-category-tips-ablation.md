@@ -108,21 +108,19 @@ Matched-conditions baseline for the per-trial comparison: same model
 Concurrency is c=24 on amax1 vs c=32 for the unified chain on amax7 —
 GPU is throughput-bound so total tokens/sec is unchanged; per-question
 accuracy doesn't depend on c. Launched 2026-05-27T23:11Z via
-`scripts/run_rvlm_paired_baseline.sh`; t7 launched standalone in
-parallel with tail of t6 (interceptor armed against the chain's
-duplicate-t7 launch). Last update 2026-05-28T08:02Z.
+`scripts/run_rvlm_paired_baseline.sh`. Last update 2026-05-28T08:38Z.
 
 | Trial | run_id | Score | Correct/total | Notes |
 |---|---|---|---|---|
 | t1 | `rvlm-val-t1` | 40.0% | 32/80 | |
 | t2 | `rvlm-val-t2` | 36.2% | 29/80 | low outlier |
 | t3 | `rvlm-val-t3` | 41.2% | 33/80 | last doc ~2h on a hard tile question |
-| t4 | `rvlm-val-t4` | 42.5% | 34/80 | high so far |
+| t4 | `rvlm-val-t4` | 42.5% | 34/80 | |
 | t5 | `rvlm-val-t5` | 41.2% | 33/80 | |
-| t6 | `rvlm-val-t6` | in progress | 24/25 docs | hard tile question on last doc, ~2h+ |
-| t7 | `rvlm-val-t7` | in progress | parallel | standalone in tmux `rvlm-t7` |
-| t8 | `rvlm-val-t8` | pending | — | will launch after t6 finishes |
-| **n=5 mean** | — | **40.22%** | std ~2.3pp | t1..t5 only |
+| t6 | `rvlm-val-t6` | **43.75%** | 35/80 | high so far |
+| t7 | `rvlm-val-t7` | in progress | resumed standalone | re-launched cleanly after a contamination incident (see below) |
+| t8 | `rvlm-val-t8` | pending | — | will launch after t7 finishes |
+| **n=6 mean** | — | **40.81%** | **std 2.60pp** | t1..t6 only |
 
 ### Per-trial paired comparison (unified − rvlm)
 
@@ -133,19 +131,19 @@ duplicate-t7 launch). Last update 2026-05-28T08:02Z.
 | t3 | 38.8% | 41.2% | −2.50pp |
 | t4 | 35.0% | 42.5% | **−7.50pp** |
 | t5 | 42.5% | 41.2% | +1.25pp |
-| t6 | 47.5% | in flight | — |
+| t6 | 47.5% | 43.75% | +3.75pp |
 | t7 | 40.0% | in flight | — |
 | t8 | in flight | pending | — |
 
-**Paired n=5: Δ mean = +0.25pp, std = 5.33pp, SE = 2.38pp** (paired
-across t1..t5).  95% CI [t₄=2.776]: [−6.37, +6.87]pp — easily
-contains zero. The n=1 +5.0pp lift did not hold up: by t5 the paired
-mean Δ is essentially zero with wide error bars.
+**Paired n=6: Δ mean = +0.83pp, std = 4.98pp, SE = 2.03pp.** 95% CI
+[t₅=2.571]: [−4.39, +6.06]pp — still easily contains zero. The early
++5.0pp lift at t1/t2 did not hold up; t6 swung Δ back positive
+(+3.75pp) but the per-trial spread remains wide.
 
-By the pre-set decision table this lands in the **"Δ ≈ 0pp → promote
-unified to default"** cell, but the t4 −7.5pp pair widens the
-confidence interval enough that the promote call should wait on
-t6/t7/t8.
+By the pre-set decision table this stays in the **"Δ ≈ 0pp → promote
+unified to default"** cell. The promote call still needs t7/t8 to
+tighten the interval, but the direction is locked: no robust accuracy
+lift, no robust accuracy loss.
 
 ### Per-category breakdown
 
@@ -181,28 +179,28 @@ make it worse.
 
 ## Summary
 
-State at 2026-05-28T10:31+03:
+State at 2026-05-28T11:38+03:
 
 | Arm | n | Mean | Std | Range |
 |---|---|---|---|---|
 | `rvlm_unified` (amax7) | 7 | 41.43% | 4.11pp | 35.0–47.5 |
-| `rvlm` paired baseline (amax1) | 5 | 40.22% | 2.40pp | 36.2–42.5 |
-| Δ paired (t1..t5) | 5 | **+0.25pp** | 5.33pp | −7.5..+5.0 |
+| `rvlm` paired baseline (amax1) | 6 | **40.81%** | 2.60pp | 36.2–43.75 |
+| Δ paired (t1..t6) | 6 | **+0.83pp** | 4.98pp | −7.5..+5.0 |
 
 **Marginal Δ vs paired Δ.** Marginal Δ (unified mean − rvlm mean) =
-+1.2pp using all available trials; paired Δ across the 5 matched
-trials is +0.25pp with SE 2.38pp. Both anchors land in the "Δ ≈ 0pp"
++0.62pp using all available trials; paired Δ across the 6 matched
+trials is +0.83pp with SE 2.03pp. Both anchors land in the "Δ ≈ 0pp"
 zone of the pre-set decision table.
 
-**Variance asymmetry.** unified std (4.11pp) is ~1.7× rvlm std
-(2.40pp) at the trial counts so far. If this holds through n=8, it
+**Variance asymmetry.** unified std (4.11pp) is ~1.6× rvlm std
+(2.60pp) at the trial counts so far. If this holds through n=8, it
 weakens the promote-to-default case: unified gets you the same
 expected score with more run-to-run noise.
 
-**Per-trial sign distribution.** Of the 5 paired pairs: 2 strongly
-positive (+5.0pp each, t1 & t2), 1 ≈ 0 (t5), 1 mildly negative
-(−2.5pp t3), 1 strongly negative (−7.5pp t4). No systematic
-direction; the +5.0pp early signal at t1 was a coincidence of two
+**Per-trial sign distribution.** Of the 6 paired pairs: 3 positive
+(+5.0pp at t1, +5.0pp at t2, +3.75pp at t6), 1 ≈ 0 (+1.25pp at t5),
+1 mildly negative (−2.5pp at t3), 1 strongly negative (−7.5pp at t4).
+No systematic direction; the +5.0pp early signal at t1 was just two
 above-mean unified trials landing first.
 
 **Maps category.** Both arms hit the maps 0–10% wall — the failure
@@ -210,8 +208,59 @@ mode is RVLM-on-maps (tile-search fails to recover map evidence
 reliably), not unified-prompt-specific. Removed from the decision
 input.
 
-**Pending.** unified t8 in flight; rvlm t6/t7 in flight + t8 pending.
-Final n=8 paired analysis will land once both chains complete.
+**Pending.** unified t8 in flight; rvlm t7 in flight (resumed
+standalone after contamination — see below) + t8 pending. Final n=8
+paired analysis will land once both chains complete.
+
+### Operational note: t7 contamination + re-launch
+
+t7 was originally launched standalone in tmux `rvlm-t7` in parallel
+with the tail of t6 to overlap wall-time (GPU is throughput-bound, so
+parallel ≈ serial total cost). When the chain script advanced past t6
+and tried to start its own t7 with the same `run_id=rvlm-val-t7`, an
+interceptor SIGTERMed the chain bash loop, but a chain-spawned uv/python
+pair attached to the shared TMPDIR (`output/runs/rvlm-val-t7/tmp/`) and
+ran for ~1m41s before being caught and killed. The contamination was
+via shared sandbox-IPC file descriptors — the surviving standalone t7's
+RLM ended up in a futex/pipe deadlock on `science_paper_1_q6`.
+Recovery: killed the hung standalone, cleaned the polluted sandbox
+dirs, restarted t7 fresh — runner resumability skipped the 24
+cleanly-completed docs and only re-ran `science_paper_1`. **No effect
+on t1–t6** (contamination requires two processes sharing the same
+`run_id`, which only ever happened on t7). Lesson: never run two evals
+with the same `run_id` in parallel — different `run_id` = different
+TMPDIR = safe.
+
+### Silent-failure audit
+
+Cross-checked t1–t6 against the runner's silent-fallback paths:
+
+- **Doc-level runner timeout (`runner.py:295`, 10-min default).** Logs
+  `"Document X timed out or failed"` and would silently set all
+  questions in the doc to `prediction="Unknown"`, `is_correct=False`.
+  **Zero such warnings in t1–t6 chain log.** Path never fired.
+- **Per-question RLM iteration exhaustion (`rvlm_solver.py:293-294`).**
+  Returns `"Unknown"` when `result.answer` is empty (RLM ran out of
+  iterations without `SUBMIT()`). Fires 2–7 times per trial (~3–9%
+  of questions); these are legitimate solver give-ups, scored as
+  WRONG. Recurring offenders: `comics_4_q2` ("Hortense"),
+  `science_paper_3_q2` (compound long answer), parts of `maps_*`.
+  Not a script timeout, not silently lost — just looks identical to
+  wrong-confident-answers in the headline score.
+- **Per-question missing-id fallback (`runner.py:184`).** Defensive,
+  never observed.
+
+`opentelemetry: Queue full, dropping Span` WARNINGs (~700 across t1–t6)
+are pure telemetry: the otel SDK's batch processor drops tracing spans
+under high concurrency; the `with logfire.span(...)` context manager
+never raises and eval code runs regardless. No scoring side effect.
+
+Same failure modes will exist in `rvlm_unified` — the per-trial paired
+Δ stays valid as a relative comparison. **TODO (planned):** change the
+doc-level runner timeout path from "silently set all qs to Unknown" to
+"record an error and let resumability retry the doc on next launch" —
+the current behavior bakes timed-out results into the persisted state
+even though those docs never produced a real answer.
 
 ## Observations / caveats
 
