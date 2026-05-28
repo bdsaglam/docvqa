@@ -1,0 +1,12 @@
+_target_: docvqa.solvers.rvlm_gepa_solver.create_rvlm_gepa_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
+# Path to a JSON file produced by ``scripts/optimize_rvlm.py``. When null,
+# the solver behaves identically to ``rvlm_unified`` (seed prompt).
+candidate_path: null
