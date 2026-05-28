@@ -276,7 +276,16 @@ def evaluate(
     results: list[DocumentResult] = list(completed.values())
     pending = [d for d in documents if d.doc_id not in completed]
 
-    def _process_doc(doc: Document) -> DocumentResult:
+    def _process_doc(doc: Document) -> DocumentResult | None:
+        """Solve one document.
+
+        Returns the result on success, or ``None`` if the solver timed out
+        / raised. A ``None`` return means the doc is **not persisted** —
+        on the next launch, resumability sees no completed result and
+        retries the doc. This is preferable to the old behavior of
+        silently writing ``prediction="Unknown"`` for every question,
+        which baked broken results into the persisted state.
+        """
         print(
             f"Solving {doc.doc_id} ({doc.doc_category}, {len(doc.questions)} questions)"
         )
@@ -293,35 +302,18 @@ def evaluate(
                 try:
                     result, trajectories = future.result(timeout=task_timeout_seconds)
                 except Exception as e:
-                    logger.warning(
-                        "Document %s timed out or failed after %ds: %s",
+                    logger.error(
+                        "Document %s timed out or failed after %ds: %s — "
+                        "not persisting; will retry on next launch.",
                         doc.doc_id,
                         task_timeout_seconds,
                         e,
                     )
-                    elapsed = float(task_timeout_seconds)
-                    question_results = []
-                    for q in doc.questions:
-                        is_correct, extracted = (
-                            (False, "Unknown") if q.answer else (None, "Unknown")
-                        )
-                        question_results.append(
-                            QuestionResult(
-                                question_id=q.question_id,
-                                question=q.question,
-                                ground_truth=q.answer,
-                                prediction="Unknown",
-                                extracted_answer="Unknown",
-                                is_correct=is_correct,
-                            )
-                        )
-                    result = DocumentResult(
-                        doc_id=doc.doc_id,
-                        doc_category=doc.doc_category,
-                        questions=question_results,
-                        elapsed_seconds=elapsed,
-                    )
-                    trajectories = {}
+                    doc_span.set_attribute("error", str(e)[:500])
+                    doc_span.set_attribute("error_type", type(e).__name__)
+                    doc_span.set_attribute("retry_pending", True)
+                    print(f"  {doc.doc_id} -> ERROR ({type(e).__name__}); will retry next launch")
+                    return None
             result.trace_id = trace_id
             doc_span.set_attribute("num_questions", len(result.questions))
             scored = [q for q in result.questions if q.is_correct is not None]
@@ -345,10 +337,24 @@ def evaluate(
         max_concurrency=max_concurrency,
         output_dir=str(output_dir),
     ) as eval_span:
+        failed = 0
         with ThreadPoolExecutor(max_workers=max_concurrency) as executor:
             futures = {executor.submit(_process_doc, doc): doc for doc in pending}
             for future in as_completed(futures):
-                results.append(future.result())
+                r = future.result()
+                if r is None:
+                    failed += 1
+                else:
+                    results.append(r)
+
+        if failed:
+            logger.warning(
+                "%d/%d documents failed (timeout or exception) and were not "
+                "persisted — re-run the same command to retry them.",
+                failed,
+                len(pending),
+            )
+            eval_span.set_attribute("failed_documents", failed)
 
         summary = _compute_summary(results)
         eval_span.set_attribute("overall_accuracy", summary.get("overall_accuracy"))
