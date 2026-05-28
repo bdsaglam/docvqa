@@ -96,8 +96,7 @@ _TASK_BODY = (
     "document.\n\n"
 
     "## DOCUMENT-SHAPE GUIDANCE\n"
-    "These patterns are document-shape, not benchmark-category. Apply the "
-    "ones whose shape matches the document you see.\n\n"
+    "Apply the patterns below that match the document at hand.\n\n"
 
     "- **High-density single page** (large image, lots of detail per "
     "page): a single full-page `batch_look` will miss fine detail. Survey "
