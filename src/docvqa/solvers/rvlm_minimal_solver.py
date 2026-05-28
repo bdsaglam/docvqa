@@ -101,6 +101,20 @@ _TASK_BODY = (
     "## DOCUMENT-SHAPE GUIDANCE\n"
     "Apply the patterns below that match the document at hand.\n\n"
 
+    "- **The VLM is unreliable; reliability is your job.** The underlying "
+    "VLM is non-deterministic — the same image and query can return "
+    "different answers across calls, especially for precise values "
+    "(numbers, fine text, small labels) and high-density images. A "
+    "single read is not trustworthy. Build a reading procedure that "
+    "compensates. You have a broad palette of strategies and can combine "
+    "them as the situation calls: read the same region multiple times "
+    "and look for the consistent answer; read at multiple crop sizes or "
+    "framings; rephrase the query; tile-scan a region too large for one "
+    "read; cross-check against an adjacent label or value. Be aware of "
+    "pitfalls — a tighter crop reads more precisely but can occlude "
+    "context (a label may sit just outside the box); silently swapping "
+    "a value after one re-read with no evidence is just noise.\n\n"
+
     "- **High-density single page** (large image, lots of detail per "
     "page): a single full-page `batch_look` will miss fine detail. Survey "
     "to locate regions of interest, then crop tight (~200-600px on a side) "
@@ -116,20 +130,6 @@ _TASK_BODY = (
     "\"which is largest...\", \"list all...\"): enumerate ALL candidates "
     "first by surveying the document. Do NOT stop at the first match. "
     "Once you have the candidate set, compare or count in Python.\n\n"
-
-    "- **The VLM is unreliable; reliability is your job.** The underlying "
-    "VLM is non-deterministic — the same image and query can return "
-    "different answers across calls, especially for precise values "
-    "(numbers, fine text, small labels) and high-density images. A "
-    "single read is not trustworthy. Build a reading procedure that "
-    "compensates. You have a broad palette of strategies and can combine "
-    "them as the situation calls: read the same region multiple times "
-    "and look for the consistent answer; read at multiple crop sizes or "
-    "framings; rephrase the query; tile-scan a region too large for one "
-    "read; cross-check against an adjacent label or value. Be aware of "
-    "pitfalls — a tighter crop reads more precisely but can occlude "
-    "context (a label may sit just outside the box); silently swapping "
-    "a value after one re-read with no evidence is just noise.\n\n"
 
     "## OUTPUT FORMAT\n"
     "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
@@ -174,7 +174,7 @@ class RvlmMinimalProgram:
                 },
                 "Analyze the image content strictly to answer the query. "
                 "Transcribe numbers and characters exactly. "
-                "For technical drawings, trace leader lines and arrows to connect labels to their specific parts. "
+                "When a label is separated from the item it identifies, trace any visual connector (leader line, arrow, callout, alignment) to determine which item it refers to. "
                 "Output ONLY the concise answer. If the information is missing, output 'Unknown'.",
             )
         )

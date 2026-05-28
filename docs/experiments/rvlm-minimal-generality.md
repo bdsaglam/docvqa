@@ -29,20 +29,50 @@ tests the content.
 
 ## Implementation
 
-`src/docvqa/solvers/rvlm_minimal_solver.py`. The solver body has:
+`src/docvqa/solvers/rvlm_minimal_solver.py`. Two surfaces of
+benchmark engineering are removed from the solver body simultaneously:
+
+**(1) Category tips block — removed.** The 10.7 kB of hand-crafted
+DocVQA-2026 per-category tips (business_report, comics,
+engineering_drawing, infographics, maps, science_paper, science_poster,
+slide) is gone. Replaced with 4 generic document-shape patterns: a
+**high-density single page** strategy, a **many-page document** strategy,
+a **counting / superlatives** strategy, and a principle-level
+**verification under VLM stochasticity** bullet (re-read with different
+crops, look for consistency across reads, rephrase, tile-scan, cross-check
+adjacent labels; trust the *procedure*, not any single read).
+
+**(2) VLM sub-call signature — generalized.** The VLM
+`dspy.Predict` instructions previously contained
+*"For technical drawings, trace leader lines and arrows to connect
+labels to their specific parts."* — clearly the residue of an
+engineering_drawing failure mode. Generalized to the underlying
+principle: *"When a label is separated from the item it identifies,
+trace any visual connector (leader line, arrow, callout, alignment) to
+determine which item it refers to."* No benchmark-specific terms.
+
+Solver body structure (full):
 
 1. **Tool docs** (brief): `batch_look` + `SUBMIT`, with "what / when /
    how" structure.
 2. **Approach**: SURVEY → LOCATE → EXTRACT → VERIFY → SUBMIT.
-3. **Document-shape guidance** (4 generic patterns, no benchmark
-   category names): high-density single page; many-page document;
-   counting/superlatives; VLM disagreement.
+3. **Document-shape guidance** (3 generic patterns + 1 verification
+   principle): no benchmark category names.
 
-Zero DocVQA-2026 strings in the solver body. Dataset-specific content
-stays in `profile.answer_formatting_rules` (1.46 kB: the official
-answer format rules — "Unknown" sentinel, date format, etc.) and
+Zero DocVQA-2026 strings in the solver body or the VLM sub-call
+signature. Dataset-specific content stays in
+`profile.answer_formatting_rules` (1.46 kB: the official answer format
+rules — "Unknown" sentinel, date format, etc.) and
 `profile.question_format_hint_fn` (None for DocVQA-2026; per-question
 hint for MMLongBench-Doc).
+
+**Confound to flag in the paper.** Because the paired Δ vs
+`rvlm_unified` measures the joint effect of removing (1) and (2)
+simultaneously, we cannot separately attribute Δ to category-tip
+removal vs VLM-signature-generalization. If Δ ≈ 0pp the headline
+("benchmark engineering doesn't help") is unaffected. If Δ ≪ 0pp we
+would need a follow-up cell that removes only (1) or only (2) to
+attribute. Mitigation deferred unless the n=8 result motivates it.
 
 Prompt sizes (DocVQA-2026 profile):
 
