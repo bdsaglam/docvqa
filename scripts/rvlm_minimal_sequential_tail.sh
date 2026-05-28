@@ -2,13 +2,15 @@
 # Sequential tail for the rvlm_minimal n=8 chain after the overlap
 # experiment caused per-doc timeouts in t2/t3/t4.
 #
-# Plan:
+# Plan (refills prioritized to get full-denominator scores sooner):
 #  1. Wait for t6 to finish (it's running solo; should be 80/80 clean).
-#  2. Launch t7 sequentially (no overlap, no vllm contention).
-#  3. Launch t8 sequentially.
-#  4. Refill t2/t3/t4 missing docs. The runner is per-doc-resumable;
-#     deleting the old results.json forces the runner to regenerate it
-#     over the full doc set when the missing docs are processed.
+#  2. Refill t2/t3/t4 missing docs FIRST. The runner is per-doc
+#     resumable; deleting the stale results.json forces the runner to
+#     regenerate it over the full 25-doc set after running the missing
+#     2-3 docs. Once these land we have 6 complete trials (t1..t6) for
+#     a paired-vs-unified read-out before the chain fully closes.
+#  3. Launch t7 sequentially (no vllm contention).
+#  4. Launch t8 sequentially.
 #  5. Touch /tmp/rvlm-minimal-chain.done so the pre-existing watcher
 #     fires and notifies.
 #
@@ -42,11 +44,7 @@ while [ ! -f output/runs/rvlm-minimal-val-t6/results.json ]; do
 done
 note "t6 done"
 
-# --- 2-3. Sequential t7 + t8 ---
-run_solo rvlm-minimal-val-t7
-run_solo rvlm-minimal-val-t8
-
-# --- 4. Refill t2/t3/t4 missing docs ---
+# --- 2. Refill t2/t3/t4 missing docs (prioritized for fast partial readout) ---
 # Delete the trial-level results.json so the runner regenerates it over
 # the FULL doc set when it re-runs the missing per-doc results.
 for t in 2 3 4; do
@@ -58,6 +56,10 @@ for t in 2 3 4; do
   fi
   run_solo "${rid}"
 done
+
+# --- 3-4. Sequential t7 + t8 ---
+run_solo rvlm-minimal-val-t7
+run_solo rvlm-minimal-val-t8
 
 # --- 5. Sentinel ---
 touch /tmp/rvlm-minimal-chain.done
