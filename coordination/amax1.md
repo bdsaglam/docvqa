@@ -10,7 +10,19 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-(none)
+### A. `[→]` ReAct baseline n=8 val — REPL-vs-no-REPL ablation
+
+Claimed 2026-05-28T14:47Z. tmux `react-chain` running
+`scripts/run_react_chain.sh` (c=24, run_ids `react-val-t1..t8`).
+Tests whether the code-REPL in LeanRLM is doing real work — vs plain
+`dspy.ReAct` with the same VLM tool surface (look + look_many) but no
+Python execution. Paired comparison vs `rvlm` (per-category) and
+`rvlm_unified` (decided default). Smoke test on `comics_1` passed
+(1/1 = 100%, 3min wall). Solver: `src/docvqa/solvers/react_solver.py`;
+config: `configs/solver/react.yaml` (commit `96246ca`).
+
+User away; autonomous execution authorized. Heartbeat cron `3e93a103`
++ watcher `b8ba1tn0o` will do final pull/commit/push when done.
 
 ## Queued
 
