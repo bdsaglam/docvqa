@@ -23,11 +23,12 @@ DocVQA-2026 val). The evaluator dispatches scoring per-example.
 Student LM: Qwen 3.5 27B at localhost:8927 (the model being optimized
 for).
 
-Reflection LM: ``vertex_ai/gemini-3-flash-preview`` (Gemini 3 Flash).
-Stronger reflection model than the student is the canonical GEPA
-recipe; Flash is the cheapest frontier-grade option we have available
-and matches the archived ``optimize_flat_batch.py`` precedent of using
-a Vertex Gemini for reflection.
+Reflection LM: ``vertex_ai/gemini-3.5-flash`` (Gemini 3.5 Flash, GA
+as of Google I/O 2026). Stronger reflection model than the student is
+the canonical GEPA recipe; 3.5 Flash is the latest frontier-grade
+Flash-tier option available and matches the archived
+``optimize_flat_batch.py`` precedent of using a Vertex Gemini for
+reflection.
 
 Usage:
     uv run python scripts/optimize_rvlm.py
@@ -111,10 +112,11 @@ QWEN_27B_CONFIG = LMConfig(
     max_tokens=None,
 )
 
-# Reflection LM = Gemini 3 Flash via Vertex (cheapest frontier-grade
-# option; matches archived ``optimize_flat_batch.py`` precedent of
-# using a Vertex Gemini for reflection).
-REFLECTION_LM_MODEL = "vertex_ai/gemini-3-flash-preview"
+# Reflection LM = Gemini 3.5 Flash via Vertex (GA as of Google I/O
+# 2026; latest frontier-grade Flash-tier option). Matches the archived
+# ``optimize_flat_batch.py`` precedent of using a Vertex Gemini for
+# reflection.
+REFLECTION_LM_MODEL = "vertex_ai/gemini-3.5-flash"
 
 # ASI string formatter cap (per-question feedback lines).
 MAX_FEEDBACK_QUESTIONS = 6
