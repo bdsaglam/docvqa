@@ -117,10 +117,10 @@ accuracy doesn't depend on c. Launched 2026-05-27T23:11Z via
 | t3 | `rvlm-val-t3` | 41.2% | 33/80 | last doc ~2h on a hard tile question |
 | t4 | `rvlm-val-t4` | 42.5% | 34/80 | |
 | t5 | `rvlm-val-t5` | 41.2% | 33/80 | |
-| t6 | `rvlm-val-t6` | **43.75%** | 35/80 | high so far |
-| t7 | `rvlm-val-t7` | in progress | resumed standalone | re-launched cleanly after a contamination incident (see below) |
-| t8 | `rvlm-val-t8` | pending | — | will launch after t7 finishes |
-| **n=6 mean** | — | **40.81%** | **std 2.60pp** | t1..t6 only |
+| t6 | `rvlm-val-t6` | 43.75% | 35/80 | |
+| t7 | `rvlm-val-t7` | 40.0% | 32/80 | resumed clean after t7 contamination incident (see below) |
+| t8 | `rvlm-val-t8` | in progress | standalone | launched 2026-05-28T12:37Z in tmux `rvlm-t8` (under new runner-timeout-retry code, commit `8309710`) |
+| **n=7 mean** | — | **40.71%** | **std 2.38pp** | t1..t7 only |
 
 ### Per-trial paired comparison (unified − rvlm)
 
@@ -132,18 +132,19 @@ accuracy doesn't depend on c. Launched 2026-05-27T23:11Z via
 | t4 | 35.0% | 42.5% | **−7.50pp** |
 | t5 | 42.5% | 41.2% | +1.25pp |
 | t6 | 47.5% | 43.75% | +3.75pp |
-| t7 | 40.0% | in flight | — |
-| t8 | in flight | pending | — |
+| t7 | 40.0% | 40.0% | 0.00pp |
+| t8 | 37.5% | in flight | — |
 
-**Paired n=6: Δ mean = +0.83pp, std = 4.98pp, SE = 2.03pp.** 95% CI
-[t₅=2.571]: [−4.39, +6.06]pp — still easily contains zero. The early
-+5.0pp lift at t1/t2 did not hold up; t6 swung Δ back positive
-(+3.75pp) but the per-trial spread remains wide.
+**Paired n=7: Δ mean = +0.71pp, std = 4.56pp, SE = 1.72pp.** 95% CI
+[t₆=2.447]: [−3.50, +4.93]pp — interval tightened by t7's exact zero,
+still cleanly contains zero. The early +5.0pp lift at t1/t2 didn't
+hold up; t6 swung back positive (+3.75pp); t7 landed exactly on the
+mean. The per-trial spread is dominated by t4's −7.5pp outlier.
 
 By the pre-set decision table this stays in the **"Δ ≈ 0pp → promote
-unified to default"** cell. The promote call still needs t7/t8 to
-tighten the interval, but the direction is locked: no robust accuracy
-lift, no robust accuracy loss.
+unified to default"** cell. Direction is now well-locked: no robust
+accuracy lift, no robust accuracy loss. t8 (rvlm side) will land the
+final n=8 paired number.
 
 ### Per-category breakdown
 
@@ -179,13 +180,13 @@ make it worse.
 
 ## Summary
 
-State at 2026-05-28T12:32+03:
+State at 2026-05-28T15:38+03:
 
 | Arm | n | Mean | Std | Range |
 |---|---|---|---|---|
 | `rvlm_unified` (amax7) | **8** | **40.94%** | **4.05pp** | 35.0–47.5 |
-| `rvlm` paired baseline (amax1) | 6 | 40.81% | 2.60pp | 36.2–43.75 |
-| Δ paired (t1..t6) | 6 | +0.83pp | 4.98pp | −7.5..+5.0 |
+| `rvlm` paired baseline (amax1) | **7** | **40.71%** | **2.38pp** | 36.25–43.75 |
+| Δ paired (t1..t7) | 7 | **+0.71pp** | 4.56pp | −7.5..+5.0 |
 
 **Marginal Δ vs paired Δ.** Marginal Δ (unified n=8 mean − rvlm n=6
 mean) = +0.13pp; paired Δ across the 6 matched trials is +0.83pp

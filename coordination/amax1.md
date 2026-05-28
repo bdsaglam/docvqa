@@ -12,14 +12,15 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ### 1. `[→]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
 
-Claimed 2026-05-27T23:11Z. Chain tmux `rvlm-paired` killed (after a
-parallel-t7-vs-chain-t7 collision; see experiment doc for details).
-Now: t7 running standalone in tmux `rvlm-t7` (restarted clean after
-contamination recovery), t8 pending. c=24. run_ids
+Claimed 2026-05-27T23:11Z. Chain tmux `rvlm-paired` killed earlier
+(parallel-t7-vs-chain-t7 collision; details in experiment doc). t7
+ran standalone (re-launched clean after contamination recovery) and
+finished. t8 standalone now running in tmux `rvlm-t8` under the new
+runner-timeout-retry behavior (commit `8309710`). c=24. run_ids
 `rvlm-val-t1`..`rvlm-val-t8`.
 
-t1..t6 done (n=6 mean **40.81%**, std 2.60pp). Per-trial table and
-paired comparison vs `rvlm_unified` in
+t1..t7 done (n=7 mean **40.71%**, std 2.38pp). Per-trial table and
+paired Δ in
 [docs/experiments/unified-category-tips-ablation.md](../docs/experiments/unified-category-tips-ablation.md).
 
 **Priority over model-axis cells below.** amax7 is running `rvlm_unified`
