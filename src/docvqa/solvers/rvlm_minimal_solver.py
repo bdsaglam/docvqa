@@ -114,11 +114,13 @@ _TASK_BODY = (
     "first by surveying the document. Do NOT stop at the first match. "
     "Once you have the candidate set, compare or count in Python.\n\n"
 
-    "- **VLM disagreement**: when two reads of the same region give "
-    "different values, crop tighter on the specific detail and do ONE "
-    "tie-breaking read at higher resolution. Give more weight to the "
-    "higher-resolution crop. Never silently adopt a new number from a "
-    "general 'verification' pass.\n\n"
+    "- **Verify precise readings — the VLM is stochastic**: the "
+    "underlying VLM is non-deterministic. The same image and query can "
+    "return different answers across calls. For precise values "
+    "(numbers, fine text, small labels), do NOT trust a single read. "
+    "Re-read with a tighter crop at higher resolution and compare. When "
+    "two reads disagree, trust the tighter / higher-resolution one. "
+    "Never silently adopt a new number from a general re-read.\n\n"
 
     "## OUTPUT FORMAT\n"
     "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
