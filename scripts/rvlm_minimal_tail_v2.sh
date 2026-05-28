@@ -10,9 +10,11 @@
 # After all refills land, run t7 + t8 sequentially (they're full c=32
 # trials and the contention story bites us at 2 of those in flight).
 #
-# Per-doc timeout bumped to 1800s (30 min) for refills + t7/t8 because
-# some long docs (science_paper_1, business_report_3) exceeded the
-# default 600s even when running solo.
+# Per-doc timeout: leaves the default (14400s = 4h, from configs/config.yaml)
+# in place. t1's data showed long docs taking up to 85 min (infographics_1
+# at 5097s, business_report_4 at 4468s, etc.), so a 30-min override
+# we tried earlier was way too tight and killed every science_paper_1
+# attempt.
 
 set -uo pipefail
 cd /home/baris/repos/docvqa
@@ -30,8 +32,7 @@ launch_bg() {
       solver=rvlm_minimal \
       data.split=val data.num_samples=null \
       max_concurrency=32 \
-      ++task_timeout_seconds=1800 \
-      run_id="${rid}" >> "$LOG" 2>&1
+        run_id="${rid}" >> "$LOG" 2>&1
     note "${rid} finished" ) &
 }
 
@@ -44,7 +45,6 @@ run_solo() {
     solver=rvlm_minimal \
     data.split=val data.num_samples=null \
     max_concurrency=32 \
-    ++task_timeout_seconds=1800 \
     run_id="${rid}" >> "$LOG" 2>&1
   note "${rid} finished"
 }
