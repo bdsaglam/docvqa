@@ -1,0 +1,343 @@
+"""Minimal-prompt rvlm variant: tests the proposed method's generality.
+
+Why this exists. The current ``rvlm`` / ``rvlm_unified`` solvers carry a
+DocVQA-2026-specific category-tips block in their system prompt (8
+hand-crafted blocks: business_report, comics, engineering_drawing,
+infographics, maps, science_paper, science_poster, slide). That gives a
+reviewer a legitimate threat to the paper's generality claim — *"the
+scaffold only works because the prompt was tuned for this benchmark."*
+
+``rvlm_minimal`` strips the benchmark-specific content from the solver
+body. What remains is:
+
+1. **Tool docs** (brief): what ``batch_look`` does, when to call it,
+   how to call it; the ``SUBMIT(answer=...)`` terminal action.
+2. **Approach** (universal): SURVEY → LOCATE → EXTRACT → VERIFY → SUBMIT.
+3. **Document-shape guidance** (4 generic patterns, no benchmark
+   category names): high-density single page, many-page document,
+   counting / superlatives, VLM disagreement resolution.
+
+Dataset-specific content (answer format rules, the "Unknown" sentinel,
+the percentage-difference convention) stays in
+``profile.answer_formatting_rules`` and is appended unchanged. The
+solver body itself is byte-identical across DocVQA-2026, MP-DocVQA,
+and MMLongBench-Doc — only the profile changes.
+
+If this scores within trial noise of ``rvlm_unified``, that's direct
+evidence for the D-006 hypothesis: recursive perception is the
+load-bearing mechanism; the per-category tips are procedural, not
+foundational. If it scores meaningfully lower, the paper honestly
+reports the cost of generality.
+"""
+
+from __future__ import annotations
+
+import logging
+import math
+import os
+import tempfile
+from typing import Any
+
+import dspy
+import logfire
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
+
+from docvqa.data import Document, Question
+from docvqa.datasets.profile import DatasetProfile, get_profile
+from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
+from docvqa.solvers.rvlm_unified_solver import (
+    _build_signature,
+    _create_tools,
+    _build_sandbox_code,
+)
+from docvqa.types import LMConfig
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Minimal task body: tool docs + approach + document-shape patterns.
+# Zero benchmark-category names. Dataset-specific answer rules are
+# appended by ``profile.answer_formatting_rules`` at runtime.
+# ---------------------------------------------------------------------------
+
+_TASK_BODY = (
+    "You are a Document Visual Question Answering agent. You answer a question about a document by "
+    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
+
+    "## DATA\n"
+    "- `question`: The question you must answer.\n"
+    "- `pages`: list of page images (PIL Images, 0-indexed). Pass them to tool calls.\n\n"
+
+    "## TOOLS\n"
+    "- batch_look(requests) -> list[str]\n"
+    "  What: send one or more images to a VLM in parallel.\n"
+    "  When: any visual question — full-page survey, region crop, value read.\n"
+    "  How: list of (image, query) tuples. Image is any PIL Image — a page "
+    "(`pages[i]`) or a crop (`pages[i].crop((left, top, right, bottom))`). "
+    "Returns answers in the same order. For a single query: "
+    "`batch_look([(image, query)])[0]`.\n"
+    "- SUBMIT(answer=\"...\")\n"
+    "  What: deliver the final answer and terminate.\n"
+    "  When: you have the answer and have verified it.\n\n"
+
+    "## APPROACH\n"
+    "1. SURVEY — read the document at a coarse level to build a mental map. "
+    "Use full-page `batch_look` queries; for many-page docs, batch a sample "
+    "of pages in one call.\n"
+    "2. LOCATE — identify the page(s) and region(s) that contain the answer.\n"
+    "3. EXTRACT — crop tight on the relevant region and read the values "
+    "with `batch_look`. Ask ONE simple factual question per VLM call.\n"
+    "4. VERIFY — if the value is ambiguous, crop tighter and read again. "
+    "Trust the higher-resolution read.\n"
+    "5. SUBMIT — call `SUBMIT(answer=\"...\")` once you have the answer.\n\n"
+
+    "Never use outside or world knowledge. Every answer must come from the "
+    "document.\n\n"
+
+    "## DOCUMENT-SHAPE GUIDANCE\n"
+    "These patterns are document-shape, not benchmark-category. Apply the "
+    "ones whose shape matches the document you see.\n\n"
+
+    "- **High-density single page** (large image, lots of detail per "
+    "page): a single full-page `batch_look` will miss fine detail. Survey "
+    "to locate regions of interest, then crop tight (~200-600px on a side) "
+    "and read each crop with one focused query. Use `pages[i].size` to "
+    "compute crop coordinates.\n\n"
+
+    "- **Many-page document** (slides, papers, reports): you do NOT need to "
+    "read every page. Survey in batches "
+    "(`batch_look([(pages[i], 'summarize') for i in sample])`) to build a "
+    "table-of-contents in your head. Then drill into the relevant section.\n\n"
+
+    "- **Counting / superlatives / 'all of'** questions (\"how many...\", "
+    "\"which is largest...\", \"list all...\"): enumerate ALL candidates "
+    "first by surveying the document. Do NOT stop at the first match. "
+    "Once you have the candidate set, compare or count in Python.\n\n"
+
+    "- **VLM disagreement**: when two reads of the same region give "
+    "different values, crop tighter on the specific detail and do ONE "
+    "tie-breaking read at higher resolution. Give more weight to the "
+    "higher-resolution crop. Never silently adopt a new number from a "
+    "general 'verification' pass.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
+    "- The answer must follow these formatting rules:\n\n"
+)
+
+
+def _build_task_instructions(profile: DatasetProfile) -> str:
+    return _TASK_BODY + profile.answer_formatting_rules
+
+
+SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)  # for paper-quotable sizing
+
+
+class RvlmMinimalProgram:
+    """Minimal-prompt RVLM solver. See module docstring."""
+
+    def __init__(
+        self,
+        vlm_lm: dspy.LM,
+        profile: DatasetProfile,
+        max_iterations: int = 25,
+        rlm_type: str = "lean",
+        page_factor: float = 1.5,
+        question_concurrency: int = 4,
+        batch_concurrency: int = 8,
+    ):
+        self.vlm_lm = vlm_lm
+        self.profile = profile
+        self.max_iterations = max_iterations
+        self.rlm_type = rlm_type
+        self.page_factor = page_factor
+        self.question_concurrency = question_concurrency
+        self.batch_concurrency = batch_concurrency
+
+        self.vlm_predict = dspy.Predict(
+            dspy.Signature(
+                {
+                    "image": (dspy.Image, dspy.InputField(desc="Page or cropped region image")),
+                    "query": (str, dspy.InputField(desc="What to look for or describe")),
+                    "answer": (str, dspy.OutputField(desc="Concise response")),
+                },
+                "Analyze the image content strictly to answer the query. "
+                "Transcribe numbers and characters exactly. "
+                "For technical drawings, trace leader lines and arrows to connect labels to their specific parts. "
+                "Output ONLY the concise answer. If the information is missing, output 'Unknown'.",
+            )
+        )
+
+    def _per_question_prefix(self, q: Question) -> str:
+        if self.profile.question_format_hint_fn is None:
+            return ""
+        hint = self.profile.question_format_hint_fn(q)
+        return f"\n{hint}\n" if hint else ""
+
+    def solve_document(self, document: Document) -> tuple[dict[str, str], dict[str, list[dict]]]:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for i, img in enumerate(document.images):
+                img.save(os.path.join(tmpdir, f"page_{i}.png"), format="PNG")
+
+            doc_info = f"Category: {document.doc_category}, Pages: {len(document.images)}"
+
+            num_pages = len(document.images)
+            page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
+            max_iter = self.max_iterations + int(page_bonus)
+
+            # No category tips, no per-document dispatch — the body is the body.
+            instructions = _build_task_instructions(self.profile)
+            tools = _create_tools(self.vlm_predict, self.vlm_lm, self.batch_concurrency)
+            sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
+
+            def _solve_question(q: Question):
+                with logfire.span(
+                    "solve_rvlm",
+                    doc_id=document.doc_id,
+                    question_id=q.question_id,
+                    question=q.question[:200],
+                    profile=self.profile.name,
+                ) as q_span:
+                    question_text = q.question + self._per_question_prefix(q)
+                    RLMClass = {"code": CodeRLM, "lean": LeanRLM, "thinking": ThinkingRLM}.get(self.rlm_type, RLM)
+                    rlm = RLMClass(
+                        signature=_build_signature(instructions),
+                        max_iterations=max_iter,
+                        max_llm_calls=max_iter * 3,
+                        tools=tools,
+                        verbose=True,
+                        sandbox_code=sandbox_code,
+                    )
+                    logger.info(
+                        "RVLM-MIN [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                        self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
+                    )
+
+                    def _is_rate_limit(e: BaseException) -> bool:
+                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
+
+                    @retry(
+                        retry=retry_if_exception(_is_rate_limit),
+                        stop=stop_after_attempt(4),
+                        wait=wait_exponential(multiplier=30, min=30, max=120),
+                        before_sleep=lambda rs: logger.warning(
+                            "Rate limit, retry %d in %.0fs", rs.attempt_number, rs.next_action.sleep  # type: ignore[union-attr]
+                        ),
+                        reraise=True,
+                    )
+                    def _solve_one():
+                        return rlm(question=question_text, doc_info=doc_info)
+
+                    result = _solve_one()
+                    answer = str(result.answer or "").strip()
+                    trajectory = result.trajectory
+
+                    if not answer:
+                        answer = "Unknown"
+
+                    q_span.set_attribute("num_iterations", len(trajectory))
+                    q_span.set_attribute("prediction", answer[:200])
+
+                    if q.answer is not None:
+                        is_correct, extracted = self.profile.score_fn(answer, q.answer, q)
+                        q_span.set_attribute("is_correct", is_correct)
+                        q_span.set_attribute("ground_truth", q.answer[:200])
+                        q_span.set_attribute("extracted_answer", extracted[:200])
+                        logger.info(
+                            "RVLM-MIN[%s] Q %s: %s (GT=%s, PRED=%s)",
+                            self.profile.name,
+                            q.question_id,
+                            "CORRECT" if is_correct else "WRONG",
+                            q.answer[:40],
+                            extracted[:40],
+                        )
+
+                    return q.question_id, answer, trajectory
+
+            predictions: dict[str, str] = {}
+            trajectories: dict[str, list[dict]] = {}
+
+            if self.question_concurrency <= 1:
+                for q in document.questions:
+                    qid, answer, trajectory = _solve_question(q)
+                    predictions[qid] = answer
+                    trajectories[qid] = trajectory
+            else:
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+
+                max_w = min(self.question_concurrency, len(document.questions))
+                logger.info("RVLM-MIN: running %d questions with concurrency=%d", len(document.questions), max_w)
+                with ThreadPoolExecutor(max_workers=max_w) as pool:
+                    futures = {pool.submit(_solve_question, q): q for q in document.questions}
+                    for future in as_completed(futures):
+                        qid, answer, trajectory = future.result()
+                        predictions[qid] = answer
+                        trajectories[qid] = trajectory
+
+            correct = 0
+            scored = 0
+            for q in document.questions:
+                if q.answer is not None:
+                    scored += 1
+                    if self.profile.score_fn(predictions[q.question_id], q.answer, q)[0]:
+                        correct += 1
+            if scored > 0:
+                logger.info(
+                    "RVLM-MIN [%s] doc %s: %d/%d = %.1f%%",
+                    self.profile.name, document.doc_id, correct, scored,
+                    100 * correct / scored,
+                )
+
+            return predictions, trajectories
+
+
+def create_rvlm_minimal_program(
+    profile_name: str | None = None,
+    dataset: str | None = None,
+    max_iterations: int = 25,
+    vlm: dict[str, Any] | None = None,
+    rlm_type: str = "lean",
+    page_factor: float = 1.5,
+    question_concurrency: int = 4,
+    batch_concurrency: int = 8,
+) -> RvlmMinimalProgram:
+    """Hydra factory. Profile resolution: same as ``rvlm_unified_solver``."""
+    from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
+
+    if profile_name is not None:
+        for p in _PROFILES.values():
+            if p.name == profile_name:
+                profile = p
+                break
+        else:
+            profile = get_profile(profile_name)
+    elif dataset is not None:
+        profile = get_profile(dataset)
+    else:
+        profile = get_profile("VLR-CVC/DocVQA-2026")
+
+    vlm_config = LMConfig(
+        model=vlm["model"],
+        api_base=vlm.get("api_base"),
+        api_key=vlm.get("api_key"),
+        max_tokens=vlm.get("max_tokens", 65536),
+        temperature=vlm.get("temperature", 1.0),
+        top_p=vlm.get("top_p"),
+        top_k=vlm.get("top_k"),
+        presence_penalty=vlm.get("presence_penalty"),
+        enable_thinking=vlm.get("enable_thinking", False),
+        vertex_location=vlm.get("vertex_location"),
+    ) if vlm and vlm.get("model") else LMConfig()
+
+    vlm_lm = vlm_config.to_dspy_lm()
+
+    return RvlmMinimalProgram(
+        vlm_lm=vlm_lm,
+        profile=profile,
+        max_iterations=max_iterations,
+        rlm_type=rlm_type,
+        page_factor=page_factor,
+        question_concurrency=question_concurrency,
+        batch_concurrency=batch_concurrency,
+    )

@@ -8,22 +8,24 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` unified-tips n=2..n=8 val (task #28) — started 2026-05-28T02:10+03
+### `[→]` rvlm_minimal n=8 val — generality test (task #31) — started 2026-05-28T16:??+03
 
-User opted to skip the D-008 n=2 escalation step and run all 8 trials
-directly. t1 = 45.0%. The paired-conditions rvlm baseline runs on amax1
-in parallel (see coordination/amax1.md cell #1) — same model, prompts,
-c, paired by trial number.
+Tests whether the proposed method's score depends on benchmark-tuned
+category tips. Strip the 8 DocVQA-2026 category tip blocks; keep only
+4 generic document-shape patterns in the solver body. Paired
+comparison vs `rvlm_unified` (amax7 t1..t8, already done) by trial.
 
 ```bash
-tmux new-session -d -s unified-tips-chain bash scripts/run_unified_tips_chain.sh
-# Resumes-on-crash: bash scripts/run_unified_tips_chain.sh (it skips
-# completed run_ids).
+tmux new-session -d -s rvlm-minimal-chain bash scripts/run_rvlm_minimal_chain.sh
+# Resumable: bash scripts/run_rvlm_minimal_chain.sh (skips completed run_ids).
 ```
 
-- Expected wall: ~7 × ~50min ≈ 6h (Qwen 3.5 27B vllm, c=32)
-- Compare per-trial-pair against `rvlm-val-t{1..8}` on amax1
-- Decision gate: see `docs/experiments/unified-category-tips-ablation.md`
+- Expected wall: 8 × ~50min ≈ 7h (Qwen 3.5 27B vllm, c=32)
+- run_ids: `rvlm-minimal-val-t{1..8}`
+- Decision gate + paired analysis: `docs/experiments/rvlm-minimal-generality.md`
+- Strongest paper outcome: Δ ≈ 0pp → `rvlm_minimal` becomes the
+  proposed method; `rvlm` / `rvlm_unified` become engineering
+  ablations showing what tip-tuning buys.
 
 ## Queued
 
@@ -67,20 +69,18 @@ uv run python evals.py \
 
 ## Done
 
-### `[✓]` unified-tips n=1 val (task #25) — 2026-05-28
+### `[✓]` unified-tips n=8 val (tasks #25 + #28) — 2026-05-28
 
-run_id: `rvlm-unified-val-t1` · **45.0%** (36/80) on Qwen 3.5 27B local,
-c=32. Per-category: infographics 80%, comics 60%, eng_drawing 50%,
-slide 50%, science_poster 50%, business_report 40%, science_paper 30%,
-**maps 0%**.
+run_ids: `rvlm-unified-val-t{1..8}` · **n=8 mean 40.94% ± 4.05pp**
+(range 35.0–47.5) on Qwen 3.5 27B local, c=32.
 
-Δ vs per-category-dispatch baseline per-trial mean (rvlm legacy
-`leanest_solo` n=8 = 42.8%): **+2.2pp**, well inside trial-noise band
-(~3pp std). Lands in the "Δ ≈ 0pp → promote unified to default" cell of
-the decision rules; needs n=2 to confirm before promoting.
+Paired vs amax1's `rvlm` baseline at t1..t7: Δ mean = +0.71pp,
+SE 1.72pp, 95% CI [−3.50, +4.93]pp — well inside noise. Per-trial
+table + paired analysis: `docs/experiments/unified-category-tips-ablation.md`.
 
-Writeup updated at `docs/experiments/unified-category-tips-ablation.md`.
-Next: file n=2 trial if promotion is the direction the paper wants.
+Variance asymmetry worth flagging for the promote-to-default
+decision: unified σ=4.05pp vs rvlm σ=2.38pp (~1.7×). Final paired
+analysis lands when amax1's t8 commits.
 
 ## Decision rules (set in advance)
 
