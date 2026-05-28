@@ -9,3 +9,7 @@ top_p: 0.95
 top_k: 20
 presence_penalty: null
 enable_thinking: true
+# Per-HTTP-request timeout (s). Default fits short-output solvers
+# (rvlm/LeanRLM). ReAct-style solvers should override at invocation
+# time via Hydra CLI: ``lm.timeout=1800``.
+timeout: 600

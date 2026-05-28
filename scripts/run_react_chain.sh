@@ -27,9 +27,14 @@ CONC=${CONC:-24}
 echo "=== react chain: t${START_TRIAL}..t${END_TRIAL}, c=${CONC} ==="
 for i in $(seq "${START_TRIAL}" "${END_TRIAL}"); do
   echo "--- react t${i} ---"
+  # lm.timeout=1800 overrides the 600s default in LMConfig (types.py). Other
+  # solvers stay at 600 since their per-call outputs are short; ReAct's
+  # late-trajectory completions on hard docs can exceed 10 min and hit
+  # litellm.Timeout under the default. See docs/experiments/react-baseline.md.
   uv run python evals.py \
     lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
     lm.enable_thinking=false \
+    lm.timeout=1800 \
     solver=react \
     data.split=val data.num_samples=null \
     max_concurrency="${CONC}" \

@@ -25,6 +25,11 @@ class LMConfig:
     top_k: Optional[int] = None
     presence_penalty: Optional[float] = None
     enable_thinking: Optional[bool] = None  # None = don't set, True/False = explicit
+    timeout: int = 600  # Per-HTTP-request timeout (s). Default fits short-output
+    # solvers (rvlm/LeanRLM). ReAct-style solvers should override (e.g.
+    # ``lm.timeout=1800`` via Hydra CLI) — their late-iteration trajectories
+    # can push a single completion past 10 min on Qwen 27B and trigger
+    # ``litellm.Timeout``.
 
     def to_dspy_lm(self) -> dspy.LM:
         """Create a DSPy LM from this config."""
@@ -58,5 +63,5 @@ class LMConfig:
             extra_body["top_k"] = self.top_k
         if extra_body:
             kwargs["extra_body"] = extra_body
-        kwargs["timeout"] = 600  # 10min timeout to prevent hanging
+        kwargs["timeout"] = self.timeout
         return dspy.LM(**kwargs)
