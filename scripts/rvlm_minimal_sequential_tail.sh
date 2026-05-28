@@ -39,23 +39,18 @@ run_solo() {
 }
 
 # --- 1. Refill incomplete trials with bumped per-doc timeout ---
-# (t6 was also a refill target; an earlier broken tail run deleted its
-# results.json so it now joins the refill loop with t2/t3/t4.)
 # Trials t2/t3/t4 missed 2-3 docs each from the overlap-induced
-# contention. t6 missed business_report_3 even running solo, suggesting
+# contention; t6 missed business_report_3 even running solo, suggesting
 # the 600s timeout is too tight for some long docs regardless of
 # contention. Refill all four with task_timeout_seconds=1800 (30 min).
 #
-# Delete the trial-level results.json so the runner regenerates it over
-# the FULL doc set after the missing per-doc results land.
+# No need to delete the trial-level results.json: the runner's
+# _load_completed() in src/docvqa/runner.py reads existing
+# tasks/<doc>/result.json files and _compute_summary() aggregates over
+# the FULL set (loaded + new), so re-running with the same run_id
+# regenerates results.json over all docs it can see on disk.
 for t in 2 3 4 6; do
-  rid=rvlm-minimal-val-t${t}
-  d=output/runs/${rid}
-  if [ -f "${d}/results.json" ]; then
-    note "removing stale ${d}/results.json to allow refill regeneration"
-    rm "${d}/results.json"
-  fi
-  run_solo "${rid}"
+  run_solo "rvlm-minimal-val-t${t}"
 done
 
 # --- 2. Sequential t7 + t8 ---
