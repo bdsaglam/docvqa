@@ -10,44 +10,7 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### 1. `[→]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
-
-Claimed 2026-05-27T23:11Z. Chain tmux `rvlm-paired` killed earlier
-(parallel-t7-vs-chain-t7 collision; details in experiment doc). t7
-ran standalone (re-launched clean after contamination recovery) and
-finished. t8 standalone now running in tmux `rvlm-t8` under the new
-runner-timeout-retry behavior (commit `8309710`). c=24. run_ids
-`rvlm-val-t1`..`rvlm-val-t8`.
-
-t1..t7 done (n=7 mean **40.71%**, std 2.38pp). Per-trial table and
-paired Δ in
-[docs/experiments/unified-category-tips-ablation.md](../docs/experiments/unified-category-tips-ablation.md).
-
-**Priority over model-axis cells below.** amax7 is running `rvlm_unified`
-t2..t8 to escalate the unified-tips ablation to n=8 (t1 = 45.0%). We have
-no current-prompt n=8 baseline for `rvlm` itself at c=32 — the legacy
-per-trial mean of 42.8% comes from pre-rename `leanest_solo` n=8 on older
-prompts. Without a matched-conditions `rvlm` baseline, the within-trial
-comparison for the unified-tips decision (promote vs keep) is weaker.
-
-This cell locks the matched-conditions baseline so the unified-vs-rvlm
-comparison is clean (same model, same prompts, same c, paired t1..t8
-trials).
-
-```bash
-# Bring up Qwen 3.5 27B vllm on amax1 (matching amax7's localhost:8927).
-# Then:
-tmux new-session -d -s rvlm-paired bash scripts/run_rvlm_paired_baseline.sh
-# Resumes-on-crash: bash scripts/run_rvlm_paired_baseline.sh (it skips
-# completed run_ids).
-```
-
-- Expected wall: ~7h (8 × ~50min)
-- Compare to: `rvlm_unified` t1..t8 from amax7 (paired by trial number)
-- All trials use `solver=rvlm`, `data.split=val`, `data.num_samples=null`,
-  `max_concurrency=32`, `lm.enable_thinking=false`. Identical to amax7's
-  unified-tips chain modulo `solver`.
-- run_ids: `rvlm-val-t1` through `rvlm-val-t8`.
+(none)
 
 ## Queued
 
@@ -88,7 +51,19 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 
 ## Done
 
-(none yet under new naming)
+### 1. `[✓]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
+
+Finished 2026-05-28T16:45 (c=24, run_ids `rvlm-val-t1`..`rvlm-val-t8`).
+**n=8 mean = 40.94%, std 2.29pp, range 36.25%–43.75%.** Paired vs amax7
+`rvlm_unified` n=8: **Δ = 0.00pp** (both arms 262/640 total correct),
+95% CI [−3.91, +3.91]pp — lands cleanly in "promote unified to default"
+per the pre-set decision table. Operational note: t6→t7 transition hit
+a same-`run_id` contamination incident (chain's auto-t7 launched in
+parallel with a standalone t7); recovered via clean restart on
+`science_paper_1`. Runner's silent-timeout fallback was changed to
+record-error-and-retry mid-chain (commit `8309710`). Full per-trial
+tables, paired Δ stats, contamination story, and silent-failure audit
+in [docs/experiments/unified-category-tips-ablation.md](../docs/experiments/unified-category-tips-ablation.md).
 
 ## Decision rules (set in advance)
 

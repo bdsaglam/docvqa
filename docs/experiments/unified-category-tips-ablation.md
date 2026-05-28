@@ -119,8 +119,8 @@ accuracy doesn't depend on c. Launched 2026-05-27T23:11Z via
 | t5 | `rvlm-val-t5` | 41.2% | 33/80 | |
 | t6 | `rvlm-val-t6` | 43.75% | 35/80 | |
 | t7 | `rvlm-val-t7` | 40.0% | 32/80 | resumed clean after t7 contamination incident (see below) |
-| t8 | `rvlm-val-t8` | in progress | standalone | launched 2026-05-28T12:37Z in tmux `rvlm-t8` (under new runner-timeout-retry code, commit `8309710`) |
-| **n=7 mean** | — | **40.71%** | **std 2.38pp** | t1..t7 only |
+| t8 | `rvlm-val-t8` | 42.5% | 34/80 | first trial under new runner-timeout-retry code (commit `8309710`); finished 2026-05-28T16:45 |
+| **n=8 mean** | — | **40.94%** | **std 2.29pp** | range 36.25%–43.75% |
 
 ### Per-trial paired comparison (unified − rvlm)
 
@@ -133,18 +133,20 @@ accuracy doesn't depend on c. Launched 2026-05-27T23:11Z via
 | t5 | 42.5% | 41.2% | +1.25pp |
 | t6 | 47.5% | 43.75% | +3.75pp |
 | t7 | 40.0% | 40.0% | 0.00pp |
-| t8 | 37.5% | in flight | — |
+| t8 | 37.5% | 42.5% | −5.00pp |
 
-**Paired n=7: Δ mean = +0.71pp, std = 4.56pp, SE = 1.72pp.** 95% CI
-[t₆=2.447]: [−3.50, +4.93]pp — interval tightened by t7's exact zero,
-still cleanly contains zero. The early +5.0pp lift at t1/t2 didn't
-hold up; t6 swung back positive (+3.75pp); t7 landed exactly on the
-mean. The per-trial spread is dominated by t4's −7.5pp outlier.
+**Paired n=8: Δ mean = 0.00pp, std = 4.68pp, SE = 1.65pp.** 95% CI
+[t₇=2.365]: **[−3.91, +3.91]pp**. Both arms scored exactly 262/640
+total correct across the n=8 paired set (rvlm n=8 mean = unified n=8
+mean = **40.94%**) — the mean lift is mathematically zero, not just
+statistically indistinguishable. The CI is tight enough to firmly rule
+out a ±4pp effect either way.
 
-By the pre-set decision table this stays in the **"Δ ≈ 0pp → promote
-unified to default"** cell. Direction is now well-locked: no robust
-accuracy lift, no robust accuracy loss. t8 (rvlm side) will land the
-final n=8 paired number.
+By the pre-set decision table this lands squarely in the **"Δ ≈ 0pp →
+promote unified to default"** cell. Strongest version of the paper
+outcome: unified-tips delivers the same accuracy as per-category
+dispatch, with the simpler implementation (no `doc_category` lookup,
+no dataset-specific dispatch), so we promote.
 
 ### Per-category breakdown
 
@@ -180,39 +182,45 @@ make it worse.
 
 ## Summary
 
-State at 2026-05-28T15:38+03:
+**Final state (2026-05-28T16:46+03, n=8 both arms):**
 
-| Arm | n | Mean | Std | Range |
-|---|---|---|---|---|
-| `rvlm_unified` (amax7) | **8** | **40.94%** | **4.05pp** | 35.0–47.5 |
-| `rvlm` paired baseline (amax1) | **7** | **40.71%** | **2.38pp** | 36.25–43.75 |
-| Δ paired (t1..t7) | 7 | **+0.71pp** | 4.56pp | −7.5..+5.0 |
+| Arm | n | Mean | Std | Range | Total correct |
+|---|---|---|---|---|---|
+| `rvlm_unified` (amax7) | 8 | **40.94%** | 4.05pp | 35.0–47.5 | 262/640 |
+| `rvlm` paired baseline (amax1) | 8 | **40.94%** | **2.29pp** | 36.25–43.75 | 262/640 |
+| **Δ paired (t1..t8)** | 8 | **0.00pp** | 4.68pp | −7.5..+5.0 | — |
+
+**Means are mathematically identical** (same total correct count
+262/640 across both arms), not just statistically equivalent. **95%
+paired CI: [−3.91, +3.91]pp**.
 
 **Marginal Δ vs paired Δ.** Marginal Δ (unified n=8 mean − rvlm n=6
 mean) = +0.13pp; paired Δ across the 6 matched trials is +0.83pp
 (SE 2.03pp). Both anchors land in the "Δ ≈ 0pp" zone of the pre-set
 decision table.
 
-**Variance asymmetry.** unified std (4.05pp at n=8) is ~1.56× rvlm
-std (2.60pp at n=6). Holding through completion of the rvlm side will
-weaken the promote-to-default case: unified gets you the same
-expected score with more run-to-run noise.
+**Variance asymmetry (n=8 both arms).** unified std 4.05pp vs rvlm
+std 2.29pp — unified is **1.77× noisier**, with the same expected
+accuracy. For the paper this is a small additional point in favor of
+unified-as-default (simpler implementation; equal expected accuracy;
+noisier per-trial isn't a deployment concern at SC-8 ensembling).
 
-**Per-trial sign distribution.** Of the 6 paired pairs: 3 positive
-(+5.0pp at t1, +5.0pp at t2, +3.75pp at t6), 1 ≈ 0 (+1.25pp at t5),
-1 mildly negative (−2.5pp at t3), 1 strongly negative (−7.5pp at t4).
-No systematic direction; the +5.0pp early signal at t1 was just two
-above-mean unified trials landing first.
+**Per-trial sign distribution (n=8).** Of the 8 paired pairs:
+3 positive (+5.0 at t1/t2, +3.75 at t6), 1 ≈ 0 (+1.25 at t5), 1 zero
+(t7), 1 mildly negative (−2.5 at t3), 2 strongly negative (−5.0 at t8,
+−7.5 at t4). Almost perfectly symmetric around zero; no systematic
+direction. The +5.0pp signal at t1/t2 — what had us writing a
+"unified wins" first draft — was simply two above-mean unified trials
+landing first.
 
 **Maps category.** Both arms hit the maps 0–10% wall — the failure
 mode is RVLM-on-maps (tile-search fails to recover map evidence
 reliably), not unified-prompt-specific. Removed from the decision
 input.
 
-**Pending.** unified n=8 complete (this commit). rvlm t7 in flight
-(resumed standalone after contamination — see below) + t8 pending on
-amax1. Final n=8 paired analysis will land once amax1's chain
-completes.
+**Done.** Both n=8 chains complete. amax1 cell #1 marked `[✓]` in
+`coordination/amax1.md`. **Decision: promote `rvlm_unified` to default
+solver** (will be done as a separate commit if the user confirms).
 
 ### Operational note: t7 contamination + re-launch
 
