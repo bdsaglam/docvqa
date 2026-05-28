@@ -10,19 +10,7 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### A. `[→]` ReAct baseline n=8 val — REPL-vs-no-REPL ablation
-
-Claimed 2026-05-28T14:47Z. tmux `react-chain` running
-`scripts/run_react_chain.sh` (c=24, run_ids `react-val-t1..t8`).
-Tests whether the code-REPL in LeanRLM is doing real work — vs plain
-`dspy.ReAct` with the same VLM tool surface (look + look_many) but no
-Python execution. Paired comparison vs `rvlm` (per-category) and
-`rvlm_unified` (decided default). Smoke test on `comics_1` passed
-(1/1 = 100%, 3min wall). Solver: `src/docvqa/solvers/react_solver.py`;
-config: `configs/solver/react.yaml` (commit `96246ca`).
-
-User away; autonomous execution authorized. Heartbeat cron `3e93a103`
-+ watcher `b8ba1tn0o` will do final pull/commit/push when done.
+(none)
 
 ## Queued
 
@@ -62,6 +50,25 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### A. `[✓]` ReAct baseline n=8 val — REPL-vs-no-REPL ablation
+
+Finished 2026-05-29T01:53. c=24, `lm.timeout=1800` (overridden via the
+new `LMConfig.timeout` field), run_ids `react-val-t1..t8`. **n=8 mean
+= 30.47%, std 3.06pp, range 25.0–33.75%.** Paired vs rvlm n=8: **Δ =
+−10.47pp, 95% CI [−13.42, −7.52]pp** (cleanly outside ±1.5pp noise).
+Paired vs rvlm_unified n=8: **Δ = −10.47pp, 95% CI [−14.46, −6.48]pp**.
+Lands in "≤ −5pp → REPL is load-bearing" per the pre-set decision
+table. Largest per-category gaps (rvlm−react): `business_report`
+(+23.8pp), `engineering_drawing` (+23.8pp), `comics`/`science_poster`
+(+13–14pp) — exactly the zoom-then-read categories where the REPL's
+`pages[i].crop()` matters. Operational notes: 3 `litellm.Timeout`s on
+original chain (`science_poster_2`/`business_report_2`), recovered via
+2 backfill passes; the second backfill exposed that the 600s default
+timeout doesn't fit ReAct's long-trajectory completions, fixed via
+config-driven `LMConfig.timeout` (commit `3acee78`). Full per-trial
+tables, paired Δ stats, per-category breakdown, and the timeout
+calibration story in [docs/experiments/react-baseline.md](../docs/experiments/react-baseline.md).
 
 ### 1. `[✓]` rvlm n=8 val — paired-comparison anchor for unified-tips (task #28)
 
