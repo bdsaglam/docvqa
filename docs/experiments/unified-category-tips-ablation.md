@@ -89,11 +89,17 @@ baseline, same model + prompt scrub.
 
 ### `rvlm_unified` (treatment, amax7)
 
-| Trial | run_id | Score | Correct/total | Wall | Notes |
-|---|---|---|---|---|---|
-| t1 | `rvlm-unified-val-t1` | **45.0%** | 36/80 | ~52min | c=32; tmux `unified-tips-t1`; finished 2026-05-28T01:59 |
-| t2 | `rvlm-unified-val-t2` | — | — | — | in tmux `unified-tips-chain` |
-| t3..t8 | `rvlm-unified-val-t{3..8}` | — | — | — | queued in same chain |
+| Trial | run_id | Score | Correct/total | Notes |
+|---|---|---|---|---|
+| t1 | `rvlm-unified-val-t1` | 45.0% | 36/80 | tmux `unified-tips-t1`; finished 2026-05-28T01:59 |
+| t2 | `rvlm-unified-val-t2` | 41.2% | 33/80 | |
+| t3 | `rvlm-unified-val-t3` | 38.8% | 31/80 | |
+| t4 | `rvlm-unified-val-t4` | 35.0% | 28/80 | low outlier |
+| t5 | `rvlm-unified-val-t5` | 42.5% | 34/80 | |
+| t6 | `rvlm-unified-val-t6` | 47.5% | 38/80 | high outlier |
+| t7 | `rvlm-unified-val-t7` | 40.0% | 32/80 | |
+| t8 | `rvlm-unified-val-t8` | in progress | — | started 2026-05-28T10:29; in tmux `unified-tips-chain` |
+| **n=7 mean** | — | **41.43%** | **std 4.11pp**, range 35.0%–47.5% | |
 
 ### `rvlm` paired baseline (amax1, c=24)
 
@@ -122,12 +128,24 @@ duplicate-t7 launch). Last update 2026-05-28T08:02Z.
 
 | Trial | unified | rvlm | Δ |
 |---|---|---|---|
-| t1 | 45.0% | 40.0% | **+5.0pp** |
-| t2..t8 | pending | pending | — |
+| t1 | 45.0% | 40.0% | **+5.00pp** |
+| t2 | 41.2% | 36.2% | **+5.00pp** |
+| t3 | 38.8% | 41.2% | −2.50pp |
+| t4 | 35.0% | 42.5% | **−7.50pp** |
+| t5 | 42.5% | 41.2% | +1.25pp |
+| t6 | 47.5% | in flight | — |
+| t7 | 40.0% | in flight | — |
+| t8 | in flight | pending | — |
 
-n=1 paired Δ = +5.0pp, materially above the ±1.5pp noise band — the
-direction that would land "promote unified to default" under the
-pre-set decision table. n=8 needed to confirm.
+**Paired n=5: Δ mean = +0.25pp, std = 5.33pp, SE = 2.38pp** (paired
+across t1..t5).  95% CI [t₄=2.776]: [−6.37, +6.87]pp — easily
+contains zero. The n=1 +5.0pp lift did not hold up: by t5 the paired
+mean Δ is essentially zero with wide error bars.
+
+By the pre-set decision table this lands in the **"Δ ≈ 0pp → promote
+unified to default"** cell, but the t4 −7.5pp pair widens the
+confidence interval enough that the promote call should wait on
+t6/t7/t8.
 
 ### Per-category breakdown
 
@@ -163,26 +181,37 @@ make it worse.
 
 ## Summary
 
-n=1: **45.0% overall** (unified).
+State at 2026-05-28T10:31+03:
 
-Two comparison anchors, both pointing the same direction:
-- vs **fresh paired baseline** (rvlm n=5 mean from amax1 chain so far)
-  = **40.22%** → Δ = **+4.78pp**, well outside the ±1.5pp noise band.
-- vs legacy per-trial mean from pre-rename `leanest_solo` n=8 = 42.8%
-  → Δ = +2.2pp (kept for historical context only; the paired anchor
-  supersedes this).
+| Arm | n | Mean | Std | Range |
+|---|---|---|---|---|
+| `rvlm_unified` (amax7) | 7 | 41.43% | 4.11pp | 35.0–47.5 |
+| `rvlm` paired baseline (amax1) | 5 | 40.22% | 2.40pp | 36.2–42.5 |
+| Δ paired (t1..t5) | 5 | **+0.25pp** | 5.33pp | −7.5..+5.0 |
 
-Per the pre-set decision table, +4.78pp is in the "Δ ≈ 0 → promote
-unified to default" cell on the strong side — if it holds across the
-full n=8 paired chain, the promote decision is robust.
+**Marginal Δ vs paired Δ.** Marginal Δ (unified mean − rvlm mean) =
++1.2pp using all available trials; paired Δ across the 5 matched
+trials is +0.25pp with SE 2.38pp. Both anchors land in the "Δ ≈ 0pp"
+zone of the pre-set decision table.
 
-Caveat: still n=1 on the unified side and n=5 on the rvlm side. n=8
-paired both sides will close it. The maps=0% category is the obvious
-red flag — needs inspection to confirm it's a per-trial noise effect
-on a 1-page, counting-heavy category rather than a unified-prompt
-failure mode. (Update from amax1 data: the paired rvlm baseline hits
-maps 0–10% across t1..t5 too, so the failure mode is RVLM-on-maps,
-not unified-prompt-specific.)
+**Variance asymmetry.** unified std (4.11pp) is ~1.7× rvlm std
+(2.40pp) at the trial counts so far. If this holds through n=8, it
+weakens the promote-to-default case: unified gets you the same
+expected score with more run-to-run noise.
+
+**Per-trial sign distribution.** Of the 5 paired pairs: 2 strongly
+positive (+5.0pp each, t1 & t2), 1 ≈ 0 (t5), 1 mildly negative
+(−2.5pp t3), 1 strongly negative (−7.5pp t4). No systematic
+direction; the +5.0pp early signal at t1 was a coincidence of two
+above-mean unified trials landing first.
+
+**Maps category.** Both arms hit the maps 0–10% wall — the failure
+mode is RVLM-on-maps (tile-search fails to recover map evidence
+reliably), not unified-prompt-specific. Removed from the decision
+input.
+
+**Pending.** unified t8 in flight; rvlm t6/t7 in flight + t8 pending.
+Final n=8 paired analysis will land once both chains complete.
 
 ## Observations / caveats
 
@@ -215,13 +244,13 @@ ablation table. The narrative direction depends on outcome:
 
 ## Status
 
-**Both chains in flight** (2026-05-28):
+**Both chains in flight** (2026-05-28T10:31+03):
 
-- amax7: `rvlm_unified` t1 done (45.0%). t2..t8 running in tmux
-  `unified-tips-chain` (c=32).
+- amax7: `rvlm_unified` t1..t7 done (n=7 mean 41.43% ± 4.11pp). t8
+  running in tmux `unified-tips-chain` (c=32).
 - amax1: paired-conditions `rvlm` baseline t1..t5 done (n=5 mean
-  40.22%, std ~2.3pp). t6 in progress (24/25), t7 launched standalone
-  in parallel in tmux `rvlm-t7`, t8 pending. Coord cell:
+  40.22% ± 2.40pp). t6 in progress (24/25 last update), t7 launched
+  standalone in parallel in tmux `rvlm-t7`, t8 pending. Coord cell:
   `coordination/amax1.md` #1.
 
 Comparison: per-trial-pair on identical model / prompts (c differs
