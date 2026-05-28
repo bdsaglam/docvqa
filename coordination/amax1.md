@@ -17,6 +17,32 @@ override of default c=32; concurrency affects wall-time/load, not
 per-question accuracy, so the paired comparison stays valid). run_ids
 `rvlm-val-t1`..`rvlm-val-t8`.
 
+**Partial results (2026-05-28T08:02Z):**
+
+| Trial | Score | |
+|-------|------:|--|
+| rvlm-val-t1 | 32/80 = 40.0% | |
+| rvlm-val-t2 | 29/80 = 36.2% | low outlier |
+| rvlm-val-t3 | 33/80 = 41.2% | hard tile q on maps doc |
+| rvlm-val-t4 | 34/80 = 42.5% | high so far |
+| rvlm-val-t5 | 33/80 = 41.2% | |
+| **n=5 mean** | **40.22%** | std ~2.3pp |
+| rvlm-val-t6 | 24/25 docs done | last doc 2h+ on tile-search |
+| rvlm-val-t7 | running (parallel) | launched standalone in tmux `rvlm-t7` while t6's tail finishes — GPU is throughput-bound so parallel ≈ sequential total time |
+| rvlm-val-t8 | pending | |
+
+Vs paired amax7 `unified-tips-val-t1` = 45.0% (52570d1): unified is
+**+5.0pp over rvlm-val-t1 (40.0%)** and **+4.78pp over the rvlm n=5
+mean**. Promising signal; waits on amax7's t2..t8 + our t6..t8 for the
+full paired comparison.
+
+Per-category pattern across t1–t5 (consistent failure modes):
+- **maps:** 0–1/10 every trial — RVLM tile search isn't recovering map
+  evidence reliably.
+- **infographics:** noisy 5–7/10 (t5 hit 70%).
+- **business_report, engineering_drawing:** stable 5–6/10.
+- **comics, science_paper, science_poster, slide:** noisy 3–5/10 band.
+
 **Priority over model-axis cells below.** amax7 is running `rvlm_unified`
 t2..t8 to escalate the unified-tips ablation to n=8 (t1 = 45.0%). We have
 no current-prompt n=8 baseline for `rvlm` itself at c=32 — the legacy
