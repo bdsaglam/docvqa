@@ -5,18 +5,20 @@ UNIFIED_TIPS merged, see ``rvlm_gepa_solver.SEED_TASK_INSTRUCTIONS``).
 The dataset-specific answer-formatting rules are NOT optimized — they
 remain profile-injected at runtime so GEPA cannot break answer parsing.
 
-Train/val split: DocVQA-2026 val set, deterministic ~50/50 by
-category. The val set has only **25 docs** (2-4 per category) so the
-split lands at ~13 train / 12 val docs. Per-category breakdown:
+Training data: **MP-DocVQA + MMLongBench-Doc val samples** (the
+pre-built 200q stratified subsamples shipped in
+``data/{mp-docvqa,mmlongbench-doc}/val/sample_200q_doc_ids.txt``).
+~61 docs / ~412 questions total. NO DocVQA-2026 docs in train —
+generalization to DocVQA-2026 is the held-out signal.
 
-- categories with 4 docs (comics, engineering_drawing, business_report)
-  → 2 train / 2 val
-- categories with 3 docs (maps, science_paper, slide) → 2 train / 1 val
-- categories with 2 docs (infographics, science_poster) → 1 train / 1 val
+Validation: full DocVQA-2026 val (25 docs / 80 questions). GEPA only
+commits a new candidate if it improves the DocVQA-2026 val score,
+which protects against the optimizer compressing away DocVQA-2026
+category content that doesn't help on MP-DocVQA / MMLongBench.
 
-That's small for prompt optimization — flagged to the user; if results
-are noisy, the obvious next step is to mix in MP-DocVQA + MMLongBench
-training samples.
+Per-example scoring: each train doc is tagged with its dataset's
+profile (ANLS for MP-DocVQA, Qwen judge for MMLongBench-Doc, ANLS for
+DocVQA-2026 val). The evaluator dispatches scoring per-example.
 
 Student LM: Qwen 3.5 27B at localhost:8927 (the model being optimized
 for).
@@ -45,8 +47,8 @@ import logging
 import os
 import random
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
@@ -86,13 +88,14 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-DATASET = "VLR-CVC/DocVQA-2026"
-SPLIT = "val"
-SPLIT_SEED = 42  # deterministic train/val split seed
-# Per-category 50/50 with ceiling on train side (so 3-doc categories
-# give 2/1 train/val rather than 1/2). 4-doc → 2/2, 3-doc → 2/1,
-# 2-doc → 1/1. See module docstring for the resulting size.
-TRAIN_FRACTION = 0.5
+VAL_DATASET = "VLR-CVC/DocVQA-2026"
+VAL_SPLIT = "val"
+# Default training datasets (CLI: --train-datasets overrides).
+DEFAULT_TRAIN_DATASETS = (
+    "lmms-lab/MP-DocVQA",
+    "yubo2333/MMLongBench-Doc",
+)
+SPLIT_SEED = 42  # deterministic ordering when datasets are sampled / shuffled
 
 # Student LM = Qwen 3.5 27B at the same vllm the unified-tips chain
 # uses, so the optimizer must wait for that chain to finish before
@@ -122,34 +125,48 @@ MAX_FEEDBACK_QUESTIONS = 6
 # ---------------------------------------------------------------------------
 
 
-def split_by_category(
-    documents: list[Document],
-    train_fraction: float = TRAIN_FRACTION,
-    seed: int = SPLIT_SEED,
-) -> tuple[list[Document], list[Document]]:
-    """Deterministic per-category split.
+@dataclass
+class TaggedDoc:
+    """A document paired with the HF dataset slug it came from.
 
-    For each category, sort docs by doc_id (reproducible order), shuffle
-    with the seed, then take ``ceil(n_cat * train_fraction)`` into train
-    and the remainder into val. Ceiling-on-train ensures every category
-    is represented in train even when ``n_cat`` is odd.
+    The evaluator uses ``dataset`` to look up the profile (and therefore
+    the score function and per-question hint) at scoring time. This lets
+    a single GEPA run train on cross-dataset examples while keeping
+    correct per-example scoring semantics.
     """
-    import math
+    document: Document
+    dataset: str  # HF slug; key into get_profile()
 
+
+def load_training_docs(dataset_slugs: list[str], seed: int = SPLIT_SEED) -> list[TaggedDoc]:
+    """Load training docs from the listed datasets.
+
+    Each dataset is loaded via :func:`load_documents`, which automatically
+    honors the ``data/<dataset>/val/sample_200q_doc_ids.txt`` sample lists
+    when present. Order: dataset-by-dataset (sorted by slug for
+    reproducibility), then by doc_id within each dataset, then shuffled
+    with the seed so GEPA's batch sampling sees a balanced mix.
+    """
     rng = random.Random(seed)
-    by_cat: dict[str, list[Document]] = defaultdict(list)
-    for d in documents:
-        by_cat[d.doc_category].append(d)
+    examples: list[TaggedDoc] = []
+    for slug in sorted(dataset_slugs):
+        logger.info("Loading training docs from %s ...", slug)
+        docs = load_documents(slug, "val")
+        docs = [d for d in docs if any(q.answer is not None for q in d.questions)]
+        # Deterministic order within a dataset before global shuffle.
+        docs.sort(key=lambda d: d.doc_id)
+        logger.info("  %s: %d docs, %d Qs", slug, len(docs), sum(len(d.questions) for d in docs))
+        examples.extend(TaggedDoc(document=d, dataset=slug) for d in docs)
+    rng.shuffle(examples)
+    return examples
 
-    train: list[Document] = []
-    val: list[Document] = []
-    for cat in sorted(by_cat):
-        docs = sorted(by_cat[cat], key=lambda d: d.doc_id)
-        rng.shuffle(docs)
-        n_train = max(1, math.ceil(len(docs) * train_fraction))
-        train.extend(docs[:n_train])
-        val.extend(docs[n_train:])
-    return train, val
+
+def load_val_docs(dataset: str = VAL_DATASET, split: str = VAL_SPLIT) -> list[TaggedDoc]:
+    """Load the held-out validation docs. Always DocVQA-2026 val."""
+    docs = load_documents(dataset, split)
+    docs = [d for d in docs if any(q.answer is not None for q in d.questions)]
+    docs.sort(key=lambda d: d.doc_id)
+    return [TaggedDoc(document=d, dataset=dataset) for d in docs]
 
 
 # ---------------------------------------------------------------------------
@@ -195,20 +212,23 @@ def _format_feedback(doc: Document, predictions: dict[str, str], profile_score_f
     return score, "\n".join(lines)
 
 
-def make_evaluator(profile_name: str):
+def make_evaluator():
     """Return an evaluator closure suitable for ``optimize_anything``.
 
-    Each example is a ``Document``. The evaluator builds an RvlmGepaProgram
-    with the candidate's ``task_instructions``, runs ``solve_document``,
-    scores answers with the dataset profile's ``score_fn``, and returns
-    ``(score, side_info)`` where ``side_info["Feedback"]`` is the per-doc
-    feedback string GEPA's reflection LM will see.
+    Each example is a :class:`TaggedDoc`. The evaluator looks up the
+    profile for ``example.dataset`` at call time, builds an
+    ``RvlmGepaProgram`` with the candidate's ``task_instructions`` and
+    that profile, runs ``solve_document``, scores answers with the
+    profile's ``score_fn``, and returns ``(score, side_info)`` where
+    ``side_info["Feedback"]`` is the per-doc feedback string GEPA's
+    reflection LM will see.
     """
-    profile = get_profile(profile_name)
     vlm_lm = QWEN_27B_CONFIG.to_dspy_lm()
     student_lm = QWEN_27B_CONFIG.to_dspy_lm()
 
-    def evaluate(candidate: dict[str, str], example: Document) -> tuple[float, dict[str, Any]]:
+    def evaluate(candidate: dict[str, str], example: TaggedDoc) -> tuple[float, dict[str, Any]]:
+        doc = example.document
+        profile = get_profile(example.dataset)
         program = RvlmGepaProgram(
             vlm_lm=vlm_lm,
             profile=profile,
@@ -219,21 +239,23 @@ def make_evaluator(profile_name: str):
 
         try:
             with dspy.context(lm=student_lm):
-                predictions, _trajectories = program.solve_document(example)
+                predictions, _trajectories = program.solve_document(doc)
         except Exception as e:
-            oa.log(f"ERROR: Solver failed for {example.doc_id}: {e}")
+            oa.log(f"ERROR: Solver failed for {doc.doc_id} ({example.dataset}): {e}")
             return 0.0, {
                 "Error": str(e),
                 "Feedback": (
-                    f"Solver crashed on {example.doc_id} ({example.doc_category}). "
-                    "The task_instructions may have caused the agent to fail. "
-                    "Check that instructions still describe tools (batch_look) and "
-                    "the SUBMIT(answer=...) call format."
+                    f"Solver crashed on {doc.doc_id} (dataset={example.dataset}, "
+                    f"category={doc.doc_category}). The task_instructions may "
+                    f"have caused the agent to fail. Check that instructions "
+                    f"still describe the batch_look tool and the "
+                    f"SUBMIT(answer=...) call format."
                 ),
             }
 
-        score, feedback = _format_feedback(example, predictions, profile.score_fn)
-        oa.log(f"Doc {example.doc_id}: score={score:.2f}")
+        score, feedback = _format_feedback(doc, predictions, profile.score_fn)
+        feedback = f"[dataset={example.dataset}] " + feedback
+        oa.log(f"Doc {doc.doc_id} (ds={example.dataset}): score={score:.2f}")
         return score, {"Feedback": feedback, "scores": {"accuracy": score}}
 
     return evaluate
@@ -276,7 +298,15 @@ def main():
         action="store_true",
         help="Disable wandb logging.",
     )
+    parser.add_argument(
+        "--train-datasets",
+        type=str,
+        default=",".join(DEFAULT_TRAIN_DATASETS),
+        help="Comma-separated HF dataset slugs to use for training. "
+             "Defaults to lmms-lab/MP-DocVQA + yubo2333/MMLongBench-Doc.",
+    )
     args = parser.parse_args()
+    train_datasets = [s.strip() for s in args.train_datasets.split(",") if s.strip()]
 
     logging.basicConfig(
         level=logging.INFO,
@@ -290,22 +320,28 @@ def main():
     os.makedirs(run_dir, exist_ok=True)
     logger.info("Run dir: %s", run_dir)
 
-    # Load docs and split.
-    logger.info("Loading %s [%s]...", DATASET, SPLIT)
-    documents = load_documents(DATASET, SPLIT)
-    documents = [d for d in documents if any(q.answer is not None for q in d.questions)]
-    logger.info("Loaded %d docs with GT", len(documents))
+    # Load training docs from non-DocVQA datasets.
+    logger.info("Loading training docs from: %s", train_datasets)
+    train = load_training_docs(train_datasets, seed=args.seed)
+    train_per_ds: dict[str, int] = defaultdict(int)
+    train_q_per_ds: dict[str, int] = defaultdict(int)
+    for ex in train:
+        train_per_ds[ex.dataset] += 1
+        train_q_per_ds[ex.dataset] += len(ex.document.questions)
+    logger.info(
+        "Train: %d docs / %d Qs total",
+        len(train), sum(train_q_per_ds.values()),
+    )
+    for ds, n in train_per_ds.items():
+        logger.info("  %s: %d docs, %d Qs", ds, n, train_q_per_ds[ds])
 
-    train, val = split_by_category(documents, seed=args.seed)
-    logger.info("Train: %d docs, Val: %d docs", len(train), len(val))
-    # Sanity-check per-category counts so the split is paper-quotable.
-    def _count(docs: list[Document]) -> dict[str, int]:
-        c: dict[str, int] = defaultdict(int)
-        for d in docs:
-            c[d.doc_category] += 1
-        return dict(c)
-    logger.info("Train per-cat: %s", _count(train))
-    logger.info("Val   per-cat: %s", _count(val))
+    # Validation: full DocVQA-2026 val (held-out from training).
+    logger.info("Loading validation docs: %s [%s]", VAL_DATASET, VAL_SPLIT)
+    val = load_val_docs()
+    logger.info(
+        "Val: %d docs / %d Qs",
+        len(val), sum(len(ex.document.questions) for ex in val),
+    )
 
     # Persist the split so re-runs and writeups can quote exact doc_ids.
     split_path = os.path.join(run_dir, "split.json")
@@ -313,12 +349,18 @@ def main():
         json.dump(
             {
                 "seed": args.seed,
-                "train": [d.doc_id for d in train],
-                "val": [d.doc_id for d in val],
+                "train_datasets": train_datasets,
+                "train": [
+                    {"dataset": ex.dataset, "doc_id": ex.document.doc_id}
+                    for ex in train
+                ],
+                "val_dataset": VAL_DATASET,
+                "val": [ex.document.doc_id for ex in val],
             },
             f,
             indent=2,
         )
+    logger.info("Wrote split manifest to %s", split_path)
 
     # Seed candidate (one component).
     seed_candidate: dict[str, str] = {"task_instructions": SEED_TASK_INSTRUCTIONS}
@@ -327,7 +369,7 @@ def main():
         len(seed_candidate["task_instructions"]),
     )
 
-    evaluate = make_evaluator(DATASET)
+    evaluate = make_evaluator()
 
     config = GEPAConfig(
         engine=EngineConfig(
@@ -356,16 +398,26 @@ def main():
         "REPL with one tool: batch_look(requests) which sends "
         "(PIL_image, query) pairs to a VLM and returns answer strings. "
         "Pages are pre-loaded into a list `pages`. The agent must arrive "
-        "at an answer and call SUBMIT(answer=...). Maximize per-document "
-        "answer accuracy on DocVQA-2026."
+        "at an answer and call SUBMIT(answer=...). The prompt is trained "
+        "on MP-DocVQA + MMLongBench-Doc samples (multi-document and "
+        "long-document benchmarks with no overlap with the val set) and "
+        "validated on DocVQA-2026 val (single-doc, 8-category). The "
+        "objective is to maximize answer accuracy on the held-out "
+        "DocVQA-2026 val — i.e., produce a prompt that generalizes from "
+        "the training distributions to DocVQA-2026."
     )
     background = (
         "There is exactly ONE optimizable component:\n"
-        "- task_instructions: the agent's system prompt, which currently "
-        "merges (a) generic 'how to use batch_look + how to reason' "
-        "guidance and (b) per-category tips for all 8 DocVQA-2026 "
-        "categories (business_report, comics, engineering_drawing, "
-        "infographics, maps, science_paper, science_poster, slide).\n\n"
+        "- task_instructions: the agent's system prompt. The seed merges "
+        "(a) generic 'how to use batch_look + how to reason' guidance and "
+        "(b) per-category tips for all 8 DocVQA-2026 categories "
+        "(business_report, comics, engineering_drawing, infographics, "
+        "maps, science_paper, science_poster, slide). Training docs come "
+        "from MP-DocVQA (mostly business / financial pages, up to ~20 "
+        "pages) and MMLongBench-Doc (research papers, reports, decks; up "
+        "to 80 pages). MP-DocVQA and MMLongBench docs do not have those "
+        "8 categories — the agent should still benefit from any general "
+        "guidance in the prompt.\n\n"
         "Hard constraints:\n"
         "- The agent's only visual tool is batch_look. Instructions MUST "
         "tell the agent it exists and how to call it.\n"
@@ -378,7 +430,10 @@ def main():
         "document'. Do not encourage giving up too easily — most failures "
         "are missed evidence, not absent evidence.\n"
         "- The agent has a turn budget. Encourage focused exploration "
-        "(survey → locate → crop → verify) over exhaustive enumeration."
+        "(survey → locate → crop → verify) over exhaustive enumeration.\n"
+        "- Keep DocVQA-2026 category tips in the prompt even if they "
+        "appear unused on the MP-DocVQA / MMLongBench training docs. The "
+        "validation set IS DocVQA-2026 and those tips help there."
     )
 
     logger.info(

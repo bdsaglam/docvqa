@@ -98,8 +98,8 @@ baseline, same model + prompt scrub.
 | t5 | `rvlm-unified-val-t5` | 42.5% | 34/80 | |
 | t6 | `rvlm-unified-val-t6` | 47.5% | 38/80 | high outlier |
 | t7 | `rvlm-unified-val-t7` | 40.0% | 32/80 | |
-| t8 | `rvlm-unified-val-t8` | in progress | — | started 2026-05-28T10:29; in tmux `unified-tips-chain` |
-| **n=7 mean** | — | **41.43%** | **std 4.11pp**, range 35.0%–47.5% | |
+| t8 | `rvlm-unified-val-t8` | 37.5% | 30/80 | finished 2026-05-28T12:?? |
+| **n=8 mean** | — | **40.94%** | **std 4.05pp**, range 35.0%–47.5% | |
 
 ### `rvlm` paired baseline (amax1, c=24)
 
@@ -179,22 +179,22 @@ make it worse.
 
 ## Summary
 
-State at 2026-05-28T11:38+03:
+State at 2026-05-28T12:32+03:
 
 | Arm | n | Mean | Std | Range |
 |---|---|---|---|---|
-| `rvlm_unified` (amax7) | 7 | 41.43% | 4.11pp | 35.0–47.5 |
-| `rvlm` paired baseline (amax1) | 6 | **40.81%** | 2.60pp | 36.2–43.75 |
-| Δ paired (t1..t6) | 6 | **+0.83pp** | 4.98pp | −7.5..+5.0 |
+| `rvlm_unified` (amax7) | **8** | **40.94%** | **4.05pp** | 35.0–47.5 |
+| `rvlm` paired baseline (amax1) | 6 | 40.81% | 2.60pp | 36.2–43.75 |
+| Δ paired (t1..t6) | 6 | +0.83pp | 4.98pp | −7.5..+5.0 |
 
-**Marginal Δ vs paired Δ.** Marginal Δ (unified mean − rvlm mean) =
-+0.62pp using all available trials; paired Δ across the 6 matched
-trials is +0.83pp with SE 2.03pp. Both anchors land in the "Δ ≈ 0pp"
-zone of the pre-set decision table.
+**Marginal Δ vs paired Δ.** Marginal Δ (unified n=8 mean − rvlm n=6
+mean) = +0.13pp; paired Δ across the 6 matched trials is +0.83pp
+(SE 2.03pp). Both anchors land in the "Δ ≈ 0pp" zone of the pre-set
+decision table.
 
-**Variance asymmetry.** unified std (4.11pp) is ~1.6× rvlm std
-(2.60pp) at the trial counts so far. If this holds through n=8, it
-weakens the promote-to-default case: unified gets you the same
+**Variance asymmetry.** unified std (4.05pp at n=8) is ~1.56× rvlm
+std (2.60pp at n=6). Holding through completion of the rvlm side will
+weaken the promote-to-default case: unified gets you the same
 expected score with more run-to-run noise.
 
 **Per-trial sign distribution.** Of the 6 paired pairs: 3 positive
@@ -208,9 +208,10 @@ mode is RVLM-on-maps (tile-search fails to recover map evidence
 reliably), not unified-prompt-specific. Removed from the decision
 input.
 
-**Pending.** unified t8 in flight; rvlm t7 in flight (resumed
-standalone after contamination — see below) + t8 pending. Final n=8
-paired analysis will land once both chains complete.
+**Pending.** unified n=8 complete (this commit). rvlm t7 in flight
+(resumed standalone after contamination — see below) + t8 pending on
+amax1. Final n=8 paired analysis will land once amax1's chain
+completes.
 
 ### Operational note: t7 contamination + re-launch
 
