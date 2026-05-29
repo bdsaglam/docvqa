@@ -10,13 +10,16 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### `[→]` R2: direct_vlm_minimal n=1 val @ cap=40 (task #34 follow-up)
+### `[→]` R3: direct_vlm n=1 val @ cap=40 (task #19, alt-arch baseline)
 
-Launched 2026-05-29T11:47Z, tmux `docvqa-dvm:eval40`, c=24,
-`solver.max_iterations=40`, run_id `direct-vlm-minimal-val-iter40-t1`.
-Tests whether R1's low score is cap-truncation (62/80 hit cap=20) vs
-prompt-stripping. Part of the autonomous chain R1→R5 (see chain note
-under Queued).
+run_id `direct-vlm-val-iter40-t1`, tmux `docvqa-dvm:baseline40`, c=40
+cap. Launched 2026-05-29T17:44Z overlapping R2's tail; **crashed at
+16/25 docs ~19:34Z (cause unclear — no Python traceback, host had
+440GB RAM free so not host-OOM; possibly killed during a >64-image
+`display()` trajectory). Resumed 2026-05-29T19:43Z** (run is
+resumable; skipped the 16 done docs). Remaining docs are the hard
+ones incl. comics_1-4 + maps_1-3 — expect comics to hit the same
+task_timeout as R2 (see R2 note).
 
 ## Queued
 
@@ -81,6 +84,34 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### R2. `[✓]` direct_vlm_minimal n=1 val @ cap=40 (task #34) — 2026-05-29
+
+run_id `direct-vlm-minimal-val-iter40-t1`, c=24, `max_iterations=40`.
+**Overall 21.6% (16/74)** — per-cat: infographics 60%, science_paper
+30%, science_poster/slide 20%, business_report/eng_drawing/maps 10%,
+**comics 0% (0/4)**.
+
+**⚠ INCOMPLETE DENOMINATOR (74, not 80).** `comics_2` and `comics_4`
+each hit the 4h `task_timeout` (14400s) at 18:47Z and errored out
+(6 questions never scored). So 21.6%/74 is NOT directly comparable to
+R1's 27.5%/80. On the shared 74 questions the comparison is still
+roughly flat-to-down.
+
+**Headline finding (R1 vs R2 — iteration-budget effect): doubling the
+cap did NOT help.** 58/74 questions still hit the 40/40 cap (vs 62/80
+hitting 20/20 in R1), and the score did not rise. The agent does not
+converge at *either* budget — it loops/wanders to whatever ceiling it
+is given. **R1's low score was therefore NOT cap-truncation**; the
+iteration budget was not the bottleneck. This weakens the original
+"cap=20 was binding" hypothesis and shifts the read toward solver
+behavior / task difficulty. NOTE for the chain: R4/R5 (more cap=40
+trials) are now lower-value given this — flag for user on return.
+
+Operational: logfire/otlp telemetry threw protobuf DecodeErrors
+throughout (harmless to scoring). comics docs are pathological for the
+direct-VLM family at cap=40 (4h timeout) — R3/R4/R5 will likely share
+the <80 denominator problem.
 
 ### R1. `[✓]` direct_vlm_minimal n=1 val @ cap=20 (task #34) — 2026-05-29
 
