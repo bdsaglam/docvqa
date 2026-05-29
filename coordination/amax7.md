@@ -8,7 +8,48 @@ cell at a time; replan after each result.
 
 ## In progress
 
-(none)
+### `[→]` rvlm_skeletal n=1 val (task #32) — started 2026-05-29T11:??+03
+
+Drops the 3 doc-shape pattern bullets from `rvlm_minimal` (high-density,
+many-page, counting). Keeps APPROACH + verify-under-VLM-stochasticity
+principle. Tests whether the patterns were doing work or were
+window-dressing.
+
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=rvlm_skeletal \
+  data.split=val data.num_samples=null \
+  max_concurrency=32 \
+  run_id=rvlm-skeletal-val-t1
+```
+
+- Expected wall: ~50 min
+- Compare to: rvlm_minimal n=8 mean 42.03% (SD 2.21pp).
+- Decision rule: if within ±2pp of minimal → run rvlm_naked next; if
+  >3pp drop → patterns were load-bearing, halt further stripping.
+
+### `[ ]` rvlm_naked n=1 val (task #33) — auto-starts after skeletal
+
+Strips everything except DATA + TOOLS + faithfulness + OUTPUT FORMAT.
+The pure "give the agent a recursive-perception tool and let it figure
+it out" test. Strongest possible result if Δ ≈ 0.
+
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=rvlm_naked \
+  data.split=val data.num_samples=null \
+  max_concurrency=32 \
+  run_id=rvlm-naked-val-t1
+```
+
+- Auto-chains after skeletal in the same tmux session `rvlm-strip-chain`.
+- Decision rule: if naked ≈ skeletal ≈ minimal → naked becomes the
+  headline; absolute floor of "what the method needs to work" is just
+  the tool API.
 
 ## Queued
 
