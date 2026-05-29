@@ -35,30 +35,23 @@ comics — flag, don't keep retrying blind.
 
 ## Queued
 
-### 2. `[ ]` direct_vlm n=1 val @ cap=40 (task #19, moved from amax7)
+### images_for_last_n sweep for direct_vlm (replaces old n=2 trials)
 
-Alternative-architecture baseline (full prompt, incl. `TOOL_HINTS`).
-Pairs with `direct_vlm_minimal` for the prompt-stripping generality
-test. Moved here to run both at the **same iteration budget**;
-`direct_vlm_minimal` cap=20 showed the cap is binding (~56/80 questions
-hit 20/20), so both run at `max_iterations=40`.
+User directive 2026-05-29: run `direct_vlm` cap=40 at
+`images_for_last_n=1` and `=2` **instead of** the confirmatory n=2
+trials (old R4 minimal-t2 / R5 direct_vlm-t2 are CANCELLED). Motivation:
+R3 (il_n=3 default) crashes on long comics docs — the solver
+`display()`s images into its own context and exceeds vllm's 64-image
+limit. Trimming kept-image-context should fix the crash; the sweep also
+measures the accuracy effect.
 
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=direct_vlm solver.max_iterations=40 \
-  data.split=val data.num_samples=null \
-  max_concurrency=24 \
-  run_id=direct-vlm-val-iter40-t1
-```
+- **R4** `direct-vlm-iln1-val-iter40-t1`: `solver=direct_vlm
+  solver.max_iterations=40 solver.images_for_last_n=1`
+- **R5** `direct-vlm-iln2-val-iter40-t1`: `solver=direct_vlm
+  solver.max_iterations=40 solver.images_for_last_n=2`
 
-- Expected wall: ~1.5-3h (cap=40 ~2× the cap=20 wall; display() bandwidth-bound).
-- Compare to: `direct-vlm-minimal-val-iter40-t1` (prompt-stripping Δ, same cap);
-  and `rvlm` headline (BUT rvlm n=8 is cap=20 — see amax7.md caveat before
-  reading the architecture claim).
-- Run order: after the two `direct_vlm_minimal` runs (cap=20 t1, cap=40 t1)
-  finish, to avoid contending on local vllm 8927.
+Comparison: R3 (il_n=3, crashes on comics) vs R4 (il_n=1) vs R5 (il_n=2),
+all direct_vlm cap=40. Driven by the cron chain (afae64f5).
 
 ### 3. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
 
@@ -145,14 +138,19 @@ but did NOT affect scoring/submission — harmless.
 Strictly sequential on local vllm; driven by heartbeat cron. No vllm
 swaps (safe while unattended).
 - R1 `direct-vlm-minimal-val-t1` cap=20 — ✓ 27.5%
-- R2 `direct-vlm-minimal-val-iter40-t1` cap=40 — running
-- R3 `direct-vlm-val-iter40-t1` (direct_vlm, full prompt) cap=40
-- R4 `direct-vlm-minimal-val-iter40-t2` cap=40 (n=2 escalation, D-008)
-- R5 `direct-vlm-val-iter40-t2` cap=40 (n=2 escalation)
+- R2 `direct-vlm-minimal-val-iter40-t1` cap=40 — ✓ 21.6%/74
+- R3 `direct-vlm-val-iter40-t1` (direct_vlm, il_n=3 default) cap=40 — running (crashes on comics)
+- R4 `direct-vlm-iln1-val-iter40-t1` (direct_vlm, **images_for_last_n=1**) cap=40
+- R5 `direct-vlm-iln2-val-iter40-t1` (direct_vlm, **images_for_last_n=2**) cap=40
 
-Reads: R1-vs-R2 = iteration-budget effect; R2-vs-R3 = prompt-stripping
-(TOOL_HINTS) at equal cap; R3-vs-rvlm needs equal cap (rvlm headline is
-cap=20 — flagged in amax7.md).
+(R4/R5 changed 2026-05-29 from the original n=2 confirmatory trials to
+the images_for_last_n sweep, per user "instead of more trials".)
+
+Reads: R1-vs-R2 = iteration-budget effect (≈flat → budget not the
+bottleneck); R3 vs R4 vs R5 = images_for_last_n sweep (crash-fix +
+accuracy effect of trimming kept image-context); R2(minimal) vs
+direct_vlm runs at equal cap = prompt/architecture; rvlm headline is
+cap=20 (flagged in amax7.md).
 
 ### NOTE: model-axis cells #3-5 DEFERRED (need attention on return)
 
