@@ -10,28 +10,12 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### `[→]` R3: direct_vlm n=1 val @ cap=40 (task #19, alt-arch baseline)
+### `[→]` R4: direct_vlm cap=40 @ images_for_last_n=1
 
-run_id `direct-vlm-val-iter40-t1`, tmux `docvqa-dvm:baseline40`,
-cap=40. Launched 17:44Z. **Has crashed TWICE** (at 16/25 ~19:34Z and
-21/25 ~21:31Z), each time mid-`display()` on a long multi-page comics
-doc (e.g. page 48), no Python traceback, host RAM fine (440GB free),
-vllm healthy. Resumed after each (resumable; skips done docs):
-attempt 2 @ 19:43Z got 16→21, attempt 3 @ 21:31Z running.
-
-**FINDING — `direct_vlm` (full multimodal solver) is unstable on long
-comics docs.** It `display()`s images into its OWN LM context and
-blows past vllm's 64-image/prompt limit (logged
-`BadRequestError: At most 64 images`); on the longest comics docs the
-process gets killed outright (not a Python exception — likely the RLM
-sandbox subprocess dying). Contrast: R2's `direct_vlm_minimal`/RVLM
-path uses VLM *sub-calls* and merely TIMED OUT cleanly on the same
-comics docs. So comics_2/3/4 may be **unscoreable** for direct_vlm.
-**Stop rule:** if attempt 3 crashes again still incomplete, record R3
-as partial (currently 21/25) and advance the chain to R4 rather than
-loop on the comics crash. Decision for user on return: the direct_vlm
-baseline likely needs a solver fix (cap displayed images) to score
-comics — flag, don't keep retrying blind.
+run_id `direct-vlm-iln1-val-iter40-t1`, tmux `docvqa-dvm:iln1`.
+Launched 2026-05-29 overlapping R3's tail. Tests whether il_n=1 fixes
+the comics crash (BadReq64=0 so far) and how trimming kept-image
+context affects accuracy. R5 (il_n=2) overlaps when R4 hits 23/25.
 
 ## Queued
 
@@ -89,6 +73,35 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### R3. `[✓ PARTIAL]` direct_vlm n=1 val @ cap=40, il_n=3 (task #19) — 2026-05-30
+
+run_id `direct-vlm-val-iter40-t1`. **23/25 docs (74 q); `comics_2` &
+`comics_4` UNSCOREABLE** — `direct_vlm` at il_n=3 crashed 4× on those
+two long comics docs (>64-image / sandbox kill; 3 `BadRequestError:
+64 images` logged). Resumed across attempts (16→21→23 docs). 47 cap40
+hits. **q-weighted accuracy over the 74 completed q = 43.2%.**
+Per-cat: infographics/science_poster/slide 60%, eng_drawing/science_paper
+40%, business_report 30%, comics 50%(2/4), maps 10%.
+
+**★ HEADLINE FINDING — full prompt is hugely load-bearing for the
+DIRECT architecture (opposite of rvlm).** R3 and R2 cover the
+**identical 74-q subset** (both miss only comics_2/comics_4), so paired:
+| cap40, same 74 q | prompt | score |
+|---|---|---|
+| R2 `direct_vlm_minimal` | stripped | 21.6% (16/74) |
+| R3 `direct_vlm` | full (TOOL_HINTS+tips) | **43.2% (32/74)** |
+**Δ ≈ +21.6pp** from the full prompt — far beyond n=1 noise (~3pp).
+This is the OPPOSITE of the rvlm family, where minimal ≈ unified
+(prompt content NOT load-bearing, Δ=+1.09pp n.s.). Coherent story:
+the **recursive (VLM-sub-call) architecture is robust to prompt
+minimization; the direct (display-into-own-context) architecture
+depends heavily on prompt scaffolding.** Caveats: n=1 each, partial
+74/80 (internally valid — identical subset), single model (Qwen 27B).
+Worth a paired n≥2 confirmation before it goes in the paper, but the
+magnitude is striking. (Also note R3's 43.2% > R2's 21.6% > R1's
+27.5%cap20 — direct+full-prompt is the strongest direct-VLM config so
+far on this subset.)
 
 ### R2. `[✓]` direct_vlm_minimal n=1 val @ cap=40 (task #34) — 2026-05-29
 
