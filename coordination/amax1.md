@@ -10,13 +10,13 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### 1. `[→]` direct_vlm_minimal n=1 val (task #34)
+### `[→]` R2: direct_vlm_minimal n=1 val @ cap=40 (task #34 follow-up)
 
-Claimed 2026-05-29T10:03Z, tmux `docvqa-dvm`, `max_concurrency=24`.
-Note: the `direct_vlm` baseline (task #19) is still `[ ]` queued on
-amax7 — no legacy number exists yet, so the within-noise/>3pp-drop
-decision rule is deferred until that cell runs. This cell just locks
-the minimal number.
+Launched 2026-05-29T11:47Z, tmux `docvqa-dvm:eval40`, c=24,
+`solver.max_iterations=40`, run_id `direct-vlm-minimal-val-iter40-t1`.
+Tests whether R1's low score is cap-truncation (62/80 hit cap=20) vs
+prompt-stripping. Part of the autonomous chain R1→R5 (see chain note
+under Queued).
 
 ## Queued
 
@@ -81,6 +81,44 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### R1. `[✓]` direct_vlm_minimal n=1 val @ cap=20 (task #34) — 2026-05-29
+
+run_id `direct-vlm-minimal-val-t1`, c=24, default `max_iterations=20`.
+**Overall 27.5% (22/80).** Per-category: slide 60%, infographics 50%,
+science_paper 30%, business_report/comics/science_poster 20%,
+engineering_drawing/maps 10%. Wall ~96min.
+
+**Key signal: 62/80 questions (78%) hit the 20/20 iteration cap.** The
+low score is therefore confounded — cannot attribute to prompt
+content until the cap is relaxed. Hence the cap=40 re-run (R2) and the
+decision to run the whole direct-VLM family at cap=40. NO direct_vlm
+baseline comparison yet (R3 will provide it at equal cap). Logfire
+telemetry threw protobuf DecodeErrors throughout (broken span export)
+but did NOT affect scoring/submission — harmless.
+
+### Autonomous chain plan (R1→R5, all on the 27B @ 8927; user away 2026-05-29)
+
+Strictly sequential on local vllm; driven by heartbeat cron. No vllm
+swaps (safe while unattended).
+- R1 `direct-vlm-minimal-val-t1` cap=20 — ✓ 27.5%
+- R2 `direct-vlm-minimal-val-iter40-t1` cap=40 — running
+- R3 `direct-vlm-val-iter40-t1` (direct_vlm, full prompt) cap=40
+- R4 `direct-vlm-minimal-val-iter40-t2` cap=40 (n=2 escalation, D-008)
+- R5 `direct-vlm-val-iter40-t2` cap=40 (n=2 escalation)
+
+Reads: R1-vs-R2 = iteration-budget effect; R2-vs-R3 = prompt-stripping
+(TOOL_HINTS) at equal cap; R3-vs-rvlm needs equal cap (rvlm headline is
+cap=20 — flagged in amax7.md).
+
+### NOTE: model-axis cells #3-5 DEFERRED (need attention on return)
+
+Not run unattended. Reasons in
+`tmp/workspace/amax1-model-axis/vllm-bringup-notes.md`: (1) per-model
+vllm bringup is unscripted and Gemma-4 needs an undocumented tool-call
+parser (wrong parser → silent tool-call failure → fake-low scores);
+(2) #5 Gemma-31B as-written needs TP=4 but amax1 has only 3 GPUs. The
+vllm `docker run` template + per-model ports are in that file.
 
 ### A. `[✓]` ReAct baseline n=8 val — REPL-vs-no-REPL ablation
 
