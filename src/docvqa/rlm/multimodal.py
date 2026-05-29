@@ -1,4 +1,4 @@
-"""RVLM — Multimodal RLM where the agent can see displayed images inline.
+"""MultimodalRLM — RLM where the agent can see displayed images inline.
 
 The agent calls `display(image)` in its code. The image appears as an inline
 image in the next LLM message, allowing multimodal LLMs to perceive images
@@ -8,7 +8,9 @@ Uses DSPy's CUSTOM_TYPE marker injection so that displayed images are
 properly formatted as image_url content blocks by the existing ChatAdapter
 pipeline.
 
-Based on lean_rlm.py.
+Based on lean.py. Renamed from rvlm.py (2026-05-29) to disambiguate from
+the "rvlm" solver family, which uses LeanRLM and a sub-VLM tool rather than
+this class's inline-image channel.
 """
 
 from __future__ import annotations
@@ -158,7 +160,7 @@ class VisualREPLHistory(pydantic.BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# RVLM — RLM with inline image display
+# MultimodalRLM — RLM with inline image display
 # ---------------------------------------------------------------------------
 
 DEFAULT_ACTION_INSTRUCTIONS = """You are tasked with producing the following outputs given the inputs {inputs}:
@@ -204,7 +206,7 @@ def _strip_code_fences(code: str | None) -> str:
     return result
 
 
-class RVLM(Module):
+class MultimodalRLM(Module):
     """Multimodal RLM — agent can see displayed images inline.
 
     Extends LeanRLM's architecture with:
@@ -445,7 +447,7 @@ class RVLM(Module):
         history: VisualREPLHistory,
         output_field_names: list[str],
     ) -> Prediction:
-        logger.warning("RVLM reached max iterations, using extract to get final output")
+        logger.warning("MultimodalRLM reached max iterations, using extract to get final output")
         # Strip images for extract — not needed for summarization
         no_image_history = VisualREPLHistory(
             entries=list(history.entries),
@@ -557,7 +559,7 @@ class RVLM(Module):
                 iteration=f"{iteration + 1}/{self.max_iterations}",
             )
         except AdapterParseError as e:
-            logger.warning("RVLM iteration %d/%d: parse error after adapter retries: %s", iteration + 1, self.max_iterations, e)
+            logger.warning("MultimodalRLM iteration %d/%d: parse error after adapter retries: %s", iteration + 1, self.max_iterations, e)
             history.append(VisualREPLEntry(code="", output=f"[Error] {e}", images=[]))
             return history
         # Coerce None code to empty string

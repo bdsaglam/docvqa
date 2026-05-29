@@ -31,7 +31,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
-from docvqa.rlm import RVLM
+from docvqa.rlm import MultimodalRLM
 
 logger = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ class DirectVlmProgram:
         return f"\n{hint}\n" if hint else ""
 
     def solve_document(self, document: Document) -> tuple[dict[str, str], dict[str, list[dict]]]:
-        """Solve all questions for a document, one question per RVLM session."""
+        """Solve all questions for a document, one question per MultimodalRLM session."""
         with tempfile.TemporaryDirectory() as tmpdir:
             for i, img in enumerate(document.images):
                 img.save(os.path.join(tmpdir, f"page_{i}.png"), format="PNG")
@@ -266,7 +266,7 @@ class DirectVlmProgram:
                     profile=self.profile.name,
                 ) as q_span:
                     question_text = q.question + self._per_question_prefix(q)
-                    rvlm = RVLM(
+                    rvlm = MultimodalRLM(
                         signature=_build_signature(instructions),
                         max_iterations=self.max_iterations,
                         max_llm_calls=self.max_iterations * 3,

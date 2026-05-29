@@ -1,0 +1,9 @@
+_target_: docvqa.solvers.rvlm_hybrid_solver.create_rvlm_hybrid_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+vlm: ${vlm}
+page_factor: 1.5
+question_concurrency: 4
+images_for_last_n: 3
+max_image_pixels: 8000000

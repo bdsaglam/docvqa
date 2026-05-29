@@ -51,6 +51,36 @@ uv run python evals.py \
   headline; absolute floor of "what the method needs to work" is just
   the tool API.
 
+### `[ ]` rvlm_hybrid n=1 val (task #35) — auto-starts after naked
+
+`MultimodalRLM` with BOTH `display(image)` (agent sees image itself, via
+the multimodal LM context) and `ask_vlm(image, query) -> str` (agent
+delegates focused query to a fresh sub-VLM). Agent picks per call.
+Tests: given the choice, does the agent delegate or perceive directly?
+
+- If mostly `ask_vlm`: positive evidence the rvlm architecture's
+  always-delegate design is the right pattern, not a forced detour.
+- If mostly `display`: rvlm's forced delegation is paying a tax for
+  nothing; direct perception was enough.
+- If mixed by question shape: real, paper-worthy finding about
+  *when* delegation helps.
+
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=rvlm_hybrid \
+  data.split=val data.num_samples=null \
+  max_concurrency=32 \
+  run_id=rvlm-hybrid-val-t1
+```
+
+- Auto-launches in tmux session `rvlm-hybrid-post` when
+  `/tmp/rvlm-strip-chain.done` lands.
+- Side effect of this cell: `RVLM` class renamed to `MultimodalRLM`
+  (file `rlm/multimodal.py`); the rvlm-solver-family vs class
+  naming collision is gone.
+
 ## Queued
 
 ### 1. `[ ]` rvlm_ocr n=1 val (task #14)
