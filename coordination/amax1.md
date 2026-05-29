@@ -12,14 +12,26 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ### `[→]` R3: direct_vlm n=1 val @ cap=40 (task #19, alt-arch baseline)
 
-run_id `direct-vlm-val-iter40-t1`, tmux `docvqa-dvm:baseline40`, c=40
-cap. Launched 2026-05-29T17:44Z overlapping R2's tail; **crashed at
-16/25 docs ~19:34Z (cause unclear — no Python traceback, host had
-440GB RAM free so not host-OOM; possibly killed during a >64-image
-`display()` trajectory). Resumed 2026-05-29T19:43Z** (run is
-resumable; skipped the 16 done docs). Remaining docs are the hard
-ones incl. comics_1-4 + maps_1-3 — expect comics to hit the same
-task_timeout as R2 (see R2 note).
+run_id `direct-vlm-val-iter40-t1`, tmux `docvqa-dvm:baseline40`,
+cap=40. Launched 17:44Z. **Has crashed TWICE** (at 16/25 ~19:34Z and
+21/25 ~21:31Z), each time mid-`display()` on a long multi-page comics
+doc (e.g. page 48), no Python traceback, host RAM fine (440GB free),
+vllm healthy. Resumed after each (resumable; skips done docs):
+attempt 2 @ 19:43Z got 16→21, attempt 3 @ 21:31Z running.
+
+**FINDING — `direct_vlm` (full multimodal solver) is unstable on long
+comics docs.** It `display()`s images into its OWN LM context and
+blows past vllm's 64-image/prompt limit (logged
+`BadRequestError: At most 64 images`); on the longest comics docs the
+process gets killed outright (not a Python exception — likely the RLM
+sandbox subprocess dying). Contrast: R2's `direct_vlm_minimal`/RVLM
+path uses VLM *sub-calls* and merely TIMED OUT cleanly on the same
+comics docs. So comics_2/3/4 may be **unscoreable** for direct_vlm.
+**Stop rule:** if attempt 3 crashes again still incomplete, record R3
+as partial (currently 21/25) and advance the chain to R4 rather than
+loop on the comics crash. Decision for user on return: the direct_vlm
+baseline likely needs a solver fix (cap displayed images) to score
+comics — flag, don't keep retrying blind.
 
 ## Queued
 
