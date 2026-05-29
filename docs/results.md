@@ -58,7 +58,7 @@ measurable generalization gap remaining). See
 |---|---|---|---|---|
 | `rvlm-unified-val-t1` | rvlm_unified | amax7 | running | task #25 — promotes unified to default if Δ ≈ 0pp |
 | `rvlm-ocr-val-t1` | rvlm_ocr | amax7 | queued | task #14 |
-| `direct-vlm-val-t1` | direct_vlm | amax7 | queued | task #19 |
+| `direct-vlm-val-iter40-t1` | direct_vlm @ cap=40 | amax1 | queued | task #19 — moved from amax7; cap=40 to match direct_vlm_minimal |
 | Gemma E4B baseline+rvlm | rvlm | amax1 | queued | task #8 part 1 |
 | Qwen 9B baseline+rvlm | rvlm | amax1 | queued | task #8 part 2 |
 | Gemma 31B baseline+rvlm | rvlm | amax1 | queued | task #8 part 3 |

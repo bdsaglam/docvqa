@@ -72,24 +72,20 @@ uv run python evals.py \
 - Compare to: `rvlm` val (OCR-free); expect approximately equal on
   DocVQA-2026 (moderate-length docs).
 
-### 2. `[ ]` direct_vlm n=1 val (task #19)
+### 2. `[→moved]` direct_vlm n=1 val (task #19) — MOVED to amax1 (2026-05-29)
 
-Alternative architecture data point. Tests whether single-multimodal-model
-REPL can match the recursive sub-call structure. Important for the
-paper's "the recursive sub-call is the load-bearing mechanism" claim.
+Moved to `coordination/amax1.md` to run paired with `direct_vlm_minimal`
+on the throughput host, at **`max_iterations=40`** (the minimal cell
+surfaced that cap=20 is binding — ~56/80 questions hit 20/20). Running
+both direct-VLM-architecture cells at the same cap keeps the
+prompt-stripping (TOOL_HINTS) comparison clean.
 
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=direct_vlm \
-  data.split=val data.num_samples=null \
-  max_concurrency=16 \
-  run_id=direct-vlm-val-t1
-```
-
-- Expected wall: ~30-50min (depends on display() bandwidth)
-- Compare to: `rvlm` headline + `raw_vlm_multi` baseline (20.0% val SC-8)
+**Caveat for the paper claim (decision rules below):** `direct_vlm`
+will now be cap=40, but the `rvlm` headline (n=8) was cap=20. The
+`direct_vlm < rvlm by 5+pp` / `≈ rvlm` rules below assume equal
+iteration budget — interpret the direct_vlm-vs-rvlm comparison only
+after confirming the cap difference doesn't drive it (an rvlm cap=40
+spot-check may be needed).
 
 ## Done
 

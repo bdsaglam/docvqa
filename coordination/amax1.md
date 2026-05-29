@@ -20,7 +20,32 @@ the minimal number.
 
 ## Queued
 
-### 2. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
+### 2. `[ ]` direct_vlm n=1 val @ cap=40 (task #19, moved from amax7)
+
+Alternative-architecture baseline (full prompt, incl. `TOOL_HINTS`).
+Pairs with `direct_vlm_minimal` for the prompt-stripping generality
+test. Moved here to run both at the **same iteration budget**;
+`direct_vlm_minimal` cap=20 showed the cap is binding (~56/80 questions
+hit 20/20), so both run at `max_iterations=40`.
+
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=direct_vlm solver.max_iterations=40 \
+  data.split=val data.num_samples=null \
+  max_concurrency=24 \
+  run_id=direct-vlm-val-iter40-t1
+```
+
+- Expected wall: ~1.5-3h (cap=40 ~2× the cap=20 wall; display() bandwidth-bound).
+- Compare to: `direct-vlm-minimal-val-iter40-t1` (prompt-stripping Δ, same cap);
+  and `rvlm` headline (BUT rvlm n=8 is cap=20 — see amax7.md caveat before
+  reading the architecture claim).
+- Run order: after the two `direct_vlm_minimal` runs (cap=20 t1, cap=40 t1)
+  finish, to avoid contending on local vllm 8927.
+
+### 3. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
 
 Re-run on clean prompts (D-009). Original 2026-05-09 cells used
 pre-scrub prompts. Direction is robust (+5.83pp lift in original n=3);
@@ -35,7 +60,7 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-e4b-vllm-local 4-e4
 - Expected wall: ~2-3h (baseline + scaffold)
 - Expected direction: lift sign preserved (~+5pp baseline → scaffold)
 
-### 3. `[ ]` Qwen 3.5 9B baseline + scaffold n=1 val (task #8 part 2)
+### 4. `[ ]` Qwen 3.5 9B baseline + scaffold n=1 val (task #8 part 2)
 
 ```bash
 TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh qwen-3_5-9b-vllm-local 3_5-9b
@@ -44,7 +69,7 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh qwen-3_5-9b-vllm-local 3_5-
 - Expected wall: ~2-3h
 - Expected direction: lift sign preserved (~+6pp from original n=3)
 
-### 4. `[ ]` Gemma 4 31B baseline + scaffold n=1 val (task #8 part 3)
+### 5. `[ ]` Gemma 4 31B baseline + scaffold n=1 val (task #8 part 3)
 
 ```bash
 # Per docs/experiments/gemma-4-31b-baseline-scaffold.md: needs
