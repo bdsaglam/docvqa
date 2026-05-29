@@ -8,78 +8,15 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` rvlm_skeletal n=1 val (task #32) — started 2026-05-29T11:??+03
+### `[→]` Refill pass: skeletal (4 docs) + naked (1 doc) — 2026-05-29T18:??
 
-Drops the 3 doc-shape pattern bullets from `rvlm_minimal` (high-density,
-many-page, counting). Keeps APPROACH + verify-under-VLM-stochasticity
-principle. Tests whether the patterns were doing work or were
-window-dressing.
+Round out full-set numbers for the strip-chain so n=1 scores are on the
+full 25-doc / 80-Q denominator. Hybrid was already 25/25 complete.
+Sequential to avoid vllm contention.
 
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=rvlm_skeletal \
-  data.split=val data.num_samples=null \
-  max_concurrency=32 \
-  run_id=rvlm-skeletal-val-t1
-```
-
-- Expected wall: ~50 min
-- Compare to: rvlm_minimal n=8 mean 42.03% (SD 2.21pp).
-- Decision rule: if within ±2pp of minimal → run rvlm_naked next; if
-  >3pp drop → patterns were load-bearing, halt further stripping.
-
-### `[ ]` rvlm_naked n=1 val (task #33) — auto-starts after skeletal
-
-Strips everything except DATA + TOOLS + faithfulness + OUTPUT FORMAT.
-The pure "give the agent a recursive-perception tool and let it figure
-it out" test. Strongest possible result if Δ ≈ 0.
-
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=rvlm_naked \
-  data.split=val data.num_samples=null \
-  max_concurrency=32 \
-  run_id=rvlm-naked-val-t1
-```
-
-- Auto-chains after skeletal in the same tmux session `rvlm-strip-chain`.
-- Decision rule: if naked ≈ skeletal ≈ minimal → naked becomes the
-  headline; absolute floor of "what the method needs to work" is just
-  the tool API.
-
-### `[ ]` rvlm_hybrid n=1 val (task #35) — auto-starts after naked
-
-`MultimodalRLM` with BOTH `display(image)` (agent sees image itself, via
-the multimodal LM context) and `ask_vlm(image, query) -> str` (agent
-delegates focused query to a fresh sub-VLM). Agent picks per call.
-Tests: given the choice, does the agent delegate or perceive directly?
-
-- If mostly `ask_vlm`: positive evidence the rvlm architecture's
-  always-delegate design is the right pattern, not a forced detour.
-- If mostly `display`: rvlm's forced delegation is paying a tax for
-  nothing; direct perception was enough.
-- If mixed by question shape: real, paper-worthy finding about
-  *when* delegation helps.
-
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=rvlm_hybrid \
-  data.split=val data.num_samples=null \
-  max_concurrency=32 \
-  run_id=rvlm-hybrid-val-t1
-```
-
-- Auto-launches in tmux session `rvlm-hybrid-post` when
-  `/tmp/rvlm-strip-chain.done` lands.
-- Side effect of this cell: `RVLM` class renamed to `MultimodalRLM`
-  (file `rlm/multimodal.py`); the rvlm-solver-family vs class
-  naming collision is gone.
+Missing docs:
+- skeletal-t1: `business_report_4 infographics_2 science_paper_1 science_poster_1`
+- naked-t1: `business_report_4`
 
 ## Queued
 
@@ -118,6 +55,48 @@ after confirming the cap difference doesn't drive it (an rvlm cap=40
 spot-check may be needed).
 
 ## Done
+
+### `[✓]` rvlm_skeletal + rvlm_naked + rvlm_hybrid n=1 val (tasks #32 #33 #35) — 2026-05-29
+
+Strip-chain results, all n=1 on Qwen 3.5 27B local, c=32 (refill pending
+for skeletal/naked long-tail). Compare to rvlm_minimal n=8 mean
+40.94% (wait — that's unified; minimal is **42.03% ± 2.21pp**).
+
+**Full-set numbers (no refill yet):**
+- skeletal-t1: 45.45% (25/55) — 4 docs missed long-tail
+- naked-t1: 32.00% (24/75) — 1 doc missed
+- hybrid-t1: **35.00% (28/80)** — clean 25/25, no long-tail!
+
+**Common 21-doc / 55-Q subset (clean 4-way compare):**
+
+| Solver | common-21 | Δ vs minimal-t1 |
+|---|---|---|
+| minimal-t1 | 43.64% (24/55) | — |
+| skeletal-t1 | 45.45% (25/55) | **+1.82pp** |
+| naked-t1 | 34.55% (19/55) | **−9.09pp** |
+| hybrid-t1 | 36.36% (20/55) | **−7.27pp** |
+
+**Preliminary reads (n=1, refill pending):**
+- **skeletal ≈ minimal** (+1.82pp on common 21): the 3 doc-shape
+  patterns (high-density, many-page, counting) do not carry the method.
+  Strips fine; promote-to-default candidate.
+- **naked drops ~9pp**: removing the APPROACH steps + the verify-under-
+  VLM-stochasticity principle costs real points. **APPROACH + verify
+  are load-bearing.** The skeletal → naked delta isolates the
+  contribution of these (skeletal 45.45% → naked 34.55% = −10.91pp on
+  the same 55Q). Naked is a step too far.
+- **hybrid drops ~7pp**: having `display()` as an alternative to
+  `ask_vlm()` doesn't help on n=1 — might even hurt. Possible
+  explanations: agent confused by choice; display() adds per-iteration
+  context-bloat (images in conversation); or just an n=1 low draw.
+  Worth n=8 for a clean read. Also hybrid was ~2× slower per doc than
+  the rvlm-family (MultimodalRLM has heavier per-iteration cost from
+  inline images).
+
+**Operational note: GPU overlap.** The new `rvlm_overlap_orch.py`
+pattern launched hybrid the moment naked hit 22/25, so no GPU idle
+across the long-tail transition. Pattern is reusable for any future
+strip chain.
 
 ### `[✓]` rvlm_minimal n=8 val — generality test (task #31) — 2026-05-29
 
