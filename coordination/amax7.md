@@ -8,15 +8,7 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` Refill pass: skeletal (4 docs) + naked (1 doc) — 2026-05-29T18:??
-
-Round out full-set numbers for the strip-chain so n=1 scores are on the
-full 25-doc / 80-Q denominator. Hybrid was already 25/25 complete.
-Sequential to avoid vllm contention.
-
-Missing docs:
-- skeletal-t1: `business_report_4 infographics_2 science_paper_1 science_poster_1`
-- naked-t1: `business_report_4`
+(none — strip-chain refilled; queuing n=2 next)
 
 ## Queued
 
@@ -58,45 +50,52 @@ spot-check may be needed).
 
 ### `[✓]` rvlm_skeletal + rvlm_naked + rvlm_hybrid n=1 val (tasks #32 #33 #35) — 2026-05-29
 
-Strip-chain results, all n=1 on Qwen 3.5 27B local, c=32 (refill pending
-for skeletal/naked long-tail). Compare to rvlm_minimal n=8 mean
-40.94% (wait — that's unified; minimal is **42.03% ± 2.21pp**).
+Strip-chain n=1, Qwen 3.5 27B local, c=32. All three refilled to clean
+25/25 docs / 80 questions. Reference: rvlm_minimal n=8 mean **42.03%
+SD 2.21pp** (t1 = 42.50%).
 
-**Full-set numbers (no refill yet):**
-- skeletal-t1: 45.45% (25/55) — 4 docs missed long-tail
-- naked-t1: 32.00% (24/75) — 1 doc missed
-- hybrid-t1: **35.00% (28/80)** — clean 25/25, no long-tail!
+**Locked full-set numbers (80 Q each):**
 
-**Common 21-doc / 55-Q subset (clean 4-way compare):**
+| Solver | n=1 score | vs minimal-t1 | vs minimal n=8 mean |
+|---|---|---|---|
+| minimal-t1 | 42.50% (34/80) | — | within mean |
+| **skeletal-t1** | **42.50% (34/80)** | **+0.00pp** | within mean |
+| naked-t1 | 32.50% (26/80) | **−10.00pp** | **−9.53pp (~4.3σ)** |
+| hybrid-t1 | 35.00% (28/80) | **−7.50pp** | **−7.03pp (~3.2σ)** |
 
-| Solver | common-21 | Δ vs minimal-t1 |
-|---|---|---|
-| minimal-t1 | 43.64% (24/55) | — |
-| skeletal-t1 | 45.45% (25/55) | **+1.82pp** |
-| naked-t1 | 34.55% (19/55) | **−9.09pp** |
-| hybrid-t1 | 36.36% (20/55) | **−7.27pp** |
+**Reads (n=1):**
+1. **skeletal ≡ minimal at n=1** (literal 34/80 tie). The 3 doc-shape
+   patterns (high-density, many-page, counting) don't carry the
+   method. Strong promote-to-default candidate. Run n=2 → n=8 to
+   confirm at the headline level.
+2. **naked drops 10pp** — well outside minimal's σ (≈4.3σ at the
+   point estimate). Removing the APPROACH steps + the verify-under-
+   VLM-stochasticity principle costs real points. **APPROACH +
+   verify are load-bearing.** Naked is a step too far; don't escalate.
+3. **hybrid drops 7.5pp** — also outside minimal's σ. Adding a second
+   perception channel (display) on top of ask_vlm hurts in n=1.
+   Worth n=2 to confirm the magnitude.
 
-**Preliminary reads (n=1, refill pending):**
-- **skeletal ≈ minimal** (+1.82pp on common 21): the 3 doc-shape
-  patterns (high-density, many-page, counting) do not carry the method.
-  Strips fine; promote-to-default candidate.
-- **naked drops ~9pp**: removing the APPROACH steps + the verify-under-
-  VLM-stochasticity principle costs real points. **APPROACH + verify
-  are load-bearing.** The skeletal → naked delta isolates the
-  contribution of these (skeletal 45.45% → naked 34.55% = −10.91pp on
-  the same 55Q). Naked is a step too far.
-- **hybrid drops ~7pp**: having `display()` as an alternative to
-  `ask_vlm()` doesn't help on n=1 — might even hurt. Possible
-  explanations: agent confused by choice; display() adds per-iteration
-  context-bloat (images in conversation); or just an n=1 low draw.
-  Worth n=8 for a clean read. Also hybrid was ~2× slower per doc than
-  the rvlm-family (MultimodalRLM has heavier per-iteration cost from
-  inline images).
+**Tool-preference insight from hybrid (paper-worthy).** Counted
+code-block tool calls across the full hybrid trial:
+- `display(...)`: **1397 calls**
+- `ask_vlm(...)`: **706 calls**
 
-**Operational note: GPU overlap.** The new `rvlm_overlap_orch.py`
-pattern launched hybrid the moment naked hit 22/25, so no GPU idle
-across the long-tail transition. Pattern is reusable for any future
-strip chain.
+Agent strongly preferred `display()` over delegation (~2:1).
+*Given the choice, the agent picked direct perception. And the score
+dropped 7.5pp.* This is direct evidence that the rvlm family's
+forced-delegation pattern is the right one — the agent's revealed
+preference points toward seeing-itself, but seeing-itself produces
+worse answers. A nice find for the paper's discussion of why
+recursive perception > direct perception when the LM is identical.
+
+**Operational note.** The new `rvlm_overlap_orch.py` pattern kept
+the GPU warm across the n=1 chain (no idle on long-tails). Refill
+needed for skeletal (4 docs) + naked (1) — sequential pass at full
+14400s timeout. Hybrid was already 25/25 (no long-tail; possibly
+because MultimodalRLM's inline-image channel sidesteps the
+agent-loop hang mode that catches science_paper_1 in the rvlm
+family).
 
 ### `[✓]` rvlm_minimal n=8 val — generality test (task #31) — 2026-05-29
 
