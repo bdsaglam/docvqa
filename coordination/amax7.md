@@ -48,6 +48,42 @@ spot-check may be needed).
 
 ## Done
 
+### `[✓]` rvlm_hybrid w/ images_for_last_n=1 n=1 val (task #37) — 2026-05-30
+
+Tested the "visual window eviction" hypothesis for hybrid's −8pp deficit.
+Overrode `solver.images_for_last_n=1` (vs yaml default 3). Hypothesis
+was that hybrid's deficit might come from stale-image confusion across
+multi-turn display() calls (tighter window helps) OR from helpful
+multi-image context being too small (tighter window hurts).
+
+**Result: imgN1 = 20.00% (16/80) — clean 25/25.**
+- vs hybrid baseline (images_for_last_n=3): **−15.00pp**
+- vs minimal: **−22.50pp**
+
+The "multi-image context helps" branch, much more extreme than
+predicted. The display() strategy heavily depends on accumulating
+visual context across turns; collapsing the window to 1 cripples it.
+
+Tool-usage ratio essentially unchanged:
+- baseline hybrid (n=3): display 1397 / ask_vlm 706 (66:34)
+- imgN1: display 1486 / ask_vlm 706 (68:32)
+- ask_vlm count is *literally identical* (706:706)
+- agent didn't adapt strategy to the smaller window — kept using
+  display() at the same rate, just with broken context retention.
+
+**Implication for the paper.** This is direct evidence that
+display()-based perception is fragile to context-window choice in a
+way that ask_vlm() (recursive sub-VLM) is not — sub-VLM text answers
+persist in the trajectory regardless of how many later display()
+calls evict images. The forced-delegation design of the rvlm family
+sidesteps a real failure mode of multimodal-LM-in-the-loop solvers.
+
+Open next-cell options if we want to keep digging:
+- images_for_last_n=8 (or 12): does pushing the window up recover
+  hybrid? If yes, locks the "display needs lots of context" story.
+- per-question correlation: are hybrid's wrongs concentrated on docs
+  where the agent did many display() calls (cumulative eviction)?
+
 ### `[✓]` rvlm_skeletal + rvlm_hybrid n=2 val (task #36) — 2026-05-29
 
 n=2 follow-up to confirm n=1 reads. Skeletal-t2 lost 4 docs to

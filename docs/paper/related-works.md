@@ -3,10 +3,12 @@
 Running index of papers relevant to this work. Each entry: citation, obsidian
 path (if downloaded), and a short note on the connection.
 
-**Local library (2026-05-27).** Every paper indexed here is now downloaded
-to [`related-works/`](related-works/) — one `{shorthand}-{arxiv_id}/` folder
-each, with `notes.md` (connection note), `overview.md`, `paper.md`, and the
-PDF. See [`related-works/README.md`](related-works/README.md) for the index.
+**Project notes (2026-05-30).** Every paper indexed here has a
+project-specific connection note at
+[`related-works/{shorthand}-{arxiv_id}.md`](related-works/) (one file per
+paper). Paper artifacts (PDF, overview, full markdown, code repos) are
+tracked separately, not in this repo. See
+[`related-works/README.md`](related-works/README.md) for the index.
 
 **Last updated:** 2026-05-01, from `lit-review-1.md` (RLM-focused) and
 `lit-review-2.md` (DocVQA-focused).
@@ -204,6 +206,28 @@ This is the cluster most likely to challenge our novelty. Sourced from
 - **Doc-V*: Coarse-to-Fine Interactive Visual Reasoning for Multi-Page
   Document VQA.** arXiv:2604.13731 (2026). **(needs verification)**
   Iterative coarse-to-fine visual reasoning for multi-page DocVQA.
+
+### Think-with-images trained VLMs (closest analog to `direct_vlm`)
+
+The RL-trained counterpart of the mechanism behind our alt-angle method
+`direct_vlm` — a single multimodal VLM that interleaves textual CoT
+with image crops it chose itself. Same closed loop as `direct_vlm`,
+realized by RL training instead of prompted scaffolding.
+
+- **DeepEyes: Incentivizing "Thinking with Images" via Reinforcement
+  Learning.** Zheng et al. arXiv:2505.14362 (May 2025). **Verified
+  2026-05-30 (existence + overview).** Trains a Qwen2.5-VL-7B (scaled to
+  32B) end-to-end with outcome-reward RL to issue "image zoom-in" bbox
+  crops mid-CoT and continue reasoning over the resulting cropped image
+  — "interleaved Multimodal Chain-of-Thought" (iMCoT). **Direct parallel
+  to `direct_vlm`** (`docs/solvers/direct-vlm.md`): same single-model
+  in-band perception loop. Our delta is (a) training-free vs RL-trained,
+  (b) broader image-action surface via Python (any PIL op vs single
+  bbox zoom-in), and (c) DeepEyes has no analog of our *proposed*
+  method `rvlm`'s recursive VLM sub-call. DeepEyes evaluates on natural-
+  image visual-reasoning benchmarks (V*, HR-Bench, MME-RealWorld), not
+  multi-page documents — so our doc setting is also additive. See
+  `related-works/deepeyes-2505.14362.md` for the full positioning.
 
 ### RLM applied to other modalities
 
