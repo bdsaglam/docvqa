@@ -355,6 +355,7 @@ for context.
 | **VLM cropping on/off** | Full method (VLM accepts arbitrary PIL Image — pages, crops, regions) vs page-only (VLM accepts only a page index, no cropping/zoom). Isolates the "active perception" contribution from the broader VLM-on/off comparison. | not in RLM paper | **DONE** — n=8: **36.88% ± 2.50pp** vs 44.69% baseline; gap **−7.81pp (5.88 SE)** |
 | **Turn budget** | Vary max turns. When does extra budget stop helping? | RLM-style inference scaling curve | **DONE** — 8 trials × {10,20,30,40}; peak m=30 = 44.69% (see below) |
 | **Category tips on/off** | Remove per-category prompt tips. Tests whether handcrafted hints carry meaningful weight or are decoration. | not in RLM paper | **DONE** — n=8 clean (t1 excluded, sandbox-error contam): **38.75% ± 3.13pp** vs 44.69% baseline; gap **−5.94pp (3.99 SE)** |
+| **Code-REPL on/off** (`react` vs `rvlm`) | `dspy.ReAct` with the same VLM tool surface as `rvlm` (look + look_many) but no Python sandbox. Removes the *composition channel*: ReAct can call the VLM but can't `pages[i].crop()`, do arithmetic, or compose results in code. | "REPL without the REPL" — direct test of whether the code sandbox is load-bearing. Not in RLM paper. | **DONE** — n=8: `react` 30.47 ± 3.06% vs `rvlm` 40.94 ± 2.29%. **Paired Δ = −10.47pp [−13.42, −7.52] 95% CI**; 16/16 trials negative. Per-category: REPL helps most on zoom-then-read (business_report +23.8pp, engineering_drawing +23.8pp). See `docs/experiments/react-baseline.md`. |
 
 ### OCR's role: two opposing forces (see `per-doc-flat-vs-leanest.md`)
 

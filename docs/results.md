@@ -23,6 +23,7 @@ shown only where they anchor an ICDAR submission).
 | `raw_vlm_multi` | `no_loop_multi` / `no_loop_multi_da` | raw-VLM baseline, multi-image |
 | `raw_vlm_single` | `no_loop` | raw-VLM baseline, single-image |
 | `repl_only` | — (new ablation) | documentation: REPL with no perception |
+| `react` | — (new ablation) | `dspy.ReAct` with the same VLM tools as `rvlm` (`look` + `look_many`) but **no Python REPL** — the no-REPL ablation for the REPL-load-bearing test |
 
 See `docs/paper/README.md` for paper-cell taxonomy and full names.
 Paper-facing method names TBD per D-005. Legacy names appear in
@@ -111,6 +112,7 @@ by three independent ablations, all measured.
 | Region selection (cropping) | `flat_solo` cropping-off | 8 | 36.88 ± 2.50% | **−7.81pp** vs 44.69%; active region selection matters |
 | Iteration count | turn budget m=5 | 3 | 30.00 ± 0.00% | **−14.69pp** vs m=30; iterative, not one-shot |
 | Recursive sub-call structure | `rvlm` vs `raw_vlm_multi` | 8 vs 8 | 42.81% vs 21.07% (per-trial) | **+21.74pp**; recursive agent↔VLM dominates one-shot |
+| **Code-REPL (composition channel)** | **`react` vs `rvlm` (paired n=8)** | **8** | **react 30.47 ± 3.06%** | **Δ = −10.47pp [−13.42, −7.52]pp 95% CI** vs `rvlm`'s 40.94% n=8 mean. 16/16 paired trials negative. The REPL is *load-bearing*: ReAct can call the same VLM tools but can't crop / arithmetic / compose results in code. |
 
 Per-component sanity:
 - `flat_solo` no-search: 42.50 ± 3.90% (−2.19pp, n.s. — BM25 redundant given `page_texts`)
@@ -124,6 +126,7 @@ Detail:
 - `docs/experiments/flat-solo-search-off.md`
 - `docs/experiments/flat-solo-category-tips-off.md`
 - `docs/experiments/efficiency-summary.md`
+- `docs/experiments/react-baseline.md` (no-REPL ablation, REPL-load-bearing test)
 
 ## Conventions for adding rows
 
