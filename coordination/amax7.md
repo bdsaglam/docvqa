@@ -8,7 +8,7 @@ cell at a time; replan after each result.
 
 ## In progress
 
-(none — strip-chain refilled; queuing n=2 next)
+(none — n=2 chain done; queue is open)
 
 ## Queued
 
@@ -47,6 +47,42 @@ after confirming the cap difference doesn't drive it (an rvlm cap=40
 spot-check may be needed).
 
 ## Done
+
+### `[✓]` rvlm_skeletal + rvlm_hybrid n=2 val (task #36) — 2026-05-29
+
+n=2 follow-up to confirm n=1 reads. Skeletal-t2 lost 4 docs to
+long-tail timeout (refill pending); hybrid-t2 was clean 25/25.
+
+**Paired Δ on common 21-doc / 68-Q subset (clean 4-trial compare):**
+
+| trial | score | Δ vs minimal-t* |
+|---|---|---|
+| minimal-t1 | 44.12% | — |
+| minimal-t2 | 42.65% | — |
+| skeletal-t1 | 41.18% | **−2.94pp** |
+| skeletal-t2 | 39.71% | **−2.94pp** |
+| hybrid-t1 | 35.29% | **−8.82pp** |
+| hybrid-t2 | 35.29% | **−7.35pp** |
+
+**n=2 paired mean Δ (common 68-Q):**
+- **skeletal − minimal = −2.94pp** (eerily consistent across both trials)
+- **hybrid − minimal = −8.09pp** (also tight: −8.82, −7.35)
+
+**Updated reads (revising n=1):**
+- **skeletal ≈ minimal but slightly below** (−2.94pp paired n=2 on
+  common subset). The n=1 full-set "tie" was on different doc sets
+  per trial. Clean paired comparison shows skeletal is consistently
+  ~3pp below minimal — close to the pre-set ±2pp threshold but not
+  cleanly inside it. n=8 needed to call this a tie vs a small cost.
+- **hybrid ~8pp below minimal at n=2.** Both trials agree the drop
+  is real (not n=1 noise). The "agent prefers display, scores
+  lower" finding is confirmed. n=8 not needed to call hybrid worse;
+  the question for the paper is *why*.
+
+**Hybrid identical-score curiosity.** hybrid-t1 and hybrid-t2 both
+scored 24/68 on the common subset. With temperature=1.0 across 4
+parallel sub-VLMs, exact agreement is suspicious but plausible at
+small denominators. Worth a per-question check if we publish this.
 
 ### `[✓]` rvlm_skeletal + rvlm_naked + rvlm_hybrid n=1 val (tasks #32 #33 #35) — 2026-05-29
 
