@@ -108,25 +108,69 @@ Chain (t1..t8) via `bash scripts/run_rvlm_minimal_chain.sh`.
 
 ## Per-trial table
 
-### `rvlm_minimal` (treatment, amax7)
+### `rvlm_minimal` (treatment, amax7) — final, n=8
 
-| Trial | run_id | Score | Correct/total | Notes |
-|---|---|---|---|---|
-| t1 | `rvlm-minimal-val-t1` | TBD | /80 | |
-| t2..t8 | `rvlm-minimal-val-t{2..8}` | TBD | /80 | in tmux `rvlm-minimal-chain` |
+| Trial | run_id | Score | Correct/total |
+|---|---|---|---|
+| t1 | `rvlm-minimal-val-t1` | 42.50% | 34/80 |
+| t2 | `rvlm-minimal-val-t2` | 42.50% | 34/80 |
+| t3 | `rvlm-minimal-val-t3` | 40.00% | 32/80 |
+| t4 | `rvlm-minimal-val-t4` | 41.25% | 33/80 |
+| t5 | `rvlm-minimal-val-t5` | 45.00% | 36/80 |
+| t6 | `rvlm-minimal-val-t6` | 38.75% | 31/80 |
+| t7 | `rvlm-minimal-val-t7` | 41.25% | 33/80 |
+| t8 | `rvlm-minimal-val-t8` | 45.00% | 36/80 |
+| **mean** | | **42.03%** | **SD 2.21pp** |
 
-### Paired comparison (minimal − unified) — populated as trials land
+### Paired comparison (minimal − unified), n=8
 
 | Trial | minimal | unified | Δ |
 |---|---|---|---|
-| t1 | TBD | 45.0% | TBD |
-| t2 | TBD | 41.2% | TBD |
-| t3 | TBD | 38.8% | TBD |
-| t4 | TBD | 35.0% | TBD |
-| t5 | TBD | 42.5% | TBD |
-| t6 | TBD | 47.5% | TBD |
-| t7 | TBD | 40.0% | TBD |
-| t8 | TBD | 37.5% | TBD |
+| t1 | 42.50% | 45.00% | −2.50 |
+| t2 | 42.50% | 41.25% | +1.25 |
+| t3 | 40.00% | 38.75% | +1.25 |
+| t4 | 41.25% | 35.00% | +6.25 |
+| t5 | 45.00% | 42.50% | +2.50 |
+| t6 | 38.75% | 47.50% | −8.75 |
+| t7 | 41.25% | 40.00% | +1.25 |
+| t8 | 45.00% | 37.50% | +7.50 |
+| **mean Δ** | | | **+1.09pp** |
+
+- Paired Δ: **+1.09pp** [CI95: −3.14, +5.33]
+- Paired t = 0.611, df = 7 — not significant at α = 0.05
+- Within-method SDs: minimal **2.21pp**, unified **4.05pp**
+
+## Result and paper action
+
+Per the pre-set decision rules, +1.09pp lands cleanly in the
+**"≈ 0pp / within paired noise"** band. The 10.7 kB of hand-crafted
+DocVQA-2026 per-category tips and the engineering-drawing-specific
+VLM signature are **not** load-bearing. The recursive-perception
+mechanism is.
+
+**Paper action: `rvlm_minimal` is the proposed method.** `rvlm_unified`
+and the per-category dispatch variant become engineering ablations
+that show what tip-tuning buys (here: nothing measurable beyond noise).
+
+Two notes worth keeping:
+
+1. **Lower variance for the simpler prompt.** rvlm_minimal SD is
+   2.21pp, rvlm_unified SD is 4.05pp — almost 2× tighter. With the
+   long tail of per-category tips removed, trial-to-trial variation
+   shrinks. Plausibly because the agent stops being yanked between
+   competing per-category prescriptions when the category dispatch
+   guess is wrong. Worth a sentence in the paper.
+2. **Confound flagged but irrelevant given Δ ≈ 0.** Because we
+   removed (1) the category tips and (2) generalized the VLM
+   sub-call signature simultaneously, we can't separately attribute
+   the (very small) observed Δ. Since Δ is ≈ 0 the joint manipulation
+   doesn't cost the method; the attribution question is moot.
+
+## Status
+
+**Done.** n=8 paired analysis locked 2026-05-29. Refill pass 2 cleared
+all four trials that hit the science_paper_1 4h-timeout hang on first
+attempt.
 
 ## Observations / caveats
 
@@ -141,8 +185,3 @@ Chain (t1..t8) via `bash scripts/run_rvlm_minimal_chain.sh`.
   documents, superlatives, vision-model disagreement). They're not
   derived from DocVQA-2026 per-category error analysis.
 
-## Status
-
-**In progress.** Solver built 2026-05-28; chain queued on amax7 (vllm
-free post-unified-tips). amax1 still finishing rvlm-val-t8 (the
-per-category baseline n=8 final).

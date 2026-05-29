@@ -8,24 +8,7 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` rvlm_minimal n=8 val — generality test (task #31) — started 2026-05-28T16:??+03
-
-Tests whether the proposed method's score depends on benchmark-tuned
-category tips. Strip the 8 DocVQA-2026 category tip blocks; keep only
-4 generic document-shape patterns in the solver body. Paired
-comparison vs `rvlm_unified` (amax7 t1..t8, already done) by trial.
-
-```bash
-tmux new-session -d -s rvlm-minimal-chain bash scripts/run_rvlm_minimal_chain.sh
-# Resumable: bash scripts/run_rvlm_minimal_chain.sh (skips completed run_ids).
-```
-
-- Expected wall: 8 × ~50min ≈ 7h (Qwen 3.5 27B vllm, c=32)
-- run_ids: `rvlm-minimal-val-t{1..8}`
-- Decision gate + paired analysis: `docs/experiments/rvlm-minimal-generality.md`
-- Strongest paper outcome: Δ ≈ 0pp → `rvlm_minimal` becomes the
-  proposed method; `rvlm` / `rvlm_unified` become engineering
-  ablations showing what tip-tuning buys.
+(none)
 
 ## Queued
 
@@ -68,6 +51,29 @@ uv run python evals.py \
 - Compare to: `rvlm` headline + `raw_vlm_multi` baseline (20.0% val SC-8)
 
 ## Done
+
+### `[✓]` rvlm_minimal n=8 val — generality test (task #31) — 2026-05-29
+
+run_ids: `rvlm-minimal-val-t{1..8}` · **n=8 mean 42.03% ± 2.21pp**
+(range 38.75–45.00) on Qwen 3.5 27B local, c=32.
+
+Paired vs `rvlm_unified` t1..t8: **Δ = +1.09pp [CI95: −3.14, +5.33]**,
+paired t = 0.611, df = 7 (n.s.). Lands cleanly in the pre-set
+"≈ 0pp / within paired noise" band → **`rvlm_minimal` is the proposed
+method.** The 10.7 kB of hand-crafted DocVQA-2026 category tips and
+the engineering-drawing-specific VLM sub-call signature are not
+load-bearing; the recursive-perception mechanism is.
+
+Variance note worth surfacing for the paper: minimal σ = 2.21pp,
+unified σ = 4.05pp — almost 2× tighter trial-to-trial. Plausibly the
+agent stops being yanked between competing per-category prescriptions
+when the dispatch guess is wrong. Per-trial table + paired analysis:
+`docs/experiments/rvlm-minimal-generality.md`.
+
+Refill notes: 4/8 trials needed pass-2 refill — `science_paper_1`
+systematically hits the 4h task_timeout (~50% per-attempt success
+rate, agent-loop / vllm-hang specific to this doc). All cleared on
+the sequential refill pass.
 
 ### `[✓]` unified-tips n=8 val (tasks #25 + #28) — 2026-05-28
 
