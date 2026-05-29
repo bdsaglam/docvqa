@@ -10,34 +10,15 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-(none)
+### 1. `[→]` direct_vlm_minimal n=1 val (task #34)
+
+Claimed 2026-05-29T10:03Z, tmux `docvqa-dvm`, `max_concurrency=24`.
+Note: the `direct_vlm` baseline (task #19) is still `[ ]` queued on
+amax7 — no legacy number exists yet, so the within-noise/>3pp-drop
+decision rule is deferred until that cell runs. This cell just locks
+the minimal number.
 
 ## Queued
-
-### 1. `[ ]` direct_vlm_minimal n=1 val (task #34)
-
-Generality test for the direct-VLM alternative-architecture solver.
-Strips the `TOOL_HINTS` per-category dispatch (2.4 kB, 8 hand-crafted
-DocVQA-2026 category overlays) + body's duplicated Unknown-rules
-bullet + a few benchmark-flavored sub-bullets. Same shape of cut as
-`rvlm_minimal` vs `rvlm`/`rvlm_unified`.
-
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=direct_vlm_minimal \
-  data.split=val data.num_samples=null \
-  max_concurrency=32 \
-  run_id=direct-vlm-minimal-val-t1
-```
-
-- Expected wall: ~50 min on Qwen 3.5 27B local.
-- Compare to: existing `direct_vlm` n=1 val (look up the latest legacy
-  number in `docs/experiments/`).
-- Decision rule: if within trial noise of direct_vlm → run n=8 paired;
-  if drop >3pp → TOOL_HINTS were load-bearing for the direct-architecture
-  variant, surfaces a real generality gap worth flagging in the paper.
 
 ### 2. `[ ]` Gemma 4 E4B baseline + scaffold n=1 val (task #8 part 1)
 
