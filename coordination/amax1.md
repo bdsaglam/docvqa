@@ -10,12 +10,8 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### `[→]` R5: direct_vlm cap=40 @ images_for_last_n=2
-
-run_id `direct-vlm-iln2-val-iter40-t1`, tmux `docvqa-dvm:iln2`.
-Launched overlapping R4's tail. The middle point of the il_n sweep —
-tests whether il_n=2 keeps the crash-fix while recovering the accuracy
-il_n=1 lost (see R4 finding below).
+(none — R1→R5 chain COMPLETE 2026-05-30T04:14Z. GPU idle by design;
+model-axis cells #3-5 deferred for the user, see NOTE below.)
 
 ## Queued
 
@@ -73,6 +69,53 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### ★ CHAIN COMPLETE — il_n sweep cross-run summary (2026-05-30)
+
+**(i) Iteration-budget effect (R1 cap20 vs R2 cap40):** ≈flat /
+slightly down (27.5%→21.6%); 58-62 q hit the cap at BOTH budgets.
+**Iteration budget is NOT the bottleneck** — the agent doesn't
+converge at any budget.
+
+**(ii) images_for_last_n sweep (direct_vlm cap40) — the main result:**
+| il_n | crash on comics? | accuracy |
+|---|---|---|
+| 3 (R3) | **YES** (>64 imgs, process killed; comics_2/4 unscoreable) | 43.2% (32/74) |
+| 2 (R5) | no (comics_2 just timed out) | 28.9% (22/76) |
+| 1 (R4) | no | 23.7% (18/76) |
+
+- **Crash fix confirmed:** il_n≤2 eliminates the >64-image crash
+  (BadReq64=0, runs complete; comics_2 merely times out like the
+  minimal solver).
+- **Accuracy is MONOTONIC in il_n:** 1 < 2 < 3. R4 vs R5 is a clean
+  same-76q compare → **il_n=2 beats il_n=1 by +5.2pp** (22 vs 18 / 76).
+  il_n=3 (43.2%) is higher still (different/smaller 74q subset + n=1,
+  but the gap is broad across categories, not a subset artifact).
+- **The tension (key takeaway):** the setting with the best accuracy
+  (il_n=3, more visual context) is exactly the one that crashes on long
+  docs. Truncating kept-images (il_n=1/2) trades ~14-20pp of accuracy
+  for stability. **A proper fix needs smarter image management** (cap
+  TOTAL images / summarize old crops), not just last-N truncation —
+  flag for the solver. n=1 each; directionally solid (monotone + clean
+  R4/R5 pair).
+
+**(iii) prompt/architecture (R2 minimal vs R3 full, same 74q, equal
+cap):** full prompt **+21.6pp** (43.2 vs 21.6) — OPPOSITE of rvlm
+(where minimal≈unified). Recursive arch robust to prompt
+minimization; direct arch depends on prompt scaffolding. (rvlm
+headline is cap20 — equal-cap caveat noted.)
+
+**Model-axis cells #3-5 NOT run** (deferred, see NOTE) — chain ended
+here; GPU idle awaiting user decision.
+
+### R5. `[✓]` direct_vlm n=1 val @ cap=40, images_for_last_n=2 — 2026-05-30
+
+run_id `direct-vlm-iln2-val-iter40-t1`. **Overall 28.9% (22/76)** —
+`comics_2` timed out (24/25; 76q, same subset as R4). 47 cap40 hits,
+**BadReq64=0** (no crash). Per-cat: infographics 80%, science_poster/
+slide 30%, business_report/eng_drawing/maps/science_paper 20%,
+comics 1/6, maps 1/10. Clean +5.2pp over R4 (il_n=1) on the identical
+76q → confirms accuracy rises with kept-image count.
 
 ### R4. `[✓]` direct_vlm n=1 val @ cap=40, images_for_last_n=1 — 2026-05-30
 
