@@ -10,8 +10,25 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-(none — R1→R5 chain COMPLETE 2026-05-30T04:14Z. GPU idle by design;
-model-axis cells #3-5 deferred for the user, see NOTE below.)
+### `[→]` direct_vlm COMPACTION-prompt validation matrix (2026-05-30)
+
+New prompts (commit `af9ca2b`) expose **`RESET_HISTORY`** (compaction)
+to direct_vlm + add **per-step display discipline** (1–2 imgs/step,
+note-then-move-on, "images are ephemeral"). Goal: fix the >64-image
+comics crash via *agent-controlled context rationing* instead of
+silent il_n truncation (which cost ~14–20pp accuracy, see R3/R4/R5).
+
+Matrix: `direct_vlm` cap40, **il_n ∈ {3, 6, 12}** (higher now safe —
+per-step bounded), **n=3 each = 9 runs**, **c=8**, maintain ≤3
+concurrent (driver cron `5a19474e`). run_ids
+`dvm-compact-iln{3,6,12}-val-t{1,2,3}`.
+
+**What success looks like:** (1) **no comics crash** (BadReq64=0,
+agent compacts/looks in bites) AND (2) accuracy **≥ il_n=3's 43.2%**
+(ideally higher). Compare to no-compaction baselines: il_n=3 crashed
+@43.2%, il_n=1=23.7%, il_n=2=28.9%. **Abort guard:** if any il_n=3 run
+crashes on comics, driver halts the il_n=6/12 batches — prompt alone
+insufficient, would need the hard total-image-cap backstop.
 
 ## Queued
 
