@@ -86,10 +86,36 @@ uv run python evals.py \
   files → single submission JSON. User uploads to competition server
   manually.
 
-### 3. `[ ]` rvlm_ocr n=1 val (task #14)
+### 3. `[ ]` Prompt-minimize other solvers (post-test gate)
 
-Locks the clean OCR-extension number. Current `rvlm_full` legacy data is
-confounded with `look()` ergonomic wrapper. This is the clean cell.
+**Decision gate:** runs only after test n=8 confirms `rvlm_minimal`
+as the proposed method.
+
+If skeletal-style minimization gave `rvlm_minimal` equal mean +
+tighter σ, the same minimization principle (drop doc-shape
+patterns, keep only DATA / TOOLS / APPROACH / VERIFY / OUTPUT) should
+apply to other solvers before they get evaluated. Otherwise their
+prompts are confounded with extra DocVQA-2026-tuned content that the
+proposed-method case shows is unnecessary.
+
+Solvers to minimize:
+- `rvlm_ocr_solver.py` — currently mirrors `rvlm_unified` doc-shape
+  patterns + OCR-specific tips. Strip to minimal + OCR-tool docs.
+- `raw_vlm_multi_solver.py` — currently has category tips appended.
+  Strip to bare task + format rules.
+- `direct_vlm_solver.py` — currently has TOOL_HINTS section. Audit
+  parity with skeletal-style minimization (task #27).
+- `official_baseline_solver.py` — already minimal (verbatim
+  competition prompt); no change.
+
+Apply same skeletal-style edit (sub-agent if not trivial), then
+proceed to cell 4.
+
+### 4. `[ ]` rvlm_ocr n=1 val (task #14, post-minimization)
+
+Locks the clean OCR-extension number. Runs AFTER prompt minimization
+above so the lift comparison isn't confounded with DocVQA-tuned
+content stripped from `rvlm_minimal`.
 
 ```bash
 uv run python evals.py \
