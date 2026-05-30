@@ -166,11 +166,49 @@ slowness. **Confirms recommendation (a): keep ALL step TEXT, hard-cap
 only total IMAGES to <64.** That's the path to il_n=3-level accuracy +
 crash safety without the window's text-loss or speed penalty.
 
+### ★ il_n=3 under NEW prompts — the regression is the PROMPT (2026-05-31)
+
+Ran the BEST config (il_n=3 = keep ALL text + last-3 images) for the
+first time under the current relaxed look-then-note prompts, now
+crash-safe (the >64-image error is caught per-question). Goal: does
+the best config reach ~43% under the new build?
+
+- **`dvm-iln3-newprompt-val-t1`** (max_messages=10000, images_for_last_n=3,
+  cap40, NEW prompt): **Overall 27.6% (21/76)**; **non-comics subset
+  20/70 = 28.6%**; comics 1/10. BadReq64=1 (caught, no crash). Wall
+  ~4h04m. 24/25 docs (one doc dropped at finish).
+- vs **old-prompt il_n=3 = 43.2%** (32/74, comics-excluded subset):
+  **−14.6pp on the fair non-comics subset** — so the gap is NOT a
+  comics/denominator artifact. The best config REGRESSED ~15pp under
+  the new prompt.
+
+**Why it's the prompt, proven by diff (not hand-waving).** Diffed the
+saved solver `.py` of the old 43.2% run (`direct-vlm-val-iter40-t1`)
+vs the new build. Identical: REPL-history rendering (old
+`images_for_last_n=3` ≡ new `max_messages=10000`+`images_for_last_n=3`,
+verified line-by-line), `max_image_pixels=8000000`, cap=40,
+`use_category_tips`. **Only substantive change = the prompt**: the new
+build added "CONTEXT IS A SLIDING WINDOW / old images drop off",
+"COMPACT OFTEN (RESET_HISTORY)", "LOOK-THEN-NOTE / once noted the image
+has done its job", and changed tables from "display each strip" →
+"one strip per step". For a `max_messages=10000` config NOTHING drops
+off, so the prompt is (a) factually false about the env and (b)
+coaching the agent toward fewer-images/note-then-move — the OPPOSITE
+of il_n=3's strength (accumulating visual context; il_n sweep showed
+accuracy monotonic in retained images 1<2<3).
+
+**Confirming run IN PROGRESS:** `dvm-iln3-legacyprompt-val-t1` — same
+config but `legacy_prompt=true` (byte-exact OLD prompt). If it recovers
+to ~43%, prompt is conclusively the lever. Tracked by cron.
+
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
 hard cap keeping all text (recommended — likely ~43% + no crash), **(b)**
 code-enforced auto-compaction, or **(c)** accept max_messages=8 @ 33.3%.
 `images_for_last_n` is removed; current default is `max_messages=8`.
+**Update:** `images_for_last_n` is RE-ADDED (a452d28); il_n=3 is now
+crash-safe via the per-question catch — option (a) may be as simple as
+"il_n=3 + legacy prompt" pending the confirming run.
 
 ### ★ CHAIN COMPLETE — il_n sweep cross-run summary (2026-05-30)
 
