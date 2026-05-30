@@ -169,13 +169,13 @@ class DirectVlmMinimalProgram:
         self,
         profile: DatasetProfile,
         max_iterations: int = 20,
-        images_for_last_n: int = 1,
+        max_messages: int = 8,
         max_image_pixels: int = 1_000_000,
         question_concurrency: int = 4,
     ):
         self.profile = profile
         self.max_iterations = max_iterations
-        self.images_for_last_n = images_for_last_n
+        self.max_messages = max_messages
         self.max_image_pixels = max_image_pixels
         self.question_concurrency = question_concurrency
 
@@ -214,7 +214,7 @@ class DirectVlmMinimalProgram:
                         tools=[],
                         verbose=True,
                         sandbox_code=sandbox_code,
-                        images_for_last_n=self.images_for_last_n,
+                        max_messages=self.max_messages,
                         max_image_pixels=self.max_image_pixels,
                     )
                     logger.info(
@@ -314,7 +314,7 @@ def create_direct_vlm_minimal_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 20,
-    images_for_last_n: int = 1,
+    max_messages: int = 8,
     max_image_pixels: int = 1_000_000,
     question_concurrency: int = 4,
     vlm: dict[str, Any] | None = None,  # unused — direct VLM doesn't need a separate VLM
@@ -341,7 +341,7 @@ def create_direct_vlm_minimal_program(
     return DirectVlmMinimalProgram(
         profile=profile,
         max_iterations=max_iterations,
-        images_for_last_n=images_for_last_n,
+        max_messages=max_messages,
         max_image_pixels=max_image_pixels,
         question_concurrency=question_concurrency,
     )

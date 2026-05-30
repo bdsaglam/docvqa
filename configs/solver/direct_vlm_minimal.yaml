@@ -2,6 +2,6 @@ _target_: docvqa.solvers.direct_vlm_minimal_solver.create_direct_vlm_minimal_pro
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 20
-images_for_last_n: 3
+max_messages: 8
 max_image_pixels: 8000000
 question_concurrency: 4

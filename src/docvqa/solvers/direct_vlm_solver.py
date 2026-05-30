@@ -73,15 +73,16 @@ _TASK_BODY = (
     "5. SUBMIT: Once you have the answer, call `SUBMIT(answer=\"...\")`.\n\n"
 
     "## GUIDELINES\n"
-    "- LOOK IN SMALL BITES: display at most 1–2 images per step. After each display, WRITE DOWN "
-    "what you see (key text, values, positions) in your reasoning and with `print()`, then move on. "
-    "Do NOT dump many crops in one step — inspect incrementally.\n"
-    "- NOTES PERSIST, IMAGES DON'T: only your most recent displays stay in view; older images are "
-    "dropped from context. Your written notes survive, so record what matters as you go and rely on "
-    "the notes rather than expecting old images to still be visible.\n"
-    "- COMPACT WHEN CLUTTERED: once you've noted the key facts from several images, call "
-    "`RESET_HISTORY(summary='<your findings so far>')` to clear old images and keep your view "
-    "focused. Variables persist — you can re-`display()` a page afterward if you need another look.\n"
+    "- LOOK, THEN NOTE: after each `display()`, WRITE DOWN what you see (key text, values, "
+    "positions) in your reasoning and with `print()`. Display a few related crops per step as "
+    "needed — once you've noted what an image shows, it has done its job.\n"
+    "- CONTEXT IS A SLIDING WINDOW: only your last several steps stay in view; older steps (and "
+    "their images) drop off. Your written notes persist, so record what matters as you go and rely "
+    "on the notes rather than expecting old images to still be visible.\n"
+    "- COMPACT OFTEN: call `RESET_HISTORY(summary='<all findings so far>')` FREQUENTLY — e.g. after "
+    "finishing a page/region or every several displays — to clear accumulated images and keep your "
+    "context small and focused. Variables (incl. `pages`) persist, so you can re-`display()` later "
+    "if you need another look. Compacting regularly keeps you fast and avoids overloading on images.\n"
     "- Full-page `display()` gives an overview; for fine details CROP FIRST using pixel coordinates "
     "from `pages[i].size`. Do not re-display the same full page hoping to see more detail — crop instead.\n"
     "- After displaying, describe what you see in your reasoning — this helps you think clearly.\n"
@@ -236,14 +237,14 @@ class DirectVlmProgram:
         self,
         profile: DatasetProfile,
         max_iterations: int = 20,
-        images_for_last_n: int = 1,
+        max_messages: int = 8,
         max_image_pixels: int = 1_000_000,
         use_category_tips: bool = True,
         question_concurrency: int = 4,
     ):
         self.profile = profile
         self.max_iterations = max_iterations
-        self.images_for_last_n = images_for_last_n
+        self.max_messages = max_messages
         self.max_image_pixels = max_image_pixels
         self.use_category_tips = use_category_tips
         self.question_concurrency = question_concurrency
@@ -286,7 +287,7 @@ class DirectVlmProgram:
                         tools=[],
                         verbose=True,
                         sandbox_code=sandbox_code,
-                        images_for_last_n=self.images_for_last_n,
+                        max_messages=self.max_messages,
                         max_image_pixels=self.max_image_pixels,
                     )
                     logger.info(
@@ -386,7 +387,7 @@ def create_direct_vlm_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 20,
-    images_for_last_n: int = 1,
+    max_messages: int = 8,
     max_image_pixels: int = 1_000_000,
     use_category_tips: bool = True,
     question_concurrency: int = 4,
@@ -410,7 +411,7 @@ def create_direct_vlm_program(
     return DirectVlmProgram(
         profile=profile,
         max_iterations=max_iterations,
-        images_for_last_n=images_for_last_n,
+        max_messages=max_messages,
         max_image_pixels=max_image_pixels,
         use_category_tips=use_category_tips,
         question_concurrency=question_concurrency,

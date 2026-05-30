@@ -170,7 +170,7 @@ class RvlmHybridProgram:
         max_iterations: int = 25,
         page_factor: float = 1.5,
         question_concurrency: int = 4,
-        images_for_last_n: int = 3,
+        max_messages: int = 8,
         max_image_pixels: int = 8_000_000,
     ):
         self.vlm_lm = vlm_lm
@@ -178,7 +178,7 @@ class RvlmHybridProgram:
         self.max_iterations = max_iterations
         self.page_factor = page_factor
         self.question_concurrency = question_concurrency
-        self.images_for_last_n = images_for_last_n
+        self.max_messages = max_messages
         self.max_image_pixels = max_image_pixels
 
         self.vlm_predict = dspy.Predict(
@@ -232,7 +232,7 @@ class RvlmHybridProgram:
                         tools=tools,
                         verbose=True,
                         sandbox_code=sandbox_code,
-                        images_for_last_n=self.images_for_last_n,
+                        max_messages=self.max_messages,
                         max_image_pixels=self.max_image_pixels,
                     )
                     logger.info(
@@ -330,7 +330,7 @@ def create_rvlm_hybrid_program(
     vlm: dict[str, Any] | None = None,
     page_factor: float = 1.5,
     question_concurrency: int = 4,
-    images_for_last_n: int = 3,
+    max_messages: int = 8,
     max_image_pixels: int = 8_000_000,
 ) -> RvlmHybridProgram:
     """Hydra factory. Profile resolution: same as ``rvlm_minimal_solver``."""
@@ -369,6 +369,6 @@ def create_rvlm_hybrid_program(
         max_iterations=max_iterations,
         page_factor=page_factor,
         question_concurrency=question_concurrency,
-        images_for_last_n=images_for_last_n,
+        max_messages=max_messages,
         max_image_pixels=max_image_pixels,
     )

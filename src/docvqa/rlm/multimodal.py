@@ -103,12 +103,15 @@ class VisualREPLHistory(pydantic.BaseModel):
     """Container for REPL interaction history with image support.
 
     Immutable: append() returns a new instance with the entry added.
-    Only the last `images_for_last_n` entries include actual image data
-    to control token usage.
+    Only the last `max_messages` steps are rendered (with their images);
+    older steps are dropped from the formatted view to bound context — the
+    agent is expected to `RESET_HISTORY(summary=...)` to preserve findings
+    before they scroll off. Set `include_images=False` to render text only.
     """
 
     entries: list[VisualREPLEntry] = Field(default_factory=list)
-    images_for_last_n: int = 1
+    max_messages: int = 8
+    include_images: bool = True
 
     model_config = pydantic.ConfigDict(frozen=True)
 
@@ -116,14 +119,22 @@ class VisualREPLHistory(pydantic.BaseModel):
         if not self.entries:
             return "You have not interacted with the REPL environment yet."
         n = len(self.entries)
-        return "\n".join(
-            entry.format(
-                index=i,
-                max_output_chars=max_output_chars,
-                include_images=(n - i) <= self.images_for_last_n,
+        start = max(0, n - self.max_messages)
+        prefix = ""
+        if start > 0:
+            prefix = (
+                f"[... {start} earlier step(s) dropped from view to keep context bounded. "
+                f"Rely on your notes / your last RESET_HISTORY summary for older findings. ...]\n"
             )
-            for i, entry in enumerate(self.entries)
+        body = "\n".join(
+            entry.format(
+                index=start + i,
+                max_output_chars=max_output_chars,
+                include_images=self.include_images,
+            )
+            for i, entry in enumerate(self.entries[start:])
         )
+        return prefix + body
 
     @pydantic.model_serializer()
     def serialize_model(self) -> str:
@@ -146,7 +157,8 @@ class VisualREPLHistory(pydantic.BaseModel):
         )
         return VisualREPLHistory(
             entries=list(self.entries) + [new_entry],
-            images_for_last_n=self.images_for_last_n,
+            max_messages=self.max_messages,
+            include_images=self.include_images,
         )
 
     def __len__(self) -> int:
@@ -174,7 +186,7 @@ Available:
 - Variables: {inputs} (your input data)
 - `print()` - ALWAYS print to see results
 - `display(image)` - Show a PIL Image inline (you will see the image in the next step)
-- `RESET_HISTORY(summary="...")` - Compact your history: clears all past steps AND their images from view, keeping only your summary text. Variables persist (you can re-display later). Use it once you've noted what you need from images, to keep context small.
+- `RESET_HISTORY(summary="...")` - Compact your history: clears all past steps AND their images from view, keeping only your summary text. Variables persist (you can re-display later). Use it OFTEN — once you've noted what you need from a batch of images — to keep context small.
 - `SUBMIT({final_output_names})` - call when done (ends the run immediately)
 - Standard libraries: re, json, collections, math, etc.
 
@@ -182,7 +194,7 @@ Rules:
 - This is ITERATIVE. State persists between steps. Do NOT solve everything in one step.
 - ALWAYS print before submitting — verify results look correct.
 - Use `display()` to look at images directly — you can see them.
-- Images are EPHEMERAL: only your most recent displays stay in view; older images drop out of context. Write down what you see as notes so you don't depend on stale images.
+- Your REPL view is a SLIDING WINDOW of the last several steps; older steps (and their images) drop off. Write down what you see as notes as you go, and call RESET_HISTORY(summary=...) often to compact — relying on notes, not on stale images.
 - Re-access values from variables instead of retyping long strings/numbers.
 - You have max {max_iterations} iterations."""
 
@@ -214,7 +226,7 @@ class MultimodalRLM(Module):
     Extends LeanRLM's architecture with:
     - `display(image)` function in the sandbox
     - VisualREPLHistory that embeds images as DSPy CUSTOM_TYPE markers
-    - Token management via images_for_last_n
+    - Token management via max_messages (cap on rendered REPL steps)
     """
 
     def __init__(
@@ -229,7 +241,7 @@ class MultimodalRLM(Module):
         interpreter: SubprocessInterpreter | None = None,
         sandbox_code: str | None = None,
         action_instructions: str | None = None,
-        images_for_last_n: int = 1,
+        max_messages: int = 8,
         max_image_pixels: int = 1_000_000,
     ):
         super().__init__()
@@ -242,7 +254,7 @@ class MultimodalRLM(Module):
         self._interpreter = interpreter
         self._sandbox_code = sandbox_code
         self._action_instructions = action_instructions or DEFAULT_ACTION_INSTRUCTIONS
-        self._images_for_last_n = images_for_last_n
+        self._max_messages = max_messages
         self._max_image_pixels = max_image_pixels
         self._user_tools = self._normalize_tools(tools)
         self._validate_tools(self._user_tools)
@@ -453,7 +465,8 @@ class MultimodalRLM(Module):
         # Strip images for extract — not needed for summarization
         no_image_history = VisualREPLHistory(
             entries=list(history.entries),
-            images_for_last_n=0,
+            max_messages=10_000,
+            include_images=False,
         )
         extract_pred = self.extract(
             variables_info=str(variables),
@@ -504,7 +517,7 @@ class MultimodalRLM(Module):
 
         # Handle HistoryReset signal
         if isinstance(result, HistoryReset):
-            return VisualREPLHistory(images_for_last_n=self._images_for_last_n).append(
+            return VisualREPLHistory(max_messages=self._max_messages).append(
                 code=code,
                 output=f"[History compacted] {result.summary}",
             )
@@ -599,7 +612,7 @@ class MultimodalRLM(Module):
         variables = self._build_variables(**input_args)
 
         with self._interpreter_context(execution_tools) as repl:
-            history = VisualREPLHistory(images_for_last_n=self._images_for_last_n)
+            history = VisualREPLHistory(max_messages=self._max_messages)
 
             for iteration in range(self.max_iterations):
                 result: Prediction | VisualREPLHistory = self._execute_iteration(

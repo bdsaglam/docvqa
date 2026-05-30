@@ -5,5 +5,5 @@ max_iterations: 25
 vlm: ${vlm}
 page_factor: 1.5
 question_concurrency: 4
-images_for_last_n: 3
+max_messages: 8
 max_image_pixels: 8000000
