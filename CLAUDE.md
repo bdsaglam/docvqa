@@ -101,6 +101,44 @@ A "unit of work" is one experiment cell. For each cell:
 - **Never claim or in-progress two cells at once on one host.** That
   invites push/pull conflicts on the host file.
 
+### Orchestration: prefer heartbeat over chain scripts
+
+**Don't write chain orchestrator scripts** (`scripts/<x>_chain.py`,
+`scripts/<x>_post_orch.py` etc.) that pre-script "run trial N → wait
+for sentinel → run trial N+1 → ...". Use a **heartbeat cron** that
+polls run state and launches the next thing when its condition is
+met. Concretely:
+
+- A trial launch is one line: `tmux new-session -d -s <name> bash -c
+  "cd /repo && exec uv run python evals.py ... run_id=<id>"`. There's
+  no value in wrapping six of these in a script.
+- The heartbeat checks state on each tick — `ls output/runs/<id>/
+  tasks/*/result.json | wc -l`, `tmux ls`, `ls /tmp/<sentinel>` — and
+  decides what to launch. Stateless and self-healing: if the
+  heartbeat misses a tick or the previous launcher died, the next
+  tick just sees the same state and recovers.
+
+Why this matters:
+- **Brittle.** Chain scripts are single processes that can silently
+  die mid-chain (we lost a chain at 14:33 on 2026-05-30 this way).
+  Heartbeats are session-resident and re-fire from clean state.
+- **Decisions get hidden.** A chain that auto-launches the next
+  trial after the prior lands removes the chance to look at the
+  result first. amax7 is supposed to be the **adaptive** host —
+  pre-committed chains undermine that.
+- **Triggers are locked in.** A chain script with a 22/25 overlap
+  trigger can't react to a stuck-at-18/25 long-tail trial. A
+  heartbeat can apply any condition — overlap trigger, stuck-
+  detection, GPU-idle, etc. — without rewriting the orchestrator.
+- **Early launches.** Heartbeat can launch the next trial *before*
+  the previous one fully completes (e.g., when the previous is at
+  18/25 and stuck on a long-tail doc). A chain locked to "wait for
+  sentinel" can't do that.
+
+What's OK: single-purpose launcher scripts (`tmux new-session ...
+evals.py ...`), the eval runner itself, utility scripts. Not
+multi-step orchestrators.
+
 ## Best Results
 
 | Config | Val | Test |
