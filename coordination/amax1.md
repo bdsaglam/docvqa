@@ -10,25 +10,9 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### `[→]` direct_vlm COMPACTION-prompt validation matrix (2026-05-30)
-
-New prompts (commit `af9ca2b`) expose **`RESET_HISTORY`** (compaction)
-to direct_vlm + add **per-step display discipline** (1–2 imgs/step,
-note-then-move-on, "images are ephemeral"). Goal: fix the >64-image
-comics crash via *agent-controlled context rationing* instead of
-silent il_n truncation (which cost ~14–20pp accuracy, see R3/R4/R5).
-
-Matrix: `direct_vlm` cap40, **il_n ∈ {3, 6, 12}** (higher now safe —
-per-step bounded), **n=3 each = 9 runs**, **c=8**, maintain ≤3
-concurrent (driver cron `5a19474e`). run_ids
-`dvm-compact-iln{3,6,12}-val-t{1,2,3}`.
-
-**What success looks like:** (1) **no comics crash** (BadReq64=0,
-agent compacts/looks in bites) AND (2) accuracy **≥ il_n=3's 43.2%**
-(ideally higher). Compare to no-compaction baselines: il_n=3 crashed
-@43.2%, il_n=1=23.7%, il_n=2=28.9%. **Abort guard:** if any il_n=3 run
-crashes on comics, driver halts the il_n=6/12 batches — prompt alone
-insufficient, would need the hard total-image-cap backstop.
+(none — compaction/window experiments concluded 2026-05-30; see Done
+"compaction + max_messages findings" below. GPU idle; next step is a
+design decision, see NOTE.)
 
 ## Queued
 
@@ -86,6 +70,59 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### ★ COMPACTION + max_messages findings (2026-05-30)
+
+Two attempts to fix the direct_vlm >64-image comics crash WITHOUT the
+il_n-truncation accuracy loss. Both via `direct_vlm` cap40, Qwen 27B.
+
+**Attempt 1 — compaction prompt + strict per-step discipline** (commit
+`af9ca2b`): exposed `RESET_HISTORY` + "1–2 images/step, note-then-move".
+Result (il_n=3, c=8, n=3 started): **no crash through comics, but agent
+NEVER called RESET_HISTORY (0)**, and the "1–2/step" rule made it
+**~5× slower** (nibbling to the iteration cap on every question).
+Killed before completion — too slow, compaction unused.
+
+**Attempt 2 — `max_messages` window, removed `images_for_last_n`**
+(commit `6bdf27b`): `VisualREPLHistory` now renders only the last
+`max_messages=8` REPL steps (text+images), drops older; relaxed
+per-step rule; strengthened "compact OFTEN". Run
+`dvm-compact-v2-val-t1` (c=16): **q-weighted 33.3% (24/25 docs, 78q)**,
+`BadReq64=1` (a single CAUGHT 64-image warning, NOT a process crash —
+comics_2/4 completed), speed recovered (~57 q/h), **RESET_HISTORY still
+0** (agent ignores it even with strong prompting). Run hung on the last
+doc (business_report_1, iteration 35/40) — killed; verdict taken from
+the 24 done docs.
+
+**direct_vlm cap40 accuracy ladder (rough — subsets/prompts vary, n=1):**
+| config | acc | crash? |
+|---|---|---|
+| il_n=3 (all-text + last-3-images) | 43.2% | crashes |
+| **max_messages=8 (last-8-steps total)** | **33.3%** | no crash ✓ |
+| il_n=2 | 28.9% | no |
+| il_n=1 | 23.7% | no |
+
+**KEY FINDINGS:**
+1. **Prompt-motivated compaction does NOT work** — Qwen never calls
+   `RESET_HISTORY` despite it being in the tool list + 3 guidelines
+   saying "compact OFTEN". Two independent confirmations. If compaction
+   is wanted, it must be **code-enforced** (auto-compact), not prompted.
+2. **`max_messages` window is WORSE than `images_for_last_n` for
+   accuracy** (33.3% vs 43.2%) because it drops old **TEXT** too, not
+   just images. il_n kept ALL step text (the agent's accumulated notes)
+   + only truncated images; the window discards reasoning history, so a
+   non-compacting agent loses its notes → accuracy falls.
+3. **Right design (recommendation):** keep ALL step TEXT (like il_n) +
+   hard-cap total IMAGES to <64 (most-recent ~56, across steps). Full
+   reasoning context (→ il_n=3-level accuracy) + hard crash safety (no
+   >64 ever). This is the original "smarter total-image management"
+   idea; the message-window overcorrected by throwing away text.
+
+### NOTE: open design decision for user
+Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
+hard cap keeping all text (recommended — likely ~43% + no crash), **(b)**
+code-enforced auto-compaction, or **(c)** accept max_messages=8 @ 33.3%.
+`images_for_last_n` is removed; current default is `max_messages=8`.
 
 ### ★ CHAIN COMPLETE — il_n sweep cross-run summary (2026-05-30)
 
