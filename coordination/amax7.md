@@ -28,7 +28,35 @@ needed). Full writeup in
 
 ## Queued
 
-### 1. `[ ]` rvlm_ocr n=1 val (task #14)
+### 1. `[ ]` rvlm_skeletal n=8 refill (post-hybrid)
+
+Skeletal n=8 chain ran with 22/25 overlap and 5/8 trials timed out
+on long-tail docs under load (see "Done" cell for full Δ analysis).
+20 docs total missing across t3-t7. Refill restores the clean
+per-trial 80-Q paired baseline.
+
+**Strict serial — one trial at a time, low concurrency to avoid
+recreating the load problem that caused the original timeouts.**
+
+Per-trial refill (resumable via run_id — only re-runs missing docs):
+```bash
+for T in 3 4 5 6 7; do
+  uv run python evals.py \
+    lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+    lm.enable_thinking=false \
+    solver=rvlm_skeletal \
+    data.split=val data.num_samples=null \
+    max_concurrency=4 \
+    run_id=rvlm-skeletal-val-t${T}
+done
+```
+
+- Refill scope: t3=7 docs, t4=3, t5=5, t6=3, t7=2 → 20 docs.
+- Wall: ~13h at sequential c=4.
+- After refill, re-run paired Δ skeletal-minimal at n=8 to get the
+  clean σ for the paper.
+
+### 2. `[ ]` rvlm_ocr n=1 val (task #14)
 
 Locks the clean OCR-extension number. Current `rvlm_full` legacy data is
 confounded with `look()` ergonomic wrapper. This is the clean cell.
