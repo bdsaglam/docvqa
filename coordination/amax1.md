@@ -139,12 +139,32 @@ Q returns PRED=Unknown → run continues), NOT a process crash.
   40-iter cap per question (seen hitting 30/40, 37/40). The death is
   secondary; the disqualifier is that mm=40 is pathologically slow.
   **Do not relaunch.** Confirms the window can't safely go this high.
-- **`dvm-mm24-val-t1` (max_messages=24): running, healthy** — 9 docs at
-  the mm40-death checkpoint, BadReq64=3 (caught). Accuracy pending.
+- **`dvm-mm24-val-t1` (max_messages=24): FINISHED — 35.0% (28/80),
+  clean 25/25 docs.** BadReq64=8, all caught per-Q (run finished cleanly,
+  no crash). Wall ~3h21m (18:08→21:30) — ~1.5–2× slower than the il_n
+  runs (~1.5–2h), the larger window's token cost. Comics partially
+  scored despite caught overflows: 3/10 comics-Q correct
+  (comics_1_q1, comics_2_q2, comics_3_q1), 4 lost to PRED=Unknown
+  (comics_2_q3, comics_3_q2, comics_4_q1, comics_4_q2 — the caught
+  64-image cases), 3 wrong on content.
 
-Read so far: a bigger window does NOT cleanly help — mm=40 is too slow
-to finish, reinforcing that a sliding window is the wrong knob. Supports
-the recommendation below (keep all TEXT, hard-cap only total IMAGES).
+**VERDICT — larger max_messages does NOT recover accuracy.**
+
+| config | acc | crash/finish |
+|---|---|---|
+| il_n=3 (all-text + last-3-images) | **43.2%** | crashes on comics |
+| max_messages=40 | — | **DIED** (too slow, 2/25 in 63min) |
+| max_messages=24 | **35.0%** | finishes, ~3h21m |
+| max_messages=8 | 33.3% | finishes |
+
+Going 8→24 buys only **+1.7pp** (33.3→35.0), still **−8.2pp below
+il_n=3's 43.2%**, and the bigger window costs ~1.5–2× wall time; mm=40
+can't even finish. The sliding window is the wrong knob: it discards
+the agent's accumulated TEXT notes (which a non-compacting agent can't
+rebuild), and bigger windows just trade that loss for crippling
+slowness. **Confirms recommendation (a): keep ALL step TEXT, hard-cap
+only total IMAGES to <64.** That's the path to il_n=3-level accuracy +
+crash safety without the window's text-loss or speed penalty.
 
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
