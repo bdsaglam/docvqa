@@ -118,6 +118,34 @@ the 24 done docs.
    >64 ever). This is the original "smarter total-image management"
    idea; the message-window overcorrected by throwing away text.
 
+### ★ larger max_messages sweep — does a bigger window recover accuracy? (2026-05-30)
+
+Testing the user's question "why not larger max_messages?" — if the
+window drops TEXT and that's what cost accuracy (mm8=33.3% vs il_n=3
+43.2%), a bigger window keeps more text and should climb back. Both
+`direct_vlm` cap40, c=12, new-prompt build 6bdf27b, val 25docs/80q.
+Note: with the new build the >64-image error is now **caught
+per-question** (logged `Direct-VLM failed for Q ...` WARNING → that one
+Q returns PRED=Unknown → run continues), NOT a process crash.
+
+- **`dvm-mm40-val-t1` (max_messages=40): DIED — non-viable.** Process
+  gone at docs=2/25, q=20, after ~63 min wall (vs mm24's 9 docs in the
+  same time → ~4.5× slower). BadReq64=4 (all caught per-Q, not the
+  crash). No fatal Python traceback at the tail (only logfire/otel
+  telemetry-export noise); no OOM line accessible (308G RAM free at
+  check, but swap 1/1G exhausted). Root cause is the window size itself:
+  at mm=40 each step carries up to 40 prior steps of accumulated images
+  → huge prompts → generation crawls AND the agent nibbles to the
+  40-iter cap per question (seen hitting 30/40, 37/40). The death is
+  secondary; the disqualifier is that mm=40 is pathologically slow.
+  **Do not relaunch.** Confirms the window can't safely go this high.
+- **`dvm-mm24-val-t1` (max_messages=24): running, healthy** — 9 docs at
+  the mm40-death checkpoint, BadReq64=3 (caught). Accuracy pending.
+
+Read so far: a bigger window does NOT cleanly help — mm=40 is too slow
+to finish, reinforcing that a sliding window is the wrong knob. Supports
+the recommendation below (keep all TEXT, hard-cap only total IMAGES).
+
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
 hard cap keeping all text (recommended — likely ~43% + no crash), **(b)**
