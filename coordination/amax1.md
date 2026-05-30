@@ -10,12 +10,12 @@ iteration; if a cell shows an unexpected direction, **halt and append a
 
 ## In progress
 
-### `[→]` R4: direct_vlm cap=40 @ images_for_last_n=1
+### `[→]` R5: direct_vlm cap=40 @ images_for_last_n=2
 
-run_id `direct-vlm-iln1-val-iter40-t1`, tmux `docvqa-dvm:iln1`.
-Launched 2026-05-29 overlapping R3's tail. Tests whether il_n=1 fixes
-the comics crash (BadReq64=0 so far) and how trimming kept-image
-context affects accuracy. R5 (il_n=2) overlaps when R4 hits 23/25.
+run_id `direct-vlm-iln2-val-iter40-t1`, tmux `docvqa-dvm:iln2`.
+Launched overlapping R4's tail. The middle point of the il_n sweep —
+tests whether il_n=2 keeps the crash-fix while recovering the accuracy
+il_n=1 lost (see R4 finding below).
 
 ## Queued
 
@@ -73,6 +73,30 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-31b-vllm-local 4-31
 - Expected direction: lift sign preserved (~+25pp from original n=3)
 
 ## Done
+
+### R4. `[✓]` direct_vlm n=1 val @ cap=40, images_for_last_n=1 — 2026-05-30
+
+run_id `direct-vlm-iln1-val-iter40-t1`. **Overall 23.7% (18/76)** —
+`comics_2` task_timed-out (only doc missing; 76 not 80). **57 cap40
+hits. `BadRequestError:64 images` = 0 — il_n=1 FIXED the comics
+crash** (`comics_2` merely timed out like the minimal solver; no
+process kill). Per-cat: infographics 60%, science_paper 40%,
+science_poster 30%, business_report/slide 20%, eng_drawing 10%,
+**maps 0/10, comics 0/6**.
+
+**★ FINDING — the crash-fix has a big accuracy cost; il_n is a real
+knob.** il_n=1 (23.7%) vs il_n=3 (R3, 43.2%) ≈ **−20pp**. Mechanism is
+clear in the per-cat: il_n=1 **collapses on maps (0%) and comics (0%)**
+— the multi-region / multi-panel categories where you must hold
+several crops in context simultaneously to compare across them.
+Keeping only the last iteration's image destroys that. So:
+- il_n=3: best accuracy (43.2%) but CRASHES on the longest comics docs
+- il_n=1: no crash, but accuracy collapses on multi-image reasoning (23.7%)
+- il_n=2 (R5, running): the candidate sweet spot — does it keep the
+  crash-fix while recovering maps/comics accuracy?
+(Subsets differ slightly: R3 74q misses comics_2+comics_4; R4 76q
+misses only comics_2. The ~20pp gap is far larger than that overlap
+difference, so the direction is solid. n=1 each.)
 
 ### R3. `[✓ PARTIAL]` direct_vlm n=1 val @ cap=40, il_n=3 (task #19) — 2026-05-30
 
