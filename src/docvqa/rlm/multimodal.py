@@ -111,6 +111,7 @@ class VisualREPLHistory(pydantic.BaseModel):
 
     entries: list[VisualREPLEntry] = Field(default_factory=list)
     max_messages: int = 8
+    images_for_last_n: int = 10_000  # of the rendered steps, how many most-recent keep images
     include_images: bool = True
 
     model_config = pydantic.ConfigDict(frozen=True)
@@ -120,6 +121,7 @@ class VisualREPLHistory(pydantic.BaseModel):
             return "You have not interacted with the REPL environment yet."
         n = len(self.entries)
         start = max(0, n - self.max_messages)
+        img_start = n - self.images_for_last_n  # entries at abs index >= img_start keep images
         prefix = ""
         if start > 0:
             prefix = (
@@ -130,7 +132,7 @@ class VisualREPLHistory(pydantic.BaseModel):
             entry.format(
                 index=start + i,
                 max_output_chars=max_output_chars,
-                include_images=self.include_images,
+                include_images=self.include_images and (start + i) >= img_start,
             )
             for i, entry in enumerate(self.entries[start:])
         )
@@ -158,6 +160,7 @@ class VisualREPLHistory(pydantic.BaseModel):
         return VisualREPLHistory(
             entries=list(self.entries) + [new_entry],
             max_messages=self.max_messages,
+            images_for_last_n=self.images_for_last_n,
             include_images=self.include_images,
         )
 
@@ -242,6 +245,7 @@ class MultimodalRLM(Module):
         sandbox_code: str | None = None,
         action_instructions: str | None = None,
         max_messages: int = 8,
+        images_for_last_n: int = 10_000,
         max_image_pixels: int = 1_000_000,
     ):
         super().__init__()
@@ -255,6 +259,7 @@ class MultimodalRLM(Module):
         self._sandbox_code = sandbox_code
         self._action_instructions = action_instructions or DEFAULT_ACTION_INSTRUCTIONS
         self._max_messages = max_messages
+        self._images_for_last_n = images_for_last_n
         self._max_image_pixels = max_image_pixels
         self._user_tools = self._normalize_tools(tools)
         self._validate_tools(self._user_tools)
@@ -517,7 +522,10 @@ class MultimodalRLM(Module):
 
         # Handle HistoryReset signal
         if isinstance(result, HistoryReset):
-            return VisualREPLHistory(max_messages=self._max_messages).append(
+            return VisualREPLHistory(
+                max_messages=self._max_messages,
+                images_for_last_n=self._images_for_last_n,
+            ).append(
                 code=code,
                 output=f"[History compacted] {result.summary}",
             )
@@ -612,7 +620,10 @@ class MultimodalRLM(Module):
         variables = self._build_variables(**input_args)
 
         with self._interpreter_context(execution_tools) as repl:
-            history = VisualREPLHistory(max_messages=self._max_messages)
+            history = VisualREPLHistory(
+                max_messages=self._max_messages,
+                images_for_last_n=self._images_for_last_n,
+            )
 
             for iteration in range(self.max_iterations):
                 result: Prediction | VisualREPLHistory = self._execute_iteration(

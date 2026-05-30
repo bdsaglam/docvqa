@@ -232,6 +232,7 @@ class DirectVlmProgram:
         profile: DatasetProfile,
         max_iterations: int = 20,
         max_messages: int = 8,
+        images_for_last_n: int = 10_000,
         max_image_pixels: int = 1_000_000,
         use_category_tips: bool = True,
         question_concurrency: int = 4,
@@ -239,6 +240,7 @@ class DirectVlmProgram:
         self.profile = profile
         self.max_iterations = max_iterations
         self.max_messages = max_messages
+        self.images_for_last_n = images_for_last_n
         self.max_image_pixels = max_image_pixels
         self.use_category_tips = use_category_tips
         self.question_concurrency = question_concurrency
@@ -282,6 +284,7 @@ class DirectVlmProgram:
                         verbose=True,
                         sandbox_code=sandbox_code,
                         max_messages=self.max_messages,
+                        images_for_last_n=self.images_for_last_n,
                         max_image_pixels=self.max_image_pixels,
                     )
                     logger.info(
@@ -378,6 +381,7 @@ def create_direct_vlm_program(
     dataset: str | None = None,
     max_iterations: int = 20,
     max_messages: int = 8,
+    images_for_last_n: int = 10_000,
     max_image_pixels: int = 1_000_000,
     use_category_tips: bool = True,
     question_concurrency: int = 4,
@@ -402,6 +406,7 @@ def create_direct_vlm_program(
         profile=profile,
         max_iterations=max_iterations,
         max_messages=max_messages,
+        images_for_last_n=images_for_last_n,
         max_image_pixels=max_image_pixels,
         use_category_tips=use_category_tips,
         question_concurrency=question_concurrency,
