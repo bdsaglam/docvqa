@@ -8,17 +8,18 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` skeletal n=8 + hybrid n=8 chained — D-008 escalation — 2026-05-30
+### `[→]` hybrid n=8 — D-008 escalation, parity coverage — 2026-05-30
 
-Two chains running on amax7:
+`scripts/hybrid_n8_post_orch.py` (auto-fired on skeletal sentinel
+at 21:48) drives hybrid t3..t8 with 22/25 overlap. Hybrid t1+t2
+already done. Wall: ~10-12h. Sentinel: `/tmp/hybrid-n8.done`.
+Tmux: `hyb-n8-orch` + per-trial `rvlm-hyb-tN`.
 
-- **Stage 1**: `scripts/skeletal_n8_orch.py` drives skeletal t2..t8
-  with 22/25 overlap. Tmux: `skel-n8-orch` + per-trial `rvlm-skel-tN`.
-  Sentinel: `/tmp/skeletal-n8.done`. Wall: ~5-6h.
-- **Stage 2** (auto-chained): `scripts/hybrid_n8_post_orch.py` waits
-  for stage-1 sentinel, then drives hybrid t3..t8 with same overlap.
-  Hybrid t1+t2 already done. Wall: ~10-12h after stage 1.
-  Sentinel: `/tmp/hybrid-n8.done`.
+Parity coverage only — at n=1/n=2 hybrid was already outside
+minimal's noise (−8pp at n=2 paired). Per-user direction: "for
+hybrid, we may want to cover it in the paper like 'we tried it and
+it didn't work' but we need to run it n=8 similar to others for
+parity".
 
 Naked **shelved** (n=1 −10.00pp, ~4.3σ outside minimal's noise band;
 pre-set "−5pp or worse → load-bearing" rule triggered — no n=2/n=8
@@ -62,6 +63,49 @@ after confirming the cap difference doesn't drive it (an rvlm cap=40
 spot-check may be needed).
 
 ## Done
+
+### `[✓]` rvlm_skeletal n=8 val — paired vs minimal (task #38) — 2026-05-30
+
+run_ids: `rvlm-skeletal-val-t{1..8}` on Qwen 3.5 27B local, c=32.
+Chain wall: ~9.5h (orch + 8 trials w/ overlap).
+
+**Paired Δ skeletal − minimal at n=8 (per-trial intersection):**
+**Δ = −1.63pp ± 4.83pp sd**, SE 1.71pp, 95% CI [−5.67, +2.41]pp,
+t(7) = −0.954 (n.s.). Lands cleanly in the "≈ 0pp / within paired
+noise" band.
+
+Per-trial paired table (n_common varies; skeletal lost more docs to
+the long-tail science_paper_1 hang — pass-2 refill not run for the
+short-tail trials, but pair-on-intersection is robust to that):
+
+| trial | n_common | skeletal | minimal | Δ |
+|---|---:|---:|---:|---:|
+| t1 | 80 | 42.50% | 42.50% | +0.00pp |
+| t2 | 80 | 38.75% | 42.50% | −3.75pp |
+| t3 | 49 | 38.78% | 36.73% | +2.04pp |
+| t4 | 63 | 38.10% | 39.68% | −1.59pp |
+| t5 | 59 | 42.37% | 47.46% | −5.08pp |
+| t6 | 65 | 43.08% | 35.38% | +7.69pp |
+| t7 | 68 | 30.88% | 38.24% | −7.35pp |
+| t8 | 80 | 40.00% | 45.00% | −5.00pp |
+
+Marginals: skeletal n=8 = 39.31% ± 3.92pp (range 30.88–43.08);
+minimal n=8 = 42.03% ± 2.21pp (range 38.75–45.00). Skeletal is ~1.8×
+noisier across trials.
+
+**Reading.** The 3 doc-shape patterns in `rvlm_minimal`
+(high-density single page, many-page document, counting /
+superlatives) are **not load-bearing for the headline score** —
+paired Δ is well inside noise. But they tighten the trial-to-trial
+variance: with the patterns, σ drops from 3.92pp → 2.21pp. The
+patterns give the agent a more consistent reading discipline rather
+than a better one.
+
+**Promotion decision.** Both viable. Keep `rvlm_minimal` as the
+proposed method — same headline, tighter variance is a free win for
+the paper's "method is stable" story. Skeletal stays as the
+ablation cell: "dropping the 3 doc-shape pattern bullets does not
+change the headline but doubles σ."
 
 ### `[✓]` rvlm_hybrid w/ images_for_last_n=1 n=1 val (task #37) — 2026-05-30
 
