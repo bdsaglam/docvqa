@@ -39,9 +39,9 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Prompt body
@@ -91,15 +91,12 @@ _TASK_BODY = (
     "- The final ``answer`` field must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
 
 # ---------------------------------------------------------------------------
 # Signature + tools
 # ---------------------------------------------------------------------------
-
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -114,7 +111,6 @@ def _build_signature(instructions: str) -> dspy.Signature:
         ),
     }
     return dspy.Signature(fields, instructions)
-
 
 def _create_tools(
     vlm_predict: dspy.Predict,
@@ -168,11 +164,9 @@ def _create_tools(
 
     return [look, look_many]
 
-
 # ---------------------------------------------------------------------------
 # ReactProgram
 # ---------------------------------------------------------------------------
-
 
 def _trajectory_to_list(traj: dict[str, Any]) -> list[dict[str, Any]]:
     """Convert dspy.ReAct's flat trajectory dict to a list of per-iter dicts.
@@ -192,7 +186,6 @@ def _trajectory_to_list(traj: dict[str, Any]) -> list[dict[str, Any]]:
         field, idx_s = parts[0], int(parts[1])
         by_idx.setdefault(idx_s, {})[field] = v
     return [by_idx[i] for i in sorted(by_idx.keys())]
-
 
 class ReactProgram:
     """ReAct baseline: ``dspy.ReAct`` over VLM tools, no Python REPL."""
@@ -267,11 +260,8 @@ class ReactProgram:
                         self.profile.name, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -343,7 +333,6 @@ class ReactProgram:
                 )
 
             return predictions, trajectories
-
 
 def create_react_program(
     profile_name: str | None = None,

@@ -33,9 +33,9 @@ from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Prompt body (formatting rules substituted from the profile)
@@ -88,15 +88,12 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
 
 # ---------------------------------------------------------------------------
 # Helpers (inlined from the former leanest_solo_solver — Phase 2B merge)
 # ---------------------------------------------------------------------------
-
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -111,7 +108,6 @@ def _build_signature(instructions: str) -> dspy.Signature:
         ),
     }
     return dspy.Signature(fields, instructions)
-
 
 def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, batch_concurrency: int = 8) -> list:
     from PIL import Image as PILImage
@@ -153,7 +149,6 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, batch_concurrency:
 
     return [_batch_look_impl]
 
-
 def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
     """Build sandbox code that loads pages as PIL Images and defines `batch_look()`."""
     return f'''
@@ -184,11 +179,9 @@ def batch_look(requests):
     return _batch_look_impl(_json.dumps(paths))
 '''
 
-
 # ---------------------------------------------------------------------------
 # RvlmProgram
 # ---------------------------------------------------------------------------
-
 
 class RvlmProgram:
     """Proposed-method solver. See module docstring."""
@@ -271,11 +264,8 @@ class RvlmProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -347,7 +337,6 @@ class RvlmProgram:
                 )
 
             return predictions, trajectories
-
 
 def create_rvlm_program(
     profile_name: str | None = None,

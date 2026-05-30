@@ -40,9 +40,9 @@ from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Prompt templates (formatting rules are substituted from the profile)
@@ -142,17 +142,14 @@ _PAGE_ONLY_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile, vlm_cropping: bool) -> str:
     body = _CROPPING_BODY if vlm_cropping else _PAGE_ONLY_BODY
     return body + profile.answer_formatting_rules
-
 
 # Back-compat export for shelved solvers (flat_solo_gepa) that imported
 # ``TASK_INSTRUCTIONS`` from the old flat_solo_solver. They want the default
 # (DocVQA-2026 + cropping) prompt seed for GEPA optimization.
 TASK_INSTRUCTIONS = _build_task_instructions(get_profile("VLR-CVC/DocVQA-2026"), vlm_cropping=True)
-
 
 # ---------------------------------------------------------------------------
 # Per-category tool-routing overlay (solver-owned per D-009).
@@ -191,7 +188,6 @@ TOOL_HINTS: dict[str, str] = {
     ),
 }
 
-
 def _get_category_tips(profile: DatasetProfile, category: str) -> str:
     """Compose profile semantic tips + this solver's OCR-routing overlay."""
     base = profile.category_tips_fn(category)
@@ -204,11 +200,9 @@ def _get_category_tips(profile: DatasetProfile, category: str) -> str:
         return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
     return base
 
-
 # ---------------------------------------------------------------------------
 # Helpers (inlined from the former flat_solo_solver — Phase 2D merge)
 # ---------------------------------------------------------------------------
-
 
 @dataclass
 class RunContext:
@@ -217,10 +211,8 @@ class RunContext:
     search_index: Any = None
     page_texts: list[str] | None = None
 
-
 def _format_page_texts(page_texts: list[str]) -> list[str]:
     return [t.strip() or "[No text extracted - use look() for visual content]" for t in page_texts]
-
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -240,11 +232,9 @@ def _build_signature(instructions: str) -> dspy.Signature:
     }
     return dspy.Signature(fields, instructions)
 
-
 def _strip_search_tool(instructions: str) -> str:
     """Remove the search() tool line for the use_search=False ablation."""
     return re.sub(r'- search\(query, k=5\)[^\n]*\n', '', instructions)
-
 
 def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *, use_search: bool = True) -> list:
     from PIL import Image as PILImage
@@ -309,7 +299,6 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *
         tools.append(_search)
     return tools
 
-
 def _build_sandbox_code(page_dir: str, num_pages: int, use_search: bool = True) -> str:
     """Build sandbox code that loads pages as PIL Images and defines `look()`."""
     search_def = '''
@@ -354,7 +343,6 @@ def batch_look(requests):
     return _batch_look_impl(_json.dumps(paths))
 '''
 
-
 def _build_sandbox_code_page_only(page_dir: str, num_pages: int, use_search: bool = True) -> str:
     """Page-only sandbox for the D-004 cropping ablation. `look(page_idx, query)`
     accepts only an integer page index — no PIL Images, no crops."""
@@ -393,11 +381,9 @@ def batch_look(requests):
     return _batch_look_impl(_json.dumps(paths))
 '''
 
-
 # ---------------------------------------------------------------------------
 # RvlmFullProgram
 # ---------------------------------------------------------------------------
-
 
 class RvlmFullProgram:
     """RVLM-full solver. See module docstring."""
@@ -508,11 +494,8 @@ class RvlmFullProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -590,11 +573,9 @@ class RvlmFullProgram:
 
             return predictions, trajectories
 
-
 # ---------------------------------------------------------------------------
 # Factory for Hydra instantiation
 # ---------------------------------------------------------------------------
-
 
 def create_rvlm_full_program(
     profile_name: str | None = None,

@@ -33,11 +33,11 @@ import logfire
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
+from docvqa.retry_utils import is_retryable_lm_error
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Prompt body (formatting rules substituted from the profile)
@@ -81,10 +81,8 @@ _TASK_BODY = (
     "- If an answer is genuinely warranted, it must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -104,20 +102,17 @@ def _build_signature(instructions: str) -> dspy.Signature:
     }
     return dspy.Signature(fields, instructions)
 
-
 # No tools are exposed in the REPL-only ablation. The RLM injects SUBMIT
 # automatically; we deliberately add no `batch_look`, no `look`, no
 # `search`, no `page_texts`.
 def _create_tools() -> list:
     return []
 
-
 # No sandbox bootstrap is needed for REPL-only — there are no images to
 # load and no helpers to define. The RLM's interpreter starts clean with
 # stdlib available.
 def _build_sandbox_code() -> str | None:
     return None
-
 
 # ---------------------------------------------------------------------------
 # ReplOnlyProgram
@@ -184,11 +179,8 @@ class ReplOnlyProgram:
                     self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                 )
 
-                def _is_rate_limit(e: BaseException) -> bool:
-                    return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                 @retry(
-                    retry=retry_if_exception(_is_rate_limit),
+                    retry=retry_if_exception(is_retryable_lm_error),
                     stop=stop_after_attempt(4),
                     wait=wait_exponential(multiplier=30, min=30, max=120),
                     before_sleep=lambda rs: logger.warning(
@@ -265,7 +257,6 @@ class ReplOnlyProgram:
             )
 
         return predictions, trajectories
-
 
 # ---------------------------------------------------------------------------
 # Factory for hydra instantiation

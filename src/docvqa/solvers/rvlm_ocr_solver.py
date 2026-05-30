@@ -42,9 +42,9 @@ from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.search import get_or_build_index
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Prompt body (formatting rules substituted from the profile)
@@ -114,10 +114,8 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
 
 # ---------------------------------------------------------------------------
 # Per-category tool-routing overlay (solver-owned per D-009).
@@ -157,7 +155,6 @@ TOOL_HINTS: dict[str, str] = {
     ),
 }
 
-
 def _get_category_tips(profile: DatasetProfile, category: str) -> str:
     """Compose profile semantic tips + this solver's OCR-routing overlay."""
     base = profile.category_tips_fn(category)
@@ -172,7 +169,6 @@ def _get_category_tips(profile: DatasetProfile, category: str) -> str:
         return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
     return base
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -184,10 +180,8 @@ class RunContext:
     search_index: Any = None
     page_texts: list[str] | None = None
 
-
 def _format_page_texts(page_texts: list[str]) -> list[str]:
     return [t.strip() or "[No text extracted - use batch_look() for visual content]" for t in page_texts]
-
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -206,7 +200,6 @@ def _build_signature(instructions: str) -> dspy.Signature:
         ),
     }
     return dspy.Signature(fields, instructions)
-
 
 def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, batch_concurrency: int = 8) -> list:
     from PIL import Image as PILImage
@@ -272,7 +265,6 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, b
     # symbol in its REPL. Single-image queries go through `batch_look([(img, q)])[0]`.
     return [_batch_look_impl, _search]
 
-
 def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
     """Build sandbox code that loads pages as PIL Images and defines
     `batch_look()` and `search()`. No `look()` is defined."""
@@ -308,7 +300,6 @@ def batch_look(requests):
         paths.append({{"path": tmp.name, "query": query}})
     return _batch_look_impl(_json.dumps(paths))
 '''
-
 
 # ---------------------------------------------------------------------------
 # RvlmOcrProgram
@@ -420,11 +411,8 @@ class RvlmOcrProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -501,7 +489,6 @@ class RvlmOcrProgram:
                 )
 
             return predictions, trajectories
-
 
 # ---------------------------------------------------------------------------
 # Factory for hydra instantiation

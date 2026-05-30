@@ -41,9 +41,9 @@ from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import MultimodalRLM
 from docvqa.solvers.rvlm_unified_solver import _build_signature
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Sub-VLM tool: ask_vlm(image, query) -> str. Single-call (no batch) so the
@@ -65,7 +65,6 @@ def _create_ask_vlm_tool(vlm_predict: dspy.Predict, vlm_lm: dspy.LM) -> list:
                 return answer
 
     return [_ask_vlm_impl]
-
 
 def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
     """Sandbox with pages + a Python wrapper for the ask_vlm tool."""
@@ -92,7 +91,6 @@ def ask_vlm(image, query):
     tmp.close()
     return _ask_vlm_impl(tmp.name, query)
 '''
-
 
 # ---------------------------------------------------------------------------
 # Body. Two perception tools (display + ask_vlm) presented symmetrically.
@@ -152,13 +150,10 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
 
-
 SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)
-
 
 class RvlmHybridProgram:
     """Hybrid solver — MultimodalRLM with both display() and ask_vlm()."""
@@ -240,15 +235,15 @@ class RvlmHybridProgram:
                         self.profile.name, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
-                            "Rate limit, retry %d in %.0fs", rs.attempt_number, rs.next_action.sleep  # type: ignore[union-attr]
+                            "Retryable error, retry %d in %.0fs: %s",
+                            rs.attempt_number,
+                            rs.next_action.sleep,  # type: ignore[union-attr]
+                            rs.outcome.exception() if rs.outcome else "?",  # type: ignore[union-attr]
                         ),
                         reraise=True,
                     )
@@ -321,7 +316,6 @@ class RvlmHybridProgram:
                 )
 
             return predictions, trajectories
-
 
 def create_rvlm_hybrid_program(
     profile_name: str | None = None,

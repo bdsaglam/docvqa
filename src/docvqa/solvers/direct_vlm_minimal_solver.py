@@ -57,11 +57,11 @@ import logfire
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
+from docvqa.retry_utils import is_retryable_lm_error
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import MultimodalRLM
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Minimal task body: sandbox + tool docs + approach + universal guidance.
@@ -118,13 +118,10 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
 
-
 SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)  # for paper-quotable sizing
-
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -139,7 +136,6 @@ def _build_signature(instructions: str) -> dspy.Signature:
         ),
     }
     return dspy.Signature(fields, instructions)
-
 
 def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
     """Build sandbox code that loads pages as PIL Images."""
@@ -156,7 +152,6 @@ for i in range({num_pages}):
     pages.append(Image.open(path))
 assert len(pages) == {num_pages}, f"Expected {num_pages} pages, got {{len(pages)}}"
 '''
-
 
 # ---------------------------------------------------------------------------
 # DirectVlmMinimalProgram
@@ -222,11 +217,8 @@ class DirectVlmMinimalProgram:
                         self.profile.name, q.question_id, self.max_iterations,
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -304,7 +296,6 @@ class DirectVlmMinimalProgram:
                 )
 
             return predictions, trajectories
-
 
 # ---------------------------------------------------------------------------
 # Factory for hydra instantiation

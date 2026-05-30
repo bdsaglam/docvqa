@@ -25,9 +25,9 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 _TASK_BODY = (
     "You are answering a question about a document. The document is shown as a sequence "
@@ -38,10 +38,8 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
 
 def _build_messages(
     question: str,
@@ -62,7 +60,6 @@ def _build_messages(
             parts.append({"type": "image_url", "image_url": {"url": formatted}})
     parts.append({"type": "text", "text": f"\nQuestion: {question}\n\nAnswer:"})
     return [{"role": "user", "content": parts}]
-
 
 class RawVlmMultiProgram:
     """Dataset-aware direct VLM Q&A baseline."""
@@ -110,15 +107,8 @@ class RawVlmMultiProgram:
                 profile=self.profile.name,
             ) as q_span:
 
-                def _is_rate_limit(e: BaseException) -> bool:
-                    return (
-                        "429" in str(e)
-                        or "RateLimit" in type(e).__name__
-                        or "RESOURCE_EXHAUSTED" in str(e)
-                    )
-
                 @retry(
-                    retry=retry_if_exception(_is_rate_limit),
+                    retry=retry_if_exception(is_retryable_lm_error),
                     stop=stop_after_attempt(4),
                     wait=wait_exponential(multiplier=30, min=30, max=120),
                     before_sleep=lambda rs: logger.warning(
@@ -202,7 +192,6 @@ class RawVlmMultiProgram:
             )
 
         return predictions, trajectories
-
 
 def create_raw_vlm_multi_program(
     profile_name: str | None = None,

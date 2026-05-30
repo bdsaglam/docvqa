@@ -38,9 +38,9 @@ from docvqa.solvers.rvlm_unified_solver import (
     _build_sandbox_code,
 )
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 _TASK_BODY = (
     "You are a Document Visual Question Answering agent. You answer a question about a document by "
@@ -69,13 +69,10 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
 
-
 SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)
-
 
 class RvlmNakedProgram:
     """rvlm stripped to DATA + TOOLS + faithfulness + OUTPUT FORMAT only."""
@@ -156,11 +153,8 @@ class RvlmNakedProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -232,7 +226,6 @@ class RvlmNakedProgram:
                 )
 
             return predictions, trajectories
-
 
 def create_rvlm_naked_program(
     profile_name: str | None = None,

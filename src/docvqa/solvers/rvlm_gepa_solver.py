@@ -45,9 +45,9 @@ from docvqa.solvers.rvlm_unified_solver import (
     _build_sandbox_code,
 )
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # ---------------------------------------------------------------------------
 # Seed candidate — what the optimizer starts from.
@@ -57,7 +57,6 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SEED_TASK_INSTRUCTIONS: str = _TASK_BODY + "\n" + _UNIFIED_TIPS
-
 
 class RvlmGepaProgram:
     """RVLM solver with one optimizable prompt component (``task_instructions``).
@@ -157,11 +156,8 @@ class RvlmGepaProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    def _is_rate_limit(e: BaseException) -> bool:
-                        return "429" in str(e) or "RateLimit" in type(e).__name__ or "RESOURCE_EXHAUSTED" in str(e)
-
                     @retry(
-                        retry=retry_if_exception(_is_rate_limit),
+                        retry=retry_if_exception(is_retryable_lm_error),
                         stop=stop_after_attempt(4),
                         wait=wait_exponential(multiplier=30, min=30, max=120),
                         before_sleep=lambda rs: logger.warning(
@@ -233,7 +229,6 @@ class RvlmGepaProgram:
                 )
 
             return predictions, trajectories
-
 
 def create_rvlm_gepa_program(
     profile_name: str | None = None,

@@ -36,9 +36,9 @@ PILImage.MAX_IMAGE_PIXELS = None
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
 from docvqa.types import LMConfig
+from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
-
 
 # Verbatim from DocVQA2026/eval_utils.py get_evaluation_prompt().
 # Refresh manually if upstream changes.
@@ -66,7 +66,6 @@ MASTER_PROMPT = (
     "Ensure the content inside [FINAL ANSWER] strictly follows the MANDATORY RESPONSE RULES."
 )
 
-
 def _extract_final_answer(raw: str) -> str:
     """Return the text after the last 'FINAL ANSWER:' marker, stripped of
     bracket framing. Falls back to the full string if no marker found.
@@ -92,7 +91,6 @@ def _extract_final_answer(raw: str) -> str:
             return line
     return tail
 
-
 def _downscale(p: PILImage.Image, max_pixels: int) -> PILImage.Image:
     """Resize page to fit within `max_pixels` total, preserving aspect ratio.
     Returns original if already under the budget."""
@@ -103,7 +101,6 @@ def _downscale(p: PILImage.Image, max_pixels: int) -> PILImage.Image:
     new_w = max(1, int(p.size[0] * scale))
     new_h = max(1, int(p.size[1] * scale))
     return p.resize((new_w, new_h), PILImage.Resampling.LANCZOS)
-
 
 def _build_messages(
     question: str,
@@ -130,7 +127,6 @@ def _build_messages(
             parts.append({"type": "image_url", "image_url": {"url": formatted}})
     parts.append({"type": "text", "text": f"\n\nQuestion: {question}"})
     return [{"role": "user", "content": parts}]
-
 
 class OfficialBaselineProgram:
     """Multi-image VLM with the official DocVQA 2026 MASTER_PROMPT.
@@ -169,15 +165,8 @@ class OfficialBaselineProgram:
                 question=q.question[:200],
             ) as q_span:
 
-                def _is_rate_limit(e: BaseException) -> bool:
-                    return (
-                        "429" in str(e)
-                        or "RateLimit" in type(e).__name__
-                        or "RESOURCE_EXHAUSTED" in str(e)
-                    )
-
                 @retry(
-                    retry=retry_if_exception(_is_rate_limit),
+                    retry=retry_if_exception(is_retryable_lm_error),
                     stop=stop_after_attempt(4),
                     wait=wait_exponential(multiplier=30, min=30, max=120),
                     before_sleep=lambda rs: logger.warning(
@@ -260,7 +249,6 @@ class OfficialBaselineProgram:
             )
 
         return predictions, trajectories
-
 
 def create_official_baseline_program(
     vlm: dict[str, Any] | None = None,
