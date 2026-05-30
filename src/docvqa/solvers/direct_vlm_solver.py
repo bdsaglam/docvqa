@@ -108,8 +108,67 @@ _TASK_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-def _build_task_instructions(profile: DatasetProfile) -> str:
-    return _TASK_BODY + profile.answer_formatting_rules
+# Legacy pre-compaction prompt (no RESET_HISTORY / sliding-window / compact-often
+# language). Byte-exact copy of the prompt that produced il_n=3 = 43.2%. Used to
+# isolate the prompt as the regression lever when the window is effectively
+# unbounded (max_messages huge). Select via legacy_prompt=True.
+_TASK_BODY_LEGACY = (
+    "You are a Document Visual Question Answering agent. You answer a question about a document by "
+    "displaying page images, examining them visually, and reasoning step by step in Python.\n\n"
+
+    "## PRE-LOADED SANDBOX\n"
+    "The REPL already has these variables defined — use them directly. "
+    "DO NOT import PIL or open files from disk; the images are NOT on your CWD.\n"
+    "- `pages`: list of page images as PIL Images (0-indexed), already loaded in memory.\n"
+    "  Access a page: `pages[0]`, `pages[1]`, ... Dimensions: `pages[i].size` → (width, height).\n"
+    "  Crop a region: `pages[i].crop((left, top, right, bottom))`.\n\n"
+
+    "## DATA\n"
+    "- `question`: The question you must answer.\n"
+    "- `doc_info`: Document category and page count.\n\n"
+
+    "## TOOLS\n"
+    "- `display(image)` — Show a PIL Image inline. You will SEE the image in the next step. "
+    "`image` can be a full page (e.g. `pages[0]`), a crop (e.g. `pages[0].crop((l,t,r,b))`), "
+    "or any processed PIL Image. Full pages are downscaled — for fine details, crop first.\n"
+    "- `print()` — ALWAYS print to see text results (numbers, strings, computed values).\n\n"
+
+    "## APPROACH\n"
+    "1. EXPLORE: Start with `display(pages[0])` (and further pages if multi-page) to see the layout. "
+    "Build a mental map: what sections, tables, figures, and labels are present and where.\n"
+    "2. LOCATE: Find the specific region(s) relevant to the question.\n"
+    "3. EXTRACT: `display()` tight crops with `pages[i].crop((l,t,r,b))` to read exact values.\n"
+    "4. VERIFY: Cross-check extracted values if ambiguous.\n"
+    "5. SUBMIT: Once you have the answer, call `SUBMIT(answer=\"...\")`.\n\n"
+
+    "## GUIDELINES\n"
+    "- Full-page `display()` gives an overview; for fine details CROP FIRST using pixel coordinates "
+    "from `pages[i].size`. Do not re-display the same full page hoping to see more detail — crop instead.\n"
+    "- After displaying, describe what you see in your reasoning — this helps you think clearly.\n"
+    "- CONFLICT RESOLUTION: If you read conflicting values across displays, crop TIGHTER on the "
+    "specific detail and do one tie-breaking read. Trust the higher-resolution crop.\n"
+    "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' — enumerate ALL candidates first, "
+    "then select programmatically. Do NOT stop at the first match.\n"
+    "- UNKNOWN RULES: Answer 'Unknown' when:\n"
+    "  (a) A specific named entity does not exist after thorough visual search.\n"
+    "  (b) A chart/table explicitly shows N/A or missing data for the requested item.\n"
+    "  Do NOT substitute a similar-sounding entity or extrapolate from nearby data.\n"
+    "  Do NOT use narrative/descriptive text when a chart explicitly shows N/A.\n"
+    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
+    "Extract all referenced values visually and compute explicitly in Python.\n"
+    "- For tables: crop overlapping horizontal strips and display each to read rows reliably.\n"
+    "- For spatial questions: display relevant regions and describe positions in your reasoning.\n"
+    "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "- SUBMIT a single answer string.\n"
+    '- Example: SUBMIT(answer="42")\n'
+    "- The answer must follow these formatting rules:\n\n"
+)
+
+def _build_task_instructions(profile: DatasetProfile, legacy: bool = False) -> str:
+    body = _TASK_BODY_LEGACY if legacy else _TASK_BODY
+    return body + profile.answer_formatting_rules
 
 # ---------------------------------------------------------------------------
 # Per-category tool-routing overlay (solver-owned per D-009).
@@ -236,6 +295,7 @@ class DirectVlmProgram:
         max_image_pixels: int = 1_000_000,
         use_category_tips: bool = True,
         question_concurrency: int = 4,
+        legacy_prompt: bool = False,
     ):
         self.profile = profile
         self.max_iterations = max_iterations
@@ -244,6 +304,7 @@ class DirectVlmProgram:
         self.max_image_pixels = max_image_pixels
         self.use_category_tips = use_category_tips
         self.question_concurrency = question_concurrency
+        self.legacy_prompt = legacy_prompt
 
     def _per_question_prefix(self, q: Question) -> str:
         if self.profile.question_format_hint_fn is None:
@@ -260,7 +321,7 @@ class DirectVlmProgram:
             doc_info = f"Category: {document.doc_category}, Pages: {len(document.images)}"
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
-            instructions = _build_task_instructions(self.profile)
+            instructions = _build_task_instructions(self.profile, legacy=self.legacy_prompt)
             if self.use_category_tips:
                 tips = _get_category_tips(self.profile, document.doc_category)
                 if tips:
@@ -385,6 +446,7 @@ def create_direct_vlm_program(
     max_image_pixels: int = 1_000_000,
     use_category_tips: bool = True,
     question_concurrency: int = 4,
+    legacy_prompt: bool = False,
     vlm: dict[str, Any] | None = None,  # unused — direct VLM doesn't need a separate VLM
 ) -> DirectVlmProgram:
     """Hydra factory. Profile resolution mirrors ``rvlm_solver.create_rvlm_program``."""
@@ -410,4 +472,5 @@ def create_direct_vlm_program(
         max_image_pixels=max_image_pixels,
         use_category_tips=use_category_tips,
         question_concurrency=question_concurrency,
+        legacy_prompt=legacy_prompt,
     )
