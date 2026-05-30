@@ -8,7 +8,22 @@ cell at a time; replan after each result.
 
 ## In progress
 
-(none — n=2 chain done; queue is open)
+### `[→]` skeletal n=8 + hybrid n=8 chained — D-008 escalation — 2026-05-30
+
+Two chains running on amax7:
+
+- **Stage 1**: `scripts/skeletal_n8_orch.py` drives skeletal t2..t8
+  with 22/25 overlap. Tmux: `skel-n8-orch` + per-trial `rvlm-skel-tN`.
+  Sentinel: `/tmp/skeletal-n8.done`. Wall: ~5-6h.
+- **Stage 2** (auto-chained): `scripts/hybrid_n8_post_orch.py` waits
+  for stage-1 sentinel, then drives hybrid t3..t8 with same overlap.
+  Hybrid t1+t2 already done. Wall: ~10-12h after stage 1.
+  Sentinel: `/tmp/hybrid-n8.done`.
+
+Naked **shelved** (n=1 −10.00pp, ~4.3σ outside minimal's noise band;
+pre-set "−5pp or worse → load-bearing" rule triggered — no n=2/n=8
+needed). Full writeup in
+`docs/experiments/strip-chain-naked-hybrid.md`.
 
 ## Queued
 
