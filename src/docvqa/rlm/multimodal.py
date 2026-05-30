@@ -174,6 +174,7 @@ Available:
 - Variables: {inputs} (your input data)
 - `print()` - ALWAYS print to see results
 - `display(image)` - Show a PIL Image inline (you will see the image in the next step)
+- `RESET_HISTORY(summary="...")` - Compact your history: clears all past steps AND their images from view, keeping only your summary text. Variables persist (you can re-display later). Use it once you've noted what you need from images, to keep context small.
 - `SUBMIT({final_output_names})` - call when done (ends the run immediately)
 - Standard libraries: re, json, collections, math, etc.
 
@@ -181,6 +182,7 @@ Rules:
 - This is ITERATIVE. State persists between steps. Do NOT solve everything in one step.
 - ALWAYS print before submitting — verify results look correct.
 - Use `display()` to look at images directly — you can see them.
+- Images are EPHEMERAL: only your most recent displays stay in view; older images drop out of context. Write down what you see as notes so you don't depend on stale images.
 - Re-access values from variables instead of retyping long strings/numbers.
 - You have max {max_iterations} iterations."""
 
