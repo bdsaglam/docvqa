@@ -56,7 +56,37 @@ done
 - After refill, re-run paired Δ skeletal-minimal at n=8 to get the
   clean σ for the paper.
 
-### 2. `[ ]` rvlm_ocr n=1 val (task #14)
+### 2. `[ ]` rvlm_minimal n=8 test + SC-vote submission
+
+Paper-method submission cell. Test set = **48 docs / 160 Qs** (≈2×
+val scope). Run minimal n=8 on test, then self-consistency vote
+across 8 trials to produce one submission JSON for upload.
+
+**Decision gate (S4 in heartbeat):** if refilled skeletal Δ < +0.5pp
+or in the noise band, the proposed method is `rvlm_minimal` and this
+cell runs. If skeletal beats minimal by >+1pp (unlikely from current
+trajectory), swap `rvlm_minimal` → `rvlm_skeletal` here.
+
+Per-trial:
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=rvlm_minimal \
+  data.split=test data.num_samples=null \
+  max_concurrency=16 \
+  run_id=rvlm-minimal-test-t${T}
+```
+
+- Strict serial — one trial at a time, no overlap. c=16 (vs val
+  c=32) gives test trials more vllm headroom and reduces timeout
+  risk on the larger test set.
+- Trial wall: ~3-4h. **Chain wall: ~28-32h sequential.**
+- After all 8 land: per-question majority vote across 8 prediction
+  files → single submission JSON. User uploads to competition server
+  manually.
+
+### 3. `[ ]` rvlm_ocr n=1 val (task #14)
 
 Locks the clean OCR-extension number. Current `rvlm_full` legacy data is
 confounded with `look()` ergonomic wrapper. This is the clean cell.
