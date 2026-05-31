@@ -60,7 +60,17 @@ the VLM tool — no image-reading fallback.
   qwen3-8b-rvlm-minimal.md`, move this cell to Done. (No paired Δ —
   single variant.)
 
-### `[→]` Remove agent-level @retry from ALL solvers — amax7 POLLING (amax1 refactor in progress now)
+### `[✓]` Remove agent-level @retry from ALL solvers — DONE 2026-06-01 (commit `0a04aee`)
+
+**Done:** after amax1's rename cascade landed (`feae419`), removed the
+whole-agent `@retry` from all 12 remaining solvers (`0a04aee`; `rvlm`
+already clean from `895851f`). Pure deletions (decorator + unused
+tenacity/`is_retryable_lm_error` imports); all 13 solvers import OK;
+grep for the retry pattern is now zero across `src/docvqa/solvers/`.
+Per-call dspy `num_retries=5` (global in `types.py`) is the only retry
+layer everywhere. Watcher cron retired.
+
+---
 
 Per-user direction 2026-05-31 ~23:00 (updated: amax1 is doing the
 rename/reorg NOW, not deferred). `rvlm_minimal` already done (commit
