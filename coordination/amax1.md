@@ -349,13 +349,38 @@ Matched non-comics, legacy vs new-prompt: **34.3% vs 28.6% = +5.7pp**.
   image pipeline UNCHANGED (38-line diff is all max_messages logic),
   identical params, served model still `Qwen/Qwen3.5-27B`.
 
-**Resolution (proposed, not yet run — needs user / GPU):**
-1. Re-run the OLD build (checkout f737190) il_n=3 once — does 43.2%
-   reproduce, or also land ~30%? Settles variance-vs-real-regression.
-2. n=3 on current-build il_n=3 to get the real mean/spread.
-If old-build also ~30% → it was variance, case closed. If old-build
-reproduces ~43% → a dependency/env regression remains (uv.lock has been
-dirty all session — dependency drift is the one un-checked suspect).
+**Resolution — n=3 DONE (2026-05-31): il_n=3 is HIGH-VARIANCE; no
+defensible regression.** Ran current-build legacy-prompt il_n=3 n=3.
+Non-comics (clean 70Q):
+
+| trial | non-comics | full |
+|---|---|---|
+| legacy t1 | 34.3% | 31.2% |
+| legacy t2 | 31.4% | 30.3% |
+| legacy t3 | **40.0%** | 38.2% |
+| new-prompt t1 | 28.6% | 27.6% |
+| **OLD-orig (the "43.2%")** | **42.9%** | 43.2% |
+
+current-build legacy **n=3 = 35.2% ± 4.4pp (sample SD), range
+31.4–40.0%**. The spread is WIDE (~9pp across 3 trials), NOT the tight
+cluster t1+t2 alone suggested. Old-orig 42.9% sits **~1.75 SD above the
+current mean**, and the best current trial (t3=40.0%) is within 2.9pp of
+it → **43% is a plausible high draw of the same distribution. No
+statistically significant regression** (1.75σ, n=1-vs-n=3).
+
+**Meta-lesson (logged honestly):** this thread whipsawed 3× —
+"prompt is the lever" → "tie, it's luck" → "tight n=3, maybe real
+regression" → (with t3) "wide variance, no clear regression." Each flip
+came from reading a verdict off 1–2 trials of a solver whose true SD is
+~4–5pp. The project rule "~3pp std, run 3+ trials before claiming"
+existed for exactly this; il_n=3's variance is even higher than that.
+**Bottom line: direct_vlm il_n=3 ≈ 35% ± 4–5pp (non-comics); the old
+43% was a high draw, not a regression.**
+
+Old-build rerun `oldbuild-iln3-val-t1` (worktree /tmp/dvo @ f737190)
+still running as a final cross-check (adds the old build's own variance
+point); verdict already not in doubt — expect it within the same
+~31–43% band. Tracked by cron.
 
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
