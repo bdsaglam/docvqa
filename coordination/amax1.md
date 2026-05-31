@@ -377,10 +377,36 @@ existed for exactly this; il_n=3's variance is even higher than that.
 **Bottom line: direct_vlm il_n=3 ≈ 35% ± 4–5pp (non-comics); the old
 43% was a high draw, not a regression.**
 
-Old-build rerun `oldbuild-iln3-val-t1` (worktree /tmp/dvo @ f737190)
-still running as a final cross-check (adds the old build's own variance
-point); verdict already not in doubt — expect it within the same
-~31–43% band. Tracked by cron.
+**FINAL — old-build rerun DONE (2026-05-31): NO regression, case
+closed.** `oldbuild-iln3-val-t1` (worktree /tmp/dvo @ f737190, faithful
+old code + old deps) = **33.8% full / 35.7% non-comics**, clean 25/25.
+The old build did NOT reproduce 43.2% — it landed mid-distribution.
+
+All 6 il_n=3 trials, non-comics 70Q (both builds):
+
+| trial | build | non-comics |
+|---|---|---|
+| OLD-orig ("the 43.2") | f737190 | 42.9% |
+| OLD-rerun | f737190 | 35.7% |
+| legacy t1 | current | 34.3% |
+| legacy t2 | current | 31.4% |
+| legacy t3 | current | 40.0% |
+| new-prompt t1 | current | 28.6% |
+
+**Pooled: mean 35.5% ± 5.3pp.** The old build's OWN two trials span
+42.9→35.7 (7pp) — so 42.9% was the high tail of the old build's own
+variance, not a build effect. Old 2-trial mean 39.3% vs current 4-trial
+mean 33.6% → 5.7pp ≈ 1.3σ, **not significant**. (Faint hint the old
+build is marginally higher, but unestablishable at this n and not worth
+chasing.)
+
+**CASE CLOSED: `direct_vlm` il_n=3 ≈ 35% ± 5pp (non-comics). The 43.2%
+was a high-variance single draw, NOT a regression.** The entire
+"il_n=3 regressed" thread was an artifact of reading verdicts off
+single high-variance trials — exactly what "run 3+ trials" prevents.
+Actionable downstream: il_n=3 (or legacy prompt) is a fine crash-safe
+direct_vlm default at ~35%; no code/dep bisect needed. Worktree /tmp/dvo
+can be removed.
 
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
