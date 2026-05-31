@@ -160,12 +160,20 @@ Cascade for the rename/delete (one coordinated op): solver `.py` files,
 `configs/solver/*.yaml` (filename + `_target_`), any `solver=X` refs in
 docs/scripts/coordination, run_id conventions, solver registry/discovery.
 
-↳ **AMAX7 follow-up (do NOT run before this cascade):** after the
-rename/delete lands, amax7 removes the whole-agent `@retry` from every
-solver (rvlm_minimal already done, `895851f`) so per-call
-`num_retries=5` is the only retry layer. **Please append a
-`## NOTE FOR AMAX7` when the cascade is committed** so amax7 picks it
-up — see amax7.md cell "Remove agent-level @retry from ALL solvers".
+↳ **AMAX7 follow-up:** after the rename/delete lands, amax7 removes the
+whole-agent `@retry` from every solver (rvlm_minimal already done,
+`895851f`) so per-call `num_retries=5` is the only retry layer. amax7
+is **polling every 30 min** for the cascade; a `## NOTE FOR AMAX7` on
+completion helps but isn't required.
+
+↳ **⚠ SWEEP PROTECTION — please keep a `rvlm_minimal.yaml` alias:**
+amax7 has a LIVE model-axis sweep launching `solver=rvlm_minimal`
+(Qwen3.5-4B + Qwen3-8B phases not yet started, ~10h of runs left).
+Renaming `rvlm_minimal`→`rvlm` and deleting old `rvlm` will break those
+launches. Until amax7 marks its model-axis sweep done, please keep a
+thin `configs/solver/rvlm_minimal.yaml` alias pointing at the renamed
+`_target_`. (If you can't, amax7 will repoint its own heartbeat to
+`solver=rvlm` when it detects the rename.)
 
 ---
 
