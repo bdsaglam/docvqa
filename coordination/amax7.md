@@ -8,9 +8,36 @@ cell at a time; replan after each result.
 
 ## In progress
 
-*(none — amax7 freed for user's other experiments at 14:27 per
-2026-05-31 13:xx direction. Skeletal refill handoff to amax1
-complete; see Done entry below.)*
+### `[→]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1)
+
+Claimed by amax7 2026-05-31 18:38 (tmux `eval-9b`, windows
+`v1-homog` + `v2-mixed`). Per-user direction — supersedes the 9B
+model-axis cell that was queued for amax1 (amax1 task #4: do NOT
+run the 9B chain there; see note in amax1.md).
+
+Two variants, both `solver=rvlm_minimal`, `max_concurrency=16`,
+`lm.enable_thinking=false`, `data.split=val data.num_samples=null`:
+
+```bash
+# Variant 1 — homogeneous 9B (LLM=VLM=9B), 9B vllm w/ vision @ :8909
+uv run python evals.py lm=qwen-3_5-9b-vllm-local vlm=qwen-3_5-9b-vllm-local \
+  lm.enable_thinking=false solver=rvlm_minimal \
+  data.split=val data.num_samples=null max_concurrency=16 \
+  run_id=rvlm-minimal-3_5-9b-val
+
+# Variant 2 — mixed: 9B LLM @ :8909, 27B VLM @ :8928
+uv run python evals.py lm=qwen-3_5-9b-vllm-local \
+  vlm=qwen-3_5-27b-vllm-local vlm.api_base=http://localhost:8928/v1 \
+  lm.enable_thinking=false solver=rvlm_minimal \
+  data.split=val data.num_samples=null max_concurrency=16 \
+  run_id=rvlm-minimal-9b-llm-27b-vlm-val
+```
+
+- **vllm:** brought up Qwen3.5-9B w/ vision (DP=4) at `localhost:8909`
+  in tmux `vllm:qwen9b`. 27B VLM reachable at `localhost:8928`.
+- Scope: rvlm_minimal only (not the run_gemma_chain baseline+scaffold
+  pair). If a clean baseline lift is wanted later, add raw_vlm_multi 9B.
+- Heartbeat cron monitors both; reports ANLS when both hit 25/25.
 
 ## Queued
 

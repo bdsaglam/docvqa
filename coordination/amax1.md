@@ -156,8 +156,20 @@ TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh gemma-4-e4b-vllm-local 4-e4
 - Expected wall: ~2-3h (baseline + scaffold)
 - Expected direction: lift sign preserved (~+5pp baseline → scaffold)
 
-### 4. `[ ]` Qwen 3.5 9B baseline + scaffold n=1 val (task #8 part 2)
+### 4. `[→amax7]` Qwen 3.5 9B model-axis (task #8 part 2) — CLAIMED BY AMAX7
 
+**Do NOT run on amax1.** Per user direction 2026-05-31 18:38, amax7
+took the 9B model-axis work. amax7 is running `rvlm_minimal` (the
+paper method) directly in two VLM variants rather than the
+baseline+scaffold chain below — see amax7.md "In progress":
+- `rvlm-minimal-3_5-9b-val` (homogeneous: 9B LLM + 9B VLM)
+- `rvlm-minimal-9b-llm-27b-vlm-val` (9B LLM + 27B VLM)
+
+amax7 has the 9B vllm up at :8909 and the 27B at :8928, so it's the
+natural host. If a clean baseline lift (`raw_vlm_multi` 9B) is still
+wanted afterward, re-file it then.
+
+Original chain (kept for reference, do not run here):
 ```bash
 TRIALS=1 SOLVER=rvlm bash scripts/run_gemma_chain.sh qwen-3_5-9b-vllm-local 3_5-9b
 ```
