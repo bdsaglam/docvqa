@@ -27,7 +27,6 @@ from typing import Any
 
 import dspy
 import logfire
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
@@ -38,7 +37,6 @@ from docvqa.solvers.rvlm_solver import (
     _build_sandbox_code,
 )
 from docvqa.types import LMConfig
-from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
 
@@ -153,15 +151,6 @@ class RvlmNakedProgram:
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    @retry(
-                        retry=retry_if_exception(is_retryable_lm_error),
-                        stop=stop_after_attempt(4),
-                        wait=wait_exponential(multiplier=30, min=30, max=120),
-                        before_sleep=lambda rs: logger.warning(
-                            "Rate limit, retry %d in %.0fs", rs.attempt_number, rs.next_action.sleep  # type: ignore[union-attr]
-                        ),
-                        reraise=True,
-                    )
                     def _solve_one():
                         return rlm(question=question_text, doc_info=doc_info)
 

@@ -25,7 +25,6 @@ from typing import Any
 import dspy
 import logfire
 from PIL import Image as PILImage
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 # Match the official DocVQA 2026 kit (eval_utils.py) — no decompression-bomb
 # limit. As of 2026-05-13 the largest test page is 246M pixels (maps_5 p0)
@@ -36,7 +35,6 @@ PILImage.MAX_IMAGE_PIXELS = None
 from docvqa.data import Document
 from docvqa.metrics import evaluate_prediction
 from docvqa.types import LMConfig
-from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
 
@@ -165,17 +163,6 @@ class OfficialBaselineProgram:
                 question=q.question[:200],
             ) as q_span:
 
-                @retry(
-                    retry=retry_if_exception(is_retryable_lm_error),
-                    stop=stop_after_attempt(4),
-                    wait=wait_exponential(multiplier=30, min=30, max=120),
-                    before_sleep=lambda rs: logger.warning(
-                        "Rate limit, retry %d in %.0fs",
-                        rs.attempt_number,
-                        rs.next_action.sleep,  # type: ignore[union-attr]
-                    ),
-                    reraise=True,
-                )
                 def _call() -> str:
                     messages = _build_messages(q.question, pages, max_image_pixels=self.max_image_pixels)
                     response: Any = self.vlm_lm.forward(messages=messages)

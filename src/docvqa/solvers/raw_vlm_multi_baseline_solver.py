@@ -24,12 +24,10 @@ from typing import Any
 import dspy
 import logfire
 from PIL import Image as PILImage
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.types import LMConfig
-from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
 
@@ -112,17 +110,6 @@ class RawVlmMultiProgram:
                 profile=self.profile.name,
             ) as q_span:
 
-                @retry(
-                    retry=retry_if_exception(is_retryable_lm_error),
-                    stop=stop_after_attempt(4),
-                    wait=wait_exponential(multiplier=30, min=30, max=120),
-                    before_sleep=lambda rs: logger.warning(
-                        "Rate limit, retry %d in %.0fs",
-                        rs.attempt_number,
-                        rs.next_action.sleep,  # type: ignore[union-attr]
-                    ),
-                    reraise=True,
-                )
                 def _call():
                     question_text = self._per_question_text(q)
                     messages = _build_messages(question_text, doc_info, pages, instructions)
