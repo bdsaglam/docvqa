@@ -30,6 +30,13 @@ class LMConfig:
     # ``lm.timeout=1800`` via Hydra CLI) — their late-iteration trajectories
     # can push a single completion past 10 min on Qwen 27B and trigger
     # ``litellm.Timeout``.
+    num_retries: int = 5  # Per-call retries (dspy.LM/litellm) on transient
+    # errors (Timeout, RateLimit, connection/server). Applies to BOTH the
+    # agent LM and the VLM tool. This is the only retry layer — solvers no
+    # longer wrap the whole agent in a retry; if a call still fails after
+    # these retries the exception propagates and the doc fails (not
+    # persisted → re-run on next launch), instead of restarting the agent
+    # from iteration 0 and discarding all completed work.
 
     def to_dspy_lm(self) -> dspy.LM:
         """Create a DSPy LM from this config."""
@@ -64,4 +71,5 @@ class LMConfig:
         if extra_body:
             kwargs["extra_body"] = extra_body
         kwargs["timeout"] = self.timeout
+        kwargs["num_retries"] = self.num_retries
         return dspy.LM(**kwargs)
