@@ -8,16 +8,30 @@ cell at a time; replan after each result.
 
 ## In progress
 
-*(none)*
+### `[→]` Qwen 3.5 9B model-axis: rvlm_minimal n=8 escalation (val)
+
+Per-user direction 2026-05-31 ~21:20: escalate both VLM-axis variants
+to **n=8**. t1 = the original run (renamed `*-val-t1`). t2 launched,
+t3-t8 driven by heartbeat cron (one trial per variant at a time,
+c=16, stall-detect + resume). Full writeup:
+`docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md`.
+
+- run_ids: `rvlm-minimal-3_5-9b-val-t{1..8}`,
+  `rvlm-minimal-9b-llm-27b-vlm-val-t{1..8}`.
+- tmux `eval-9b` (`v1-homog` + `v2-mixed`); 9B@:8909, 27B@:8928.
+- On t8 complete: n=8 mean±std + paired per-trial Δ, update doc + this
+  cell.
 
 ## Done
 
 ### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31
 
+(Superseded by the n=8 escalation above; t1 numbers retained.)
+
 **Result (both n=1, val, 80 Q / 25 docs):**
-- Variant 1 — homogeneous 9B (LLM=VLM=9B): `rvlm-minimal-3_5-9b-val`
+- Variant 1 — homogeneous 9B (LLM=VLM=9B): `rvlm-minimal-3_5-9b-val-t1`
   → **17/80 = 21.2% ANLS**
-- Variant 2 — 9B LLM + 27B VLM: `rvlm-minimal-9b-llm-27b-vlm-val`
+- Variant 2 — 9B LLM + 27B VLM: `rvlm-minimal-9b-llm-27b-vlm-val-t1`
   → **17/80 = 21.2% ANLS**
 
 **Takeaway:** upgrading the VLM 9B→27B moved the headline by **0.0pp**
