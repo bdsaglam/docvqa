@@ -41,6 +41,25 @@ variants, n=8. Same heartbeat drives it (phase 2).
   mean±std + paired Δ → new doc `docs/experiments/
   qwen-4b-rvlm-minimal-vlm-axis.md`, move this cell to Done.
 
+### `[ ]` Qwen 3 8B (text-only): rvlm_minimal n=8, variant 2 only — PHASE 3, after 4B
+
+Per-user direction 2026-05-31 ~22:40. **Qwen3-8B is text-only**
+(`text-generation`, no vision) → variant 1 (LLM=VLM) is impossible;
+**run variant 2 only** (8B LLM + 27B VLM @ :8928). Cross-FAMILY point
+(Qwen3, not Qwen3.5): a pure text reasoner that can only perceive via
+the VLM tool — no image-reading fallback.
+
+- **GPU handoff:** after 4B n=8, heartbeat tears down 4B
+  (`docker stop vllm-qwen4b`) and brings up Qwen3-8B (text-only, DP=4)
+  @ :8908 in tmux `vllm:qwen3-8b`, container `vllm-qwen3-8b`. Model is
+  **cached** (no download).
+- run_id: `rvlm-minimal-qwen3-8b-llm-27b-vlm-val-t{1..8}`.
+- config: `configs/lm/qwen-3-8b-vllm-local.yaml` (port 8908). No vlm
+  config needed (vlm=qwen-3_5-27b-vllm-local, api_base→:8928).
+- On t8 complete: n=8 mean±std → new doc `docs/experiments/
+  qwen3-8b-rvlm-minimal.md`, move this cell to Done. (No paired Δ —
+  single variant.)
+
 ## Done
 
 ### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31
