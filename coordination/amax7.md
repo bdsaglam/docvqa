@@ -22,6 +22,25 @@ c=16, stall-detect + resume). Full writeup:
 - On t8 complete: n=8 mean±std + paired per-trial Δ, update doc + this
   cell.
 
+### `[ ]` Qwen 3.5 4B model-axis: rvlm_minimal n=8 (val) — PHASE 2, after 9B
+
+Per-user direction 2026-05-31 ~22:25: after the 9B n=8 completes,
+extend the model-size axis downward to **Qwen 3.5 4B**, same two VLM
+variants, n=8. Same heartbeat drives it (phase 2).
+
+- **GPU handoff (forced sequential):** 9B (DP=4 @ :8909, tmux
+  `vllm:qwen9b`, container `vllm-qwen9b`) holds all 4 GPUs; 4B needs
+  them. Heartbeat tears down 9B (`docker stop vllm-qwen9b`) then brings
+  up Qwen3.5-4B w/ vision (DP=4) @ :8904 in tmux `vllm:qwen4b`. 4B is
+  multimodal (`image-text-to-text`), ~8 GB, **not cached** → first
+  start downloads it.
+- run_ids: `rvlm-minimal-3_5-4b-val-t{1..8}` (4B/4B),
+  `rvlm-minimal-4b-llm-27b-vlm-val-t{1..8}` (4B LLM + 27B VLM @ :8928).
+- configs: `configs/{lm,vlm}/qwen-3_5-4b-vllm-local.yaml` (port 8904).
+- Reuse tmux `eval-9b` windows for the evals. On t8 complete: n=8
+  mean±std + paired Δ → new doc `docs/experiments/
+  qwen-4b-rvlm-minimal-vlm-axis.md`, move this cell to Done.
+
 ## Done
 
 ### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31
