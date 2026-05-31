@@ -12,11 +12,12 @@ tests whether the recursive VLM sub-call is the load-bearing mechanism
 of the scaffold.
 
 Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`
-per D-009 (DocVQA-2026 default). Per-category tips come from
-``profile.category_tips_fn`` — much of that semantic content is *also*
-useless without perception (e.g., "crop the legend"), but the
-ablation deliberately inherits whatever the dataset profile gives so
-the only thing this solver changes vs ``rvlm`` is the tool surface.
+per D-009 (DocVQA-2026 default). This is a **minimal-prompt** baseline:
+the solver body carries only generic guidance and no hand-crafted
+per-category tips, matching the minimalism of ``rvlm_minimal`` so the
+baseline-vs-method comparison is fair (no benchmark-specific prompt
+tuning on either side). The only thing this solver changes vs
+``rvlm_minimal`` is the tool surface (no perception).
 
 ``ANSWER_FORMATTING_RULES`` comes from ``profile.answer_formatting_rules``,
 not from :mod:`docvqa.prompts`.
@@ -149,9 +150,8 @@ class ReplOnlyProgram:
         page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
         max_iter = self.max_iterations + int(page_bonus)
 
-        base_instructions = _build_task_instructions(self.profile)
-        tips = self.profile.category_tips_fn(document.doc_category)
-        instructions = base_instructions + ("\n" + tips if tips else "")
+        # No category tips — minimal prompt = generic body + profile.answer_formatting_rules.
+        instructions = _build_task_instructions(self.profile)
         tools = _create_tools()
         sandbox_code = _build_sandbox_code()
 

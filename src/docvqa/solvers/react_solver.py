@@ -237,9 +237,8 @@ class ReactProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            base_instructions = _build_task_instructions(self.profile)
-            tips = self.profile.category_tips_fn(document.doc_category)
-            instructions = base_instructions + ("\n" + tips if tips else "")
+            # No category tips, no per-document dispatch — the body is the body.
+            instructions = _build_task_instructions(self.profile)
             tools = _create_tools(
                 self.vlm_predict, self.vlm_lm, tmpdir, num_pages, self.batch_concurrency
             )
