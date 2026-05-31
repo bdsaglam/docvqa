@@ -197,9 +197,46 @@ coaching the agent toward fewer-images/note-then-move — the OPPOSITE
 of il_n=3's strength (accumulating visual context; il_n sweep showed
 accuracy monotonic in retained images 1<2<3).
 
-**Confirming run IN PROGRESS:** `dvm-iln3-legacyprompt-val-t1` — same
-config but `legacy_prompt=true` (byte-exact OLD prompt). If it recovers
-to ~43%, prompt is conclusively the lever. Tracked by cron.
+**CONFIRMING RUN DONE — verdict: it's n=1 NOISE, not a clean prompt
+regression (2026-05-31).** `dvm-iln3-legacyprompt-val-t1` (byte-exact
+OLD prompt, everything else matched, new build): **31.2% (25/80)**,
+non-comics **34.3% (24/70)**, BadReq64=0 (never overflowed, clean
+25/25), comics 1/10, wall ~3h31m.
+
+3-way ladder (all n=1):
+
+| il_n=3 | full | non-comics |
+|---|---|---|
+| old build, OLD prompt (`direct-vlm-val-iter40-t1`) | 43.2% (32/74) | 42.9% (30/70) |
+| new build, NEW prompt | 27.6% (21/76) | 28.6% (20/70) |
+| new build, LEGACY prompt (byte-exact old) | 31.2% (25/80) | 34.3% (24/70) |
+
+Matched non-comics, legacy vs new-prompt: **34.3% vs 28.6% = +5.7pp**.
+
+**What this actually shows (correcting two earlier over-reads):**
+- The prompt is NOT the clean ~15pp lever I first claimed. Reverting it
+  recovered only **+5.7pp** (matched non-comics), leaving **−8.6pp**
+  still short of the old 43.2% run.
+- But it's also NOT "exact tie / prompt irrelevant" (an artifact of a
+  14-doc partial). On the full set legacy beats new-prompt by ~5-6pp.
+- **At n=1 NONE of this is significant.** Per-run SE on ~70Q ≈ 5.5pp;
+  difference SE ≈ 7.7pp. The +5.7pp prompt lift is <1 SE; the −8.6pp
+  residual to old is ~1.1 SE. The new runs (27.6/31.2/34.3) all sit
+  near il_n=2's old 28.9% — **the old 43.2% is most parsimoniously a
+  high single draw.** We built a whole prompt theory on one old n=1
+  point vs one new n=1 point without first checking reproducibility
+  (violating the project's own "~3pp std, run 3+ trials" rule).
+- Code surfaces are exonerated: identical rendering, `multimodal.py`
+  image pipeline UNCHANGED (38-line diff is all max_messages logic),
+  identical params, served model still `Qwen/Qwen3.5-27B`.
+
+**Resolution (proposed, not yet run — needs user / GPU):**
+1. Re-run the OLD build (checkout f737190) il_n=3 once — does 43.2%
+   reproduce, or also land ~30%? Settles variance-vs-real-regression.
+2. n=3 on current-build il_n=3 to get the real mean/spread.
+If old-build also ~30% → it was variance, case closed. If old-build
+reproduces ~43% → a dependency/env regression remains (uv.lock has been
+dirty all session — dependency drift is the one un-checked suspect).
 
 ### NOTE: open design decision for user
 Pick the image-bounding mechanism for direct_vlm: **(a)** total-image
