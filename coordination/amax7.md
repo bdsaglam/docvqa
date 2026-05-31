@@ -8,12 +8,36 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1)
+*(none)*
 
-Claimed by amax7 2026-05-31 18:38 (tmux `eval-9b`, windows
-`v1-homog` + `v2-mixed`). Per-user direction — supersedes the 9B
-model-axis cell that was queued for amax1 (amax1 task #4: do NOT
-run the 9B chain there; see note in amax1.md).
+## Done
+
+### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31
+
+**Result (both n=1, val, 80 Q / 25 docs):**
+- Variant 1 — homogeneous 9B (LLM=VLM=9B): `rvlm-minimal-3_5-9b-val`
+  → **17/80 = 21.2% ANLS**
+- Variant 2 — 9B LLM + 27B VLM: `rvlm-minimal-9b-llm-27b-vlm-val`
+  → **17/80 = 21.2% ANLS**
+
+**Takeaway:** upgrading the VLM 9B→27B moved the headline by **0.0pp**
+at n=1 — for the 9B reasoner under `rvlm_minimal`, perception is not
+the binding constraint; the 9B orchestrator/LLM is. (Same correct
+*count* (17), not necessarily the same questions — n=1, ~3–4% trial
+σ, so treat as "no detectable lift" rather than literally identical.)
+Consistent with the small-model caveat (scaffold/perception lift
+scales with model size). To make this paper-grade would need n≥3 on
+both arms.
+
+Ops note: variant 2 hung once on a non-returning `maps_2_q5` model
+call (~1h50m, never logged iter 1 — I/O stall, not a loop); killed +
+resumed (resumable re-ran only maps_2), q5 then CORRECT.
+
+Claimed by amax7 2026-05-31 18:38 (tmux `eval-9b`). Per-user
+direction — superseded the 9B model-axis cell queued for amax1
+(amax1 task #4). vllm: Qwen3.5-9B w/ vision (DP=4) @ :8909, 27B @ :8928.
+
+<details><summary>commands</summary>
 
 Two variants, both `solver=rvlm_minimal`, `max_concurrency=16`,
 `lm.enable_thinking=false`, `data.split=val data.num_samples=null`:
@@ -33,11 +57,10 @@ uv run python evals.py lm=qwen-3_5-9b-vllm-local \
   run_id=rvlm-minimal-9b-llm-27b-vlm-val
 ```
 
-- **vllm:** brought up Qwen3.5-9B w/ vision (DP=4) at `localhost:8909`
-  in tmux `vllm:qwen9b`. 27B VLM reachable at `localhost:8928`.
 - Scope: rvlm_minimal only (not the run_gemma_chain baseline+scaffold
   pair). If a clean baseline lift is wanted later, add raw_vlm_multi 9B.
-- Heartbeat cron monitors both; reports ANLS when both hit 25/25.
+
+</details>
 
 ## Queued
 
