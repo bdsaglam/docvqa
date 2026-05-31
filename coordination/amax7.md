@@ -8,23 +8,7 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` hybrid n=8 — D-008 escalation, parity coverage — 2026-05-30
-
-`scripts/hybrid_n8_post_orch.py` (auto-fired on skeletal sentinel
-at 21:48) drives hybrid t3..t8 with 22/25 overlap. Hybrid t1+t2
-already done. Wall: ~10-12h. Sentinel: `/tmp/hybrid-n8.done`.
-Tmux: `hyb-n8-orch` + per-trial `rvlm-hyb-tN`.
-
-Parity coverage only — at n=1/n=2 hybrid was already outside
-minimal's noise (−8pp at n=2 paired). Per-user direction: "for
-hybrid, we may want to cover it in the paper like 'we tried it and
-it didn't work' but we need to run it n=8 similar to others for
-parity".
-
-Naked **shelved** (n=1 −10.00pp, ~4.3σ outside minimal's noise band;
-pre-set "−5pp or worse → load-bearing" rule triggered — no n=2/n=8
-needed). Full writeup in
-`docs/experiments/strip-chain-naked-hybrid.md`.
+*(empty — hybrid n=8 closed at 08:30; heartbeat S3 next: skeletal refill)*
 
 ## Queued
 
@@ -147,6 +131,57 @@ after confirming the cap difference doesn't drive it (an rvlm cap=40
 spot-check may be needed).
 
 ## Done
+
+### `[✓]` rvlm_hybrid n=8 val — paired vs minimal (task #39) — 2026-05-31
+
+run_ids: `rvlm-hybrid-val-t{1..8}` on Qwen 3.5 27B local, c=32.
+Chain wall: ~20h start to sentinel (~12:09 → 08:30 next day).
+
+**Paired Δ hybrid − minimal at n=8 (per-trial intersection):**
+**Δ = −5.31pp ± 4.32pp sd**, SE 1.53pp, 95% CI [−8.92, −1.70]pp,
+t(7) = −3.48 (**significant** — CI excludes 0). Confirms the n=2
+signal (Δ = −8pp paired) tightened to −5.31pp at n=8.
+
+Per-trial table (clean — all 8 trials hit 80/80 Qs, unlike skeletal):
+
+| trial | n | hybrid | minimal | Δ |
+|---|---:|---:|---:|---:|
+| t1 | 80 | 35.00% | 42.50% | −7.50pp |
+| t2 | 80 | 35.00% | 42.50% | −7.50pp |
+| t3 | 80 | 31.25% | 40.00% | −8.75pp |
+| t4 | 80 | 38.75% | 41.25% | −2.50pp |
+| t5 | 80 | 43.75% | 45.00% | −1.25pp |
+| t6 | 80 | 37.50% | 38.75% | −1.25pp |
+| t7 | 80 | 40.00% | 41.25% | −1.25pp |
+| t8 | 80 | 32.50% | 45.00% | −12.50pp |
+
+Marginals: hybrid 36.72% ± 4.12pp (range 31.25–43.75); minimal
+42.03% ± 2.21pp. Hybrid is ~2× noisier across trials AND ~5pp
+behind on mean.
+
+**Paper reading.** Hybrid is the "we tried it and it didn't work"
+cell. Adding a second perception channel (`display()`) on top of
+`ask_vlm()` degrades performance at n=8 with statistical
+significance, despite the agent's revealed 2:1 preference for
+`display()` over `ask_vlm()` (counted at n=1: 1397 vs 706 calls).
+The agent's revealed preference for direct perception is the
+**wrong** preference under this regime — forcing delegation through
+`ask_vlm` is the right design choice for the rvlm family. Strong
+evidence for the paper's discussion of why recursive perception >
+direct perception when the LM is identical.
+
+**Methodological footnote.** Hybrid was the only chain in the
+rvlm-* family with NO doc-timeouts (8/8 trials clean 80-Q
+intersections). The display() channel appears to sidestep the
+agent-loop hang mode that catches `science_paper_1` in
+`rvlm_minimal` and `rvlm_skeletal`. Worth a parenthetical in the
+paper: when measuring an ablation we care about *more* than just
+mean — variance, completion, and failure mode all matter.
+
+Naked **shelved** (n=1 −10.00pp, ~4.3σ outside minimal's noise band;
+pre-set "−5pp or worse → load-bearing" rule triggered — no n=2/n=8
+needed). Full writeup in
+`docs/experiments/strip-chain-naked-hybrid.md`.
 
 ### `[✓]` rvlm_skeletal n=8 val — paired vs minimal (task #38) — 2026-05-30
 
