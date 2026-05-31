@@ -13,11 +13,13 @@ that don't expose native multi-image input.
 Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`;
 DocVQA-2026 default. Engineering name per D-010 (formerly ``no_loop``).
 
-Per D-009 (docs/paper/decisions.md, 2026-05-27):
-- Per-category baseline tips come from
-  ``profile.baseline_category_tips_fn(category)``. No inline dict.
-- ``ANSWER_FORMATTING_RULES`` comes from
-  ``profile.answer_formatting_rules``.
+Minimal prompt (matches ``rvlm_minimal``): the task instructions are the
+generic body + ``profile.answer_formatting_rules``, with NO hand-crafted
+per-category tips. This keeps the raw-VLM baseline at the same prompt
+sophistication as the rvlm method, so the method-vs-baseline gap isn't
+confounded by prompt tuning. Dataset-awareness stays: the profile still
+supplies ``answer_formatting_rules``, the per-question hint, and the
+``score_fn``.
 """
 
 from __future__ import annotations
@@ -97,15 +99,14 @@ class RawVlmSingleProgram:
         profile: DatasetProfile,
         question_concurrency: int = 4,
         max_height: int = 16384,
-        use_category_tips: bool = True,
     ):
         self.vlm_lm = vlm_lm
         self.profile = profile
         self.question_concurrency = question_concurrency
         self.max_height = max_height
-        self.use_category_tips = use_category_tips
-        # Default predict (used when no tips); rebuilt per-doc when tips are enabled.
-        self._default_predict = dspy.Predict(
+        # Minimal prompt: generic body + profile.answer_formatting_rules.
+        # No category tips, no per-document dispatch — the body is the body.
+        self._predict = dspy.Predict(
             _build_signature(_build_task_instructions(self.profile))
         )
 
@@ -121,16 +122,7 @@ class RawVlmSingleProgram:
         composite = _stack_pages(document.images, max_height=self.max_height)
         composite_dspy = dspy.Image(composite)
         doc_info = f"Category: {document.doc_category}, Pages: {len(document.images)}"
-        base_instructions = _build_task_instructions(self.profile)
-        if self.use_category_tips:
-            tips = self.profile.baseline_category_tips_fn(document.doc_category)
-            if tips:
-                instructions = base_instructions + "\n" + tips
-                predict = dspy.Predict(_build_signature(instructions))
-            else:
-                predict = self._default_predict
-        else:
-            predict = self._default_predict
+        predict = self._predict
 
         def _solve_question(q: Question):
             with logfire.span(
@@ -227,7 +219,6 @@ def create_raw_vlm_single_program(
     vlm: dict[str, Any] | None = None,
     question_concurrency: int = 4,
     max_height: int = 16384,
-    use_category_tips: bool = True,
 ) -> RawVlmSingleProgram:
     """Hydra factory. See ``rvlm_full_solver.create_rvlm_full_program`` for profile resolution."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
@@ -262,5 +253,4 @@ def create_raw_vlm_single_program(
         profile=profile,
         question_concurrency=question_concurrency,
         max_height=max_height,
-        use_category_tips=use_category_tips,
     )

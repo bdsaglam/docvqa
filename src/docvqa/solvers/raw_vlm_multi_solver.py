@@ -5,8 +5,12 @@ Direct VLM Q&A with native multi-image input — pages are interleaved with
 This is the unaided multi-image baseline for the scaffold-vs-raw lift.
 
 Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`;
-DocVQA-2026 default. The profile drives answer formatting, baseline
-category tips, per-question format hint, and (for the runner) scoring.
+DocVQA-2026 default. The profile drives answer formatting, per-question
+format hint, and (for the runner) scoring.
+
+Minimal prompt (matches ``rvlm_minimal_solver``): generic body +
+``profile.answer_formatting_rules`` only. NO hand-crafted per-category
+tips — so the method-vs-baseline gap is not confounded by prompt tuning.
 
 Engineering name per D-010 (formerly ``no_loop_multi`` / ``no_loop_multi_da``;
 paper-facing name TBD).
@@ -94,9 +98,10 @@ class RawVlmMultiProgram:
             f"Pages shown: {len(pages)} of {len(document.images)}"
             + (" (truncated to first N pages)" if truncated else "")
         )
-        base_instructions = _build_task_instructions(self.profile)
-        tips = self.profile.baseline_category_tips_fn(document.doc_category)
-        instructions = base_instructions + ("\n" + tips if tips else "")
+        # Minimal prompt: generic body + profile.answer_formatting_rules only.
+        # No per-category tips — this is a fair baseline whose prompt matches
+        # the rvlm method's sophistication (see rvlm_minimal_solver).
+        instructions = _build_task_instructions(self.profile)
 
         def _solve_question(q: Question):
             with logfire.span(

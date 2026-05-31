@@ -4,4 +4,3 @@ profile_name: null
 vlm: ${vlm}
 question_concurrency: 4
 max_height: 16384
-use_category_tips: true
