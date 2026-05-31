@@ -8,16 +8,9 @@ cell at a time; replan after each result.
 
 ## In progress
 
-### `[→]` rvlm_skeletal n=8 refill — t5 ONLY, then host stops — 2026-05-31
-
-User direction 13:xx: amax7 needed for other experiments. Finish
-the currently-running `rvlm-skel-refill-t5` (~2-3h remaining), then
-STOP. Subsequent skeletal refill (t6, t7), minimal test n=8, and
-SC-vote submission have all moved to `coordination/amax1.md`
-(see "★ HANDOFF FROM AMAX7" cell at top of amax1's Queued).
-
-Heartbeat `60643424` watches t5 and writes the handoff Done entry
-when it closes.
+*(none — amax7 freed for user's other experiments at 14:27 per
+2026-05-31 13:xx direction. Skeletal refill handoff to amax1
+complete; see Done entry below.)*
 
 ## Queued
 
@@ -145,6 +138,33 @@ after confirming the cap difference doesn't drive it (an rvlm cap=40
 spot-check may be needed).
 
 ## Done
+
+### `[✓ PARTIAL]` rvlm_skeletal n=8 refill — t3, t4, t5 only (task #38) — 2026-05-31
+
+amax7 refilled t3 (7 missing→0), t4 (3→0), t5 (5→0) at c=4 strict
+serial. Then released for user's other experiments per 13:xx
+direction. **t6 (3 missing) and t7 (2 missing) handed off to
+amax1** — see "★ HANDOFF FROM AMAX7" cell in
+`coordination/amax1.md`.
+
+| trial | pre-refill | post-amax7-refill |
+|---|---:|---:|
+| t3 | 18/25 | **25/25** ✓ |
+| t4 | 22/25 | **25/25** ✓ |
+| t5 | 20/25 | **25/25** ✓ |
+| t6 | 22/25 | 22/25 (→ amax1) |
+| t7 | 23/25 | 23/25 (→ amax1) |
+
+amax1 needs to rsync t6/t7 partial run dirs to use resumability.
+Skipping refill is also acceptable — current paired Δ
+(−1.63pp [−5.67, +2.41] n.s.) already lands minimal as proposed
+method.
+
+Refill confirmed the per-doc timeout root cause: at c=4 (vs the
+original c=32 overlap chain), every long-tail doc — including
+science_paper_1 — completed within the 4h task_timeout. The
+overlap pattern's load contention was the timeout driver, not any
+solver-specific bug.
 
 ### `[✓]` rvlm_hybrid n=8 val — paired vs minimal (task #39) — 2026-05-31
 
