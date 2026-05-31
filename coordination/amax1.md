@@ -105,6 +105,63 @@ See `coordination/amax7.md` cells 3 & 4 for prompt-minimization
 
 ---
 
+### ★ SOLVER MINIMIZATION + NAMING CLEANUP (2026-05-31, user-directed)
+
+Principle: **minimal prompts everywhere** (the n=8 ablation proved
+hand-crafted per-category tips aren't load-bearing). Keep baselines but
+minimize their prompts; remove OUR redundant heavy-prompt method
+solvers; rename so minimal is canonical and baselines carry a
+`_baseline` suffix.
+
+**DONE — prompt minimization (committed, all stay dataset-aware):**
+- Method extensions: `rvlm_full`, `rvlm_ocr` (c82b174)
+- Baselines: `raw_vlm_single`, `raw_vlm_multi` (0ea5068);
+  `react`, `repl_only` (febbcf8)
+- Already-minimal (no change): `rvlm_minimal`, `rvlm_skeletal`,
+  `rvlm_naked`, `rvlm_hybrid`, `direct_vlm_minimal`.
+
+**PENDING re-val** (minimized solvers' numbers changed — re-run after
+the test chain frees the GPU): `rvlm_full`, `rvlm_ocr`, `react`,
+`repl_only`, `raw_vlm_single`, `raw_vlm_multi`. (rvlm_ocr re-val was
+already handoff Step 5.)
+
+**DEFERRED — rename + delete (do AFTER: (1) the rvlm_minimal TEST chain
+finishes — it references `solver=rvlm_minimal` by name, so renaming now
+breaks the cron relaunch; (2) re-val above):**
+
+Rename map:
+| current | →                | role |
+|---|---|---|
+| `rvlm_minimal` | `rvlm`           | proposed method (canonical) |
+| `direct_vlm_minimal` | `direct_vlm` | alt-architecture method (see direct_vlm note) |
+| `react` | `react_baseline`        | baseline |
+| `repl_only` | `repl_only_baseline` | baseline |
+| `raw_vlm_single` | `raw_vlm_single_baseline` | baseline |
+| `raw_vlm_multi` | `raw_vlm_multi_baseline` | baseline |
+| `rvlm_skeletal/naked/hybrid/full/ocr` | (unchanged) | method variants |
+| `official_baseline` | (already suffixed) | baseline |
+
+Delete (OUR old heavy-prompt method solvers, superseded by minimal;
+git-tag `pre-solver-cleanup` first so ablations stay reproducible):
+- `rvlm` (base, heavy category tips) — DELETE; frees the `rvlm` name.
+- **OPEN — `rvlm_unified`** (heavy `_UNIFIED_TIPS`; the ablation control
+  that proved tips aren't load-bearing). Recommend DELETE (result is in
+  `docs/experiments/unified-category-tips-ablation.md` + git tag).
+- **OPEN — `rvlm_gepa`** (GEPA prompt-optimization; separate research
+  line, not just a heavy duplicate). Recommend KEEP unless retired.
+- **OPEN — `direct_vlm` (heavy)**: it holds the il_n + legacy_prompt
+  infra (documented in `docs/experiments/direct-vlm-il_n-and-prompt-
+  variance.md`). Recommend MINIMIZE IN PLACE (strip its TOOL_HINTS,
+  keep the il_n/legacy infra) and DELETE the redundant
+  `direct_vlm_minimal` instead — i.e. for direct_vlm the canonical file
+  is the existing one minimized, NOT a promote-from-minimal.
+
+Cascade for the rename/delete (one coordinated op): solver `.py` files,
+`configs/solver/*.yaml` (filename + `_target_`), any `solver=X` refs in
+docs/scripts/coordination, run_id conventions, solver registry/discovery.
+
+---
+
 ### images_for_last_n sweep for direct_vlm (replaces old n=2 trials)
 
 User directive 2026-05-29: run `direct_vlm` cap=40 at
