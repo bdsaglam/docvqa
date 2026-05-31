@@ -8,11 +8,25 @@ cell at a time; replan after each result.
 
 ## In progress
 
-*(empty — hybrid n=8 closed at 08:30; heartbeat S3 next: skeletal refill)*
+### `[→]` rvlm_skeletal n=8 refill — t5 ONLY, then host stops — 2026-05-31
+
+User direction 13:xx: amax7 needed for other experiments. Finish
+the currently-running `rvlm-skel-refill-t5` (~2-3h remaining), then
+STOP. Subsequent skeletal refill (t6, t7), minimal test n=8, and
+SC-vote submission have all moved to `coordination/amax1.md`
+(see "★ HANDOFF FROM AMAX7" cell at top of amax1's Queued).
+
+Heartbeat `60643424` watches t5 and writes the handoff Done entry
+when it closes.
 
 ## Queued
 
-### 1. `[ ]` rvlm_skeletal n=8 refill (post-hybrid)
+*(All queued cells below moved to amax1 per user direction 2026-05-31
+— see "★ HANDOFF FROM AMAX7" at top of `coordination/amax1.md` for
+the new ordering and rsync prerequisites. Kept here for reference
+only; do NOT run on amax7.)*
+
+### 1. `[→moved]` rvlm_skeletal n=8 refill (post-hybrid)
 
 Skeletal n=8 chain ran with 22/25 overlap and 5/8 trials timed out
 on long-tail docs under load (see "Done" cell for full Δ analysis).
@@ -40,7 +54,7 @@ done
 - After refill, re-run paired Δ skeletal-minimal at n=8 to get the
   clean σ for the paper.
 
-### 2. `[ ]` rvlm_minimal n=8 test + SC-vote submission
+### 2. `[→moved]` rvlm_minimal n=8 test + SC-vote submission
 
 Paper-method submission cell. Test set = **48 docs / 160 Qs** (≈2×
 val scope). Run minimal n=8 on test, then self-consistency vote
@@ -70,7 +84,7 @@ uv run python evals.py \
   files → single submission JSON. User uploads to competition server
   manually.
 
-### 3. `[ ]` Prompt-minimize other solvers (post-test gate)
+### 3. `[→moved]` Prompt-minimize other solvers (post-test gate)
 
 **Decision gate:** runs only after test n=8 confirms `rvlm_minimal`
 as the proposed method.
@@ -95,7 +109,7 @@ Solvers to minimize:
 Apply same skeletal-style edit (sub-agent if not trivial), then
 proceed to cell 4.
 
-### 4. `[ ]` rvlm_ocr n=1 val (task #14, post-minimization)
+### 4. `[→moved]` rvlm_ocr n=1 val (task #14, post-minimization)
 
 Locks the clean OCR-extension number. Runs AFTER prompt minimization
 above so the lift comparison isn't confounded with DocVQA-tuned

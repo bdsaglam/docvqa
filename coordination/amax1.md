@@ -16,6 +16,113 @@ design decision, see NOTE.)
 
 ## Queued
 
+### ★ HANDOFF FROM AMAX7 — paper submission path (2026-05-31)
+
+User freed amax7 for other experiments mid-skeletal-refill. amax7 is
+finishing its current `rvlm-skeletal-val-t5` refill (5 docs), then
+stopping. Everything below moves here.
+
+**Background (read first):**
+- Hybrid n=8 done: **paired Δ hybrid−minimal = −5.31pp [−8.92, −1.70]
+  significant** (`8113887`). Hybrid shelved (paper: "tried it, didn't
+  work").
+- Skeletal n=8 incomplete (only t1/t2/t8 clean; t3-t7 had timeout
+  dropouts under the 22/25 overlap chain). Current paired Δ on
+  intersection: **−1.63pp [−5.67, +2.41]pp t(7)=−0.954 (n.s.)** —
+  inside the "minimal as proposed method" band already.
+- Minimal n=8 reference: 42.03% ± 2.21pp marginal, σ tighter than
+  skeletal (3.92pp) → minimal wins on stability even if mean ties.
+
+**Order:**
+
+1. **Skeletal refill t6 + t7** (low priority — refines σ, mean
+   already in noise band)
+2. **Refined paired Δ skeletal-minimal** (decide proposed method;
+   default outcome: minimal)
+3. **Minimal n=8 test + SC-vote submission** (paper headline cell;
+   user uploads JSON to competition server manually)
+4. **Prompt-minimize other solvers** (post-test gate, see
+   amax7.md cell 3)
+5. **rvlm_ocr n=1 val** (post-minimization)
+
+#### Step 1: skeletal refill t6 + t7 (optional but recommended)
+
+Prerequisite: rsync partial run dirs from amax7 (resumability needs
+them — only the missing docs get re-run):
+```bash
+rsync -av amax7.your-network:/home/baris/repos/docvqa/output/runs/rvlm-skeletal-val-t6/ output/runs/rvlm-skeletal-val-t6/
+rsync -av amax7.your-network:/home/baris/repos/docvqa/output/runs/rvlm-skeletal-val-t7/ output/runs/rvlm-skeletal-val-t7/
+# Adjust hostname as needed — pulls partial tasks/ dirs over.
+```
+
+After rsync, missing counts should match: t6=3, t7=2. Run:
+```bash
+for T in 6 7; do
+  uv run python evals.py \
+    lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+    lm.enable_thinking=false \
+    solver=rvlm_skeletal \
+    data.split=val data.num_samples=null \
+    max_concurrency=4 \
+    run_id=rvlm-skeletal-val-t${T}
+done
+```
+- c=4 strict serial (NOT 32 — avoids the overlap-load timeout
+  cascade that caused the original misses).
+- Wall: ~3-4h for both trials.
+
+If you choose to **skip refill** (acceptable — current paired Δ
+already lands minimal as proposed method): jump to Step 3.
+
+#### Step 2: refined paired Δ
+
+After refill, re-run the per-trial-intersection paired analysis
+(see `git show 14e4784` for the script pattern). Update
+`coordination/amax7.md` "Done" section with refined number,
+commit + push. Decision rule:
+- Δ < +0.5pp or CI95 includes 0 → **minimal** is proposed method
+- Δ > +1pp → **skeletal** wins, swap in Step 3
+
+#### Step 3: minimal n=8 test + SC-vote submission
+
+Test set = **48 docs / 160 Qs**. Strict serial, one trial at a
+time, c=16:
+
+```bash
+for T in 1 2 3 4 5 6 7 8; do
+  uv run python evals.py \
+    lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+    lm.enable_thinking=false \
+    solver=rvlm_minimal \
+    data.split=test data.num_samples=null \
+    max_concurrency=16 \
+    run_id=rvlm-minimal-test-t${T}
+done
+```
+(Or `solver=rvlm_skeletal` if Step 2 lands the skeletal verdict.)
+
+- Trial wall: ~3-4h. Chain wall: ~28-32h.
+- Apply long-tail rule: if a trial at ≤8 docs remaining stalls
+  ≥45 min, launch the next trial in parallel (vllm has headroom
+  for one overlap at c=16).
+
+#### Step 4: SC-vote submission
+
+After all 8 test trials land, write `scripts/sc_vote_submission.py`:
+for each `(doc_id, question_id)`, load prediction from each trial's
+`output/runs/rvlm-minimal-test-tN/submission.json`, majority-vote
+literal answer string, tie-break by trial-with-highest-val-score.
+
+Output: `output/submissions/rvlm-minimal-test-sc8.json`. User
+uploads to competition server manually.
+
+#### Steps 5-6 (post-submission)
+
+See `coordination/amax7.md` cells 3 & 4 for prompt-minimization
++ rvlm_ocr. Run on whichever host has time.
+
+---
+
 ### images_for_last_n sweep for direct_vlm (replaces old n=2 trials)
 
 User directive 2026-05-29: run `direct_vlm` cap=40 at
