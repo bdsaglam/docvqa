@@ -5,6 +5,5 @@ max_iterations: 20
 max_messages: 8
 images_for_last_n: 1   # images only on the most recent step; older windowed steps render text-only
 max_image_pixels: 8000000
-use_category_tips: true
 question_concurrency: 4
 legacy_prompt: false   # true = pre-compaction prompt (no sliding-window/compact language); for isolating the prompt as the il_n=3 regression lever

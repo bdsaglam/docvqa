@@ -32,7 +32,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
-from docvqa.solvers.rvlm_unified_solver import (
+from docvqa.solvers.rvlm_solver import (
     _build_signature,
     _create_tools,
     _build_sandbox_code,
@@ -237,7 +237,7 @@ def create_rvlm_naked_program(
     question_concurrency: int = 4,
     batch_concurrency: int = 8,
 ) -> RvlmNakedProgram:
-    """Hydra factory. Profile resolution: same as ``rvlm_unified_solver``."""
+    """Hydra factory. Profile resolution: explicit profile_name, else dataset, else DocVQA-2026."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:

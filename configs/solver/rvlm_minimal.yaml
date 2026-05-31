@@ -1,4 +1,5 @@
-_target_: docvqa.solvers.rvlm_minimal_solver.create_rvlm_minimal_program
+# TEMP ALIAS for the in-flight rvlm-minimal-test chain — delete after rvlm-minimal-test-t8 completes. Canonical name is `rvlm`.
+_target_: docvqa.solvers.rvlm_solver.create_rvlm_program
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 25

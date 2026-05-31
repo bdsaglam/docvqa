@@ -8,7 +8,7 @@ Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`;
 DocVQA-2026 default. The profile drives answer formatting, per-question
 format hint, and (for the runner) scoring.
 
-Minimal prompt (matches ``rvlm_minimal_solver``): generic body +
+Minimal prompt (matches the ``rvlm`` solver): generic body +
 ``profile.answer_formatting_rules`` only. NO hand-crafted per-category
 tips — so the method-vs-baseline gap is not confounded by prompt tuning.
 
@@ -100,7 +100,7 @@ class RawVlmMultiProgram:
         )
         # Minimal prompt: generic body + profile.answer_formatting_rules only.
         # No per-category tips — this is a fair baseline whose prompt matches
-        # the rvlm method's sophistication (see rvlm_minimal_solver).
+        # the rvlm method's sophistication (see rvlm_solver).
         instructions = _build_task_instructions(self.profile)
 
         def _solve_question(q: Question):
@@ -198,7 +198,7 @@ class RawVlmMultiProgram:
 
         return predictions, trajectories
 
-def create_raw_vlm_multi_program(
+def create_raw_vlm_multi_baseline_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     vlm: dict[str, Any] | None = None,

@@ -21,7 +21,7 @@ predict path the rvlm family uses).
 
 Body is dataset-agnostic — DocVQA-specific answer-format rules come
 from ``profile.answer_formatting_rules`` exactly like in
-``rvlm_minimal_solver`` and ``direct_vlm_minimal_solver``.
+``rvlm_solver`` and ``direct_vlm_solver``.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import MultimodalRLM
-from docvqa.solvers.rvlm_unified_solver import _build_signature
+from docvqa.solvers.rvlm_solver import _build_signature
 from docvqa.types import LMConfig
 from docvqa.retry_utils import is_retryable_lm_error
 
@@ -327,7 +327,7 @@ def create_rvlm_hybrid_program(
     max_messages: int = 8,
     max_image_pixels: int = 8_000_000,
 ) -> RvlmHybridProgram:
-    """Hydra factory. Profile resolution: same as ``rvlm_minimal_solver``."""
+    """Hydra factory. Profile resolution: explicit profile_name, else dataset, else DocVQA-2026."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:

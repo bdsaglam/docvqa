@@ -1,8 +1,0 @@
-_target_: docvqa.solvers.react_solver.create_react_program
-dataset: ${data.dataset}
-profile_name: null
-max_iterations: 25
-vlm: ${vlm}
-page_factor: 1.5
-question_concurrency: 4
-batch_concurrency: 8

@@ -213,7 +213,7 @@ class RawVlmSingleProgram:
 
         return predictions, trajectories
 
-def create_raw_vlm_single_program(
+def create_raw_vlm_single_baseline_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     vlm: dict[str, Any] | None = None,

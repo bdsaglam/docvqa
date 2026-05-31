@@ -1,4 +1,9 @@
-"""GEPA-friendly variant of ``rvlm_unified_solver``.
+"""GEPA-friendly recursive-VLM solver with a heavy (category-tips) seed prompt.
+
+The seed prompt is self-contained here (formerly imported from the deleted
+heavy-prompt unified solver; see the inlined ``_TASK_BODY`` /
+``_UNIFIED_TIPS`` below). Separate research line from the proposed-method
+``rvlm`` solver, kept for prompt optimization.
 
 One injectable string: ``task_instructions`` (the merged TASK_BODY +
 UNIFIED_TIPS blob the agent sees). The dataset-specific
@@ -7,8 +12,8 @@ cannot rewrite dataset-format conventions (avoids breaking answer
 parsing downstream). The VLM ``dspy.Predict`` signature stays fixed; the
 lean RLM harness prompt stays fixed.
 
-Behavior with no candidate: identical to ``RvlmUnifiedProgram`` (seed =
-``_TASK_BODY + _UNIFIED_TIPS`` from the unified solver). Behavior with a
+Behavior with no candidate: identical to the heavy-prompt seed (=
+``_TASK_BODY + _UNIFIED_TIPS``). Behavior with a
 candidate JSON loaded: ``task_instructions`` is replaced from the JSON.
 
 Construction modes (mirrors archived ``flat_solo_gepa_solver`` pattern):
@@ -17,7 +22,7 @@ Construction modes (mirrors archived ``flat_solo_gepa_solver`` pattern):
   (``output/optim/<run>/best_candidate.json``). Loaded once at factory.
 - ``task_instructions``: direct string override (used by the optimizer's
   in-process evaluator via ``apply_candidate``).
-- Neither set: uses the seed (identical to ``rvlm_unified``).
+- Neither set: uses the heavy-prompt seed.
 """
 
 from __future__ import annotations
@@ -35,11 +40,13 @@ import logfire
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
-from docvqa.datasets.profile import DatasetProfile, get_profile
+from docvqa.datasets.profile import (
+    DatasetProfile,
+    get_profile,
+    _DOCVQA_2026_CATEGORY_TIPS,
+)
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
-from docvqa.solvers.rvlm_unified_solver import (
-    _TASK_BODY,
-    _UNIFIED_TIPS,
+from docvqa.solvers.rvlm_solver import (
     _build_signature,
     _create_tools,
     _build_sandbox_code,
@@ -50,11 +57,80 @@ from docvqa.retry_utils import is_retryable_lm_error
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Seed candidate — what the optimizer starts from.
-# Identical to ``rvlm_unified``'s full agent prompt minus the
-# dataset-specific ``answer_formatting_rules`` (which stays profile-injected
-# and is NOT optimized).
+# Heavy-prompt seed (inlined from the former unified solver, which
+# was deleted in the D-010 solver cleanup). GEPA optimizes from this seed:
+# the full category-tips agent prompt minus the dataset-specific
+# ``answer_formatting_rules`` (which stays profile-injected and is NOT
+# optimized). Kept self-contained here so this research line is decoupled
+# from the proposed-method ``rvlm`` solver's minimal prompt.
 # ---------------------------------------------------------------------------
+
+def _build_unified_category_tips() -> str:
+    parts: list[str] = [
+        "",
+        "## CATEGORY-SPECIFIC TIPS",
+        "",
+        "The document's category will be one of: business_report, comics, "
+        "engineering_drawing, infographics, maps, science_paper, "
+        "science_poster, slide. Tips for each category are given below; "
+        "apply the ones that match this document and ignore the rest.",
+        "",
+    ]
+    for cat in sorted(_DOCVQA_2026_CATEGORY_TIPS):
+        body = _DOCVQA_2026_CATEGORY_TIPS[cat].strip()
+        parts.append(f"### {cat}")
+        parts.append(body)
+        parts.append("")
+    return "\n".join(parts)
+
+_UNIFIED_TIPS = _build_unified_category_tips()
+
+_TASK_BODY = (
+    "You are a Document Visual Question Answering agent. You answer a question about a document by "
+    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
+
+    "## DATA\n"
+    "- `question`: The question you must answer.\n"
+    "- `pages`: list of page images (PIL Images) (0-indexed). Pass to `batch_look()`, e.g. `batch_look([(pages[0], 'describe layout')])[0]`.\n\n"
+
+    "## TOOLS\n"
+    "- batch_look(requests) -> list[str]: Send one or more images to the VLM in parallel. "
+    "Input: list of (image, query) tuples where image is any PIL Image "
+    "(a page from `pages`, a crop via `pages[i].crop((l,t,r,b))`, etc). "
+    "Returns: list of answers in same order. ALL visual queries go through this tool.\n"
+    "  Example: batch_look([(pages[0], 'describe layout'), (pages[0].crop((0,0,500,500)), 'read text')])\n"
+    "  For a single query, use: batch_look([(image, query)])[0]\n\n"
+
+    "## APPROACH\n"
+    "1. EXPLORE: Before answering, understand the document structure. "
+    "Use `batch_look` to survey pages — "
+    "e.g. `batch_look([(pages[0], 'Describe layout...'), (pages[1], 'Describe layout...')])`.\n"
+    "Build a mental map of the document.\n"
+    "2. LOCATE: Find the specific region(s) relevant to the question.\n"
+    "3. EXTRACT: Use `batch_look` with tight crops to read exact values. "
+    "For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
+    "4. VERIFY: Cross-check extracted values if ambiguous.\n"
+    "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
+
+    "## GUIDELINES\n"
+    "- Full-page batch_look gives a broad overview. For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
+    "- Use `pages[i].size` to get dimensions for cropping.\n"
+    "- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. "
+    "Extract raw facts, then count/compare/compute in Python.\n"
+    "- VLM CONFLICT RESOLUTION: The VLM gives different answers across calls for the same region. "
+    "When readings conflict, crop TIGHTER on the specific detail and do ONE tie-breaking read. "
+    "Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.\n"
+    "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
+    "then select programmatically. Do NOT stop at the first match.\n"
+    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
+    "Extract all referenced values and compute explicitly in Python.\n"
+    "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "- SUBMIT a single answer string.\n"
+    '- Example: SUBMIT(answer="42")\n'
+    "- The answer must follow these formatting rules:\n\n"
+)
 
 SEED_TASK_INSTRUCTIONS: str = _TASK_BODY + "\n" + _UNIFIED_TIPS
 
@@ -243,10 +319,9 @@ def create_rvlm_gepa_program(
 ) -> RvlmGepaProgram:
     """Hydra factory.
 
-    Profile resolution: same as ``rvlm_unified_solver``. If
+    Profile resolution: explicit profile_name, else dataset, else DocVQA-2026. If
     ``candidate_path`` is set, loads ``{"task_instructions": str}`` JSON
-    and applies it on top of the seed. Otherwise behavior matches
-    ``rvlm_unified``.
+    and applies it on top of the seed. Otherwise behavior matches the seed.
     """
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 

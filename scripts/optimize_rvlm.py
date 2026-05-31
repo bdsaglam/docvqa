@@ -1,4 +1,4 @@
-"""GEPA optimization for the rvlm_unified scaffold.
+"""GEPA optimization for the rvlm_gepa scaffold.
 
 Optimizes ONE prompt component: ``task_instructions`` (= TASK_BODY +
 UNIFIED_TIPS merged, see ``rvlm_gepa_solver.SEED_TASK_INSTRUCTIONS``).
@@ -269,7 +269,7 @@ def make_evaluator():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="GEPA optimization for rvlm_unified")
+    parser = argparse.ArgumentParser(description="GEPA optimization for rvlm_gepa")
     parser.add_argument(
         "--max-metric-calls",
         type=int,

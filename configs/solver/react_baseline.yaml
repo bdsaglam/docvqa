@@ -1,9 +1,8 @@
-_target_: docvqa.solvers.rvlm_unified_solver.create_rvlm_unified_program
+_target_: docvqa.solvers.react_baseline_solver.create_react_baseline_program
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 25
 vlm: ${vlm}
-rlm_type: lean
 page_factor: 1.5
 question_concurrency: 4
 batch_concurrency: 8

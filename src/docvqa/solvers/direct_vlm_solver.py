@@ -10,12 +10,11 @@ with :mod:`docvqa.solvers.rvlm_solver` is what the name encodes per D-010
 
 Engineering name only per D-010 — paper-facing name TBD.
 
-Per D-009 (docs/paper/decisions.md, 2026-05-27), tool-agnostic semantic
-content comes from the dataset profile
-(``profile.category_tips_fn(category)``). Tool-routing for ``display()``
-lives in this solver — in :data:`TOOL_HINTS` below — and is layered on top
-of the profile tips at the call site. ``ANSWER_FORMATTING_RULES`` comes
-from the profile, not from :mod:`docvqa.prompts`.
+The solver prompt carries no benchmark-specific per-category content (the
+per-category ``display()`` tool-routing overlay was removed in the D-010
+solver cleanup, mirroring the minimal ``rvlm`` solver). Dataset-specific
+answer-formatting rules still come from the profile
+(``profile.answer_formatting_rules``), not from :mod:`docvqa.prompts`.
 """
 
 from __future__ import annotations
@@ -170,85 +169,6 @@ def _build_task_instructions(profile: DatasetProfile, legacy: bool = False) -> s
     body = _TASK_BODY_LEGACY if legacy else _TASK_BODY
     return body + profile.answer_formatting_rules
 
-# ---------------------------------------------------------------------------
-# Per-category tool-routing overlay (solver-owned per D-009).
-#
-# Semantic content comes from the dataset profile. This overlay adds
-# ``display()``-specific tool-routing examples on top of the semantic tips,
-# mirroring the FLAT_SOLO_TOOL_HINTS pattern from rvlm_full / rvlm_ocr
-# (adapted to direct-vlm's tool surface).
-# ---------------------------------------------------------------------------
-
-TOOL_HINTS: dict[str, str] = {
-    "engineering_drawing": (
-        "- TOOL ROUTING: BOM tables are dense — display in overlapping horizontal strips at full "
-        "resolution. Read each strip carefully, stitch rows in code.\n"
-        "- For counting parts, display the full BOM, read ALL rows with their QTY column, "
-        "then sum in Python — don't estimate visually.\n"
-        "- Leader lines: display the label AND the part it connects to separately to confirm.\n"
-    ),
-    "business_report": (
-        "- TOOL ROUTING: Display the table title/headers first to confirm you're reading the "
-        "correct one before extracting values.\n"
-        "- For YoY calculations, display the specific table cells, extract raw numbers, compute in Python.\n"
-        "- Pictograms: display each icon individually at high zoom and describe it, rather than "
-        "scanning all icons at once.\n"
-    ),
-    "comics": (
-        "- TOOL ROUTING: Display pages and read speech bubbles visually.\n"
-        "- For counting events: display each page, ask yourself 'what happens in each panel?' "
-        "Build a list of events with strict inclusion criteria, then count in code.\n"
-        "- After collecting event candidates, crop the specific panel tightly and re-display to "
-        "ask a disconfirming question.\n"
-    ),
-    "maps": (
-        "- TOOL ROUTING: COARSE-TO-FINE — display the full page first for rough layout, then "
-        "crop ~800px regions, then ~400px for small text.\n"
-        "- For tile-based counting, use `pages[i].crop((l,t,r,b))` for each tile and "
-        "`display(...)` it; list every visible object in your reasoning.\n"
-        "- LEGEND + ROAD TYPES: crop the legend early; crop the specific road segment at HIGH "
-        "resolution alongside the legend to compare line styles directly.\n"
-    ),
-    "science_paper": (
-        "- TOOL ROUTING: Display pages to locate relevant sections, then crop for details.\n"
-        "- CITATION NUMBERS: display the relevant paragraph at full resolution and read [N] "
-        "patterns directly.\n"
-        "- CITED PAPER FINDINGS: display the bibliography page(s) to locate the reference number, "
-        "then display body-text occurrences.\n"
-    ),
-    "science_poster": (
-        "- TOOL ROUTING: Crop specific sections for precise values rather than re-displaying full page.\n"
-        "- For table values, always crop the specific cell at full resolution before displaying.\n"
-        "- COLOR-CODED VALUES: crop the table at MAXIMUM resolution and describe colors of "
-        "individual cells in your reasoning.\n"
-    ),
-    "infographics": (
-        "- TOOL ROUTING: For precise numbers or dates, crop the specific data point. "
-        "For layout/overview, full-page display is fine.\n"
-    ),
-    "slide": (
-        "- TOOL ROUTING: Display pages to find the right slide, then crop for details.\n"
-        "- Verify page indices by displaying the page header/title — off-by-one errors are common.\n"
-        "- Tables in slides are small — crop at full resolution before reading values.\n"
-    ),
-}
-
-def _get_category_tips(profile: DatasetProfile, category: str | None) -> str:
-    """Compose profile semantic tips + this solver's display() tool-routing overlay."""
-    if not category:
-        return ""
-    base = profile.category_tips_fn(category)
-    tool = TOOL_HINTS.get(category, "")
-    if not base and not tool:
-        return ""
-    if tool and base:
-        # profile.category_tips_fn already wraps with the
-        # ``## CATEGORY-SPECIFIC TIPS`` header; append the tool overlay.
-        return base + tool
-    if tool:
-        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
-    return base
-
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
         "question": (
@@ -293,7 +213,6 @@ class DirectVlmProgram:
         max_messages: int = 8,
         images_for_last_n: int = 10_000,
         max_image_pixels: int = 1_000_000,
-        use_category_tips: bool = True,
         question_concurrency: int = 4,
         legacy_prompt: bool = False,
     ):
@@ -302,7 +221,6 @@ class DirectVlmProgram:
         self.max_messages = max_messages
         self.images_for_last_n = images_for_last_n
         self.max_image_pixels = max_image_pixels
-        self.use_category_tips = use_category_tips
         self.question_concurrency = question_concurrency
         self.legacy_prompt = legacy_prompt
 
@@ -322,10 +240,6 @@ class DirectVlmProgram:
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
             instructions = _build_task_instructions(self.profile, legacy=self.legacy_prompt)
-            if self.use_category_tips:
-                tips = _get_category_tips(self.profile, document.doc_category)
-                if tips:
-                    instructions = instructions + "\n" + tips
 
             def _solve_question(q: Question):
                 """Solve a single question. Returns (question_id, answer, trajectory)."""
@@ -444,7 +358,6 @@ def create_direct_vlm_program(
     max_messages: int = 8,
     images_for_last_n: int = 10_000,
     max_image_pixels: int = 1_000_000,
-    use_category_tips: bool = True,
     question_concurrency: int = 4,
     legacy_prompt: bool = False,
     vlm: dict[str, Any] | None = None,  # unused — direct VLM doesn't need a separate VLM
@@ -470,7 +383,6 @@ def create_direct_vlm_program(
         max_messages=max_messages,
         images_for_last_n=images_for_last_n,
         max_image_pixels=max_image_pixels,
-        use_category_tips=use_category_tips,
         question_concurrency=question_concurrency,
         legacy_prompt=legacy_prompt,
     )

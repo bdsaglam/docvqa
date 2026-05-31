@@ -8,5 +8,5 @@ page_factor: 1.5
 question_concurrency: 4
 batch_concurrency: 8
 # Path to a JSON file produced by ``scripts/optimize_rvlm.py``. When null,
-# the solver behaves identically to ``rvlm_unified`` (seed prompt).
+# the solver uses the built-in heavy-prompt seed.
 candidate_path: null

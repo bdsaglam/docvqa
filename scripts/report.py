@@ -37,11 +37,11 @@ SOLVER_SHORT = {
     "docvqa.solvers.rvlm_solver.create_rvlm_program": "RVLM",
     "docvqa.solvers.rvlm_ocr_solver.create_rvlm_ocr_program": "RVLM+OCR",
     "docvqa.solvers.rvlm_full_solver.create_rvlm_full_program": "RVLM full",
-    "docvqa.solvers.rvlm_unified_solver.create_rvlm_unified_program": "RVLM unified",
     "docvqa.solvers.direct_vlm_solver.create_direct_vlm_program": "Direct VLM",
-    "docvqa.solvers.raw_vlm_multi_solver.create_raw_vlm_multi_program": "Raw VLM multi",
-    "docvqa.solvers.raw_vlm_single_solver.create_raw_vlm_single_program": "Raw VLM single",
-    "docvqa.solvers.repl_only_solver.create_repl_only_program": "REPL only",
+    "docvqa.solvers.raw_vlm_multi_baseline_solver.create_raw_vlm_multi_baseline_program": "Raw VLM multi",
+    "docvqa.solvers.raw_vlm_single_baseline_solver.create_raw_vlm_single_baseline_program": "Raw VLM single",
+    "docvqa.solvers.react_baseline_solver.create_react_baseline_program": "ReAct",
+    "docvqa.solvers.repl_only_baseline_solver.create_repl_only_baseline_program": "REPL only",
     # Legacy targets — pre-2026-05-27 run configs reference these targets;
     # the *_solver.py files no longer exist post-D-010. Labels are tagged
     # "(legacy)" to disambiguate from the post-rename targets above.

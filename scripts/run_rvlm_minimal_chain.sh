@@ -3,8 +3,8 @@
 #
 # Tests the proposed-method generality claim: strip DocVQA-2026 category
 # tips from the solver body, keep only generic document-shape guidance.
-# Compared paired-by-trial against rvlm_unified (amax7 t1..t8) and rvlm
-# (amax1 t1..t8) on identical model / val / c=32.
+# This minimal variant is now the canonical `rvlm` solver; `solver=rvlm_minimal`
+# below resolves via the temp alias kept for this in-flight chain.
 #
 # Resumable per-trial: evals.py skips completed run_ids.
 #

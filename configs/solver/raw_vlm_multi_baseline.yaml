@@ -1,4 +1,4 @@
-_target_: docvqa.solvers.raw_vlm_multi_solver.create_raw_vlm_multi_program
+_target_: docvqa.solvers.raw_vlm_multi_baseline_solver.create_raw_vlm_multi_baseline_program
 dataset: ${data.dataset}
 profile_name: null
 vlm: ${vlm}

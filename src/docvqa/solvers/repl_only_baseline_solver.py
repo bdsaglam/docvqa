@@ -262,7 +262,7 @@ class ReplOnlyProgram:
 # Factory for hydra instantiation
 # ---------------------------------------------------------------------------
 
-def create_repl_only_program(
+def create_repl_only_baseline_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 20,

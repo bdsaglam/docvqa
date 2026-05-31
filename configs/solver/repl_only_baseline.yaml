@@ -1,4 +1,4 @@
-_target_: docvqa.solvers.repl_only_solver.create_repl_only_program
+_target_: docvqa.solvers.repl_only_baseline_solver.create_repl_only_baseline_program
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 25

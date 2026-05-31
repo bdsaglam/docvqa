@@ -333,7 +333,7 @@ class ReactProgram:
 
             return predictions, trajectories
 
-def create_react_program(
+def create_react_baseline_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 25,

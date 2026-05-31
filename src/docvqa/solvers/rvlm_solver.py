@@ -1,20 +1,34 @@
-"""Proposed-method solver. Code-LM in REPL with recursive VLM sub-call via ``batch_look``.
+"""Proposed method: recursive VLM (RVLM) with a minimal, dataset-agnostic prompt.
 
-Dataset-aware via injected :class:`docvqa.datasets.profile.DatasetProfile`;
-DocVQA-2026 default. Engineering name per D-010 (paper-facing name TBD).
+A code-LM drives a Python REPL and calls a VLM recursively via
+``batch_look`` to perceive document pages. The solver body carries NO
+benchmark-specific content — earlier ``rvlm`` variants shipped a
+DocVQA-2026-specific category-tips block in their system prompt (8
+hand-crafted blocks: business_report, comics, engineering_drawing,
+infographics, maps, science_paper, science_poster, slide), giving a
+reviewer a legitimate threat to the paper's generality claim — *"the
+scaffold only works because the prompt was tuned for this benchmark."*
 
-Tool surface is intentionally minimal: ``batch_look`` only — no OCR text,
-no BM25 search. The agent's only channel into the document is active VLM
-perception via parallel page/crop calls.
+This solver strips that benchmark-specific content from the solver
+body. What remains is:
 
-Per D-009 (docs/paper/decisions.md, 2026-05-27):
-- Tool-agnostic semantic content (per-category tips, answer-formatting
-  rules) comes from the dataset profile.
-- The solver owns its tool-surface documentation (``_TASK_BODY``) and
-  has no inline ``CATEGORY_TIPS`` dict.
-- ``ANSWER_FORMATTING_RULES`` is read from
-  ``profile.answer_formatting_rules`` — not imported from
-  :mod:`docvqa.prompts`.
+1. **Tool docs** (brief): what ``batch_look`` does, when to call it,
+   how to call it; the ``SUBMIT(answer=...)`` terminal action.
+2. **Approach** (universal): SURVEY → LOCATE → EXTRACT → VERIFY → SUBMIT.
+3. **Document-shape guidance** (4 generic patterns, no benchmark
+   category names): high-density single page, many-page document,
+   counting / superlatives, VLM disagreement resolution.
+
+Dataset-specific content (answer format rules, the "Unknown" sentinel,
+the percentage-difference convention) stays in
+``profile.answer_formatting_rules`` and is appended unchanged. The
+solver body itself is byte-identical across DocVQA-2026, MP-DocVQA,
+and MMLongBench-Doc — only the profile changes.
+
+Scoring within trial noise of the heavy-prompt variants was direct
+evidence for the D-006 hypothesis: recursive perception is the
+load-bearing mechanism; the per-category tips are procedural, not
+foundational.
 """
 
 from __future__ import annotations
@@ -27,72 +41,21 @@ from typing import Any
 
 import dspy
 import logfire
-from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
 from docvqa.rlm import LeanRLM, CodeRLM, ThinkingRLM, RLM
 from docvqa.types import LMConfig
-from docvqa.retry_utils import is_retryable_lm_error
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Prompt body (formatting rules substituted from the profile)
-# ---------------------------------------------------------------------------
-
-_TASK_BODY = (
-    "You are a Document Visual Question Answering agent. You answer a question about a document by "
-    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
-
-    "## DATA\n"
-    "- `question`: The question you must answer.\n"
-    "- `pages`: list of page images (PIL Images) (0-indexed). Pass to `batch_look()`, e.g. `batch_look([(pages[0], 'describe layout')])[0]`.\n\n"
-
-    "## TOOLS\n"
-    "- batch_look(requests) -> list[str]: Send one or more images to the VLM in parallel. "
-    "Input: list of (image, query) tuples where image is any PIL Image "
-    "(a page from `pages`, a crop via `pages[i].crop((l,t,r,b))`, etc). "
-    "Returns: list of answers in same order. ALL visual queries go through this tool.\n"
-    "  Example: batch_look([(pages[0], 'describe layout'), (pages[0].crop((0,0,500,500)), 'read text')])\n"
-    "  For a single query, use: batch_look([(image, query)])[0]\n\n"
-
-    "## APPROACH\n"
-    "1. EXPLORE: Before answering, understand the document structure. "
-    "Use `batch_look` to survey pages — "
-    "e.g. `batch_look([(pages[0], 'Describe layout...'), (pages[1], 'Describe layout...')])`.\n"
-    "Build a mental map of the document.\n"
-    "2. LOCATE: Find the specific region(s) relevant to the question.\n"
-    "3. EXTRACT: Use `batch_look` with tight crops to read exact values. "
-    "For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
-    "4. VERIFY: Cross-check extracted values if ambiguous.\n"
-    "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
-
-    "## GUIDELINES\n"
-    "- Full-page batch_look gives a broad overview. For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
-    "- Use `pages[i].size` to get dimensions for cropping.\n"
-    "- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. "
-    "Extract raw facts, then count/compare/compute in Python.\n"
-    "- VLM CONFLICT RESOLUTION: The VLM gives different answers across calls for the same region. "
-    "When readings conflict, crop TIGHTER on the specific detail and do ONE tie-breaking read. "
-    "Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.\n"
-    "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
-    "then select programmatically. Do NOT stop at the first match.\n"
-    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
-    "Extract all referenced values and compute explicitly in Python.\n"
-    "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
-
-    "## OUTPUT FORMAT\n"
-    "- SUBMIT a single answer string.\n"
-    '- Example: SUBMIT(answer="42")\n'
-    "- The answer must follow these formatting rules:\n\n"
-)
-
-def _build_task_instructions(profile: DatasetProfile) -> str:
-    return _TASK_BODY + profile.answer_formatting_rules
 
 # ---------------------------------------------------------------------------
-# Helpers (inlined from the former leanest_solo_solver — Phase 2B merge)
+# Shared RVLM helpers: signature, recursive-VLM tool, sandbox bootstrap.
+# This module is the canonical home for these (formerly in the deleted
+# heavy-prompt unified solver); the baseline/ablation rvlm variants
+# (``rvlm_naked``, ``rvlm_skeletal``, ``rvlm_hybrid``, ``rvlm_gepa``)
+# import them from here.
 # ---------------------------------------------------------------------------
 
 def _build_signature(instructions: str) -> dspy.Signature:
@@ -108,6 +71,7 @@ def _build_signature(instructions: str) -> dspy.Signature:
         ),
     }
     return dspy.Signature(fields, instructions)
+
 
 def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, batch_concurrency: int = 8) -> list:
     from PIL import Image as PILImage
@@ -149,6 +113,7 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, batch_concurrency:
 
     return [_batch_look_impl]
 
+
 def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
     """Build sandbox code that loads pages as PIL Images and defines `batch_look()`."""
     return f'''
@@ -180,11 +145,93 @@ def batch_look(requests):
 '''
 
 # ---------------------------------------------------------------------------
-# RvlmProgram
+# Minimal task body: tool docs + approach + document-shape patterns.
+# Zero benchmark-category names. Dataset-specific answer rules are
+# appended by ``profile.answer_formatting_rules`` at runtime.
 # ---------------------------------------------------------------------------
 
+_TASK_BODY = (
+    "You are a Document Visual Question Answering agent. You answer a question about a document by "
+    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
+
+    "## DATA\n"
+    "- `question`: The question you must answer.\n"
+    "- `pages`: list of page images (PIL Images, 0-indexed). Pass them to tool calls.\n\n"
+
+    "## TOOLS\n"
+    "- batch_look(requests) -> list[str]\n"
+    "  What: send one or more images to a VLM in parallel.\n"
+    "  When: any visual question — full-page survey, region crop, value read.\n"
+    "  How: list of (image, query) tuples. Image is any PIL Image — a page "
+    "(`pages[i]`) or a crop (`pages[i].crop((left, top, right, bottom))`). "
+    "Returns answers in the same order. For a single query: "
+    "`batch_look([(image, query)])[0]`.\n"
+    "- SUBMIT(answer=\"...\")\n"
+    "  What: deliver the final answer and terminate.\n"
+    "  When: you have the answer and have verified it.\n\n"
+
+    "## APPROACH\n"
+    "1. SURVEY — read the document at a coarse level to build a mental map. "
+    "Use full-page `batch_look` queries; for many-page docs, batch a sample "
+    "of pages in one call.\n"
+    "2. LOCATE — identify the page(s) and region(s) that contain the answer.\n"
+    "3. EXTRACT — get the values out of the relevant region with `batch_look`. "
+    "Ask ONE simple factual question per VLM call.\n"
+    "4. VERIFY — for any precise value (numbers, fine text, small labels), "
+    "do not commit a reading you've only seen once. Design a check: "
+    "re-read with a different crop or query, look for consistency across "
+    "reads, or cross-reference an adjacent label. See the verification "
+    "guidance below.\n"
+    "5. SUBMIT — call `SUBMIT(answer=\"...\")` once you have the answer.\n\n"
+
+    "Never use outside or world knowledge. Every answer must come from the "
+    "document.\n\n"
+
+    "## DOCUMENT-SHAPE GUIDANCE\n"
+    "Apply the patterns below that match the document at hand.\n\n"
+
+    "- **The VLM is unreliable; reliability is your job.** The underlying "
+    "VLM is non-deterministic — the same image and query can return "
+    "different answers across calls, especially for precise values "
+    "(numbers, fine text, small labels) and high-density images. A "
+    "single read is not trustworthy. Build a reading procedure that "
+    "compensates. You have a broad palette of strategies and can combine "
+    "them as the situation calls: read the same region multiple times "
+    "and look for the consistent answer; read at multiple crop sizes or "
+    "framings; rephrase the query; tile-scan a region too large for one "
+    "read; cross-check against an adjacent label or value. Be aware of "
+    "pitfalls — a tighter crop reads more precisely but can occlude "
+    "context (a label may sit just outside the box); silently swapping "
+    "a value after one re-read with no evidence is just noise.\n\n"
+
+    "- **High-density single page** (large image, lots of detail per "
+    "page): a single full-page `batch_look` will miss fine detail. Survey "
+    "to locate regions of interest, then crop tight (~200-600px on a side) "
+    "and read each crop with one focused query. Use `pages[i].size` to "
+    "compute crop coordinates.\n\n"
+
+    "- **Many-page document** (slides, papers, reports): you do NOT need to "
+    "read every page. Survey in batches "
+    "(`batch_look([(pages[i], 'summarize') for i in sample])`) to build a "
+    "table-of-contents in your head. Then drill into the relevant section.\n\n"
+
+    "- **Counting / superlatives / 'all of'** questions (\"how many...\", "
+    "\"which is largest...\", \"list all...\"): enumerate ALL candidates "
+    "first by surveying the document. Do NOT stop at the first match. "
+    "Once you have the candidate set, compare or count in Python.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
+    "- The answer must follow these formatting rules:\n\n"
+)
+
+def _build_task_instructions(profile: DatasetProfile) -> str:
+    return _TASK_BODY + profile.answer_formatting_rules
+
+SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)  # for paper-quotable sizing
+
 class RvlmProgram:
-    """Proposed-method solver. See module docstring."""
+    """Minimal-prompt RVLM solver. See module docstring."""
 
     def __init__(
         self,
@@ -213,7 +260,7 @@ class RvlmProgram:
                 },
                 "Analyze the image content strictly to answer the query. "
                 "Transcribe numbers and characters exactly. "
-                "For technical drawings, trace leader lines and arrows to connect labels to their specific parts. "
+                "When a label is separated from the item it identifies, trace any visual connector (leader line, arrow, callout, alignment) to determine which item it refers to. "
                 "Output ONLY the concise answer. If the information is missing, output 'Unknown'.",
             )
         )
@@ -235,9 +282,8 @@ class RvlmProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            base_instructions = _build_task_instructions(self.profile)
-            tips = self.profile.category_tips_fn(document.doc_category)
-            instructions = base_instructions + ("\n" + tips if tips else "")
+            # No category tips, no per-document dispatch — the body is the body.
+            instructions = _build_task_instructions(self.profile)
             tools = _create_tools(self.vlm_predict, self.vlm_lm, self.batch_concurrency)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
@@ -260,23 +306,18 @@ class RvlmProgram:
                         sandbox_code=sandbox_code,
                     )
                     logger.info(
-                        "RVLM [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                        "RVLM-MIN [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
-                    @retry(
-                        retry=retry_if_exception(is_retryable_lm_error),
-                        stop=stop_after_attempt(4),
-                        wait=wait_exponential(multiplier=30, min=30, max=120),
-                        before_sleep=lambda rs: logger.warning(
-                            "Rate limit, retry %d in %.0fs", rs.attempt_number, rs.next_action.sleep  # type: ignore[union-attr]
-                        ),
-                        reraise=True,
-                    )
-                    def _solve_one():
-                        return rlm(question=question_text, doc_info=doc_info)
-
-                    result = _solve_one()
+                    # No agent-level retry. dspy.LM retries each LLM/VLM call
+                    # (lm.num_retries / vlm.num_retries) on transient errors.
+                    # If a call still fails after those, the exception
+                    # propagates → the question raises → the doc fails (runner
+                    # returns None, not persisted → re-run on next launch).
+                    # We deliberately do NOT restart the whole agent, which
+                    # would discard all completed iterations and their reads.
+                    result = rlm(question=question_text, doc_info=doc_info)
                     answer = str(result.answer or "").strip()
                     trajectory = result.trajectory
 
@@ -292,7 +333,7 @@ class RvlmProgram:
                         q_span.set_attribute("ground_truth", q.answer[:200])
                         q_span.set_attribute("extracted_answer", extracted[:200])
                         logger.info(
-                            "RVLM[%s] Q %s: %s (GT=%s, PRED=%s)",
+                            "RVLM-MIN[%s] Q %s: %s (GT=%s, PRED=%s)",
                             self.profile.name,
                             q.question_id,
                             "CORRECT" if is_correct else "WRONG",
@@ -314,7 +355,7 @@ class RvlmProgram:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
 
                 max_w = min(self.question_concurrency, len(document.questions))
-                logger.info("RVLM: running %d questions with concurrency=%d", len(document.questions), max_w)
+                logger.info("RVLM-MIN: running %d questions with concurrency=%d", len(document.questions), max_w)
                 with ThreadPoolExecutor(max_workers=max_w) as pool:
                     futures = {pool.submit(_solve_question, q): q for q in document.questions}
                     for future in as_completed(futures):
@@ -331,7 +372,7 @@ class RvlmProgram:
                         correct += 1
             if scored > 0:
                 logger.info(
-                    "RVLM [%s] doc %s: %d/%d = %.1f%%",
+                    "RVLM-MIN [%s] doc %s: %d/%d = %.1f%%",
                     self.profile.name, document.doc_id, correct, scored,
                     100 * correct / scored,
                 )
@@ -348,16 +389,7 @@ def create_rvlm_program(
     question_concurrency: int = 4,
     batch_concurrency: int = 8,
 ) -> RvlmProgram:
-    """Hydra factory.
-
-    Profile resolution order:
-        1. ``profile_name`` if given — look up by registered name slug.
-        2. ``dataset`` if given — look up by HF dataset id.
-        3. Default to DocVQA-2026.
-
-    Pass ``solver.dataset=${data.dataset}`` from the top-level config so
-    the profile picks itself up automatically per Hydra invocation.
-    """
+    """Hydra factory. Profile resolution: explicit ``profile_name`` wins, else ``dataset``, else DocVQA-2026."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:
