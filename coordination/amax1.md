@@ -35,55 +35,37 @@ stopping. Everything below moves here.
 
 **Order:**
 
-1. **Skeletal refill t6 + t7** (low priority — refines σ, mean
-   already in noise band)
-2. **Refined paired Δ skeletal-minimal** (decide proposed method;
-   default outcome: minimal)
+1. ~~**Skeletal refill t6 + t7**~~ → **MOVED BACK TO AMAX7**
+   (2026-05-31): amax1 can't refill — resumability needs the partial
+   run dirs (t6=22/25, t7=23/25) which live on amax7; the rsync
+   prerequisite was the blocker. See amax7.md Queued cell #1.
+2. ~~**Refined paired Δ skeletal-minimal**~~ → **MOVED TO AMAX7**
+   (depends on the refill data, which now lands on amax7). Default
+   outcome stays **minimal** as proposed method.
 3. **Minimal n=8 test + SC-vote submission** (paper headline cell;
-   user uploads JSON to competition server manually)
+   user uploads JSON to competition server manually) — **amax1 starts
+   here.** Gate from step 2 defaults to `rvlm_minimal`; no need to wait
+   on amax7's refined Δ (current intersection Δ already lands minimal).
 4. **Prompt-minimize other solvers** (post-test gate, see
    amax7.md cell 3)
 5. **rvlm_ocr n=1 val** (post-minimization)
 
-#### Step 1: skeletal refill t6 + t7 (optional but recommended)
+#### Step 1: skeletal refill t6 + t7 — `[→amax7]` MOVED BACK TO AMAX7 (2026-05-31)
 
-Prerequisite: rsync partial run dirs from amax7 (resumability needs
-them — only the missing docs get re-run):
-```bash
-rsync -av amax7.your-network:/home/baris/repos/docvqa/output/runs/rvlm-skeletal-val-t6/ output/runs/rvlm-skeletal-val-t6/
-rsync -av amax7.your-network:/home/baris/repos/docvqa/output/runs/rvlm-skeletal-val-t7/ output/runs/rvlm-skeletal-val-t7/
-# Adjust hostname as needed — pulls partial tasks/ dirs over.
-```
+**Do NOT run on amax1.** Resumability needs the partial run dirs
+(t6=22/25, t7=23/25) and they are **local on amax7** — the rsync-to-
+amax1 prerequisite was the blocker, so per user direction this refill
+returns to amax7 where the data lives. See amax7.md Queued cell #1 for
+the (rsync-free) commands.
 
-After rsync, missing counts should match: t6=3, t7=2. Run:
-```bash
-for T in 6 7; do
-  uv run python evals.py \
-    lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-    lm.enable_thinking=false \
-    solver=rvlm_skeletal \
-    data.split=val data.num_samples=null \
-    max_concurrency=4 \
-    run_id=rvlm-skeletal-val-t${T}
-done
-```
-- c=4 strict serial (NOT 32 — avoids the overlap-load timeout
-  cascade that caused the original misses).
-- Wall: ~3-4h for both trials.
+#### Step 2: refined paired Δ — `[→amax7]` MOVED TO AMAX7 (2026-05-31)
 
-If you choose to **skip refill** (acceptable — current paired Δ
-already lands minimal as proposed method): jump to Step 3.
+Follows the refill, so it moves with it. amax7 re-runs the per-trial-
+intersection paired analysis after its refill and updates its own
+"Done" section. Decision rule (unchanged): Δ < +0.5pp or CI95 includes
+0 → **minimal**; Δ > +1pp → **skeletal**. Default outcome: **minimal**.
 
-#### Step 2: refined paired Δ
-
-After refill, re-run the per-trial-intersection paired analysis
-(see `git show 14e4784` for the script pattern). Update
-`coordination/amax7.md` "Done" section with refined number,
-commit + push. Decision rule:
-- Δ < +0.5pp or CI95 includes 0 → **minimal** is proposed method
-- Δ > +1pp → **skeletal** wins, swap in Step 3
-
-#### Step 3: minimal n=8 test + SC-vote submission
+#### Step 3: minimal n=8 test + SC-vote submission — amax1 STARTS HERE
 
 Test set = **48 docs / 160 Qs**. Strict serial, one trial at a
 time, c=16:

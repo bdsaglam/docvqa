@@ -121,19 +121,23 @@ uv run python evals.py lm=qwen-3_5-9b-vllm-local \
 the new ordering and rsync prerequisites. Kept here for reference
 only; do NOT run on amax7.)*
 
-### 1. `[→moved]` rvlm_skeletal n=8 refill (post-hybrid)
+### 1. `[ ]` rvlm_skeletal n=8 refill t6 + t7 (post-hybrid) — MOVED BACK FROM AMAX1 (2026-05-31)
 
-Skeletal n=8 chain ran with 22/25 overlap and 5/8 trials timed out
-on long-tail docs under load (see "Done" cell for full Δ analysis).
-20 docs total missing across t3-t7. Refill restores the clean
-per-trial 80-Q paired baseline.
+**Moved back from amax1 per user direction 2026-05-31:** amax1 cannot
+run this refill — resumability needs the partial run dirs (t6=22/25,
+t7=23/25), which are **local on amax7**. The rsync-to-amax1 prerequisite
+was the blocker, so the refill returns to amax7 where the data lives.
+
+t3/t4/t5 were already refilled to clean 25/25 by amax7 (see the
+`[✓ PARTIAL]` cell in Done). Only **t6 (3 docs) + t7 (2 docs)** remain.
 
 **Strict serial — one trial at a time, low concurrency to avoid
 recreating the load problem that caused the original timeouts.**
 
-Per-trial refill (resumable via run_id — only re-runs missing docs):
+Per-trial refill (resumable via run_id — only re-runs missing docs;
+no rsync needed, partial dirs already on amax7):
 ```bash
-for T in 3 4 5 6 7; do
+for T in 6 7; do
   uv run python evals.py \
     lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
     lm.enable_thinking=false \
@@ -144,10 +148,17 @@ for T in 3 4 5 6 7; do
 done
 ```
 
-- Refill scope: t3=7 docs, t4=3, t5=5, t6=3, t7=2 → 20 docs.
-- Wall: ~13h at sequential c=4.
-- After refill, re-run paired Δ skeletal-minimal at n=8 to get the
-  clean σ for the paper.
+- Refill scope: t6=3 docs, t7=2 docs → 5 docs.
+- Wall: ~3-4h at sequential c=4.
+- After refill, re-run paired Δ skeletal-minimal at n=8 (per-trial
+  intersection; see `git show 14e4784` for the script pattern) to get
+  the clean σ for the paper. Update the `[✓ PARTIAL]` cell in Done with
+  the refined number. Decision rule: Δ < +0.5pp or CI95 includes 0 →
+  **minimal** is proposed method (default); Δ > +1pp → **skeletal**.
+- **Note (acceptable to skip):** current paired Δ on the intersection
+  (−1.63pp [−5.67, +2.41] n.s.) already lands minimal as proposed
+  method, so this refill only refines σ — it is not a gate on the
+  submission path.
 
 ### 2. `[→moved]` rvlm_minimal n=8 test + SC-vote submission
 
