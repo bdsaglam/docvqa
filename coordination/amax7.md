@@ -60,6 +60,36 @@ the VLM tool — no image-reading fallback.
   qwen3-8b-rvlm-minimal.md`, move this cell to Done. (No paired Δ —
   single variant.)
 
+### `[ ]` Remove agent-level @retry from ALL solvers — BLOCKED on amax1 rename/delete cascade
+
+Per-user direction 2026-05-31 ~23:00. `rvlm_minimal` already done
+(commit `895851f`: dropped whole-agent `@retry`, per-call
+`num_retries` 3→5). The remaining solvers still wrap the whole agent
+in `@retry(is_retryable_lm_error, stop_after_attempt(4), ...)`, which
+restarts the agent from iteration 0 on any transient error, discarding
+all completed iterations. Remove it from every solver so per-call
+dspy retries (`num_retries=5`, already global in `types.py`) are the
+only retry layer; a call that still fails → exception propagates →
+doc fails (runner returns None → re-run on resume).
+
+**BLOCKED until amax1's SOLVER MINIMIZATION rename/delete cascade lands**
+(see amax1.md "★ SOLVER MINIMIZATION + NAMING CLEANUP"; deferred there
+until the rvlm_minimal TEST chain + re-val finish). Editing solver
+files now would collide with the renames. **amax1: please leave a
+`## NOTE FOR AMAX7` when the cascade is committed.**
+
+When unblocked (name-agnostic — re-discover, don't hardcode files):
+```bash
+grep -rl "stop_after_attempt\|is_retryable_lm_error" src/docvqa/solvers/
+```
+For each hit, apply the same transform as `895851f`: replace the
+`@retry`-wrapped `_solve_one()` (or equivalent) with a direct
+`rlm(...)` / model call, drop the now-unused tenacity +
+`is_retryable_lm_error` imports, confirm the module imports, then
+commit. (If amax1 centralized retry into a shared helper during the
+refactor, remove it there instead.) Multi-day, cross-session item —
+tracked here in coordination, NOT a session cron.
+
 ## Done
 
 ### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31

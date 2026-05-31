@@ -160,6 +160,13 @@ Cascade for the rename/delete (one coordinated op): solver `.py` files,
 `configs/solver/*.yaml` (filename + `_target_`), any `solver=X` refs in
 docs/scripts/coordination, run_id conventions, solver registry/discovery.
 
+↳ **AMAX7 follow-up (do NOT run before this cascade):** after the
+rename/delete lands, amax7 removes the whole-agent `@retry` from every
+solver (rvlm_minimal already done, `895851f`) so per-call
+`num_retries=5` is the only retry layer. **Please append a
+`## NOTE FOR AMAX7` when the cascade is committed** so amax7 picks it
+up — see amax7.md cell "Remove agent-level @retry from ALL solvers".
+
 ---
 
 ### images_for_last_n sweep for direct_vlm (replaces old n=2 trials)
