@@ -10,12 +10,12 @@ Engineering name per D-010 (paper-facing name TBD). This solver retains
 the D-004 page-only cropping ablation (``vlm_cropping=False``) and the
 search-on/off ablation (``use_search=False``).
 
-Per D-009 (docs/paper/decisions.md, 2026-05-27):
-- Tool-agnostic semantic content (per-category tips, answer-formatting
-  rules) comes from the dataset profile.
-- This solver owns its tool-surface documentation (``TASK_INSTRUCTIONS``)
-  and an optional per-category :data:`TOOL_HINTS` overlay (the OCR-routing
-  fragments for science_paper / slide / infographics).
+Per D-007/D-009 (docs/paper/decisions.md), this solver uses a MINIMAL
+prompt for parity with ``rvlm_minimal``:
+- This solver owns its tool-surface documentation (``TASK_INSTRUCTIONS``).
+- No per-category tips and no per-category tool-routing overlay: an n=8
+  ablation showed the per-category content was not load-bearing, so it
+  was stripped to reach prompt parity with the proposed method.
 - ``ANSWER_FORMATTING_RULES`` is read from
   ``profile.answer_formatting_rules`` — not imported from
   :mod:`docvqa.prompts`.
@@ -150,55 +150,6 @@ def _build_task_instructions(profile: DatasetProfile, vlm_cropping: bool) -> str
 # ``TASK_INSTRUCTIONS`` from the old flat_solo_solver. They want the default
 # (DocVQA-2026 + cropping) prompt seed for GEPA optimization.
 TASK_INSTRUCTIONS = _build_task_instructions(get_profile("VLR-CVC/DocVQA-2026"), vlm_cropping=True)
-
-# ---------------------------------------------------------------------------
-# Per-category tool-routing overlay (solver-owned per D-009).
-#
-# Semantic content comes from the dataset profile. This overlay adds the
-# BM25 + page_texts routing fragments for categories where that strategy
-# is dominant. Mirrors flat_solo's original FLAT_SOLO_TOOL_HINTS verbatim.
-# ---------------------------------------------------------------------------
-
-TOOL_HINTS: dict[str, str] = {
-    "science_paper": (
-        "- TOOL ROUTING: Papers can be very long — start with `search()` over the BM25 "
-        "index and read `page_texts` to locate the relevant section before any visual "
-        "tool calls. Use `look()` / `batch_look()` only to verify or to read figures/tables.\n"
-        "- CITATION NUMBERS: For 'first/last citation on this page' style questions, "
-        "extract all `[N]` (or `(Author, Year)`) patterns from `page_texts` with a "
-        "Python regex ordered by position. Do NOT ask the VLM to identify citation "
-        "order — its inline ordering is unreliable.\n"
-        "- CITED-WORK LOOKUP: To find what a cited work claims, find its reference "
-        "number in the bibliography (via `search()` for the title), then `search()` "
-        "the body text for that bracketed number.\n"
-    ),
-    "slide": (
-        "- TOOL ROUTING: Slide decks span many pages — use `search()` and `page_texts` "
-        "to find the relevant slide first, then crop / `look()` for fine detail. "
-        "Browsing slide-by-slide visually is wasteful.\n"
-        "- PAGE NAVIGATION: For 'the page before X' or 'page where Y is mentioned', "
-        "locate X / Y in `page_texts` first, then verify the page index by cropping "
-        "the page's header/title — off-by-one errors on page indices are common.\n"
-    ),
-    "infographics": (
-        "- TOOL ROUTING: A full-page `look()` pass gives useful structural context "
-        "before zooming. OCR (`page_texts`) on infographics often describes images "
-        "instead of reading them, so prefer `look()` / `batch_look()` for text that "
-        "lives on icons or illustrations.\n"
-    ),
-}
-
-def _get_category_tips(profile: DatasetProfile, category: str) -> str:
-    """Compose profile semantic tips + this solver's OCR-routing overlay."""
-    base = profile.category_tips_fn(category)
-    tool = TOOL_HINTS.get(category, "")
-    if not base and not tool:
-        return ""
-    if base and tool:
-        return base + tool
-    if tool:
-        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
-    return base
 
 # ---------------------------------------------------------------------------
 # Helpers (inlined from the former flat_solo_solver — Phase 2D merge)
@@ -459,11 +410,9 @@ class RvlmFullProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            base_instructions = _build_task_instructions(self.profile, self.vlm_cropping)
+            instructions = _build_task_instructions(self.profile, self.vlm_cropping)
             if not self.use_search:
-                base_instructions = _strip_search_tool(base_instructions)
-            tips = _get_category_tips(self.profile, document.doc_category)
-            instructions = base_instructions + ("\n" + tips if tips else "")
+                instructions = _strip_search_tool(instructions)
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, use_search=self.use_search)
             if self.vlm_cropping:
                 sandbox_code = _build_sandbox_code(tmpdir, len(document.images), use_search=self.use_search)

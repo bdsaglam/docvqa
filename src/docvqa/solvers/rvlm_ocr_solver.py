@@ -11,17 +11,16 @@ with a single-image ``look()`` ergonomic wrapper.
 
 Engineering name per D-010 (paper-facing name TBD).
 
-Per D-009 (docs/paper/decisions.md, 2026-05-27):
-- Tool-agnostic semantic content (per-category tips, answer-formatting
-  rules) comes from the dataset profile.
-- This solver owns its tool-surface documentation (``TASK_INSTRUCTIONS``)
-  and an optional per-category :data:`TOOL_HINTS` overlay (the OCR-routing
-  fragments for science_paper / slide / infographics where BM25 +
-  page_texts is the dominant strategy). Tips composition at the call site
-  is ``profile.category_tips_fn(cat) + TOOL_HINTS.get(cat, "")``.
-- ``ANSWER_FORMATTING_RULES`` is read from
-  ``profile.answer_formatting_rules`` — not imported from
-  :mod:`docvqa.prompts`.
+Prompt parity (D-007). Per an n=8 ablation the hand-crafted per-category
+tips are not load-bearing, so this solver carries a MINIMAL prompt that
+matches ``rvlm_minimal``: a category-agnostic ``_TASK_BODY`` plus the
+profile's answer-formatting rules, with no per-category overlay or
+per-category tips dispatch. The generic search / OCR /
+``page_texts`` / ``batch_look`` tool documentation lives in ``_TASK_BODY``
+and is retained — only the per-category specializations are removed.
+``ANSWER_FORMATTING_RULES`` is read from
+``profile.answer_formatting_rules`` — not imported from
+:mod:`docvqa.prompts`.
 """
 
 from __future__ import annotations
@@ -116,58 +115,6 @@ _TASK_BODY = (
 
 def _build_task_instructions(profile: DatasetProfile) -> str:
     return _TASK_BODY + profile.answer_formatting_rules
-
-# ---------------------------------------------------------------------------
-# Per-category tool-routing overlay (solver-owned per D-009).
-#
-# Semantic content comes from the dataset profile. This overlay adds the
-# BM25+page_texts routing fragments for categories where that strategy is
-# dominant (mirrors flat_solo's FLAT_SOLO_TOOL_HINTS, adapted to use
-# `batch_look()` instead of `look()` to match the rvlm+OCR tool surface).
-# ---------------------------------------------------------------------------
-
-TOOL_HINTS: dict[str, str] = {
-    "science_paper": (
-        "- TOOL ROUTING: Papers can be very long — start with `search()` over the BM25 "
-        "index and read `page_texts` to locate the relevant section before any visual "
-        "tool calls. Use `batch_look()` only to verify or to read figures/tables.\n"
-        "- CITATION NUMBERS: For 'first/last citation on this page' style questions, "
-        "extract all `[N]` (or `(Author, Year)`) patterns from `page_texts` with a "
-        "Python regex ordered by position. Do NOT ask the VLM to identify citation "
-        "order — its inline ordering is unreliable.\n"
-        "- CITED-WORK LOOKUP: To find what a cited work claims, find its reference "
-        "number in the bibliography (via `search()` for the title), then `search()` "
-        "the body text for that bracketed number.\n"
-    ),
-    "slide": (
-        "- TOOL ROUTING: Slide decks span many pages — use `search()` and `page_texts` "
-        "to find the relevant slide first, then crop / `batch_look()` for fine detail. "
-        "Browsing slide-by-slide visually is wasteful.\n"
-        "- PAGE NAVIGATION: For 'the page before X' or 'page where Y is mentioned', "
-        "locate X / Y in `page_texts` first, then verify the page index by cropping "
-        "the page's header/title — off-by-one errors on page indices are common.\n"
-    ),
-    "infographics": (
-        "- TOOL ROUTING: A full-page `batch_look()` pass gives useful structural "
-        "context before zooming. OCR (`page_texts`) on infographics often describes "
-        "images instead of reading them, so prefer `batch_look()` for text that lives "
-        "on icons or illustrations.\n"
-    ),
-}
-
-def _get_category_tips(profile: DatasetProfile, category: str) -> str:
-    """Compose profile semantic tips + this solver's OCR-routing overlay."""
-    base = profile.category_tips_fn(category)
-    tool = TOOL_HINTS.get(category, "")
-    if not base and not tool:
-        return ""
-    if base and tool:
-        # profile.category_tips_fn already returns the wrapped block; append
-        # the tool overlay inside the same section.
-        return base + tool
-    if tool:
-        return f"## CATEGORY-SPECIFIC TIPS ({category})\n{tool}"
-    return base
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -381,9 +328,8 @@ class RvlmOcrProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            base_instructions = _build_task_instructions(self.profile)
-            tips = _get_category_tips(self.profile, document.doc_category)
-            instructions = base_instructions + ("\n" + tips if tips else "")
+            # No category tips, no per-document dispatch — the body is the body.
+            instructions = _build_task_instructions(self.profile)
             tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, self.batch_concurrency)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
