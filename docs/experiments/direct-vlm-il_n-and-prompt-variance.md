@@ -114,5 +114,37 @@ before claiming a win" rule exists to prevent.
   context + hard crash safety — if direct_vlm accuracy ever needs to
   improve without the il_n image-truncation cost.
 
-See `coordination/amax1.md` "il_n=3" / "COMPACTION + max_messages"
-sections for the full per-run log.
+## Appendix — per-cell run log (migrated from coordination/amax1.md)
+
+Operational detail for the cells behind the findings above. All
+Qwen 3.5 27B, val (25 docs / 80 Q), n=1 each unless noted.
+
+**Iteration-budget effect (cap20 vs cap40), `direct_vlm` minimal prompt:**
+- `direct-vlm-minimal-val-t1` cap20 = 27.5% (22/80); **62/80 (78%) hit
+  the 20/20 cap.**
+- `direct-vlm-minimal-val-iter40-t1` cap40 = 21.6% (16/74; comics_2/4
+  timed out); **58/74 still hit 40/40.**
+- Verdict: doubling the cap did NOT help — the agent doesn't converge at
+  either budget, it wanders to whatever ceiling it's given. The low
+  score is solver behavior / task difficulty, not cap truncation.
+
+**il_n sweep (`direct_vlm` cap40):** il_n=3 (`direct-vlm-val-iter40-t1`)
+= 43.2% (32/74, crashes on comics >64 imgs); il_n=2
+(`direct-vlm-iln2-val-iter40-t1`) = 28.9% (22/76); il_n=1
+(`direct-vlm-iln1-val-iter40-t1`) = 23.7% (18/76). Accuracy monotonic in
+retained images; il_n=1 collapses on maps/comics (the multi-region
+categories that need several crops held at once). Clean R4/R5 same-76q
+pair: il_n=2 beats il_n=1 by +5.2pp.
+
+**max_messages window sweep (`direct_vlm` cap40, new-prompt build):**
+mm8 = 33.3%, mm24 (`dvm-mm24-val-t1`) = 35.0% (finishes ~3h21m,
+BadReq64=8 all caught per-Q), mm40 (`dvm-mm40-val-t1`) = DIED (too
+slow — 2/25 docs in 63 min, ~4.5× slower than mm24; do not relaunch).
+Going 8→24 buys only +1.7pp, still −8.2pp below il_n=3, at ~1.5–2× wall
+cost. The window is the wrong knob — it drops old TEXT, not just images.
+
+**prompt-vs-build (il_n=3, regression investigation):** 6 trials pooled
+across both builds, non-comics 70Q = [28.6, 31.4, 34.3, 35.7, 40.0,
+42.9] → 35.5% ± 5.3pp. Old-build rerun (`oldbuild-iln3-val-t1`, worktree
+@ f737190, faithful old code + deps) = 35.7% nc — did NOT reproduce its
+own 43.2%. Full reasoning in §4 above.
