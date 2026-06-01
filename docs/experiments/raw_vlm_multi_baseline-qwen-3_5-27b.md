@@ -32,14 +32,21 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `raw-vlm-multi-cmp-val-t1` | 18.75% | 15/80 | — | collapses on business_report 0/10, comics 0/10, engineering_drawing 1/10 |
+| t2 | `raw-vlm-multi-cmp-val-t2` | 22.50% | 18/80 | — | business_report 0/10, comics 0/10 again |
 
 Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
 1/10, infographics 4/10, maps 1/10, science_paper 3/10, science_poster
 3/10, slide 3/10.
 
+Per-category (t2): business_report 0/10, comics 0/10, engineering_drawing
+2/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster
+4/10, slide 3/10.
+
 ## Summary
 
-n=1 so far (t2, t3 queued). Mean ± std at n=3.
+n=2 so far (t3 queued). t1 18.75%, t2 22.50% → running mean ~20.6%;
+business_report and comics 0/10 in both trials (single multi-image read
+can't resolve fine print). Mean ± std at n=3.
 
 ## Comparison
 

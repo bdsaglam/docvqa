@@ -33,15 +33,20 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `rvlm-ocr-cmp-val-t1` | 36.25% | 29/80 | ~1h14m | maps 0/10, science_paper 1/10 |
+| t2 | `rvlm-ocr-cmp-val-t2` | 35.00% | 28/80 | — | maps 0/10, eng_drawing 3/10 |
 
 Per-category (t1): business_report 50%, comics 40%, engineering_drawing
 50%, infographics 50%, maps 0%, science_paper 10%, science_poster 40%,
 slide 50%.
 
+Per-category (t2): business_report 5/10, comics 2/10, engineering_drawing
+3/10, infographics 6/10, maps 0/10, science_paper 3/10, science_poster
+4/10, slide 5/10.
+
 ## Summary
 
-n=1 so far (t2, t3 queued in the comparison re-run). Will fill mean ± std
-at n=3.
+n=2 so far (t3 queued). t1 36.25%, t2 35.00% → running mean ~35.6%; maps
+0/10 both trials. Will fill mean ± std at n=3.
 
 ## Comparison
 

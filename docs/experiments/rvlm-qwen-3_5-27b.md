@@ -33,14 +33,20 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `rvlm-cmp-val-t1` | 40.00% | 32/80 | ~3.5h | last doc (science_paper dense table) churned to iter cap; recovered once at 24/25 |
+| t2 | `rvlm-cmp-val-t2` | 38.75% | 31/80 | — | recovered once at 24/25 (long-tail doc) |
 
 Per-category (t1): business_report 6/10, comics 3/10, engineering_drawing
 5/10, infographics 7/10, maps 0/10, science_paper 3/10, science_poster
 3/10, slide 5/10.
 
+Per-category (t2): business_report 4/10, comics 3/10, engineering_drawing
+6/10, infographics 7/10, maps 0/10, science_paper 2/10, science_poster
+4/10, slide 5/10.
+
 ## Summary
 
-n=1 so far (t2, t3 queued). Mean ± std at n=3.
+n=2 so far (t3 queued). t1 40.00%, t2 38.75% → running mean ~39.4%; maps
+0/10 both trials (consistent weak spot). Mean ± std at n=3.
 
 ## Comparison
 
