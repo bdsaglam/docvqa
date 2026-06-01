@@ -33,6 +33,7 @@ uv run python evals.py \
 |---|---|---|---|---|---|
 | t1 | `raw-vlm-multi-cmp-val-t1` | 18.75% | 15/80 | — | collapses on business_report 0/10, comics 0/10, engineering_drawing 1/10 |
 | t2 | `raw-vlm-multi-cmp-val-t2` | 22.50% | 18/80 | — | business_report 0/10, comics 0/10 again |
+| t3 | `raw-vlm-multi-cmp-val-t3` | 21.25% | 17/80 | — | business_report 0/10, comics 0/10 (third time) |
 
 Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
 1/10, infographics 4/10, maps 1/10, science_paper 3/10, science_poster
@@ -42,18 +43,22 @@ Per-category (t2): business_report 0/10, comics 0/10, engineering_drawing
 2/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster
 4/10, slide 3/10.
 
+Per-category (t3): business_report 0/10, comics 0/10, engineering_drawing
+2/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster
+3/10, slide 3/10.
+
 ## Summary
 
-n=2 so far (t3 queued). t1 18.75%, t2 22.50% → running mean ~20.6%;
-business_report and comics 0/10 in both trials (single multi-image read
-can't resolve fine print). Mean ± std at n=3.
+**n=3 complete: 20.83% ± 1.91pp** (t1 18.75%, t2 22.50%, t3 21.25%).
+business_report and comics are **0/10 in all three trials** — a single
+multi-image read cannot resolve their fine print, the exact failure the
+recursive scaffold targets.
 
 ## Comparison
 
-Baseline floor. `rvlm` t1 (40.00%) − this (18.75%) = **+21.25pp** scaffold
-lift at n=1 — biggest gaps in the zoom-then-read categories
-(business_report, comics, engineering_drawing all near-zero here). Lock
-paired Δ at n=3.
+Baseline floor. **rvlm (38.75% ± 1.25pp) − this (20.83% ± 1.91pp) =
++17.92pp** scaffold lift at n=3 — biggest gaps in the zoom-then-read
+categories (business_report, comics near-zero here vs rvlm's 4-6/10).
 
 ## Observations / caveats
 
@@ -62,4 +67,4 @@ paired Δ at n=3.
 
 ## Status
 
-in progress (n=1 of 3)
+complete (n=3 of 3)
