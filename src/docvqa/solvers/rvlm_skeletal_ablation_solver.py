@@ -1,20 +1,20 @@
-"""Naked-prompt rvlm: strip everything except DATA + TOOLS + faithfulness + OUTPUT FORMAT.
+"""Skeletal-prompt rvlm: rvlm_minimal minus the document-shape patterns.
 
-Tests whether anything beyond pure tool documentation contributes to
-the method's performance. This is the strongest possible test of the
-thesis that the recursive-perception mechanism — not hand-crafted
-prompt content — drives RVLM's lift.
+Tests whether the 3 document-shape patterns in ``rvlm_minimal``
+(high-density single page, many-page document, counting / superlatives)
+contribute beyond noise.
 
 Keeps:
-  - DATA + TOOLS docs (the tool API the agent must know to act at all)
+  - DATA + TOOLS docs
+  - APPROACH (SURVEY → LOCATE → EXTRACT → VERIFY → SUBMIT)
+  - The VLM-stochasticity verification principle (the only thing
+    that explicitly encodes "the agent must compensate for an
+    unreliable underlying model" — likely load-bearing)
   - The faithfulness rule ("never use outside knowledge")
-  - OUTPUT FORMAT pointer + profile answer-formatting rules
-    (appended at runtime)
+  - Profile answer-formatting rules (appended at runtime)
 
-Drops, vs ``rvlm_skeletal``:
-  - APPROACH (SURVEY → LOCATE → EXTRACT → VERIFY → SUBMIT) steps.
-  - The VLM-stochasticity verification principle.
-  - (Already dropped in skeletal: the 3 doc-shape pattern bullets.)
+Drops, vs ``rvlm_minimal``:
+  - The 3 document-shape pattern bullets.
 """
 
 from __future__ import annotations
@@ -58,9 +58,38 @@ _TASK_BODY = (
     "`batch_look([(image, query)])[0]`.\n"
     "- SUBMIT(answer=\"...\")\n"
     "  What: deliver the final answer and terminate.\n"
-    "  When: you have the answer.\n\n"
+    "  When: you have the answer and have verified it.\n\n"
 
-    "Never use outside or world knowledge. Every answer must come from the document.\n\n"
+    "## APPROACH\n"
+    "1. SURVEY — read the document at a coarse level to build a mental map. "
+    "Use full-page `batch_look` queries; for many-page docs, batch a sample "
+    "of pages in one call.\n"
+    "2. LOCATE — identify the page(s) and region(s) that contain the answer.\n"
+    "3. EXTRACT — get the values out of the relevant region with `batch_look`. "
+    "Ask ONE simple factual question per VLM call.\n"
+    "4. VERIFY — for any precise value (numbers, fine text, small labels), "
+    "do not commit a reading you've only seen once. Design a check: "
+    "re-read with a different crop or query, look for consistency across "
+    "reads, or cross-reference an adjacent label. See the verification "
+    "guidance below.\n"
+    "5. SUBMIT — call `SUBMIT(answer=\"...\")` once you have the answer.\n\n"
+
+    "Never use outside or world knowledge. Every answer must come from the "
+    "document.\n\n"
+
+    "## VERIFICATION UNDER VLM STOCHASTICITY\n"
+    "The underlying VLM is non-deterministic — the same image and query can "
+    "return different answers across calls, especially for precise values "
+    "(numbers, fine text, small labels) and high-density images. A single "
+    "read is not trustworthy. Build a reading procedure that compensates. "
+    "You have a broad palette of strategies and can combine them as the "
+    "situation calls: read the same region multiple times and look for the "
+    "consistent answer; read at multiple crop sizes or framings; rephrase "
+    "the query; tile-scan a region too large for one read; cross-check "
+    "against an adjacent label or value. Be aware of pitfalls — a tighter "
+    "crop reads more precisely but can occlude context (a label may sit "
+    "just outside the box); silently swapping a value after one re-read "
+    "with no evidence is just noise.\n\n"
 
     "## OUTPUT FORMAT\n"
     "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
@@ -72,8 +101,8 @@ def _build_task_instructions(profile: DatasetProfile) -> str:
 
 SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)
 
-class RvlmNakedProgram:
-    """rvlm stripped to DATA + TOOLS + faithfulness + OUTPUT FORMAT only."""
+class RvlmSkeletalAblationProgram:
+    """rvlm_minimal minus the 3 doc-shape pattern bullets."""
 
     def __init__(
         self,
@@ -147,7 +176,7 @@ class RvlmNakedProgram:
                         sandbox_code=sandbox_code,
                     )
                     logger.info(
-                        "RVLM-NKD [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                        "RVLM-SKE [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
@@ -170,7 +199,7 @@ class RvlmNakedProgram:
                         q_span.set_attribute("ground_truth", q.answer[:200])
                         q_span.set_attribute("extracted_answer", extracted[:200])
                         logger.info(
-                            "RVLM-NKD[%s] Q %s: %s (GT=%s, PRED=%s)",
+                            "RVLM-SKE[%s] Q %s: %s (GT=%s, PRED=%s)",
                             self.profile.name,
                             q.question_id,
                             "CORRECT" if is_correct else "WRONG",
@@ -192,7 +221,7 @@ class RvlmNakedProgram:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
 
                 max_w = min(self.question_concurrency, len(document.questions))
-                logger.info("RVLM-NKD: running %d questions with concurrency=%d", len(document.questions), max_w)
+                logger.info("RVLM-SKE: running %d questions with concurrency=%d", len(document.questions), max_w)
                 with ThreadPoolExecutor(max_workers=max_w) as pool:
                     futures = {pool.submit(_solve_question, q): q for q in document.questions}
                     for future in as_completed(futures):
@@ -209,14 +238,14 @@ class RvlmNakedProgram:
                         correct += 1
             if scored > 0:
                 logger.info(
-                    "RVLM-NKD [%s] doc %s: %d/%d = %.1f%%",
+                    "RVLM-SKE [%s] doc %s: %d/%d = %.1f%%",
                     self.profile.name, document.doc_id, correct, scored,
                     100 * correct / scored,
                 )
 
             return predictions, trajectories
 
-def create_rvlm_naked_program(
+def create_rvlm_skeletal_ablation_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 25,
@@ -225,7 +254,7 @@ def create_rvlm_naked_program(
     page_factor: float = 1.5,
     question_concurrency: int = 4,
     batch_concurrency: int = 8,
-) -> RvlmNakedProgram:
+) -> RvlmSkeletalAblationProgram:
     """Hydra factory. Profile resolution: explicit profile_name, else dataset, else DocVQA-2026."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
@@ -256,7 +285,7 @@ def create_rvlm_naked_program(
 
     vlm_lm = vlm_config.to_dspy_lm()
 
-    return RvlmNakedProgram(
+    return RvlmSkeletalAblationProgram(
         vlm_lm=vlm_lm,
         profile=profile,
         max_iterations=max_iterations,

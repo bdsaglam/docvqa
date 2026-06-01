@@ -1,24 +1,26 @@
-"""RVLM-full solver — kitchen-sink: rvlm + look() ergonomic + OCR.
+"""RVLM+OCR solver — RVLM with an OCR retrieval channel (M+OCR extension per D-006).
 
-Tool surface = ``look(image, query)`` single-image wrapper + ``batch_look``
-(parallel) + ``search`` + ``page_texts``. Distinct from
-:mod:`docvqa.solvers.rvlm_ocr_solver` only in the addition of the
-single-image ``look()`` ergonomic wrapper — per D-006, that ergonomic
-extra is *confounding* if you want to attribute lift to OCR alone.
+Tool surface = ``batch_look`` (the RVLM recursive sub-call) plus ``search``
+(BM25 over OCR text) and ``page_texts`` in scope. **No** single-image
+``look()`` registration: callers wanting a single visual query use
+``batch_look([(image, query)])[0]`` (same idiom as rvlm).
 
-Engineering name per D-010 (paper-facing name TBD). This solver retains
-the D-004 page-only cropping ablation (``vlm_cropping=False``) and the
-search-on/off ablation (``use_search=False``).
+This is a clean fork of :mod:`docvqa.solvers.rvlm_solver`. Distinct from
+:mod:`docvqa.solvers.rvlm_full_ablation_solver`, which confounds the OCR extension
+with a single-image ``look()`` ergonomic wrapper.
 
-Per D-007/D-009 (docs/paper/decisions.md), this solver uses a MINIMAL
-prompt for parity with ``rvlm_minimal``:
-- This solver owns its tool-surface documentation (``TASK_INSTRUCTIONS``).
-- No per-category tips and no per-category tool-routing overlay: an n=8
-  ablation showed the per-category content was not load-bearing, so it
-  was stripped to reach prompt parity with the proposed method.
-- ``ANSWER_FORMATTING_RULES`` is read from
-  ``profile.answer_formatting_rules`` — not imported from
-  :mod:`docvqa.prompts`.
+Engineering name per D-010 (paper-facing name TBD).
+
+Prompt parity (D-007). Per an n=8 ablation the hand-crafted per-category
+tips are not load-bearing, so this solver carries a MINIMAL prompt that
+matches ``rvlm_minimal``: a category-agnostic ``_TASK_BODY`` plus the
+profile's answer-formatting rules, with no per-category overlay or
+per-category tips dispatch. The generic search / OCR /
+``page_texts`` / ``batch_look`` tool documentation lives in ``_TASK_BODY``
+and is retained — only the per-category specializations are removed.
+``ANSWER_FORMATTING_RULES`` is read from
+``profile.answer_formatting_rules`` — not imported from
+:mod:`docvqa.prompts`.
 """
 
 from __future__ import annotations
@@ -26,7 +28,6 @@ from __future__ import annotations
 import logging
 import math
 import os
-import re
 import tempfile
 from dataclasses import dataclass
 from typing import Any
@@ -43,42 +44,50 @@ from docvqa.types import LMConfig
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Prompt templates (formatting rules are substituted from the profile)
+# Prompt body (formatting rules substituted from the profile)
 # ---------------------------------------------------------------------------
 
-_CROPPING_BODY = (
+_TASK_BODY = (
     "You are a Document Visual Question Answering agent. You answer a question about a document by "
     "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
 
     "## DATA\n"
     "- `question`: The question you must answer.\n"
-    "- `page_texts`: OCR-extracted text per page. May be inaccurate — verify critical values visually.\n"
-    "- `pages`: list of page images (PIL Images) (0-indexed). Pass to `look()`, e.g. `look(pages[0], 'describe layout')`.\n\n"
+    "- `page_texts`: OCR-extracted text per page (list of strings, 0-indexed). "
+    "May be inaccurate — verify critical values visually via `batch_look()`.\n"
+    "- `pages`: list of page images (PIL Images) (0-indexed). Pass to `batch_look()`, "
+    "e.g. `batch_look([(pages[0], 'describe layout')])[0]`.\n\n"
 
     "## TOOLS\n"
     "- search(query, k=5) -> list[dict]: BM25 search over OCR text. Returns [{page, score, text}]. "
-    "Useful for multi-page documents to locate relevant pages. For single-page docs, read `page_texts` directly.\n"
-    "- look(image, query) -> str: "
-    "Send any PIL Image to the VLM with a query. `image` can be a page from `pages` (e.g. `pages[0]`), "
-    "a crop (e.g. `pages[0].crop((left, top, right, bottom))`), or any processed image. "
-    "Full pages are downscaled — for fine details, crop first using PIL.\n"
-    "- batch_look(requests) -> list[str]: Parallel VLM calls. "
-    "Input: list of (image, query) tuples. Returns: list of answers in same order. "
-    "Much faster than sequential look() calls — use it for efficiently processing multiple images or queries or cross-checks.\n"
+    "Useful for multi-page documents to locate relevant pages cheaply before any visual call. "
+    "For single-page docs, read `page_texts` directly.\n"
+    "- batch_look(requests) -> list[str]: Send one or more images to the VLM in parallel. "
+    "Input: list of (image, query) tuples where image is any PIL Image "
+    "(a page from `pages`, a crop via `pages[i].crop((l,t,r,b))`, etc). "
+    "Returns: list of answers in same order. ALL visual queries go through this tool.\n"
+    "  Example: batch_look([(pages[0], 'describe layout'), (pages[0].crop((0,0,500,500)), 'read text')])\n"
+    "  For a single query, use: batch_look([(image, query)])[0]\n\n"
 
     "## APPROACH\n"
     "1. EXPLORE: Before answering, understand the document structure. "
-    "Read `page_texts`, then use `look` to survey pages — "
-    "'Describe the layout: what sections, tables, figures, and labels are present and where are they positioned?' "
+    "Read `page_texts` and/or use `search()` to locate candidate pages cheaply, "
+    "then use `batch_look` to verify or read regions OCR cannot (figures, tables, charts) — "
+    "e.g. `batch_look([(pages[0], 'Describe layout...'), (pages[1], 'Describe layout...')])`.\n"
     "Build a mental map of the document.\n"
-    "2. LOCATE: Find the specific region(s) relevant to the question.\n"
-    "3. EXTRACT: Use `look` with tight crops to read exact values. "
-    "For fine details, crop first: `look(pages[i].crop((l,t,r,b)), query)`.\n"
+    "2. LOCATE: Find the specific region(s) relevant to the question. Use `search()` on multi-page "
+    "documents to narrow the candidate set before any visual call.\n"
+    "3. EXTRACT: Use `batch_look` with tight crops to read exact values. "
+    "For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
     "4. VERIFY: Cross-check extracted values if ambiguous.\n"
     "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
 
     "## GUIDELINES\n"
-    "- Full-page `look` gives a broad overview. For fine details, crop first: `look(pages[i].crop((l,t,r,b)), query)`.\n"
+    "- Use `search()` + `page_texts` to locate relevant pages cheaply, then `batch_look()` to verify. "
+    "Browsing every page visually on a long document is wasteful.\n"
+    "- OCR text may be wrong or missing. For exact numbers, labels in figures, or any chart/table value, "
+    "verify visually with `batch_look()` on a tight crop.\n"
+    "- Full-page batch_look gives a broad overview. For fine details, crop first: `batch_look([(pages[i].crop((l,t,r,b)), query)])[0]`.\n"
     "- Use `pages[i].size` to get dimensions for cropping.\n"
     "- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. "
     "Extract raw facts, then count/compare/compute in Python.\n"
@@ -87,6 +96,11 @@ _CROPPING_BODY = (
     "Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.\n"
     "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
     "then select programmatically. Do NOT stop at the first match.\n"
+    "- UNKNOWN RULES: Answer 'Unknown' when:\n"
+    "  (a) A specific named entity (column name, layer number, variable) does not exist after thorough search.\n"
+    "  (b) A chart/table explicitly shows N/A or missing data for the requested item.\n"
+    "  Do NOT substitute a similar-sounding entity or extrapolate from nearby data.\n"
+    "  Do NOT use narrative/descriptive text when a chart explicitly shows N/A.\n"
     "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
     "Extract all referenced values and compute explicitly in Python.\n"
     "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
@@ -97,60 +111,11 @@ _CROPPING_BODY = (
     "- The answer must follow these formatting rules:\n\n"
 )
 
-_PAGE_ONLY_BODY = (
-    "You are a Document Visual Question Answering agent. You answer a question about a document by "
-    "writing Python code, calling vision tools iteratively, and reasoning programmatically.\n\n"
-
-    "## DATA\n"
-    "- `question`: The question you must answer.\n"
-    "- `page_texts`: OCR-extracted text per page. May be inaccurate — verify critical values visually.\n"
-    "- `num_pages`: total number of pages (0-indexed).\n\n"
-
-    "## TOOLS\n"
-    "- search(query, k=5) -> list[dict]: BM25 search over OCR text. Returns [{page, score, text}]. "
-    "Useful for multi-page documents to locate relevant pages. For single-page docs, read `page_texts` directly.\n"
-    "- look(page_idx, query) -> str: "
-    "Send the page at index `page_idx` (int, 0-indexed) to the VLM with a query. "
-    "Whole pages only — no cropping is available.\n"
-    "- batch_look(requests) -> list[str]: Parallel VLM calls. "
-    "Input: list of (page_idx, query) tuples. Returns: list of answers in same order. "
-    "Much faster than sequential look() calls — use it for efficiently processing multiple pages or queries.\n"
-
-    "## APPROACH\n"
-    "1. EXPLORE: Read `page_texts`, then use `look(page_idx, ...)` to survey pages and build a mental map.\n"
-    "2. LOCATE: Identify the page(s) relevant to the question.\n"
-    "3. EXTRACT: Re-look at relevant pages with targeted queries to read exact values.\n"
-    "4. VERIFY: Cross-check extracted values by re-querying the same page if ambiguous.\n"
-    "5. SUBMIT: Once you have the answer, SUBMIT it.\n\n"
-
-    "## GUIDELINES\n"
-    "- Ask the VLM ONE simple factual question per call. Do NOT combine multiple questions or ask it to reason. "
-    "Extract raw facts, then count/compare/compute in Python.\n"
-    "- VLM CONFLICT RESOLUTION: When readings conflict on the same page, do ONE tie-breaking read with a "
-    "more specific question. Never silently adopt a new number from a 'verification' pass.\n"
-    "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
-    "then select programmatically. Do NOT stop at the first match.\n"
-    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
-    "Extract all referenced values and compute explicitly in Python.\n"
-    "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
-
-    "## OUTPUT FORMAT\n"
-    "- SUBMIT a single answer string.\n"
-    '- Example: SUBMIT(answer="42")\n'
-    "- The answer must follow these formatting rules:\n\n"
-)
-
-def _build_task_instructions(profile: DatasetProfile, vlm_cropping: bool) -> str:
-    body = _CROPPING_BODY if vlm_cropping else _PAGE_ONLY_BODY
-    return body + profile.answer_formatting_rules
-
-# Back-compat export for shelved solvers (flat_solo_gepa) that imported
-# ``TASK_INSTRUCTIONS`` from the old flat_solo_solver. They want the default
-# (DocVQA-2026 + cropping) prompt seed for GEPA optimization.
-TASK_INSTRUCTIONS = _build_task_instructions(get_profile("VLR-CVC/DocVQA-2026"), vlm_cropping=True)
+def _build_task_instructions(profile: DatasetProfile) -> str:
+    return _TASK_BODY + profile.answer_formatting_rules
 
 # ---------------------------------------------------------------------------
-# Helpers (inlined from the former flat_solo_solver — Phase 2D merge)
+# Helpers
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -161,7 +126,7 @@ class RunContext:
     page_texts: list[str] | None = None
 
 def _format_page_texts(page_texts: list[str]) -> list[str]:
-    return [t.strip() or "[No text extracted - use look() for visual content]" for t in page_texts]
+    return [t.strip() or "[No text extracted - use batch_look() for visual content]" for t in page_texts]
 
 def _build_signature(instructions: str) -> dspy.Signature:
     fields: dict = {
@@ -181,15 +146,12 @@ def _build_signature(instructions: str) -> dspy.Signature:
     }
     return dspy.Signature(fields, instructions)
 
-def _strip_search_tool(instructions: str) -> str:
-    """Remove the search() tool line for the use_search=False ablation."""
-    return re.sub(r'- search\(query, k=5\)[^\n]*\n', '', instructions)
-
-def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *, use_search: bool = True) -> list:
+def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, batch_concurrency: int = 8) -> list:
     from PIL import Image as PILImage
 
     def _look_impl(image_path: str, query: str) -> str:
-        """Internal: load image from path and send to VLM."""
+        """Internal: load image from path and send to VLM. Used only by _batch_look_impl —
+        NOT registered as a sandbox-visible tool."""
         with logfire.span("look", image_path=image_path, query=query) as span:
             img = PILImage.open(image_path)
             with dspy.context(lm=vlm_lm):
@@ -211,7 +173,7 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *
             return idx, _look_impl(path, query)
 
         is_vertex = "vertex_ai" in (vlm_lm.model if hasattr(vlm_lm, 'model') else str(vlm_lm))
-        max_w = min(len(requests), 2 if is_vertex else 8)
+        max_w = min(len(requests), 2 if is_vertex else batch_concurrency)
         with logfire.span("batch_look", num_requests=len(requests)):
             with ThreadPoolExecutor(max_workers=max_w) as pool:
                 futures = {
@@ -243,18 +205,14 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, ctx: RunContext, *
             span.set_attribute("num_results", len(records))
             return records
 
-    tools = [_look_impl, _batch_look_impl]
-    if use_search:
-        tools.append(_search)
-    return tools
+    # IMPORTANT: only _batch_look_impl and _search are registered as sandbox-visible
+    # tool proxies. _look_impl is internal-only — the agent never sees a `look()`
+    # symbol in its REPL. Single-image queries go through `batch_look([(img, q)])[0]`.
+    return [_batch_look_impl, _search]
 
-def _build_sandbox_code(page_dir: str, num_pages: int, use_search: bool = True) -> str:
-    """Build sandbox code that loads pages as PIL Images and defines `look()`."""
-    search_def = '''
-def search(query, k=5):
-    """BM25 search over OCR text. Returns list of {page, score, text} dicts."""
-    return _search(query, k)
-''' if use_search else ''
+def _build_sandbox_code(page_dir: str, num_pages: int) -> str:
+    """Build sandbox code that loads pages as PIL Images and defines
+    `batch_look()` and `search()`. No `look()` is defined."""
     return f'''
 import os
 import tempfile
@@ -269,19 +227,15 @@ for i in range({num_pages}):
     pages.append(Image.open(path))
 assert len(pages) == {num_pages}, f"Expected {{num_pages}} pages, got {{len(pages)}}"
 
-def look(image, query):
-    """Send an image to the VLM with a query. `image` can be any PIL Image
-    (a page from `pages`, a crop via `image.crop(...)`, or any processed image).
-    Returns the VLM's text response."""
-    tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-    image.save(tmp, format="PNG")
-    tmp.close()
-    return _look_impl(tmp.name, query)
-{search_def}
+def search(query, k=5):
+    """BM25 search over OCR text. Returns list of {{page, score, text}} dicts."""
+    return _search(query, k)
+
 def batch_look(requests):
-    """Send multiple images to the VLM in parallel. Much faster than sequential look() calls.
+    """Send multiple images to the VLM in parallel. Much faster than sequential calls.
     Input: list of (image, query) tuples. Returns: list of str answers (same order).
-    Example: batch_look([(pages[0], "layout?"), (pages[1].crop((0,0,500,500)), "read text")])"""
+    Example: batch_look([(pages[0], "layout?"), (pages[1].crop((0,0,500,500)), "read text")])
+    For a single query, use: batch_look([(image, query)])[0]"""
     import json as _json
     paths = []
     for image, query in requests:
@@ -292,50 +246,17 @@ def batch_look(requests):
     return _batch_look_impl(_json.dumps(paths))
 '''
 
-def _build_sandbox_code_page_only(page_dir: str, num_pages: int, use_search: bool = True) -> str:
-    """Page-only sandbox for the D-004 cropping ablation. `look(page_idx, query)`
-    accepts only an integer page index — no PIL Images, no crops."""
-    search_def = '''
-def search(query, k=5):
-    """BM25 search over OCR text. Returns list of {page, score, text} dicts."""
-    return _search(query, k)
-''' if use_search else ''
-    return f'''
-import os
-num_pages = {num_pages}
-_page_paths = [os.path.join({page_dir!r}, f"page_{{i}}.png") for i in range({num_pages})]
-for _p in _page_paths:
-    assert os.path.exists(_p), f"Page image not found: {{_p}}"
-
-def look(page_idx, query):
-    """Send page `page_idx` (int, 0-indexed) to the VLM with a query.
-    No cropping is available — whole pages only."""
-    if not isinstance(page_idx, int):
-        raise TypeError(f"look() expects an int page index, got {{type(page_idx).__name__}}")
-    if not (0 <= page_idx < num_pages):
-        raise IndexError(f"page_idx {{page_idx}} out of range [0, {{num_pages}})")
-    return _look_impl(_page_paths[page_idx], query)
-{search_def}
-def batch_look(requests):
-    """Send multiple pages to the VLM in parallel. Whole pages only.
-    Input: list of (page_idx, query) tuples. Returns: list of str answers (same order)."""
-    import json as _json
-    paths = []
-    for page_idx, query in requests:
-        if not isinstance(page_idx, int):
-            raise TypeError(f"batch_look() expects int page indices, got {{type(page_idx).__name__}}")
-        if not (0 <= page_idx < num_pages):
-            raise IndexError(f"page_idx {{page_idx}} out of range [0, {{num_pages}})")
-        paths.append({{"path": _page_paths[page_idx], "query": query}})
-    return _batch_look_impl(_json.dumps(paths))
-'''
-
 # ---------------------------------------------------------------------------
-# RvlmFullProgram
+# RvlmOcrAblationProgram
 # ---------------------------------------------------------------------------
 
-class RvlmFullProgram:
-    """RVLM-full solver. See module docstring."""
+class RvlmOcrAblationProgram:
+    """RVLM+OCR solver — each question solved independently.
+
+    Tool surface: ``batch_look()`` (from rvlm) + ``search()`` + ``page_texts``
+    (from OCR). No ``look()`` is registered — that ergonomic wrapper is what
+    distinguishes this solver from ``rvlm_full``, the kitchen-sink variant.
+    """
 
     def __init__(
         self,
@@ -345,8 +266,7 @@ class RvlmFullProgram:
         rlm_type: str = "lean",
         page_factor: float = 1.5,
         question_concurrency: int = 1,
-        vlm_cropping: bool = True,
-        use_search: bool = True,
+        batch_concurrency: int = 8,
     ):
         self.vlm_lm = vlm_lm
         self.profile = profile
@@ -354,8 +274,7 @@ class RvlmFullProgram:
         self.rlm_type = rlm_type
         self.page_factor = page_factor
         self.question_concurrency = question_concurrency
-        self.vlm_cropping = vlm_cropping
-        self.use_search = use_search
+        self.batch_concurrency = batch_concurrency
 
         self.vlm_predict = dspy.Predict(
             dspy.Signature(
@@ -372,7 +291,6 @@ class RvlmFullProgram:
         )
 
     def _per_question_prefix(self, q: Question) -> str:
-        """Optional hint string prepended to the per-question prompt."""
         if self.profile.question_format_hint_fn is None:
             return ""
         hint = self.profile.question_format_hint_fn(q)
@@ -408,19 +326,15 @@ class RvlmFullProgram:
             page_bonus = min(10, self.page_factor * math.ceil(math.sqrt(max(0, num_pages - 9))))
             max_iter = self.max_iterations + int(page_bonus)
 
-            instructions = _build_task_instructions(self.profile, self.vlm_cropping)
-            if not self.use_search:
-                instructions = _strip_search_tool(instructions)
-            tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, use_search=self.use_search)
-            if self.vlm_cropping:
-                sandbox_code = _build_sandbox_code(tmpdir, len(document.images), use_search=self.use_search)
-            else:
-                sandbox_code = _build_sandbox_code_page_only(tmpdir, len(document.images), use_search=self.use_search)
+            # No category tips, no per-document dispatch — the body is the body.
+            instructions = _build_task_instructions(self.profile)
+            tools = _create_tools(self.vlm_predict, self.vlm_lm, ctx, self.batch_concurrency)
+            sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
             def _solve_question(q: Question):
                 """Solve a single question. Returns (question_id, answer, trajectory)."""
                 with logfire.span(
-                    "solve_rvlm_full",
+                    "solve_rvlm_ocr",
                     doc_id=document.doc_id,
                     question_id=q.question_id,
                     question=q.question[:200],
@@ -437,7 +351,7 @@ class RvlmFullProgram:
                         sandbox_code=sandbox_code,
                     )
                     logger.info(
-                        "RVLM-full [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
+                        "RVLM+OCR [%s] (%s) Q %s: max_iterations=%d (page_bonus=%d)",
                         self.profile.name, self.rlm_type, q.question_id, max_iter, int(page_bonus),
                     )
 
@@ -464,7 +378,7 @@ class RvlmFullProgram:
                         q_span.set_attribute("ground_truth", q.answer[:200])
                         q_span.set_attribute("extracted_answer", extracted[:200])
                         logger.info(
-                            "RVLM-full[%s] Q %s: %s (GT=%s, PRED=%s)",
+                            "RVLM+OCR[%s] Q %s: %s (GT=%s, PRED=%s)",
                             self.profile.name,
                             q.question_id,
                             "CORRECT" if is_correct else "WRONG",
@@ -474,6 +388,7 @@ class RvlmFullProgram:
 
                     return q.question_id, answer, trajectory
 
+            # Run questions with configurable concurrency
             predictions: dict[str, str] = {}
             trajectories: dict[str, list[dict]] = {}
 
@@ -484,9 +399,8 @@ class RvlmFullProgram:
                     trajectories[qid] = trajectory
             else:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
-
                 max_w = min(self.question_concurrency, len(document.questions))
-                logger.info("RVLM-full: running %d questions with concurrency=%d", len(document.questions), max_w)
+                logger.info("RVLM+OCR: running %d questions with concurrency=%d", len(document.questions), max_w)
                 with ThreadPoolExecutor(max_workers=max_w) as pool:
                     futures = {pool.submit(_solve_question, q): q for q in document.questions}
                     for future in as_completed(futures):
@@ -494,17 +408,17 @@ class RvlmFullProgram:
                         predictions[qid] = answer
                         trajectories[qid] = trajectory
 
+            # Score
             correct = 0
             scored = 0
             for q in document.questions:
                 if q.answer is not None:
                     scored += 1
-                    is_correct, _ = self.profile.score_fn(predictions[q.question_id], q.answer, q)
-                    if is_correct:
+                    if self.profile.score_fn(predictions[q.question_id], q.answer, q)[0]:
                         correct += 1
             if scored > 0:
                 logger.info(
-                    "RVLM-full [%s] doc %s: %d/%d = %.1f%%",
+                    "RVLM+OCR [%s] doc %s: %d/%d = %.1f%%",
                     self.profile.name, document.doc_id, correct, scored,
                     100 * correct / scored,
                 )
@@ -512,10 +426,10 @@ class RvlmFullProgram:
             return predictions, trajectories
 
 # ---------------------------------------------------------------------------
-# Factory for Hydra instantiation
+# Factory for hydra instantiation
 # ---------------------------------------------------------------------------
 
-def create_rvlm_full_program(
+def create_rvlm_ocr_ablation_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 20,
@@ -523,23 +437,12 @@ def create_rvlm_full_program(
     rlm_type: str = "lean",
     page_factor: float = 1.5,
     question_concurrency: int = 4,
-    vlm_cropping: bool = True,
-    use_search: bool = True,
-) -> RvlmFullProgram:
-    """Hydra factory.
-
-    Profile resolution order:
-        1. ``profile_name`` if given — look up by registered name slug.
-        2. ``dataset`` if given — look up by HF dataset id.
-        3. Default to DocVQA-2026.
-
-    Pass ``solver.dataset=${data.dataset}`` from the top-level config so
-    the profile picks itself up automatically per Hydra invocation.
-    """
+    batch_concurrency: int = 8,
+) -> RvlmOcrAblationProgram:
+    """Hydra factory. See ``rvlm_solver.create_rvlm_program``."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:
-        # Allow lookup by either the dataset id or the profile.name slug.
         for p in _PROFILES.values():
             if p.name == profile_name:
                 profile = p
@@ -566,13 +469,12 @@ def create_rvlm_full_program(
 
     vlm_lm = vlm_config.to_dspy_lm()
 
-    return RvlmFullProgram(
+    return RvlmOcrAblationProgram(
         vlm_lm=vlm_lm,
         profile=profile,
         max_iterations=max_iterations,
         rlm_type=rlm_type,
         page_factor=page_factor,
         question_concurrency=question_concurrency,
-        vlm_cropping=vlm_cropping,
-        use_search=use_search,
+        batch_concurrency=batch_concurrency,
     )

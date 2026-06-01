@@ -1,4 +1,3 @@
-# TEMP ALIAS — old name kept so cross-host (amax7) solver=rvlm_ocr invocations keep resolving. Canonical name is rvlm_ocr_ablation. Remove once all hosts/experiments reference the new name.
 _target_: docvqa.solvers.rvlm_ocr_ablation_solver.create_rvlm_ocr_ablation_program
 dataset: ${data.dataset}
 profile_name: null

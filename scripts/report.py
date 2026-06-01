@@ -35,8 +35,8 @@ MODEL_SHORT = {
 SOLVER_SHORT = {
     # Current (D-010, 2026-05-27 onwards — see docs/paper/decisions.md)
     "docvqa.solvers.rvlm_solver.create_rvlm_program": "RVLM",
-    "docvqa.solvers.rvlm_ocr_solver.create_rvlm_ocr_program": "RVLM+OCR",
-    "docvqa.solvers.rvlm_full_solver.create_rvlm_full_program": "RVLM full",
+    "docvqa.solvers.rvlm_ocr_ablation_solver.create_rvlm_ocr_ablation_program": "RVLM+OCR",
+    "docvqa.solvers.rvlm_full_ablation_solver.create_rvlm_full_ablation_program": "RVLM full",
     "docvqa.solvers.direct_vlm_solver.create_direct_vlm_program": "Direct VLM",
     "docvqa.solvers.raw_vlm_multi_baseline_solver.create_raw_vlm_multi_baseline_program": "Raw VLM multi",
     "docvqa.solvers.raw_vlm_single_baseline_solver.create_raw_vlm_single_baseline_program": "Raw VLM single",

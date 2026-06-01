@@ -153,7 +153,7 @@ def _build_task_instructions(profile: DatasetProfile) -> str:
 
 SEED_TASK_INSTRUCTIONS_LENGTH = len(_TASK_BODY)
 
-class RvlmHybridProgram:
+class RvlmHybridAblationProgram:
     """Hybrid solver — MultimodalRLM with both display() and ask_vlm()."""
 
     def __init__(
@@ -303,7 +303,7 @@ class RvlmHybridProgram:
 
             return predictions, trajectories
 
-def create_rvlm_hybrid_program(
+def create_rvlm_hybrid_ablation_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 25,
@@ -312,7 +312,7 @@ def create_rvlm_hybrid_program(
     question_concurrency: int = 4,
     max_messages: int = 8,
     max_image_pixels: int = 8_000_000,
-) -> RvlmHybridProgram:
+) -> RvlmHybridAblationProgram:
     """Hydra factory. Profile resolution: explicit profile_name, else dataset, else DocVQA-2026."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
@@ -343,7 +343,7 @@ def create_rvlm_hybrid_program(
 
     vlm_lm = vlm_config.to_dspy_lm()
 
-    return RvlmHybridProgram(
+    return RvlmHybridAblationProgram(
         vlm_lm=vlm_lm,
         profile=profile,
         max_iterations=max_iterations,

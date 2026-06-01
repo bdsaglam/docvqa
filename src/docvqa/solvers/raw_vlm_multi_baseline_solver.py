@@ -192,7 +192,7 @@ def create_raw_vlm_multi_baseline_program(
     question_concurrency: int = 4,
     max_pages: int = 10,
 ) -> RawVlmMultiProgram:
-    """Hydra factory. See ``rvlm_full_solver.create_rvlm_full_program``."""
+    """Hydra factory. See ``rvlm_full_ablation_solver.create_rvlm_full_ablation_program``."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:

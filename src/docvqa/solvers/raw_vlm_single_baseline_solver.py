@@ -209,7 +209,7 @@ def create_raw_vlm_single_baseline_program(
     question_concurrency: int = 4,
     max_height: int = 16384,
 ) -> RawVlmSingleProgram:
-    """Hydra factory. See ``rvlm_full_solver.create_rvlm_full_program`` for profile resolution."""
+    """Hydra factory. See ``rvlm_full_ablation_solver.create_rvlm_full_ablation_program`` for profile resolution."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
     if profile_name is not None:

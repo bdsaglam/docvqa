@@ -1,4 +1,3 @@
-# TEMP ALIAS — old name kept so cross-host (amax7) solver=rvlm_naked invocations keep resolving. Canonical name is rvlm_naked_ablation. Remove once all hosts/experiments reference the new name.
 _target_: docvqa.solvers.rvlm_naked_ablation_solver.create_rvlm_naked_ablation_program
 dataset: ${data.dataset}
 profile_name: null

@@ -1,7 +1,7 @@
 """GEPA optimization for the rvlm_gepa scaffold.
 
 Optimizes ONE prompt component: ``task_instructions`` (= TASK_BODY +
-UNIFIED_TIPS merged, see ``rvlm_gepa_solver.SEED_TASK_INSTRUCTIONS``).
+UNIFIED_TIPS merged, see ``rvlm_gepa_ablation_solver.SEED_TASK_INSTRUCTIONS``).
 The dataset-specific answer-formatting rules are NOT optimized — they
 remain profile-injected at runtime so GEPA cannot break answer parsing.
 
@@ -73,9 +73,9 @@ from gepa.optimize_anything import (
 
 from docvqa.data import Document, load_documents
 from docvqa.datasets.profile import get_profile
-from docvqa.solvers.rvlm_gepa_solver import (
+from docvqa.solvers.rvlm_gepa_ablation_solver import (
     SEED_TASK_INSTRUCTIONS,
-    RvlmGepaProgram,
+    RvlmGepaAblationProgram,
 )
 from docvqa.types import LMConfig
 
@@ -219,7 +219,7 @@ def make_evaluator():
 
     Each example is a :class:`TaggedDoc`. The evaluator looks up the
     profile for ``example.dataset`` at call time, builds an
-    ``RvlmGepaProgram`` with the candidate's ``task_instructions`` and
+    ``RvlmGepaAblationProgram`` with the candidate's ``task_instructions`` and
     that profile, runs ``solve_document``, scores answers with the
     profile's ``score_fn``, and returns ``(score, side_info)`` where
     ``side_info["Feedback"]`` is the per-doc feedback string GEPA's
@@ -231,7 +231,7 @@ def make_evaluator():
     def evaluate(candidate: dict[str, str], example: TaggedDoc) -> tuple[float, dict[str, Any]]:
         doc = example.document
         profile = get_profile(example.dataset)
-        program = RvlmGepaProgram(
+        program = RvlmGepaAblationProgram(
             vlm_lm=vlm_lm,
             profile=profile,
             max_iterations=25,
