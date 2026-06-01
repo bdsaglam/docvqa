@@ -41,7 +41,11 @@ uv run python evals.py \
 
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
-| — | (queued) | — | — | — | n=3 queued |
+| t1 | `official-cmp-val-t1` | 15.00% | 12/80 | — | business_report/comics/maps 0/10; below our parity-prompt raw_vlm_multi |
+
+Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
+3/10, infographics 4/10, maps 0/10, science_paper 2/10, science_poster
+1/10, slide 2/10.
 
 Prior reference (kit-faithful, max_pages=null, no downscale): **21.67% ±
 1.91pp, n=3** (recorded in `official_baseline.yaml`). The downscaled
@@ -50,7 +54,7 @@ comparison-matrix number.
 
 ## Summary
 
-Queued (n=0). Mean ± std at n=8.
+n=1 so far. t1 15.00% — notably below our parity-prompt `raw_vlm_multi_baseline` (20.83%, n=3), so the minimized prompt is NOT crippling the baseline (if anything the official prompt + max_pages=10 downscale is weaker). Mean ± std at n=8.
 
 ## Comparison
 
@@ -60,4 +64,4 @@ competition's own VLM baseline sits relative to our `raw_vlm_multi_baseline`
 
 ## Status
 
-queued (n=0 of 8)
+in progress (n=1 of 8)
