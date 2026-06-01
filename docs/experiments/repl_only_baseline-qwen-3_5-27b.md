@@ -35,15 +35,22 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `repl-only-cmp-val-t1` | 7.50% | 6/80 | ~4 min | no-perception floor; most predictions "Unknown"; fast (no VLM/OCR loop) |
+| t2 | `repl-only-cmp-val-t2` | 7.50% | 6/80 | ~4 min | identical to t1 — stable blind floor |
 
 Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
 0/10, infographics 2/10, maps 0/10, science_paper 2/10, science_poster
 0/10, slide 2/10.
 
+Per-category (t2): business_report 0/10, comics 0/10, engineering_drawing
+0/10, infographics 2/10, maps 0/10, science_paper 2/10, science_poster
+0/10, slide 2/10.
+
 ## Summary
 
-n=1 so far (t2, t3 queued). Expected to stay near the prior/guessing
-floor — the agent cannot see the document at all.
+n=2 so far (t3 queued). t1 7.50%, t2 7.50% — exactly identical, including
+per-category breakdown: the blind floor is near-deterministic (the few
+correct come from question-text/prior-answerable items, same ones each
+trial). Mean ± std at n=3.
 
 ## Comparison
 
