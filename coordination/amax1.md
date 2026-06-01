@@ -9,11 +9,20 @@ AMAX7` section at the bottom so it's seen on the next pull.
 
 ## In progress
 
-(none — GPU idle. Next up is the solver-comparison re-run, see Queued.)
+### `[→]` solver-comparison re-run (val, n=3) — started 2026-06-01T11:03
+
+Running the locked 7-solver × n=3 matrix below. **c=24**, overlap-the-
+tail (launch next when current ≥80% docs = 20/25, cap 2 concurrent),
+driven by an OS-crontab heartbeat
+(`tmp/workspace/solver-cmp/heartbeat.sh`, every 10 min) + queue
+(`queue.txt`). run_ids use a `-cmp-` tag to avoid resuming the kept
+prior-session `rvlm-val-*` / `react-val-*` dirs. t1 launched:
+`rvlm-cmp-val-t1`. Results land in
+`docs/experiments/{solver}-qwen-3_5-27b.md` as trials complete.
 
 ## Queued
 
-### ★ NEXT: solver-comparison re-run (val, n=3) — 2026-06-01
+### ★ solver-comparison re-run (val, n=3) — LOCKED PLAN, 2026-06-01
 
 **Why:** retry logic changed (whole-agent `@retry` removed; per-call
 `num_retries=5` is the only retry layer now) AND prompts were minimized
