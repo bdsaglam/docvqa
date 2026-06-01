@@ -105,6 +105,10 @@ See `coordination/amax7.md` cells 3 & 4 for prompt-minimization
 
 ---
 
+
+#### Test chain progress (live)
+- `rvlm-minimal-test-t1` ✓ done — 154 Q (47/48 docs; 1 doc short). t2 launched.
+
 ### ★ SOLVER MINIMIZATION + NAMING CLEANUP (2026-05-31, user-directed)
 
 Principle: **minimal prompts everywhere** (the n=8 ablation proved
