@@ -1,20 +1,18 @@
 # Host coordination
 
-Two hosts share this repo: **amax7** (the host running you/Claude on the
-adaptive side) and **amax1** (the secondary host). To avoid stepping on
-each other's work, each host owns one queue file. The agent or operator
-on each host picks an experiment from their file, runs it, marks it
-done, commits + pushes, then the other host pulls before its next pick.
+Two hosts share this repo: **amax7** and **amax1**. Both are used
+dynamically — whichever host has free GPU takes the next experiment;
+there's no fixed role split. To avoid stepping on each other's work,
+each host owns one queue file. The agent or operator on each host picks
+an experiment from their file, runs it, marks it done, commits + pushes,
+then the other host pulls before its next pick.
 
 ## Files
 
-- [`amax7.md`](amax7.md) — **amax7** = adaptive host. Runs critical-path
-  experiments where the result might change the experiment plan. Tighter
-  feedback loops; one cell at a time; replan after each result.
-- [`amax1.md`](amax1.md) — **amax1** = throughput host. Runs side-track
-  experiments where the direction is already known and we just need to
-  lock numbers. No adaptive iteration; if a cell shows an unexpected
-  direction, **halt and write a note here** for amax7 to triage.
+- [`amax7.md`](amax7.md) — amax7's experiment queue.
+- [`amax1.md`](amax1.md) — amax1's experiment queue. If a cell shows an
+  unexpected direction worth the other host's attention, **halt and
+  write a `## NOTE FOR AMAX7` note here**.
 - [`cleanup-runs.md`](cleanup-runs.md) — procedure for deleting obsolete
   `output/runs/` dirs to free disk. amax7 ran this 2026-05-28 and freed
   39GB. amax1 should do the same when disk pressure builds.
@@ -57,10 +55,10 @@ your host file.
   result matches expectations, the *queue owner* adds n=2 as a follow-up
   cell when they file the result; n=8 only after the paper headline
   locks.
-- **Side-tracks for amax1, critical path for amax7.** If amax1 hits an
-  unexpected result on a side-track, halt and append `## NOTE FOR AMAX7`
-  to its file with the surprise. amax7 reads on its next pull and
-  decides whether to redirect.
+- **Cross-host escalation.** If a host hits an unexpected result the
+  other host should know about, halt and append a `## NOTE FOR <host>`
+  section to its own queue file. The other host reads it on its next
+  pull and decides whether to redirect.
 - **Commit messages:** `coord: <host> <action> <cell-name>` e.g.,
   `coord: amax1 done gemma-e4b-baseline-val-t1`.
 - **Run IDs** in the new naming scheme use the new solver names. E.g.,

@@ -1,8 +1,8 @@
-# amax7 queue (adaptive host)
+# amax7 queue
 
-amax7 is the adaptive host — runs critical-path experiments where the
-result might change the experiment plan. Tighter feedback loops; one
-cell at a time; replan after each result.
+Experiment queue for the amax7 host. If a cell shows an unexpected
+direction worth the other host's attention, append a `## NOTE FOR
+AMAX1` section at the bottom so it's seen on the next pull.
 
 **vllm:** Qwen 3.5 27B at `localhost:8927`.
 
@@ -280,7 +280,7 @@ uv run python evals.py \
 ### 2. `[→moved]` direct_vlm n=1 val (task #19) — MOVED to amax1 (2026-05-29)
 
 Moved to `coordination/amax1.md` to run paired with `direct_vlm_minimal`
-on the throughput host, at **`max_iterations=40`** (the minimal cell
+on amax1, at **`max_iterations=40`** (the minimal cell
 surfaced that cap=20 is binding — ~56/80 questions hit 20/20). Running
 both direct-VLM-architecture cells at the same cap keeps the
 prompt-stripping (TOOL_HINTS) comparison clean.

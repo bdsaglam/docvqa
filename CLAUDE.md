@@ -28,23 +28,19 @@ ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 
 ## Two-host coordination convention
 
-Two hosts share this repo:
-
-- **amax7** = **adaptive** host. Runs critical-path experiments whose
-  result might change the experiment plan. One cell at a time; replan
-  after each result. Has Qwen 3.5 27B vllm at `localhost:8927`.
-- **amax1** = **throughput** host. Runs side-track experiments where
-  the direction is already known and we just need to lock numbers. No
-  adaptive iteration; brings up its own per-model vllm containers as
-  needed.
+Two hosts share this repo: **amax7** and **amax1**. Both are used
+dynamically — whichever host has free GPU takes the next experiment;
+there's no fixed role split. Each owns one queue file; one in-progress
+cell per host at a time. amax7 has Qwen 3.5 27B vllm at `localhost:8927`;
+amax1 brings up its own per-model vllm containers as needed.
 
 ### File layout
 
 ```
 coordination/
 ├── README.md       # full protocol details
-├── amax7.md        # adaptive host's queue
-└── amax1.md        # throughput host's queue
+├── amax7.md        # amax7's queue
+└── amax1.md        # amax1's queue
 ```
 
 Each host file has three sections: `## In progress`, `## Queued`,
@@ -71,20 +67,13 @@ A "unit of work" is one experiment cell. For each cell:
    applicable).
 8. **Loop.**
 
-### Which host runs what
+### Cross-host escalation
 
-- **Critical-path** (amax7): cells where a surprising result would
-  trigger a paper-framing revision. Examples: the unified-tips ablation
-  (could change the default method); the M+OCR clean cell (locks the
-  paper's OCR-extension number); the direct_vlm cell (alt-architecture
-  evidence for prediction 3).
-- **Side-tracks** (amax1): cells where the direction is robust and we
-  just need clean magnitudes. Examples: model-axis re-runs (Gemma E4B,
-  Qwen 9B, Gemma 31B) on clean prompts — original n=3 data showed the
-  lift; the re-runs just lock magnitudes.
-- **If amax1 hits a surprise:** halt the queue and append a
-  `## NOTE FOR AMAX7` section to `coordination/amax1.md`. amax7 reads
-  on its next pull and decides whether to redirect.
+If a host hits an unexpected result the other host should know about,
+halt the queue and append a `## NOTE FOR <other-host>` section to its
+own queue file (e.g. `## NOTE FOR AMAX7` in `coordination/amax1.md`).
+The other host reads it on its next pull and decides whether to
+redirect.
 
 ### Conventions
 
@@ -124,8 +113,7 @@ Why this matters:
   Heartbeats are session-resident and re-fire from clean state.
 - **Decisions get hidden.** A chain that auto-launches the next
   trial after the prior lands removes the chance to look at the
-  result first. amax7 is supposed to be the **adaptive** host —
-  pre-committed chains undermine that.
+  result first — pre-committed chains undermine adaptive replanning.
 - **Triggers are locked in.** A chain script with a 22/25 overlap
   trigger can't react to a stuck-at-18/25 long-tail trial. A
   heartbeat can apply any condition — overlap trigger, stuck-

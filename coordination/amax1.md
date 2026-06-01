@@ -1,9 +1,8 @@
-# amax1 queue (throughput host)
+# amax1 queue
 
-amax1 is the throughput host — runs side-track experiments where the
-direction is already known and we just need to lock numbers. No adaptive
-iteration; if a cell shows an unexpected direction, **halt and append a
-`## NOTE FOR AMAX7`** section at the bottom of this file.
+Experiment queue for the amax1 host. If a cell shows an unexpected
+direction worth the other host's attention, append a `## NOTE FOR
+AMAX7` section at the bottom so it's seen on the next pull.
 
 **vllm:** brings up its own per-model containers as needed. Set
 `MODEL_TAG` per cell.
