@@ -1,4 +1,33 @@
-# Qwen 3.5 9B — rvlm_minimal, VLM-quality axis
+# Qwen 3.5 (9B + 4B) — rvlm_minimal, VLM-quality axis
+
+> ## ⚠ LOCKED n=8 RESULTS (captured 2026-06-01) — supersede the n=1 numbers below
+>
+> Per-question micro-average over 80 Qs/trial, val 25 docs, new code
+> (whole-agent retry removed; `num_retries=5` per-call). Both arms run
+> with `lm.enable_thinking=false` for parity.
+>
+> **Qwen 3.5 9B reasoner (LLM fixed at 9B, swap VLM):**
+> | Arm | VLM | Mean | SD | n |
+> |---|---|---|---|---|
+> | v1 homog | 9B | **16.67%** | 3.40 | 8 |
+> | v2 mixed | 27B | **24.54%** | 5.30 | 8 |
+> | **Δ (v2−v1)** | | **+7.87pp** | Welch t=3.54, 95%CI [+3.4,+12.3] | **significant** |
+>
+> **Qwen 3.5 4B reasoner (LLM fixed at 4B, swap VLM):**
+> | Arm | VLM | Mean | SD | n |
+> |---|---|---|---|---|
+> | v1 homog | 4B | _(running, Phase 2b)_ | | |
+> | v2 mixed | 27B | **21.09%** | 3.16 | 8 |
+> | **Δ (v2−v1)** | | _pending v1_ | | |
+>
+> 4B v2 per-trial: 25.00 / 20.00 / 21.25 / 23.75 / 23.75 / 20.00 / 15.00
+> / 20.00. Phase 3 (Qwen3-8B text-only LLM + 27B VLM, v2-only) queued.
+>
+> Headline (9B, locked): swapping **only** the VLM 9B→27B with the
+> reasoner fixed lifts ~8pp → for a 9B reasoner the scaffold is
+> **perception-budget-bound**, supporting D-006. (NB this reverses the
+> stale n=1 "0.0pp" read below, which was a single high-variance draw on
+> the v1 arm.) The 4B Δ closes once Phase 2b v1 lands.
 
 ## Hypothesis / question
 
