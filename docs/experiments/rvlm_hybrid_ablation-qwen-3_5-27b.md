@@ -35,6 +35,7 @@ uv run python evals.py \
 |---|---|---|---|---|---|
 | t1 | `rvlm-hybrid-cmp-val-t1` | 40.00% | 32/80 | — | ties `rvlm` t1; science_poster 7/10, comics 1/10 |
 | t2 | `rvlm-hybrid-cmp-val-t2` | 38.75% | 31/80 | — | ties `rvlm` t2 exactly (38.75%) |
+| t3 | `rvlm-hybrid-cmp-val-t3` | 31.25% | 25/80 | — | low trial — breaks the t1/t2 lockstep with rvlm (rvlm t3 was 37.5%) |
 
 Per-category (t1): business_report 5/10, comics 1/10, engineering_drawing
 4/10, infographics 6/10, maps 1/10, science_paper 3/10, science_poster
@@ -44,11 +45,18 @@ Per-category (t2): business_report 4/10, comics 1/10, engineering_drawing
 3/10, infographics 6/10, maps 1/10, science_paper 4/10, science_poster
 6/10, slide 6/10.
 
+Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
+3/10, infographics 4/10, maps 0/10, science_paper 2/10, science_poster
+6/10, slide 6/10.
+
 ## Summary
 
-n=2 so far (t3 queued). t1 40.00%, t2 38.75% — tracks `rvlm` trial-for-trial
-(40.00/38.75 both), reinforcing that the direct `display()` channel is
-redundant on top of the VLM sub-call. Mean ± std at n=8.
+n=3 so far (target n=8). t1 40.00%, t2 38.75%, t3 31.25% → running mean
+**36.67% ± 4.73pp**. t1/t2 tracked `rvlm` trial-for-trial but t3 diverged
+low (vs rvlm's 37.5%), so the "display channel is redundant" read is now
+softer — hybrid ≈ rvlm within noise but trending slightly *below*. n=8
+needed to settle whether the display channel is neutral or mildly
+harmful. Mean ± std at n=8.
 
 ## Comparison
 
