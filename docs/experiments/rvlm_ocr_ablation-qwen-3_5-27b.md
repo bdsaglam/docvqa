@@ -34,6 +34,7 @@ uv run python evals.py \
 |---|---|---|---|---|---|
 | t1 | `rvlm-ocr-cmp-val-t1` | 36.25% | 29/80 | ~1h14m | maps 0/10, science_paper 1/10 |
 | t2 | `rvlm-ocr-cmp-val-t2` | 35.00% | 28/80 | — | maps 0/10, eng_drawing 3/10 |
+| t3 | `rvlm-ocr-cmp-val-t3` | 40.00% | 32/80 | — | business_report 7/10, maps 3/10 (best trial) |
 
 Per-category (t1): business_report 50%, comics 40%, engineering_drawing
 50%, infographics 50%, maps 0%, science_paper 10%, science_poster 40%,
@@ -43,10 +44,16 @@ Per-category (t2): business_report 5/10, comics 2/10, engineering_drawing
 3/10, infographics 6/10, maps 0/10, science_paper 3/10, science_poster
 4/10, slide 5/10.
 
+Per-category (t3): business_report 7/10, comics 3/10, engineering_drawing
+3/10, infographics 5/10, maps 3/10, science_paper 2/10, science_poster
+3/10, slide 6/10.
+
 ## Summary
 
-n=2 so far (t3 queued). t1 36.25%, t2 35.00% → running mean ~35.6%; maps
-0/10 both trials. Will fill mean ± std at n=3.
+**n=3 complete: 37.08% ± 2.60pp** (t1 36.25%, t2 35.00%, t3 40.00%). maps
+volatile (0/0/3). vs `rvlm` (39.4% mean at n=2) — OCR adds nothing over
+the OCR-free method, trending slightly below. Lock paired Δ once `rvlm`
+reaches n=3.
 
 ## Comparison
 
@@ -59,4 +66,4 @@ once both reach n=3.
 
 ## Status
 
-in progress (n=1 of 3)
+complete (n=3 of 3)
