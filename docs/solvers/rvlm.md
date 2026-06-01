@@ -135,6 +135,5 @@ uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local lm
 - [`rvlm_full`](rvlm-full.md) — kitchen-sink (adds `look()` ergonomic
   wrapper on top of `rvlm_ocr`).
 - [`direct_vlm`](direct-vlm.md) — single-multimodal-model alt angle.
-- [`repl_only`](ablations.md#repl_only) — VLM-sub-call-off ablation.
 - [`rvlm_unified`](ablations.md#rvlm_unified) — category-dispatch
   ablation.

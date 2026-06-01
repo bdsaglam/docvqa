@@ -5,8 +5,7 @@
 The no-REPL baseline: `dspy.ReAct` with the same VLM perception tools as
 `rvlm` but **no Python REPL / code execution**. Isolates whether the
 LeanRLM code-REPL is load-bearing — react keeps perception, drops the
-programmatic scaffold. Complement of `repl_only_baseline` (keeps REPL,
-drops perception). Minimized prompt (parity with `rvlm`).
+programmatic scaffold. Minimized prompt (parity with `rvlm`).
 
 ## Setup
 
@@ -54,9 +53,9 @@ matters for a stable mean. Mean ± std at n=3.
 `rvlm` t1 (40.00%) − this (17.50%) = **+22.50pp** — the REPL is
 load-bearing (consistent with the prior n=8 react ablation, Δ ≈ −10.5pp
 vs rvlm; this re-run's n=1 gap is larger but same direction — lock at
-n=3). Note react (perception, no REPL) 17.50% vs repl_only (REPL, no
-perception) 7.50%: with only one of the two, perception buys more than
-the bare REPL, but `rvlm` needs **both**.
+n=3). React (perception, no REPL) at 17.50% sits well below `rvlm` —
+perception alone does not recover the score; `rvlm` needs **both** the
+REPL and the recursive sub-call.
 
 ## Observations / caveats
 

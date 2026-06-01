@@ -41,7 +41,6 @@ SOLVER_SHORT = {
     "docvqa.solvers.raw_vlm_multi_baseline_solver.create_raw_vlm_multi_baseline_program": "Raw VLM multi",
     "docvqa.solvers.raw_vlm_single_baseline_solver.create_raw_vlm_single_baseline_program": "Raw VLM single",
     "docvqa.solvers.react_baseline_solver.create_react_baseline_program": "ReAct",
-    "docvqa.solvers.repl_only_baseline_solver.create_repl_only_baseline_program": "REPL only",
     # Legacy targets — pre-2026-05-27 run configs reference these targets;
     # the *_solver.py files no longer exist post-D-010. Labels are tagged
     # "(legacy)" to disambiguate from the post-rename targets above.

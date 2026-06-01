@@ -60,7 +60,7 @@ Reference method — others compared against this. Paired Δ vs each solver
 (both at n=3) computed in `docs/results.md` once all 27 cells land. Known
 so far: vs `rvlm_ocr_ablation` (37.08% ± 2.60pp) → **+1.67pp** — OCR adds
 nothing over the OCR-free method (slightly below). vs the n=1 baselines:
-raw_vlm_multi 18.75% (+~20pp), repl_only 7.5% (+~31pp).
+raw_vlm_multi 18.75% (+~20pp).
 
 ## Observations / caveats
 

@@ -39,8 +39,7 @@ This SUPERSEDES the earlier "pending re-val" list.
   (`rvlm_full` deferred — `rvlm_ocr` already covers the OCR-extension
   insight; the only delta is the extra `look()` tool, expected
   immaterial per user hunch)
-- baselines: `raw_vlm_multi_baseline`, `react_baseline`,
-  `repl_only_baseline`, `direct_vlm`
+- baselines: `raw_vlm_multi_baseline`, `react_baseline`, `direct_vlm`
   (`raw_vlm_single` excluded — `raw_vlm_multi` is the stronger baseline)
 
 **Orchestration (NOT chained):** launch each trial individually; when a
@@ -115,7 +114,7 @@ convenient.
 
 New canonical names:
 - **`rvlm`** ← was `rvlm_minimal` (the proposed method).
-- Baselines get `_baseline`: `react_baseline`, `repl_only_baseline`,
+- Baselines get `_baseline`: `react_baseline`,
   `raw_vlm_single_baseline`, `raw_vlm_multi_baseline`.
 - Variants/ablations get `_ablation`: `rvlm_skeletal_ablation`,
   `rvlm_naked_ablation`, `rvlm_hybrid_ablation`, `rvlm_full_ablation`,

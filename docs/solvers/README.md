@@ -17,7 +17,6 @@ implication: pick a non-RVLM name to avoid arXiv:2603.24224 collision).
 | **`raw_vlm_multi`** | Raw-VLM baseline (multi-image) | one forward pass, no scaffold | [baselines.md](baselines.md) |
 | **`raw_vlm_single`** | Raw-VLM baseline (single composite) | one forward pass, no scaffold | [baselines.md](baselines.md) |
 | **`official_baseline`** | Competition baseline | kit MASTER_PROMPT, verbatim | [baselines.md](baselines.md) |
-| **`repl_only`** | Documentation-only ablation (not a paper cell) | REPL + agent loop, no perception | [ablations.md](ablations.md) |
 | **`rvlm_unified`** | Category-dispatch ablation | same as `rvlm`, all 8 category tips concatenated | [ablations.md](ablations.md) |
 
 ## Architecture quick-look

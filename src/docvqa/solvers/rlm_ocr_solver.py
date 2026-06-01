@@ -223,7 +223,7 @@ class RlmOcrProgram:
         def _solve_question(q: Question):
             """Solve a single question. Returns (question_id, answer, trajectory)."""
             with logfire.span(
-                "solve_ocr_only",
+                "solve_rlm_ocr",
                 doc_id=document.doc_id,
                 question_id=q.question_id,
                 question=q.question[:200],

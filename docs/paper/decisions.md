@@ -220,16 +220,6 @@ Three falsifiable predictions support the hypothesis:
    vs no_loop_multi 20.0% (the recursive sub-call carries +28.8pp over
    one-shot). All measured; no new experiment needed.
 
-   *Earlier draft of prediction 3* called for a "REPL-only" cell
-   (REPL + agent loop with the VLM sub-call removed). Built and smoke-
-   tested 2026-05-27 (`src/docvqa/solvers/repl_only_solver.py`); on a
-   2-doc smoke the agent SUBMITs "Unknown" in 1 iteration per question
-   (0/5). The result is mechanistically obvious — "no perception → no
-   answer" — and tests a strawman rather than a sharp prediction. The
-   reframing above uses the three existing ablations as the mechanism
-   evidence instead. The REPL-only solver code stays in the tree as
-   documentation; it is not a paper cell.
-
 The proposed method is the **OCR-free** variant (current engineering
 name: `leanest_solo`). The **OCR-extension** variant is reported as an
 extension, not a contribution, and requires a *new* solver — distinct
@@ -461,7 +451,7 @@ system with DocVQA-2026 as the default profile.
   - Merge `leanest_solo` ← `leanest_solo_da` into a single
     DA-by-default solver. Same pattern for `no_loop_multi` ←
     `no_loop_multi_da` and other paired solvers.
-  - New solvers (`leanest_ocr`, `repl_only`) made DA-by-default at
+  - New solvers (e.g. `leanest_ocr`) made DA-by-default at
     creation. Drop inline `CATEGORY_TIPS` from them; replace with
     `profile.category_tips_fn()` calls.
   - Each solver keeps `TASK_INSTRUCTIONS` (documenting its tool
@@ -484,8 +474,8 @@ system with DocVQA-2026 as the default profile.
    `CATEGORY_TIPS` into DocVQA-2026 profile. Strip tool-routing.
 2. Merge `leanest_solo_solver.py` ← `leanest_solo_da_solver.py`.
    Keep DA structure. Default profile = DocVQA-2026.
-3. Same merge for `no_loop_multi`, and for the two new solvers
-   (`leanest_ocr`, `repl_only`) at creation.
+3. Same merge for `no_loop_multi`, and for new solvers
+   (e.g. `leanest_ocr`) at creation.
 4. Update `rvlm_solver.py` to be DA-capable (currently DocVQA-2026
    only).
 5. Update hydra configs to expose the dataset parameter.
@@ -514,7 +504,6 @@ rather than describing what each solver actually does.
 | `rvlm` (current) | **`direct_vlm`** | single multimodal model in REPL — no sub-call, "direct" perception via `display()` |
 | `no_loop_multi` | **`raw_vlm_multi`** | raw VLM baseline, multi-image |
 | `no_loop` | **`raw_vlm_single`** | raw VLM baseline, single-image |
-| `repl_only` | unchanged | documentation-only ablation; REPL with no perception |
 | `official_baseline` | unchanged | competition kit prompt, verbatim |
 
 Coupled with the D-009 merge: each `*_solo` ← `*_da` pair becomes a

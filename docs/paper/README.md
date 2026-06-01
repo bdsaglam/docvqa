@@ -85,7 +85,6 @@ post-rename (D-010, 2026-05-27). Paper-facing method names still TBD.
 | **`direct_vlm`** | **Alternative angle** | Single multimodal model in REPL — no sub-call, direct perception via `display()` |
 | **`raw_vlm_multi`** | **Raw-VLM baseline (multi-image)** | one forward pass, no scaffold |
 | **`raw_vlm_single`** | Raw-VLM baseline (single-image) | one forward pass, no scaffold |
-| **`repl_only`** | Documentation only (not a paper cell) | REPL + agent loop, no perception |
 | **`official_baseline`** | **Competition baseline** | kit MASTER_PROMPT, verbatim |
 
 **Naming notes** (D-010):

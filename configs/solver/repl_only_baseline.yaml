@@ -1,7 +1,0 @@
-_target_: docvqa.solvers.repl_only_baseline_solver.create_repl_only_baseline_program
-dataset: ${data.dataset}
-profile_name: null
-max_iterations: 25
-rlm_type: lean
-page_factor: 1.5
-question_concurrency: 4

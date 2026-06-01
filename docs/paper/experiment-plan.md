@@ -335,15 +335,6 @@ for context.
 > | Region selection (cropping) | flat_solo cropping-off | **−7.81pp** | choosing what to perceive matters |
 > | Iteration count | turn budget m=5 vs m=30 | **−15pp** at m=5 | the mechanism is iterative, not one-shot |
 > | Recursive sub-call structure | leanest 48.8% vs no_loop_multi 20.0% | **+28.8pp** | recursive agent↔VLM dominates one-shot |
->
-> Reframed (2026-05-27) from an earlier "REPL-only" framing that
-> predicted full collapse if `batch_look` was removed. The REPL-only
-> solver was built and smoke-tested (0/5 on 2 docs — agent SUBMITs
-> "Unknown" immediately because it has no perception). The result is
-> obvious — "no perception → no answer" — and tests a strawman. The
-> three ablations above are the sharper test of active perception as
-> the mechanism. REPL-only stays as `src/docvqa/solvers/repl_only_solver.py`
-> for documentation; it is not a paper cell.
 
 | Ablation | Description | Status |
 |---|---|---|
@@ -517,11 +508,6 @@ direction holds, n=8 only after the paper headline locks).
 6. **Restart RVLM chain** with reconciled prompts (alternative-angle
    datapoint). *Task #19. Other host.*
 
-**Dropped from critical path 2026-05-27:** the REPL-only ablation
-(prediction 3 strawman). Reframing to active-perception mechanism is
-already supported by existing ablations (cropping, turn budget,
-leanest-vs-no_loop_multi).
-
 ### Done — keep
 
 - **No-loop baseline (raw VLM)** — done, n=8 SC-8 split-calibration:
@@ -568,8 +554,8 @@ leanest-vs-no_loop_multi).
    document length across benchmarks (DocVQA-2026, MMLongBench-Doc,
    MP-DocVQA per-bucket). Either scatter or grouped bar.
 3. **Mechanism table (prediction 3)** — Qwen 27B on val:
-   {raw VLM, REPL-only (VLM-sub-call-off), M (full), M+OCR}.
-   The VLM-sub-call-off row is the load-bearing test.
+   {raw VLM, react (REPL-off), direct_vlm (sub-call-off), M (full), M+OCR}.
+   The sub-call-off and REPL-off rows are the load-bearing tests.
 4. **Ablation table** — M with each component ablated: cropping off,
    tips off, search off (for M+OCR variant), turn budget sweep.
    On Qwen 27B val.

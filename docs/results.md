@@ -36,8 +36,7 @@ local vllm :8927, n=3 target). All Δ measured vs the `rvlm` reference.
 | `direct_vlm` | `display()` pages into own context, no sub-call | 21.25% | 1/3 | sub-call ≈ +18.75pp |
 | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | ~20.6% (18.75, 22.50) | 2/3 | scaffold floor |
 | `react_baseline` | perception, no REPL | ~23.8% (17.50, 30.00) | 2/3 | high variance |
-| `repl_only_baseline` | REPL, no perception (blind floor) | 7.50% (7.50, 7.50) | 2/3 | near-deterministic |
-| `ocr_only_baseline` | OCR text, no vision | — | 0/3 | queued |
+| `rlm_ocr` | RLM + OCR text, no vision | — | 0/3 | queued |
 | `official_baseline` | competition `MASTER_PROMPT`, no scaffold | — | 0/3 | queued (prior kit-faithful 21.67% ± 1.91) |
 
 Detail: `docs/experiments/{solver}-qwen-3_5-27b.md` for each row.
@@ -51,14 +50,14 @@ are load-bearing and the recursive sub-call is the active ingredient:
 |---|---|---|---|
 | Recursive sub-call | `raw_vlm_multi_baseline` (~20.6%) | **≈ +21pp** | recursive agent↔VLM dominates one-shot multi-image |
 | The REPL | `react_baseline` (~23.8%) | **≈ +16pp** | code REPL is load-bearing (crop/arith/compose) |
-| Perception | `repl_only_baseline` (7.5%) | **≈ +32pp** | almost all of the score is perception, not the shell |
 | Sub-call (kept pixels) | `direct_vlm` (21.25%) | **≈ +18pp** | raw pixels in-context ≠ a focused VLM sub-call |
 
-Neither half alone recovers `rvlm`: perception-without-REPL (`react`) and
-REPL-without-perception (`repl_only`) both collapse. Adding OCR
-(`rvlm_ocr`) or a direct image channel (`rvlm_hybrid`) on top of the
-OCR-free sub-call buys ≈ 0 → supports the OCR-free recursive-perception
-framing.
+Dropping either half of the scaffold collapses the score: perception
+served one-shot instead of via the recursive sub-call (`raw_vlm_multi`,
+`direct_vlm`) and perception-without-REPL (`react`) both fall well below
+`rvlm`. Adding OCR (`rvlm_ocr`) or a direct image channel (`rvlm_hybrid`)
+on top of the OCR-free sub-call buys ≈ 0 → supports the OCR-free
+recursive-perception framing.
 
 ## Model-size / VLM-quality axis (prediction 1)
 
@@ -96,8 +95,7 @@ Gemma 31B / Qwen 27B on clean prompts) is queued on amax1 — numbers TBD.
 | `direct_vlm` | single multimodal LLM with `display()`, no sub-call (alt angle) |
 | `raw_vlm_multi_baseline` | raw multi-image, single VLM call, no REPL |
 | `react_baseline` | `dspy.ReAct` + same VLM tools as `rvlm`, no Python REPL |
-| `repl_only_baseline` | REPL, no perception (blind floor) |
-| `ocr_only_baseline` | REPL + OCR text + BM25, no vision |
+| `rlm_ocr` | REPL + OCR text + BM25, no vision (text-perception variant) |
 | `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold |
 
 Legacy pre-D-010 names (`flat_solo`, `leanest_solo`, `no_loop_multi`,

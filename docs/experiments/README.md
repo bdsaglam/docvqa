@@ -27,14 +27,14 @@ per-trial means with explicit trial counts; lock at n=3.
 | `direct_vlm` | "see it yourself": `display()` pages into the agent's own context, **no** VLM sub-call | 21.25% | 1/3 | in progress — Δ ≈ **+18.75pp** for the sub-call |
 | `raw_vlm_multi_baseline` | raw multi-image, single VLM call, **no scaffold** | ~20.6% (18.75, 22.50) | 2/3 | in progress — scaffold-lift floor (~+21pp) |
 | `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | ~23.8% (17.50, 30.00) | 2/3 | in progress (high variance) — REPL load-bearing |
-| `repl_only_baseline` | REPL, **no perception** (blind floor) | 7.50% (7.50, 7.50) | 2/3 | in progress — near-deterministic blind floor; perception ≈ +32pp |
-| `ocr_only_baseline` | OCR text perception, **no vision** | — | 0/3 | queued — the OCR-free claim's text-modality control |
+| `rlm_ocr` | RLM + OCR text perception, **no vision** | — | 0/3 | queued — the OCR-free claim's text-modality control |
 | `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold | — | 0/3 | queued — external anchor (prior kit-faithful: 21.67% ± 1.91, n=3) |
 
 **Reading:** `rvlm` (~39%) lifts ~+21pp over the no-scaffold raw-VLM floor
 (~20%). The two halves of the scaffold each matter — drop the REPL
-(`react` ~24%) or drop perception (`repl_only` 7.5%) and it collapses,
-but neither alone recovers `rvlm`. Adding OCR (`rvlm_ocr`) or a direct
+(`react` ~24%) or serve perception one-shot instead of via the recursive
+sub-call (`raw_vlm_multi` ~20%, `direct_vlm` 21%) and it collapses, but
+neither alone recovers `rvlm`. Adding OCR (`rvlm_ocr`) or a direct
 image channel (`rvlm_hybrid`) on top of the OCR-free recursive sub-call
 buys ~0 — supporting the OCR-free recursive-perception framing.
 
@@ -63,8 +63,7 @@ At 9B, swapping only the VLM 9B→27B lifts ~8pp → the scaffold is
 | [direct_vlm-qwen-3_5-27b.md](direct_vlm-qwen-3_5-27b.md) | see-it-yourself (no sub-call) |
 | [raw_vlm_multi_baseline-qwen-3_5-27b.md](raw_vlm_multi_baseline-qwen-3_5-27b.md) | raw multi-image baseline |
 | [react_baseline-qwen-3_5-27b.md](react_baseline-qwen-3_5-27b.md) | no-REPL ablation |
-| [repl_only_baseline-qwen-3_5-27b.md](repl_only_baseline-qwen-3_5-27b.md) | no-perception floor |
-| [ocr_only_baseline-qwen-3_5-27b.md](ocr_only_baseline-qwen-3_5-27b.md) | OCR-text-only control |
+| [rlm_ocr-qwen-3_5-27b.md](rlm_ocr-qwen-3_5-27b.md) | RLM + OCR (text-only) control |
 | [official_baseline-qwen-3_5-27b.md](official_baseline-qwen-3_5-27b.md) | competition-prompt anchor |
 | [qwen-9b-rvlm-minimal-vlm-axis.md](qwen-9b-rvlm-minimal-vlm-axis.md) | VLM-quality axis (9B + 4B), n=8 |
 
