@@ -727,11 +727,15 @@ SUPERSEDES the earlier "pending re-val" list.
 `lm.enable_thinking=false`). Solver comparison → prompt parity already
 enforced (rvlm = reference; extras stripped from others; `bc20ba8`).
 
-**Solvers (7 confirmed; full/single TBD):**
+**Solvers (7, LOCKED — rvlm_full + raw_vlm_single excluded):**
 - method: `rvlm`
-- ablations: `rvlm_ocr_ablation`, `rvlm_hybrid_ablation`  (rvlm_full TBD)
+- ablations: `rvlm_ocr_ablation`, `rvlm_hybrid_ablation`
+  (rvlm_full DEFERRED 2026-06-01 — rvlm_ocr already covers the
+  OCR-extension insight; the only delta is the extra `look()` tool,
+  expected immaterial per user hunch)
 - baselines: `raw_vlm_multi_baseline`, `react_baseline`,
-  `repl_only_baseline`, `direct_vlm`  (raw_vlm_single TBD)
+  `repl_only_baseline`, `direct_vlm`
+  (raw_vlm_single excluded — raw_vlm_multi is the stronger baseline)
 
 **Orchestration (NOT chained):** launch each trial individually; when a
 run reaches its long tail (~21/25 docs), launch the next run in parallel
