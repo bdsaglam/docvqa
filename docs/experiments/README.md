@@ -51,6 +51,20 @@ Each experiment file should have these sections:
 - **One cell per file** unless the cell is a parameter sweep across
   one variable (e.g., turn-budget m={5,10,20,30,40}), in which case
   bundle into one file with one section per cell.
+- **Solver-comparison result files** use the name
+  **`{solver}-{model}.md`** — one file per solver×model pairing,
+  accumulating all trials for that pairing under the 8-section layout.
+  - `{solver}` = the canonical post-D-010 solver name including any
+    `_ablation` / `_baseline` suffix (e.g. `rvlm`, `direct_vlm`,
+    `rvlm_ocr_ablation`, `rvlm_hybrid_ablation`, `react_baseline`,
+    `repl_only_baseline`, `raw_vlm_multi_baseline`).
+  - `{model}` = the model config slug minus the infra suffix
+    (`-vllm-local` / `-openrouter`): `qwen-3_5-27b-vllm-local` →
+    `qwen-3_5-27b`.
+  - Examples: `rvlm-qwen-3_5-27b.md`, `direct_vlm-qwen-3_5-27b.md`,
+    `react_baseline-qwen-3_5-27b.md`.
+  - The cross-solver head-to-head summary table lives in
+    `docs/results.md`; each row links back to these per-solver files.
 
 ## Index — active
 
