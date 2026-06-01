@@ -690,3 +690,27 @@ in [docs/experiments/unified-category-tips-ablation.md](../docs/experiments/unif
 - **Magnitude shifts by 5+pp** → expected (per-trial std ~3-4pp on
   Qwen 27B; smaller models can be noisier). Note in the result line;
   still escalate to n=2.
+
+## NOTE FOR AMAX7 — solver rename/cleanup DONE (2026-06-01)
+
+The full solver minimization + rename cascade is committed & pushed
+(`feae419` minimal→canonical + baselines; `693c0c9` `_ablation` infix).
+**All old `solver=` names are kept as TEMP aliases, so your existing
+commands keep working** — nothing breaks. Switch to the new names when
+convenient.
+
+New canonical names:
+- **`rvlm`** ← was `rvlm_minimal` (the proposed method).
+- Baselines get `_baseline`: `react_baseline`, `repl_only_baseline`,
+  `raw_vlm_single_baseline`, `raw_vlm_multi_baseline`.
+- Variants/ablations get `_ablation`: `rvlm_skeletal_ablation`,
+  `rvlm_naked_ablation`, `rvlm_hybrid_ablation`, `rvlm_full_ablation`,
+  `rvlm_ocr_ablation`, `rvlm_gepa_ablation`.
+- `direct_vlm` minimized in place (kept name). DELETED: old heavy
+  `rvlm` base, `rvlm_unified`, `direct_vlm_minimal`. Shared helpers
+  (`_build_signature`/`_create_tools`/`_build_sandbox_code`) now live in
+  `rvlm_solver.py`.
+
+⚠ **Do NOT delete `configs/solver/rvlm_minimal.yaml`** — both your live
+model-axis sweep and amax1's test chain invoke `solver=rvlm_minimal`.
+All TEMP aliases get removed only once both hosts reference new names.
