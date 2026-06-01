@@ -87,8 +87,6 @@ _CROPPING_BODY = (
     "Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.\n"
     "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
     "then select programmatically. Do NOT stop at the first match.\n"
-    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
-    "Extract all referenced values and compute explicitly in Python.\n"
     "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
 
     "## OUTPUT FORMAT\n"
@@ -130,8 +128,6 @@ _PAGE_ONLY_BODY = (
     "more specific question. Never silently adopt a new number from a 'verification' pass.\n"
     "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
     "then select programmatically. Do NOT stop at the first match.\n"
-    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
-    "Extract all referenced values and compute explicitly in Python.\n"
     "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
 
     "## OUTPUT FORMAT\n"

@@ -96,13 +96,6 @@ _TASK_BODY = (
     "Give more weight to higher-resolution crops. Never silently adopt a new number from a 'verification' pass.\n"
     "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — enumerate ALL candidates first, "
     "then select programmatically. Do NOT stop at the first match.\n"
-    "- UNKNOWN RULES: Answer 'Unknown' when:\n"
-    "  (a) A specific named entity (column name, layer number, variable) does not exist after thorough search.\n"
-    "  (b) A chart/table explicitly shows N/A or missing data for the requested item.\n"
-    "  Do NOT substitute a similar-sounding entity or extrapolate from nearby data.\n"
-    "  Do NOT use narrative/descriptive text when a chart explicitly shows N/A.\n"
-    "- COMPUTATION: When a question says 'total' or 'considering X and Y', it may require arithmetic. "
-    "Extract all referenced values and compute explicitly in Python.\n"
     "- NEVER use outside/world knowledge. ALL answers MUST come from the document.\n\n"
 
     "## OUTPUT FORMAT\n"

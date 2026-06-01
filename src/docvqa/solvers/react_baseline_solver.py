@@ -79,9 +79,6 @@ _TASK_BODY = (
     "pass.\n"
     "- SUPERLATIVES: For 'largest', 'first', 'last', 'only' questions — "
     "enumerate ALL candidates with look_many first, then pick.\n"
-    "- COMPUTATION: When a question implies arithmetic (totals, "
-    "differences), gather the raw values first, then compute in your "
-    "reasoning.\n"
     "- NEVER use outside/world knowledge. ALL answers MUST come from the "
     "document.\n\n"
 
