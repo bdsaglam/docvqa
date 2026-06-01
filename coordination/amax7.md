@@ -232,3 +232,27 @@ n=8 mean 42.03% ± 2.21pp; paired vs unified Δ = +1.09pp [−3.14, +5.33] (n.s.
 
 ### `[✓]` unified-tips n=8 val (tasks #25/#28) — 2026-05-28
 unified n=8 mean 40.94% ± 4.05pp; paired vs rvlm Δ ≈ 0pp [−3.91, +3.91] → promote unified to default. → docs/experiments/unified-category-tips-ablation.md
+
+## NOTE FOR AMAX1 — experiments folder cleanup + docs refresh (2026-06-01, amax7)
+
+Per user ("old ones are no longer valid — we changed prompts + solver
+retry logic"), I cleaned up `docs/experiments/`:
+
+- **Archived 9 pre-change writeups** (invalid numbers) to
+  `archive/experiments/`: `react-baseline.md`,
+  `official-baseline-qwen27b.md`, `no-loop-baseline.md`,
+  `no-loop-multi-image.md`, `split-calibration-no-loop-multi.md`,
+  `strip-chain-naked-hybrid.md`, `direct-vlm-il_n-and-prompt-variance.md`,
+  `rvlm-minimal-generality.md`, `unified-category-tips-ablation.md`.
+  (git mv — history preserved; indexed in `archive/experiments/README.md`.)
+- **Untouched:** your live `{solver}-qwen-3_5-27b.md` re-run files — those
+  are the current source of truth.
+- **Rewrote `docs/experiments/README.md`** → high-level results view
+  (7-solver matrix with current partial n + the VLM-axis table).
+- **Rewrote `docs/results.md`** → drops the invalid pre-change anchors,
+  points at your per-solver files, marks the doc-length (MP-DocVQA /
+  MMLongBench) cells as pending-rerun.
+
+Numbers in both docs are pulled from your in-progress cells (most n=2/3) —
+when you lock cells at n=3, refresh the matrix rows. No action needed from
+you unless you disagree with the archive set.

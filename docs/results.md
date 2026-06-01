@@ -1,36 +1,20 @@
 # Experiment Results — DocVQA 2026 (post-D-006)
 
-Paper-relevant results under the D-006 framing
-(visual-context-budget hypothesis). All scores are **mean ± std across
-trials** (no SC voting in the headline per D-003 — SC-8 numbers are
-shown only where they anchor an ICDAR submission).
+Cross-axis summary under the D-006 framing (visual-context-budget
+hypothesis). Scores are **mean ± std across trials** (no SC voting in the
+headline per D-003 — SC-8 numbers shown only where they anchor an ICDAR
+submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 
-> **Historical results** from the pre-pivot era live in
-> [`archive/docs/results.md`](../archive/docs/results.md). Read for
-> context; do not cite directly without checking that the cell is still
-> relevant under D-006/D-010. Old solver names there (`flat_solo`,
-> `leanest_solo`, etc.) map to new names per D-010.
+> **⚠ All current numbers are from the post-2026-06-01 code** (minimized /
+> parity-stripped prompts + per-call `num_retries=5` only; whole-agent
+> `@retry` removed). **Pre-change numbers are no longer valid** — the
+> prompt scrub and retry-logic change moved them; their writeups are in
+> [`archive/experiments/`](../archive/experiments/) and
+> [`archive/docs/results.md`](../archive/docs/results.md). Do not cite
+> archived numbers as current. The 7-solver Qwen-27B re-run below is
+> **in progress** (n=3 target; most cells n=2); numbers lock at n=3.
 
-## Solver taxonomy (engineering names)
-
-| Name | Legacy name (pre-D-010) | Role |
-|---|---|---|
-| `rvlm` | `leanest_solo` | proposed method — REPL + recursive VLM `batch_look` sub-call |
-| `rvlm_ocr` | — (new, no legacy predecessor) | +OCR extension (clean; no `look()` confound) |
-| `rvlm_full` | `flat_solo` / `flat_solo_da` | kitchen-sink (rvlm + `look()` + OCR); **deferred per D-011**, appendix-only |
-| `rvlm_unified` | — (new ablation) | rvlm with all 8 category tips concatenated |
-| `direct_vlm` | `rvlm` (the *old* rvlm; semantic shift per D-010) | single multimodal LLM with `display()` (alt angle) |
-| `raw_vlm_multi` | `no_loop_multi` / `no_loop_multi_da` | raw-VLM baseline, multi-image |
-| `raw_vlm_single` | `no_loop` | raw-VLM baseline, single-image |
-| `repl_only` | — (new ablation) | documentation: REPL with no perception |
-| `react` | — (new ablation) | `dspy.ReAct` with the same VLM tools as `rvlm` (`look` + `look_many`) but **no Python REPL** — the no-REPL ablation for the REPL-load-bearing test |
-
-See `docs/paper/README.md` for paper-cell taxonomy and full names.
-Paper-facing method names TBD per D-005. Legacy names appear in
-historical run IDs (`leanest-*`, `flat-solo-*`, `no-loop-*`) and in
-`archive/docs/results.md`; D-010 doesn't backfill those.
-
-## Official baselines (ICDAR 2026 — for context)
+## Official baselines (ICDAR 2026 — external, for context)
 
 | Model | Val | Test |
 |---|---|---|
@@ -39,105 +23,95 @@ historical run IDs (`leanest-*`, `flat-solo-*`, `no-loop-*`) and in
 | Gemini 3 Flash | 33.75% | 33.75% |
 | GPT-5 Mini | — | 22.50% |
 
-## Headline cells — Qwen 3.5 27B (post-D-009 clean prompts)
+## Method vs baselines — Qwen 3.5 27B, val (current code, in progress)
 
-| Cell | Solver | n | Val per-trial | Val SC-8 | Test SC-8 | Notes |
-|---|---|---|---|---|---|---|
-| **rvlm post-scrub** | rvlm | 8 | 42.81 ± 4.42pp | **48.8%** | **39.0%** | proposed method, paper headline |
-| rvlm_full post-scrub | rvlm_full | 8 | 42.35 ± 3.23pp | 47.5% | 38.0% | **deferred per D-011**; existing data stays as footnote |
-| raw_vlm_multi (baseline) | raw_vlm_multi | 8 | 21.07 ± 1.81pp | 20.0% | **11.0%** | split-difficulty anchor |
+7-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
+local vllm :8927, n=3 target). All Δ measured vs the `rvlm` reference.
 
-**Val→test gap:** rvlm 9.8pp, raw_vlm_multi 9.0pp. The 9pp baseline gap
-is the **split-difficulty floor**; scrubbed rvlm sits at the floor (no
-measurable generalization gap remaining). See
-`docs/experiments/split-calibration-no-loop-multi.md`.
-
-## In-flight cells (per coordination/amax7.md, coordination/amax1.md)
-
-| Cell | Solver | Host | Status | Notes |
+| Solver | Role | Val (current) | n | Status |
 |---|---|---|---|---|
-| `rvlm-unified-val-t1` | rvlm_unified | amax7 | running | task #25 — promotes unified to default if Δ ≈ 0pp |
-| `rvlm-ocr-val-t1` | rvlm_ocr | amax7 | queued | task #14 |
-| `direct-vlm-val-iter40-t1` | direct_vlm @ cap=40 | amax1 | queued | task #19 — moved from amax7; cap=40 to match direct_vlm_minimal |
-| Gemma E4B baseline+rvlm | rvlm | amax1 | queued | task #8 part 1 |
-| Qwen 9B baseline+rvlm | rvlm | amax1 | queued | task #8 part 2 |
-| Gemma 31B baseline+rvlm | rvlm | amax1 | queued | task #8 part 3 |
+| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **~39.4%** (40.00, 38.75) | 2/3 | reference |
+| `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | ~39.4% (40.00, 38.75) | 2/3 | Δ ≈ 0 (redundant) |
+| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | **37.08% ± 2.60** | 3/3 ✓ | Δ ≈ −2 (OCR adds nothing) |
+| `direct_vlm` | `display()` pages into own context, no sub-call | 21.25% | 1/3 | sub-call ≈ +18.75pp |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | ~20.6% (18.75, 22.50) | 2/3 | scaffold floor |
+| `react_baseline` | perception, no REPL | ~23.8% (17.50, 30.00) | 2/3 | high variance |
+| `repl_only_baseline` | REPL, no perception (blind floor) | 7.50% (7.50, 7.50) | 2/3 | near-deterministic |
+| `ocr_only_baseline` | OCR text, no vision | — | 0/3 | queued |
+| `official_baseline` | competition `MASTER_PROMPT`, no scaffold | — | 0/3 | queued (prior kit-faithful 21.67% ± 1.91) |
 
-## Model-axis (prediction 1)
-
-n=3 cells from 2026-05-09/10 used **pre-scrub** CATEGORY_TIPS — re-runs
-in flight on amax1 with clean prompts (task #8). Direction is robust;
-absolute magnitudes may shift 2–4pp.
-
-| Model | Tier | Baseline (`raw_vlm_multi`) | Scaffold (legacy `flat_solo`) | Lift |
-|---|---|---|---|---|
-| Gemma 4 E4B-it | ≤8B | 3.75 ± 0.00pp | 9.58 ± 1.44pp | +5.83pp |
-| Qwen 3.5 9B | ≤8B | 15.00 ± 1.25pp | 21.25 ± 2.50pp | +6.25pp |
-| Gemma 4 31B-it | 8–35B | 10.42 ± 0.72pp | 35.42 ± 5.20pp | +25.00pp |
-| Qwen 3.5 27B | 8–35B | 21.07 ± 1.81pp | 42.81 ± 4.42pp | +21.74pp |
-
-Detail per cell:
-- `docs/experiments/gemma-4-e4b-baseline-scaffold.md`
-- `docs/experiments/qwen-9b-baseline-scaffold.md`
-- `docs/experiments/gemma-4-31b-baseline-scaffold.md`
-
-## Document-length axis (prediction 2)
-
-200Q val samples, Qwen 3.5 27B with DA profiles, n=3 each.
-
-| Benchmark | Avg pages | Solver | Score | Δ vs baseline |
-|---|---|---|---|---|
-| MP-DocVQA | 1–20 (67% ≤5p) | raw_vlm_multi (DA) | 74.15 ± 0.84% ANLS | — |
-| MP-DocVQA | | rvlm (no OCR) | 72.52 ± 2.45% | −1.63 (n.s.) |
-| MP-DocVQA 11-20pp bucket | | rvlm_full (legacy +OCR) | — | **+13.68pp** on bucket |
-| MMLongBench-Doc | 47 avg | raw_vlm_multi (pages=80) | 46.97 ± 0.51% judge | — |
-| MMLongBench-Doc | | rvlm (no OCR) | 61.78 ± 1.17% | **+14.81pp** |
-| MMLongBench-Doc | | rvlm_full (legacy +OCR) | 63.81 ± 0.76% | +16.84pp |
-| MMLongBench-Doc | | rvlm_ocr (clean) | TBD | task #15 |
-
-The legacy OCR cells used `flat_solo_da` which bundles `look()` with OCR.
-The clean `rvlm_ocr` cell (task #15) is queued on amax7 after task #14.
-
-Detail:
-- `docs/experiments/mp-docvqa-qwen27b.md`
-- `docs/experiments/mmlongbench-doc-qwen27b.md`
+Detail: `docs/experiments/{solver}-qwen-3_5-27b.md` for each row.
 
 ## Active-perception mechanism (prediction 3)
 
-Reframed from "REPL-only collapse" to "active-perception" — triangulated
-by three independent ablations, all measured.
+The matrix above triangulates the mechanism — both halves of the scaffold
+are load-bearing and the recursive sub-call is the active ingredient:
 
-| Component | Ablation | n | Result | Reading |
+| Component dropped | Solver | vs `rvlm` (~39.4%) | Reading |
+|---|---|---|---|
+| Recursive sub-call | `raw_vlm_multi_baseline` (~20.6%) | **≈ +21pp** | recursive agent↔VLM dominates one-shot multi-image |
+| The REPL | `react_baseline` (~23.8%) | **≈ +16pp** | code REPL is load-bearing (crop/arith/compose) |
+| Perception | `repl_only_baseline` (7.5%) | **≈ +32pp** | almost all of the score is perception, not the shell |
+| Sub-call (kept pixels) | `direct_vlm` (21.25%) | **≈ +18pp** | raw pixels in-context ≠ a focused VLM sub-call |
+
+Neither half alone recovers `rvlm`: perception-without-REPL (`react`) and
+REPL-without-perception (`repl_only`) both collapse. Adding OCR
+(`rvlm_ocr`) or a direct image channel (`rvlm_hybrid`) on top of the
+OCR-free sub-call buys ≈ 0 → supports the OCR-free recursive-perception
+framing.
+
+## Model-size / VLM-quality axis (prediction 1)
+
+Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
+val, current code. Detail:
+`docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md`.
+
+| Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
-| Region selection (cropping) | `flat_solo` cropping-off | 8 | 36.88 ± 2.50% | **−7.81pp** vs 44.69%; active region selection matters |
-| Iteration count | turn budget m=5 | 3 | 30.00 ± 0.00% | **−14.69pp** vs m=30; iterative, not one-shot |
-| Recursive sub-call structure | `rvlm` vs `raw_vlm_multi` | 8 vs 8 | 42.81% vs 21.07% (per-trial) | **+21.74pp**; recursive agent↔VLM dominates one-shot |
-| **Code-REPL (composition channel)** | **`react` vs `rvlm` (paired n=8)** | **8** | **react 30.47 ± 3.06%** | **Δ = −10.47pp [−13.42, −7.52]pp 95% CI** vs `rvlm`'s 40.94% n=8 mean. 16/16 paired trials negative. The REPL is *load-bearing*: ReAct can call the same VLM tools but can't crop / arithmetic / compose results in code. |
+| Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
+| Qwen 3.5 4B | _running (Phase 2b)_ | 21.09% ± 3.16 | _pending v1_ | 8 |
+| Qwen3 8B (text-only LLM) | — | _queued (Phase 3, v2 only)_ | — | — |
 
-Per-component sanity:
-- `flat_solo` no-search: 42.50 ± 3.90% (−2.19pp, n.s. — BM25 redundant given `page_texts`)
-- `flat_solo` no-tips: 38.75 ± 3.13% (−5.94pp — tips contribute)
-- `repl_only` (VLM-off smoke): 0/5 on 2 docs — predicted full collapse, not a paper cell
+At 9B, swapping only the VLM 9B→27B with the reasoner fixed lifts ~8pp →
+the scaffold is **perception-budget-bound** for a mid/small reasoner
+(supports D-006). The baseline-vs-scaffold model-axis sweep (Gemma E4B /
+Gemma 31B / Qwen 27B on clean prompts) is queued on amax1 — numbers TBD.
 
-Detail:
-- `docs/experiments/flat-solo-vlm-cropping-off.md`
-- `docs/experiments/flat-solo-turn-budget-sweep.md`
-- `docs/experiments/leanest-turn-budget-sweep.md`
-- `docs/experiments/flat-solo-search-off.md`
-- `docs/experiments/flat-solo-category-tips-off.md`
-- `docs/experiments/efficiency-summary.md`
-- `docs/experiments/react-baseline.md` (no-REPL ablation, REPL-load-bearing test)
+## Document-length axis (prediction 2)
+
+> Prior MP-DocVQA / MMLongBench-Doc cross-benchmark numbers were run on
+> pre-change prompts/retry logic and are **invalid** (archived under
+> `archive/experiments/mp-docvqa-qwen27b.md`,
+> `mmlongbench-doc-qwen27b.md`). The mechanism (lift sign + magnitude
+> scale with the benchmark's page-count distribution) is robust, but the
+> magnitudes need a current-code re-run before citing. **Pending.**
+
+## Solver taxonomy (engineering names)
+
+| Name | Role |
+|---|---|
+| `rvlm` | proposed method — REPL + recursive VLM `batch_look` (OCR-free) |
+| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 search (OCR extension) |
+| `rvlm_hybrid_ablation` | + direct `display()` image channel on top of the sub-call |
+| `direct_vlm` | single multimodal LLM with `display()`, no sub-call (alt angle) |
+| `raw_vlm_multi_baseline` | raw multi-image, single VLM call, no REPL |
+| `react_baseline` | `dspy.ReAct` + same VLM tools as `rvlm`, no Python REPL |
+| `repl_only_baseline` | REPL, no perception (blind floor) |
+| `ocr_only_baseline` | REPL + OCR text + BM25, no vision |
+| `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold |
+
+Legacy pre-D-010 names (`flat_solo`, `leanest_solo`, `no_loop_multi`,
+etc.) appear only in historical run IDs and `archive/`; D-010 doesn't
+backfill them.
 
 ## Conventions for adding rows
 
-When a new cell completes:
-
-1. Update the **In-flight cells** table — move the row to the appropriate
-   section (headline, model-axis, doc-length, or mechanism).
-2. Cite the per-cell experiment doc under `docs/experiments/`.
-3. If the result triggers a paper-framing decision (e.g., unified-tips
-   Δ ≈ 0pp → promote to default), add a `decisions.md` D-NNN entry too.
-4. Per D-008: n=1 cells annotate as "n=1, n=2 if direction holds." Don't
-   table-headline an n=1 number — flag the trial count.
-5. Update `coordination/<host>.md` to mark the cell `[✓]` with the
-   run_id and the one-line result.
+1. When a cell reaches n=3 (or n=8), update its `docs/experiments/`
+   file's Summary + Status, then refresh the matrix row here with the
+   locked mean ± std.
+2. Per D-008: flag the trial count on every number; don't headline an
+   n=1 as if locked.
+3. If a result triggers a paper-framing decision, add a `decisions.md`
+   D-NNN entry.
+4. Mark the cell `[✓]` in `coordination/<host>.md` with the run_id and
+   one-line result.

@@ -20,6 +20,27 @@ If you need the experimental data, it's still in `output/runs/` under
 the original run IDs (where present — see `coordination/cleanup-runs.md`
 for what was deleted); this folder is the writeup, not the data.
 
+## Index — pre-change cells (invalid numbers, archived 2026-06-01)
+
+These are D-006/D-010-era writeups whose numbers predate the 2026-06-01
+code change (prompt scrub to minimized/parity-stripped + whole-agent
+`@retry` removed, leaving per-call `num_retries=5` only). **Their numbers
+are no longer valid** and are being re-run under current code as the
+7-solver matrix (`docs/experiments/{solver}-qwen-3_5-27b.md`). Kept here
+for process history only — do not cite as current.
+
+| File | Old-code headline (superseded) | Re-run under |
+|---|---|---|
+| [react-baseline.md](react-baseline.md) | react n=8 30.47% ± 3.06, Δ=−10.47pp vs rvlm | `react_baseline-qwen-3_5-27b.md` |
+| [official-baseline-qwen27b.md](official-baseline-qwen27b.md) | official prompt val n=3 21.67% ± 1.91 | `official_baseline-qwen-3_5-27b.md` |
+| [no-loop-multi-image.md](no-loop-multi-image.md) | raw_vlm_multi n=3 tips-on 23.75% | `raw_vlm_multi_baseline-qwen-3_5-27b.md` |
+| [no-loop-baseline.md](no-loop-baseline.md) | raw_vlm_single n=3 tips-on 21.25% | (no current single-image cell) |
+| [split-calibration-no-loop-multi.md](split-calibration-no-loop-multi.md) | raw_vlm_multi val SC-8 20.0% / test 11.0% (9pp split floor) | pending |
+| [unified-category-tips-ablation.md](unified-category-tips-ablation.md) | rvlm_unified n=8 40.94%, Δ=+0.00pp vs rvlm | `rvlm-qwen-3_5-27b.md` (tip-dispatch folded in) |
+| [rvlm-minimal-generality.md](rvlm-minimal-generality.md) | rvlm n=8 42.03% ± 2.21 | `rvlm-qwen-3_5-27b.md` |
+| [strip-chain-naked-hybrid.md](strip-chain-naked-hybrid.md) | skeletal Δ −1.63 (n.s.) / hybrid Δ −5.31 (sig) | `rvlm_hybrid_ablation-qwen-3_5-27b.md` |
+| [direct-vlm-il_n-and-prompt-variance.md](direct-vlm-il_n-and-prompt-variance.md) | direct_vlm il_n sweep ≈35% ± 5pp (parked process log) | `direct_vlm-qwen-3_5-27b.md` |
+
 ## Index — process / shelved
 
 | File | Why archived |
