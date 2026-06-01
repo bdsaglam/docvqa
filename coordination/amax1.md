@@ -714,3 +714,29 @@ New canonical names:
 ⚠ **Do NOT delete `configs/solver/rvlm_minimal.yaml`** — both your live
 model-axis sweep and amax1's test chain invoke `solver=rvlm_minimal`.
 All TEMP aliases get removed only once both hosts reference new names.
+
+## ★ NEXT: solver-comparison re-run (val, n=3) — queued post-test-chain (2026-06-01)
+
+**Why:** retry logic changed (whole-agent `@retry` removed; per-call
+`num_retries=5` is the only retry layer now) AND prompts were minimized
++ parity-stripped vs the `rvlm` reference. Old numbers aren't
+comparable → re-run all comparison solvers under current code. This
+SUPERSEDES the earlier "pending re-val" list.
+
+**Matrix:** n=3, **val** split, **Qwen 3.5 27B** (lm+vlm local,
+`lm.enable_thinking=false`). Solver comparison → prompt parity already
+enforced (rvlm = reference; extras stripped from others; `bc20ba8`).
+
+**Solvers (7 confirmed; full/single TBD):**
+- method: `rvlm`
+- ablations: `rvlm_ocr_ablation`, `rvlm_hybrid_ablation`  (rvlm_full TBD)
+- baselines: `raw_vlm_multi_baseline`, `react_baseline`,
+  `repl_only_baseline`, `direct_vlm`  (raw_vlm_single TBD)
+
+**Orchestration (NOT chained):** launch each trial individually; when a
+run reaches its long tail (~21/25 docs), launch the next run in parallel
+(overlap-the-tail), cap ~2 concurrent so vllm 8927 isn't double-saturated.
+21 runs total. `direct_vlm` uses `solver.max_iterations` default=40 now.
+
+**Starts:** after the `rvlm-minimal-test` n=8 chain finishes (GPU-bound);
+do NOT overlap with the test chain.
