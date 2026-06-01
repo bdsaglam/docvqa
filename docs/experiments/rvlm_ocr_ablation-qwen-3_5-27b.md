@@ -50,7 +50,7 @@ Per-category (t3): business_report 7/10, comics 3/10, engineering_drawing
 
 ## Summary
 
-**n=3 complete: 37.08% ± 2.60pp** (t1 36.25%, t2 35.00%, t3 40.00%). maps
+**n=3 so far (target n=8): 37.08% ± 2.60pp** (t1 36.25%, t2 35.00%, t3 40.00%). maps
 volatile (0/0/3). vs `rvlm` (39.4% mean at n=2) — OCR adds nothing over
 the OCR-free method, trending slightly below. Lock paired Δ once `rvlm`
 reaches n=3.
@@ -66,4 +66,4 @@ once both reach n=3.
 
 ## Status
 
-complete (n=3 of 3)
+in progress (n=3 of 8)

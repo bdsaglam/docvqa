@@ -50,7 +50,7 @@ Per-category (t3): business_report 5/10, comics 4/10, engineering_drawing
 
 ## Summary
 
-**n=3 complete: 38.75% ± 1.25pp** (t1 40.00%, t2 38.75%, t3 37.50%) —
+**n=3 so far (target n=8): 38.75% ± 1.25pp** (t1 40.00%, t2 38.75%, t3 37.50%) —
 tight variance. This is the reference the matrix is measured against.
 maps is the consistent weak spot (0/0/1).
 
@@ -70,4 +70,4 @@ raw_vlm_multi 18.75% (+~20pp).
 
 ## Status
 
-complete (n=3 of 3)
+in progress (n=3 of 8)

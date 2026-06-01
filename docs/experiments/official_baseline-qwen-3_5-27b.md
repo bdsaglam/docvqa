@@ -50,7 +50,7 @@ comparison-matrix number.
 
 ## Summary
 
-Queued (n=0). Mean ± std at n=3.
+Queued (n=0). Mean ± std at n=8.
 
 ## Comparison
 
@@ -60,4 +60,4 @@ competition's own VLM baseline sits relative to our `raw_vlm_multi_baseline`
 
 ## Status
 
-queued (n=0 of 3)
+queued (n=0 of 8)

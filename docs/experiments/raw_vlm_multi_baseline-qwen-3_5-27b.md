@@ -49,7 +49,7 @@ Per-category (t3): business_report 0/10, comics 0/10, engineering_drawing
 
 ## Summary
 
-**n=3 complete: 20.83% ± 1.91pp** (t1 18.75%, t2 22.50%, t3 21.25%).
+**n=3 so far (target n=8): 20.83% ± 1.91pp** (t1 18.75%, t2 22.50%, t3 21.25%).
 business_report and comics are **0/10 in all three trials** — a single
 multi-image read cannot resolve their fine print, the exact failure the
 recursive scaffold targets.
@@ -67,4 +67,4 @@ categories (business_report, comics near-zero here vs rvlm's 4-6/10).
 
 ## Status
 
-complete (n=3 of 3)
+in progress (n=3 of 8)

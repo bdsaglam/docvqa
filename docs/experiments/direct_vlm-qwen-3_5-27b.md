@@ -42,7 +42,7 @@ Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
 
 ## Summary
 
-n=1 so far (t2 running, t3 queued). Mean ± std at n=3.
+n=1 so far (t2 running, t3 queued). Mean ± std at n=8.
 
 ## Comparison
 
@@ -62,4 +62,4 @@ Lock paired Δ at n=3.
 
 ## Status
 
-in progress (n=1 of 3)
+in progress (n=1 of 8)

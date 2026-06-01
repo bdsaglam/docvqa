@@ -49,7 +49,7 @@ Per-category (t3): business_report 2/10, comics 3/10, engineering_drawing
 
 ## Summary
 
-**n=3 complete: 24.58% ± 6.41pp** (t1 17.50%, t2 30.00%, t3 26.25%) —
+**n=3 so far (target n=8): 24.58% ± 6.41pp** (t1 17.50%, t2 30.00%, t3 26.25%) —
 **high variance** (±6.4pp, widest in the matrix), as expected for the
 no-REPL ReAct baseline. vs `rvlm` (38.75% ± 1.25pp): **Δ +14.17pp** — the
 REPL scaffold is load-bearing even though react keeps the same perception
@@ -70,4 +70,4 @@ REPL and the recursive sub-call.
 
 ## Status
 
-complete (n=3 of 3)
+in progress (n=3 of 8)

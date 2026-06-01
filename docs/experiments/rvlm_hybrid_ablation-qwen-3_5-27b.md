@@ -48,7 +48,7 @@ Per-category (t2): business_report 4/10, comics 1/10, engineering_drawing
 
 n=2 so far (t3 queued). t1 40.00%, t2 38.75% — tracks `rvlm` trial-for-trial
 (40.00/38.75 both), reinforcing that the direct `display()` channel is
-redundant on top of the VLM sub-call. Mean ± std at n=3.
+redundant on top of the VLM sub-call. Mean ± std at n=8.
 
 ## Comparison
 
@@ -66,4 +66,4 @@ access is redundant.
 
 ## Status
 
-in progress (n=1 of 3)
+in progress (n=1 of 8)

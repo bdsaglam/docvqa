@@ -48,7 +48,7 @@ uv run python evals.py \
 
 ## Summary
 
-Queued (n=0). Mean ± std at n=3.
+Queued (n=0). Mean ± std at n=8.
 
 ## Comparison
 
@@ -67,4 +67,4 @@ slide) where OCR text is reliable.
 
 ## Status
 
-queued (n=0 of 3)
+queued (n=0 of 8)
