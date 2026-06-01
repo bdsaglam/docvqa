@@ -1,7 +1,7 @@
 _target_: docvqa.solvers.direct_vlm_solver.create_direct_vlm_program
 dataset: ${data.dataset}
 profile_name: null
-max_iterations: 20
+max_iterations: 40
 max_messages: 8
 images_for_last_n: 1   # images only on the most recent step; older windowed steps render text-only
 max_image_pixels: 8000000
