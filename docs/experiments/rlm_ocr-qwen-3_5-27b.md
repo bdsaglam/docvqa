@@ -1,8 +1,9 @@
-# ocr_only_baseline — Qwen 3.5 27B (val)
+# rlm_ocr — Qwen 3.5 27B (val)
 
 ## Hypothesis / question
 
-The **text-perception control** for the OCR-free headline. The proposed
+The **text-perception variant** (RLM scaffold + OCR, no vision) — the
+control for the OCR-free headline. The proposed
 method `rvlm` is OCR-free recursive *visual* perception. The obvious
 skeptic question: *could a cheap OCR-text pipeline match it?* This solver
 answers exactly that — it holds the scaffold constant (same LeanRLM REPL,
@@ -17,12 +18,11 @@ Reading of the result:
 
 Placement vs the rest of the matrix:
 - vs `rvlm` (vision, no OCR): isolates perception modality, scaffold held constant.
-- vs `repl_only_baseline` (REPL, NO perception): adds back the OCR text channel only — measures what OCR text alone buys over the blind floor.
 - vs `rvlm_ocr_ablation` (vision + OCR): this is that solver minus the vision sub-call.
 
 ## Setup
 
-- Solver: `ocr_only_baseline` (LeanRLM REPL + OCR `page_texts` + BM25 `search`; no vision)
+- Solver: `rlm_ocr` (LeanRLM REPL + OCR `page_texts` + BM25 `search`; no vision)
 - Model: Qwen 3.5 27B local vllm 8927 (lm only; no vlm used), `enable_thinking=false`
 - Profile: DocVQA-2026 (default)
 - max_concurrency: 8 (per the c=8 setting; aggregate cap MAXCONC=3)
@@ -34,10 +34,10 @@ Placement vs the rest of the matrix:
 uv run python evals.py \
   lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
   lm.enable_thinking=false \
-  solver=ocr_only_baseline \
+  solver=rlm_ocr \
   data.split=val data.num_samples=null \
   max_concurrency=8 \
-  run_id=ocr-only-cmp-val-tN
+  run_id=rlm-ocr-cmp-val-tN
 ```
 
 ## Per-trial table

@@ -1,4 +1,4 @@
-_target_: docvqa.solvers.ocr_only_baseline_solver.create_ocr_only_baseline_program
+_target_: docvqa.solvers.rlm_ocr_solver.create_rlm_ocr_program
 dataset: ${data.dataset}
 profile_name: null
 max_iterations: 25

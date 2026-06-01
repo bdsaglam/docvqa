@@ -1,4 +1,4 @@
-"""OCR-only baseline — the text-perception control for the OCR-free claim.
+"""RLM + OCR (``rlm_ocr``) — the text-perception variant for the OCR-free claim.
 
 Clean fork of :mod:`docvqa.solvers.rvlm_ocr_ablation_solver` with the
 **vision** channel removed: the agent keeps the LeanRLM REPL scaffold and
@@ -13,7 +13,6 @@ prompt, same ``search`` tool) and swapping the perception **modality**
 from visual (``batch_look``) to textual (OCR ``page_texts`` + ``search``).
 
 - vs ``rvlm`` (vision, no OCR): isolates perception modality, scaffold held constant.
-- vs ``repl_only_baseline`` (REPL, NO perception): adds back the OCR text channel only.
 - vs ``rvlm_ocr_ablation`` (vision + OCR): this is that solver minus the vision sub-call.
 
 If ``rvlm`` >> this, visual perception is doing real work that OCR text
@@ -161,11 +160,11 @@ def search(query, k=5):
 '''
 
 # ---------------------------------------------------------------------------
-# OcrOnlyBaselineProgram
+# RlmOcrProgram
 # ---------------------------------------------------------------------------
 
-class OcrOnlyBaselineProgram:
-    """OCR-only baseline — each question solved independently.
+class RlmOcrProgram:
+    """RLM + OCR — each question solved independently.
 
     Tool surface: ``search()`` (BM25 over OCR) + ``page_texts`` input. No
     vision: no ``look``/``batch_look``, no image access. Same LeanRLM REPL
@@ -314,14 +313,14 @@ class OcrOnlyBaselineProgram:
 # Factory for hydra instantiation
 # ---------------------------------------------------------------------------
 
-def create_ocr_only_baseline_program(
+def create_rlm_ocr_program(
     profile_name: str | None = None,
     dataset: str | None = None,
     max_iterations: int = 20,
     rlm_type: str = "lean",
     page_factor: float = 1.5,
     question_concurrency: int = 4,
-) -> OcrOnlyBaselineProgram:
+) -> RlmOcrProgram:
     """Hydra factory. See ``rvlm_ocr_ablation_solver.create_rvlm_ocr_ablation_program``."""
     from docvqa.datasets.profile import _PROFILES  # type: ignore[attr-defined]
 
@@ -337,7 +336,7 @@ def create_ocr_only_baseline_program(
     else:
         profile = get_profile("VLR-CVC/DocVQA-2026")
 
-    return OcrOnlyBaselineProgram(
+    return RlmOcrProgram(
         profile=profile,
         max_iterations=max_iterations,
         rlm_type=rlm_type,
