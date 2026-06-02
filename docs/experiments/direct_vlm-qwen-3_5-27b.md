@@ -37,6 +37,11 @@ uv run python evals.py \
 | t1 | `direct-vlm-cmp-val-t1` | 21.25% | 17/80 | ~4h+ | very slow (long-image contexts); recovered once at 24/25; business_report/comics/maps 0/10 |
 | t2 | `direct-vlm-cmp-val-t2` | 21.25% | 17/80 | — | identical to t1; comics/maps 0/10; recovered once at 23/25 |
 | t3 | `direct-vlm-cmp-val-t3` | 18.75% | 15/80 | — | business_report 0/10, slide 1/10; **died+resumed 9×** on slow long-image docs |
+| t4 | `direct-vlm-cmp-val-t4` | 26.25% | 21/80 | — | best trial; science_poster 5/10, infographics 6/10; comics 0/10; **died+resumed ~8×**, stuck at doc-23 for ~5 ticks |
+
+Per-category (t4): business_report 1/10, comics 0/10, engineering_drawing
+1/10, infographics 6/10, maps 1/10, science_paper 3/10, science_poster
+5/10, slide 4/10.
 
 Per-category (t3): business_report 0/10, comics 1/10, engineering_drawing
 2/10, infographics 5/10, maps 1/10, science_paper 2/10, science_poster
@@ -52,10 +57,10 @@ Per-category (t2): business_report 1/10, comics 0/10, engineering_drawing
 
 ## Summary
 
-n=3 so far (target n=8): 21.25 / 21.25 / 18.75 → running mean **20.42% ±
-1.44pp**. Stable, ≈ `raw_vlm_multi` (20.31%) — putting raw pixels in the
-agent's own context buys no more than a single multi-image read. vs
-`rvlm` (39.38%): **Δ +18.96pp**. **Operational note:** by far the slowest
+n=4 so far (target n=8): 21.25 / 21.25 / 18.75 / 26.25 → running mean **21.88% ±
+3.15pp**. ≈ `raw_vlm_multi` (20.50%) — putting raw pixels in the agent's
+own context buys no more than a single multi-image read. vs `rvlm`
+(39.79%): **Δ +17.91pp**. **Operational note:** by far the slowest
 solver — each trial dies and resumes ~5–9× on long-image docs (the slow
 last few pages), making it the run-time bottleneck of the matrix. Mean ±
 std at n=8.
