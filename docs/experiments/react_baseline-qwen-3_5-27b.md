@@ -36,6 +36,7 @@ uv run python evals.py \
 | t3 | `react-cmp-val-t3` | 26.25% | 21/80 | — | science_paper 4/10 (best), science_poster 1/10 |
 | t4 | `react-cmp-val-t4` | 21.25% | 17/80 | — | slide 5/10; recovered once at 24/25 |
 | t5 | `react-cmp-val-t5` | 31.25% | 25/80 | — | high trial; engineering_drawing 5/10, slide 5/10, maps 0/10 |
+| t6 | `react-cmp-val-t6` | 25.00% | 20/80 | — | comics 4/10, maps 0/10 |
 
 Per-category (t5): business_report 2/10, comics 2/10, engineering_drawing
 5/10, infographics 5/10, maps 0/10, science_paper 3/10, science_poster
@@ -59,7 +60,7 @@ Per-category (t3): business_report 2/10, comics 3/10, engineering_drawing
 
 ## Summary
 
-**n=5 so far (target n=8): 25.25% ± 5.82pp** (17.50 / 30.00 / 26.25 / 21.25 / 31.25) —
+**n=6 so far (target n=8): 25.21% ± 5.21pp** (17.50 / 30.00 / 26.25 / 21.25 / 31.25 / 25.00) —
 **high variance** (±5.8pp, widest in the matrix), as expected for the
 no-REPL ReAct baseline. vs `rvlm` (39.75% ± 1.63pp): **Δ +14.50pp** — the
 REPL scaffold is load-bearing even though react keeps the same perception
@@ -80,4 +81,4 @@ REPL and the recursive sub-call.
 
 ## Status
 
-in progress (n=5 of 8)
+in progress (n=6 of 8)
