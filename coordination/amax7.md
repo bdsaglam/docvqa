@@ -14,9 +14,12 @@ Per-user direction 2026-06-02: repeat the VLM-axis design with the
 `react_baseline` solver (FT target is a ReAct agent, not RLM — RLM's
 hidden Python-namespace state makes it a POMDP; ReAct's trajectory is a
 clean observable MDP). Cells (n=8 each): R1 8B v2, R2 9B v2, R3 4B v2,
-R4 9B v1, R5 4B v1 (8B text-only → v2 only). Sequential, all GPUs to
-the running config; 27B VLM @8927 stays up for all v2 cells then torn
-down for v1 (DP=4). Heartbeat-driven. **amax7 holds all 4 GPUs.**
+R4 9B v1, R5 4B v1 (8B text-only → v2 only). **Then CodeAct sweep
+(C1-C5, `solver=codeact`)** — same VLM-axis cells, run after ReAct
+(per-user 2026-06-02). Sequential, all GPUs to the running config;
+27B VLM @8927 stays up for all v2 cells then torn down for v1 (DP=4).
+Heartbeat-driven. **amax7 holds all 4 GPUs.** Goal: RLM-vs-ReAct-vs-
+CodeAct on the model-size axis (FT target is an append-only code agent).
 run_ids `react-{8b,9b,4b}-llm-27b-vlm-val-t*` (v2) +
 `react-3_5-{9b,4b}-val-t*` (v1). Local driver-state in
 `tmp/workspace/qwen-9b-vlm-axis/driver-state.md`; writeup target

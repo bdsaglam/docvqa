@@ -1,0 +1,8 @@
+_target_: docvqa.solvers.codeact_solver.create_codeact_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 40
+vlm: ${vlm}
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
