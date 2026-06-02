@@ -8,7 +8,27 @@ AMAX1` section at the bottom so it's seen on the next pull.
 
 ## In progress
 
-### `[→]` Qwen 3.5 9B model-axis: rvlm_minimal n=8 escalation (val)
+### `[→]` ReAct VLM-axis sweep (val, n=8) — started 2026-06-02
+
+Per-user direction 2026-06-02: repeat the VLM-axis design with the
+`react_baseline` solver (FT target is a ReAct agent, not RLM — RLM's
+hidden Python-namespace state makes it a POMDP; ReAct's trajectory is a
+clean observable MDP). Cells (n=8 each): R1 8B v2, R2 9B v2, R3 4B v2,
+R4 9B v1, R5 4B v1 (8B text-only → v2 only). Sequential, all GPUs to
+the running config; 27B VLM @8927 stays up for all v2 cells then torn
+down for v1 (DP=4). Heartbeat-driven. **amax7 holds all 4 GPUs.**
+run_ids `react-{8b,9b,4b}-llm-27b-vlm-val-t*` (v2) +
+`react-3_5-{9b,4b}-val-t*` (v1). Local driver-state in
+`tmp/workspace/qwen-9b-vlm-axis/driver-state.md`; writeup target
+`docs/experiments/react-vlm-axis.md`.
+
+**RLM (`rvlm`) VLM-axis sweep — ✅ DONE (2026-06-02):** 9B v1/v2
+16.67/24.54 (Δ+7.87 sig), 4B 12.49/21.09 (Δ+8.60 sig), 8B-text-only v2
+11.73. Perception-budget-bound at both clean sizes (D-006).
+
+(superseded RLM in-progress notes below, kept for history)
+
+### `[done]` Qwen 3.5 9B model-axis: rvlm_minimal n=8 escalation (val)
 
 Per-user direction 2026-05-31 ~21:20: escalate both VLM-axis variants
 to **n=8**. t1 = the original run (renamed `*-val-t1`). t2 launched,
