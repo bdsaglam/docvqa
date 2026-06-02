@@ -35,6 +35,11 @@ uv run python evals.py \
 | t1 | `rvlm-cmp-val-t1` | 40.00% | 32/80 | ~3.5h | last doc (science_paper dense table) churned to iter cap; recovered once at 24/25 |
 | t2 | `rvlm-cmp-val-t2` | 38.75% | 31/80 | — | recovered once at 24/25 (long-tail doc) |
 | t3 | `rvlm-cmp-val-t3` | 37.50% | 30/80 | — | comics 4/10 (best), maps 1/10 |
+| t4 | `rvlm-cmp-val-t4` | 41.25% | 33/80 | — | best trial; engineering_drawing 6/10, science_paper 4/10; recovered once at 23/25 |
+
+Per-category (t4): business_report 4/10, comics 2/10, engineering_drawing
+6/10, infographics 6/10, maps 1/10, science_paper 4/10, science_poster
+5/10, slide 5/10.
 
 Per-category (t1): business_report 6/10, comics 3/10, engineering_drawing
 5/10, infographics 7/10, maps 0/10, science_paper 3/10, science_poster
@@ -50,9 +55,9 @@ Per-category (t3): business_report 5/10, comics 4/10, engineering_drawing
 
 ## Summary
 
-**n=3 so far (target n=8): 38.75% ± 1.25pp** (t1 40.00%, t2 38.75%, t3 37.50%) —
+**n=4 so far (target n=8): 39.38% ± 1.61pp** (40.00 / 38.75 / 37.50 / 41.25) —
 tight variance. This is the reference the matrix is measured against.
-maps is the consistent weak spot (0/0/1).
+maps is the consistent weak spot (0/0/1/1).
 
 ## Comparison
 
@@ -70,4 +75,4 @@ raw_vlm_multi 18.75% (+~20pp).
 
 ## Status
 
-in progress (n=3 of 8)
+in progress (n=4 of 8)
