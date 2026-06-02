@@ -23,7 +23,7 @@ micro-average.
 
 | Reasoner | RLM | ReAct | CodeAct |
 |---|---|---|---|
-| Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | _running (CA-8Bv2)_ |
+| Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | **9.50% ± 1.44** (n=8) |
 | Qwen3.5 9B | 24.54% ± 5.30 | _queued (R2)_ | _queued (CA-9Bv2)_ |
 | Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | _queued (CA-4Bv2)_ |
 
@@ -45,6 +45,20 @@ micro-average.
   For the weak 8B text-only reasoner, the append-only ReAct loop beats
   RLM's hidden-state loop — the first evidence that the loop type (not
   just perception budget) matters, and in the FT-relevant direction.
+
+### 8B v2 CodeAct (CA-8Bv2) — 2026-06-02
+- run_ids `codeact-8b-llm-27b-vlm-val-t{1..8}`.
+- per-trial: 8.68 / 11.87 / 9.30 / 10.27 / 8.31 / 7.87 / 11.14 / 8.54.
+- **mean 9.50% ± 1.44, n=8.**
+- **8B v2 loop ranking (n=8 each): ReAct 15.79 > RLM 11.73 > CodeAct 9.50.**
+  For the weak 8B text-only reasoner the loop type dominates, and the
+  ordering is the *opposite* of "more expressive = better": ReAct's
+  short observation trace is easiest; CodeAct's append-only **growing
+  code** context is hardest (lowest mean, lowest variance — it fails
+  consistently, not erratically). Caveat for FT: append-only-code may
+  only pay off with a stronger reasoner; the 9B and 27B CodeAct cells
+  test whether it crosses over. Also: CA-8Bv2 needed 5 finalize-gap
+  resumes (heaviest docs error under CodeAct+8B), more than RLM/ReAct.
 
 ## Status
 
