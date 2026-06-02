@@ -69,16 +69,27 @@ val, current code. Detail:
 |---|---|---|---|---|
 | Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
 | Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
-| Qwen3 8B (text-only LLM) | — | _running (Phase 3, v2 only)_ | — | — |
+| Qwen3 8B (text-only LLM) | — (text-only) | 11.73% ± 2.96 | — (confounded, see note) | 8 |
 
 At both 9B and 4B, swapping only the VLM →27B with the reasoner fixed
 lifts ~8pp (9B +7.87, 4B +8.60) → the scaffold is
 **perception-budget-bound** for mid/small reasoners (supports D-006).
 The lift's consistency across reasoner size is the signature of a
-perception (not orchestration) bottleneck. Phase 3 (Qwen3-8B text-only
-reasoner + 27B VLM) is running. The baseline-vs-scaffold model-axis
-sweep (Gemma E4B / Gemma 31B / Qwen 27B on clean prompts) is queued on
-amax1 — numbers TBD.
+perception (not orchestration) bottleneck.
+
+**Boundary condition (Qwen3-8B, text-only):** with perception fixed at
+the 27B VLM, a Qwen3-8B *text-only* reasoner scores only **11.73% ±
+2.96** — below 4B v2 (21.09%) and half of 9B v2 (24.54%) on the *same*
+VLM. This is **not** clean D-006 support: it is confounded by family
+(Qwen3 vs Qwen3.5) and modality (text-only, no native vision, fully
+`batch_look`-dependent), and the 8B thrashed to max-iter (couldn't
+drive the scaffold). Reading: a strong VLM does not rescue a reasoner
+weak at agentic code/tool-use — a floor on the perception-bound claim,
+held separate from the clean 9B↔4B size curve. Detail in the experiment
+writeup.
+
+The baseline-vs-scaffold model-axis sweep (Gemma E4B / Gemma 31B / Qwen
+27B on clean prompts) is queued on amax1 — numbers TBD.
 
 ## Document-length axis (prediction 2)
 

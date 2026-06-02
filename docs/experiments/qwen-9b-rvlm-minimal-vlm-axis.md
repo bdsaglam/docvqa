@@ -22,8 +22,15 @@
 >
 > 4B v1 per-trial: 10.77 / 11.34 / 12.87 / 14.48 / 17.54 / 5.34 / 16.00
 > / 11.60. 4B v2 per-trial: 25.00 / 20.00 / 21.25 / 23.75 / 23.75 /
-> 20.00 / 15.00 / 20.00. Phase 3 (Qwen3-8B text-only LLM + 27B VLM,
-> v2-only) running.
+> 20.00 / 15.00 / 20.00.
+>
+> **Qwen3-8B reasoner — TEXT-ONLY, different family (v2 only):**
+> | Arm | LLM / VLM | Mean | SD | n |
+> |---|---|---|---|---|
+> | v2 mixed | Qwen3-8B (text-only) / 27B | **11.73%** | 2.96 | 8 |
+>
+> 8B v2 per-trial: 18.18 / 12.84 / 10.90 / 9.71 / 10.18 / 10.34 / 12.88
+> / 8.84. (No v1: Qwen3-8B is text-only, can't serve as the VLM.)
 >
 > Headline (9B + 4B, locked): swapping **only** the VLM →27B with the
 > reasoner fixed lifts ~8pp at **both** sizes (9B +7.87pp, 4B +8.60pp) →
@@ -32,6 +39,22 @@
 > is the signature of a perception (not orchestration) bottleneck. (NB
 > this reverses the stale n=1 "0.0pp" read below, a single high-variance
 > draw on the 9B v1 arm.)
+>
+> **⚠ The 8B point is NOT clean D-006 support — it's a boundary
+> condition.** With perception fixed at the strong 27B VLM, a
+> **Qwen3-8B (text-only, older Qwen3 family)** reasoner scores only
+> 11.73% — *below* even 4B v2 (21.09%) and ~half of 9B v2 (24.54%),
+> despite the identical VLM. Two confounds prevent reading this as a
+> reasoner-size effect: (1) **family** — Qwen3 vs the Qwen3.5 used for
+> 9B/4B; (2) **modality** — text-only, no native vision, so it is wholly
+> dependent on `batch_look` and cannot visually ground its own code. It
+> also **thrashed to max-iter** on many docs (15–35 iterations,
+> force-submitting wrong), i.e. it could not *drive* the scaffold. Honest
+> reading: a strong VLM does **not** rescue a reasoner that is weak at
+> agentic code/tool-use — the scaffold needs a competent orchestrator,
+> which is a floor on the perception-bound claim, not evidence for it.
+> Keep this as the "text-only / weak-orchestrator" data point; do not
+> fold it into the clean 9B↔4B size curve.
 
 ## Hypothesis / question
 
