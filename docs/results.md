@@ -68,13 +68,17 @@ val, current code. Detail:
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
 | Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
-| Qwen 3.5 4B | _running (Phase 2b)_ | 21.09% ± 3.16 | _pending v1_ | 8 |
-| Qwen3 8B (text-only LLM) | — | _queued (Phase 3, v2 only)_ | — | — |
+| Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
+| Qwen3 8B (text-only LLM) | — | _running (Phase 3, v2 only)_ | — | — |
 
-At 9B, swapping only the VLM 9B→27B with the reasoner fixed lifts ~8pp →
-the scaffold is **perception-budget-bound** for a mid/small reasoner
-(supports D-006). The baseline-vs-scaffold model-axis sweep (Gemma E4B /
-Gemma 31B / Qwen 27B on clean prompts) is queued on amax1 — numbers TBD.
+At both 9B and 4B, swapping only the VLM →27B with the reasoner fixed
+lifts ~8pp (9B +7.87, 4B +8.60) → the scaffold is
+**perception-budget-bound** for mid/small reasoners (supports D-006).
+The lift's consistency across reasoner size is the signature of a
+perception (not orchestration) bottleneck. Phase 3 (Qwen3-8B text-only
+reasoner + 27B VLM) is running. The baseline-vs-scaffold model-axis
+sweep (Gemma E4B / Gemma 31B / Qwen 27B on clean prompts) is queued on
+amax1 — numbers TBD.
 
 ## Document-length axis (prediction 2)
 

@@ -16,18 +16,22 @@
 > **Qwen 3.5 4B reasoner (LLM fixed at 4B, swap VLM):**
 > | Arm | VLM | Mean | SD | n |
 > |---|---|---|---|---|
-> | v1 homog | 4B | _(running, Phase 2b)_ | | |
+> | v1 homog | 4B | **12.49%** | 3.74 | 8 |
 > | v2 mixed | 27B | **21.09%** | 3.16 | 8 |
-> | **Δ (v2−v1)** | | _pending v1_ | | |
+> | **Δ (v2−v1)** | | **+8.60pp** | Welch t=4.96, 95%CI [+5.20,+11.99] | **significant** |
 >
-> 4B v2 per-trial: 25.00 / 20.00 / 21.25 / 23.75 / 23.75 / 20.00 / 15.00
-> / 20.00. Phase 3 (Qwen3-8B text-only LLM + 27B VLM, v2-only) queued.
+> 4B v1 per-trial: 10.77 / 11.34 / 12.87 / 14.48 / 17.54 / 5.34 / 16.00
+> / 11.60. 4B v2 per-trial: 25.00 / 20.00 / 21.25 / 23.75 / 23.75 /
+> 20.00 / 15.00 / 20.00. Phase 3 (Qwen3-8B text-only LLM + 27B VLM,
+> v2-only) running.
 >
-> Headline (9B, locked): swapping **only** the VLM 9B→27B with the
-> reasoner fixed lifts ~8pp → for a 9B reasoner the scaffold is
-> **perception-budget-bound**, supporting D-006. (NB this reverses the
-> stale n=1 "0.0pp" read below, which was a single high-variance draw on
-> the v1 arm.) The 4B Δ closes once Phase 2b v1 lands.
+> Headline (9B + 4B, locked): swapping **only** the VLM →27B with the
+> reasoner fixed lifts ~8pp at **both** sizes (9B +7.87pp, 4B +8.60pp) →
+> the scaffold is **perception-budget-bound** for mid/small reasoners,
+> supporting D-006. The lift is consistent across reasoner size, which
+> is the signature of a perception (not orchestration) bottleneck. (NB
+> this reverses the stale n=1 "0.0pp" read below, a single high-variance
+> draw on the 9B v1 arm.)
 
 ## Hypothesis / question
 

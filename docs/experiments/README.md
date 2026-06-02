@@ -47,11 +47,13 @@ n=8 per arm, val. Detail: [`qwen-9b-rvlm-minimal-vlm-axis.md`](qwen-9b-rvlm-mini
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
 | Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
-| Qwen 3.5 4B | _running (Phase 2b)_ | 21.09% ± 3.16 | _pending v1_ | 8 |
+| Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
 
-At 9B, swapping only the VLM 9B→27B lifts ~8pp → the scaffold is
-**perception-budget-bound** for a mid/small reasoner (supports D-006).
-4B Δ locks once the v1 homog arm lands.
+At both 9B and 4B, swapping only the VLM →27B lifts ~8pp (9B +7.87,
+4B +8.60) → the scaffold is **perception-budget-bound** for mid/small
+reasoners (supports D-006); the lift holds across reasoner size, the
+signature of a perception (not orchestration) bottleneck. Phase 3
+(Qwen3-8B text-only LLM + 27B VLM, v2-only) running.
 
 ## Active files
 
