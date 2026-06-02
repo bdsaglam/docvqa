@@ -48,20 +48,21 @@ n=8 per arm, val. Detail: [`qwen-9b-rvlm-minimal-vlm-axis.md`](qwen-9b-rvlm-mini
 |---|---|---|---|---|
 | Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
 | Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
-| Qwen3 8B (text-only) | — (n/a) | 11.73% ± 2.96 | — (confounded) | 8 |
+| Qwen3 8B (older gen) | — (n/a) | 11.73% ± 2.96 | — (off the size curve) | 8 |
 
 At both 9B and 4B, swapping only the VLM →27B lifts ~8pp (9B +7.87,
 4B +8.60) → the scaffold is **perception-budget-bound** for mid/small
 reasoners (supports D-006); the lift holds across reasoner size, the
 signature of a perception (not orchestration) bottleneck.
 
-**Boundary condition:** a Qwen3-8B **text-only** reasoner on the *same*
-27B VLM scores only 11.73% — below 4B v2 and half of 9B v2. This is
-**not** clean D-006 support (confounded by family Qwen3-vs-3.5 +
-text-only modality; the 8B thrashed to max-iter, couldn't drive the
-scaffold). Reading: a strong VLM doesn't rescue a reasoner weak at
-agentic tool-use — a floor on the claim, kept separate from the clean
-9B↔4B size curve.
+**Older-generation reasoner point:** a Qwen3-8B reasoner on the *same*
+27B VLM scores only 11.73% — below 4B v2 and half of 9B v2. Modality is
+not a confound (in v2 the reasoner delegates all perception to the VLM
+and never sees pixels, so text-only vs multimodal is irrelevant); the
+only variable vs 9B/4B is **generation** (Qwen3 vs Qwen3.5). The older
+8B is just a weaker orchestrator (thrashed ~18 iters/question; bug ruled
+out). Clean reasoner-*quality* signal — kept off the Qwen3.5 9B↔4B size
+curve. A clean 8B size point would need Qwen3.5-8B.
 
 ## Active files
 

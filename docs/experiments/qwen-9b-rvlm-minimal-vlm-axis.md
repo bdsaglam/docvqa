@@ -40,21 +40,22 @@
 > this reverses the stale n=1 "0.0pp" read below, a single high-variance
 > draw on the 9B v1 arm.)
 >
-> **⚠ The 8B point is NOT clean D-006 support — it's a boundary
-> condition.** With perception fixed at the strong 27B VLM, a
-> **Qwen3-8B (text-only, older Qwen3 family)** reasoner scores only
-> 11.73% — *below* even 4B v2 (21.09%) and ~half of 9B v2 (24.54%),
-> despite the identical VLM. Two confounds prevent reading this as a
-> reasoner-size effect: (1) **family** — Qwen3 vs the Qwen3.5 used for
-> 9B/4B; (2) **modality** — text-only, no native vision, so it is wholly
-> dependent on `batch_look` and cannot visually ground its own code. It
-> also **thrashed to max-iter** on many docs (15–35 iterations,
-> force-submitting wrong), i.e. it could not *drive* the scaffold. Honest
-> reading: a strong VLM does **not** rescue a reasoner that is weak at
-> agentic code/tool-use — the scaffold needs a competent orchestrator,
-> which is a floor on the perception-bound claim, not evidence for it.
-> Keep this as the "text-only / weak-orchestrator" data point; do not
-> fold it into the clean 9B↔4B size curve.
+> **The 8B point — an older-generation reasoner, NOT a modality
+> confound.** In v2 the reasoner delegates *all* perception to the 27B
+> VLM via `batch_look`; it never sees pixels in its own context
+> (`rvlm_solver.py` loads `pages` only inside the sandbox). So text-only
+> vs multimodal is **irrelevant in v2** — every reasoner is a text
+> orchestrator on the same VLM. The only variable vs 9B/4B is
+> **generation**: Qwen3-8B is the older Qwen3 family, the 9B/4B are
+> Qwen3.5. The older 8B is a **weaker orchestrator** — it thrashed ~18
+> RLM iterations/question (force-submitting wrong) and scored 11.73%,
+> *below* even the newer 4B (21.09%). Bug ruled out: `enable_thinking=
+> false` is correctly applied (`types.py:66` → `chat_template_kwargs`),
+> tool/parse errors are negligible, `batch_look` returns real content.
+> Reading: even with a strong fixed VLM, a weaker reasoner can't drive
+> the scaffold — a clean reasoner-*quality* signal. It sits off the
+> Qwen3.5 9B↔4B size curve because it's a different generation, so keep
+> it as a separate quality point rather than a size step.
 
 ## Hypothesis / question
 
