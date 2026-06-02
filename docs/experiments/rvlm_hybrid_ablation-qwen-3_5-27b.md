@@ -36,6 +36,11 @@ uv run python evals.py \
 | t1 | `rvlm-hybrid-cmp-val-t1` | 40.00% | 32/80 | — | ties `rvlm` t1; science_poster 7/10, comics 1/10 |
 | t2 | `rvlm-hybrid-cmp-val-t2` | 38.75% | 31/80 | — | ties `rvlm` t2 exactly (38.75%) |
 | t3 | `rvlm-hybrid-cmp-val-t3` | 31.25% | 25/80 | — | low trial — breaks the t1/t2 lockstep with rvlm (rvlm t3 was 37.5%) |
+| t4 | `rvlm-hybrid-cmp-val-t4` | 32.50% | 26/80 | — | low again; stuck 24/25 ~3 ticks, finished after kill+resume |
+
+Per-category (t4): business_report 2/10, comics 1/10, engineering_drawing
+3/10, infographics 5/10, maps 3/10, science_paper 2/10, science_poster
+6/10, slide 4/10.
 
 Per-category (t1): business_report 5/10, comics 1/10, engineering_drawing
 4/10, infographics 6/10, maps 1/10, science_paper 3/10, science_poster
@@ -51,12 +56,13 @@ Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
 
 ## Summary
 
-n=3 so far (target n=8). t1 40.00%, t2 38.75%, t3 31.25% → running mean
-**36.67% ± 4.73pp**. t1/t2 tracked `rvlm` trial-for-trial but t3 diverged
-low (vs rvlm's 37.5%), so the "display channel is redundant" read is now
-softer — hybrid ≈ rvlm within noise but trending slightly *below*. n=8
-needed to settle whether the display channel is neutral or mildly
-harmful. Mean ± std at n=8.
+n=4 so far (target n=8): 40.00 / 38.75 / 31.25 / 32.50 → running mean
+**35.62% ± 4.39pp**. t1/t2 tracked `rvlm` exactly but t3/t4 both came in
+low (31–33%), so vs `rvlm` (39.38% ± 1.61pp, n=4) this is now **Δ +3.76pp**
+— the read has shifted from "display channel is redundant" toward
+"mildly **harmful**" (the extra image context may distract the agent).
+High variance (±4.4pp) means n=8 still needed to confirm, but the
+direction is no longer neutral. Mean ± std at n=8.
 
 ## Comparison
 
@@ -74,4 +80,4 @@ access is redundant.
 
 ## Status
 
-in progress (n=1 of 8)
+in progress (n=4 of 8)
