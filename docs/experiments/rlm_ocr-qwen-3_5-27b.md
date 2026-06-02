@@ -45,6 +45,8 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `ocr-only-cmp-val-t1` | 12.50% | 10/80 | — | engineering_drawing 0/10, maps 0/10 — OCR extracts nothing for figures/drawings |
+| t2 | `ocr-only-cmp-val-t2` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10 again |
+| t3 | `ocr-only-cmp-val-t3` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10 (third time) |
 
 (run_id prefix is `ocr-only-cmp-val-*`, kept distinct from `rvlm-ocr-cmp-val-*`
 to avoid one-letter confusion; solver is `rlm_ocr`.)
@@ -53,15 +55,25 @@ Per-category (t1): business_report 2/10, comics 1/10, engineering_drawing
 0/10, infographics 2/10, maps 0/10, science_paper 1/10, science_poster
 1/10, slide 3/10.
 
+Per-category (t2): business_report 2/10, comics 2/10, engineering_drawing
+0/10, infographics 2/10, maps 0/10, science_paper 1/10, science_poster
+1/10, slide 3/10.
+
+Per-category (t3): business_report 2/10, comics 1/10, engineering_drawing
+0/10, infographics 2/10, maps 0/10, science_paper 2/10, science_poster
+1/10, slide 3/10.
+
 ## Summary
 
-n=1 so far (target n=8). t1 **12.50%** — the OCR-text-only control lands
-**far below** the OCR-free visual method `rvlm` (38.75%): **Δ +26.25pp**.
-Also below the no-scaffold visual baselines `raw_vlm_multi` (20.83%) and
-`direct_vlm` (21.25%). Collapses to 0/10 on engineering_drawing and maps
-(OCR captures none of the figure/drawing content). Strong early support
-for the OCR-free framing — visual perception does work OCR text cannot
-replace. Mean ± std at n=8.
+n=3 so far (target n=8): 12.50 / 13.75 / 13.75 → running mean **13.33% ±
+0.72pp** — extremely tight. The OCR-text-only control lands **far below**
+the OCR-free visual method `rvlm` (38.75% ± 1.25pp): **Δ +25.42pp**. Also
+well below the no-scaffold visual baselines `raw_vlm_multi` (20.83%) and
+`direct_vlm` (21.25%) — and even below the competition `official` anchor
+(17.50%). **engineering_drawing and maps are 0/10 in all three trials**
+(OCR captures none of the figure/drawing content). Decisive support for
+the OCR-free framing: recursive visual perception does work OCR text
+cannot replace. Mean ± std at n=8.
 
 ## Comparison
 
@@ -80,4 +92,4 @@ slide) where OCR text is reliable.
 
 ## Status
 
-in progress (n=1 of 8)
+in progress (n=3 of 8)
