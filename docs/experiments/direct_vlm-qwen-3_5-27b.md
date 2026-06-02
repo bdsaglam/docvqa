@@ -35,14 +35,21 @@ uv run python evals.py \
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
 | t1 | `direct-vlm-cmp-val-t1` | 21.25% | 17/80 | ~4h+ | very slow (long-image contexts); recovered once at 24/25; business_report/comics/maps 0/10 |
+| t2 | `direct-vlm-cmp-val-t2` | 21.25% | 17/80 | — | identical to t1; comics/maps 0/10; recovered once at 23/25 |
 
 Per-category (t1): business_report 0/10, comics 0/10, engineering_drawing
 3/10, infographics 6/10, maps 0/10, science_paper 2/10, science_poster
 3/10, slide 3/10.
 
+Per-category (t2): business_report 1/10, comics 0/10, engineering_drawing
+3/10, infographics 6/10, maps 0/10, science_paper 2/10, science_poster
+2/10, slide 3/10.
+
 ## Summary
 
-n=1 so far (t2 running, t3 queued). Mean ± std at n=8.
+n=2 so far (target n=8). t1 21.25%, t2 21.25% — identical overall, very
+stable; collapses on comics/maps (0/10 both) like `raw_vlm_multi`. Mean ±
+std at n=8.
 
 ## Comparison
 
