@@ -48,6 +48,7 @@ uv run python evals.py \
 | t2 | `ocr-only-cmp-val-t2` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10 again |
 | t3 | `ocr-only-cmp-val-t3` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10 (third time) |
 | t4 | `ocr-only-cmp-val-t4` | 15.00% | 12/80 | — | engineering_drawing 0/10, maps 0/10 (fourth time); comics 3/10 |
+| t5 | `ocr-only-cmp-val-t5` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10, science_poster 0/10 (fifth time) |
 
 (run_id prefix is `ocr-only-cmp-val-*`, kept distinct from `rvlm-ocr-cmp-val-*`
 to avoid one-letter confusion; solver is `rlm_ocr`.)
@@ -66,13 +67,13 @@ Per-category (t3): business_report 2/10, comics 1/10, engineering_drawing
 
 ## Summary
 
-n=4 so far (target n=8): 12.50 / 13.75 / 13.75 / 15.00 → running mean
-**13.75% ± 1.02pp** — extremely tight. The OCR-text-only control lands
+n=5 so far (target n=8): 12.50 / 13.75 / 13.75 / 15.00 / 13.75 → running mean
+**13.75% ± 0.88pp** — extremely tight. The OCR-text-only control lands
 **far below** the OCR-free visual method `rvlm` (39.38% ± 1.61pp, n=4):
 **Δ +25.63pp**. Also well below the no-scaffold visual baselines
 `raw_vlm_multi` (20.31%) and `direct_vlm` (~21%) — and below the
 competition `official` anchor (17.50%). **engineering_drawing and maps
-are 0/10 in all four trials** (OCR captures none of the figure/drawing
+are 0/10 in all five trials** (OCR captures none of the figure/drawing
 content). Decisive support for the OCR-free framing: recursive visual
 perception does work OCR text cannot replace. Mean ± std at n=8.
 
@@ -93,4 +94,4 @@ slide) where OCR text is reliable.
 
 ## Status
 
-in progress (n=4 of 8)
+in progress (n=5 of 8)
