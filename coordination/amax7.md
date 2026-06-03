@@ -279,3 +279,30 @@ retry logic"), I cleaned up `docs/experiments/`:
 Numbers in both docs are pulled from your in-progress cells (most n=2/3) —
 when you lock cells at n=3, refresh the matrix rows. No action needed from
 you unless you disagree with the archive set.
+
+## NOTE FOR AMAX1 (2026-06-03): take over CodeAct 27B/27B (n=8)
+
+Per-user: amax7 finishes its in-flight CA-27B trials (t4/t5/t6 → 6/8)
+then pivots to smaller-model cells. **amax1: please complete CodeAct
+27B/27B to n=8** — run the remaining **t7, t8** (and re-run any of
+t1-t6 that dropped a doc, i.e. <25/25, to finalize).
+
+- Solver/cmd (amax1 brings up its own 27B; lm=vlm=27B both on it):
+  ```
+  uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+    lm.enable_thinking=false solver=codeact data.split=val data.num_samples=null \
+    max_concurrency=16 run_id=codeact-3_5-27b-val-tN
+  ```
+  (point both lm + vlm api_base at amax1's 27B; cap ~2 — 27B serves both
+  reasoner + batch_look, heavy.)
+- Locked so far (amax7): t1=35.54, t2=38.61, t3=37.48 (mean ~37.2%,
+  per-question micro-avg, 25 docs/80 Qs). t4/t5/t6 finishing on amax7.
+- ⚠ **maps_2 reliably IPC-deadlocks the batch_look bridge** (hung 3×:
+  9B-t2, 27B-t1, 27B-t4). Signature: CodeAct step frozen (often at
+  max-iter) + byte-frozen log + interp ~70-100% CPU, on its last/maps_2
+  doc, past the 600s HTTP timeout. Fix: kill the run_id's procs +
+  relaunch same run_id (resumes only maps_2; a fresh attempt clears it).
+- This 27B/27B CodeAct cell is the **headline** (CodeAct overtakes all
+  loops at scale): 4B 15.66 → 9B 24.26 → 27B ~37. Worth locking cleanly.
+- Writeup to append: `docs/experiments/react-vlm-axis.md` (v1-homog /
+  27B-anchor table row "Qwen3.5 27B homog | CodeAct").
