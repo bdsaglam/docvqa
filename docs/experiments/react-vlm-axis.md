@@ -24,7 +24,7 @@ micro-average.
 | Reasoner | RLM | ReAct | CodeAct |
 |---|---|---|---|
 | Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | **9.50% ± 1.44** (n=8) |
-| Qwen3.5 9B | 24.54% ± 5.30 | _queued (R2)_ | **24.26% ± 4.68** (n=8) |
+| Qwen3.5 9B | 24.54% ± 5.30 | **21.01% ± 4.63** (n=8) | **24.26% ± 4.68** (n=8) |
 | Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | **15.66% ± 3.00** (n=8) |
 
 ## Results — v1 homog (LLM = VLM) + 27B anchor
@@ -84,6 +84,18 @@ micro-average.
   models and catches RLM by 9B. One IPC-deadlock hang this cell
   (t5/slide_2, batch_look bridge) — killed+resumed (2nd of the CodeAct
   sweep, after t2/maps_2 at 9B).
+
+### 9B v2 ReAct (R2) — 2026-06-03
+- run_ids `react-9b-llm-27b-vlm-val-t{1..8}`.
+- per-trial: 24.31 / 21.64 / 22.80 / 19.10 / 15.44 / 22.00 / 28.45 / 14.34.
+- **mean 21.01% ± 4.63, n=8.**
+- **Loop rank-flip with scale (confirmed at n=8, 27B VLM):**
+  - 8B v2: **ReAct 15.79 > RLM 11.73 > CodeAct 9.50** (simplest loop wins for the weak reasoner; code-state loops drown it).
+  - 9B v2: **RLM 24.54 ≈ CodeAct 24.26 > ReAct 21.01** (RLM/CodeAct overtake ReAct once the reasoner can exploit code+state).
+  - 27B: CodeAct ~35.6 pulls clear of the field.
+  Narrative: ReAct is the floor-raiser for weak reasoners; CodeAct is
+  the ceiling-raiser for strong ones; RLM tracks CodeAct but plateaus.
+  Supports an append-only-code FT target *given* a capable base model.
 
 ## Status
 
