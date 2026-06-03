@@ -84,7 +84,36 @@ served one-shot instead of via the recursive sub-call (`raw_vlm_multi`,
 on top of the OCR-free sub-call buys ≈ 0 → supports the OCR-free
 recursive-perception framing.
 
-## Model-size / VLM-quality axis (prediction 1)
+### Efficiency — agent iterations per question (n=8, val)
+
+Trajectory length (= code/observation steps the agent takes) per
+question, aggregated over all 8 trials. `%@cap` = fraction of questions
+that hit the iteration cap (a churn signal). Reproduce with
+`python scripts/iter_stats.py '<run_id_glob>'`.
+
+| Solver | avg iters/Q | median | %@cap |
+|---|---|---|---|
+| `rvlm` | 13.0 | 11 | 1% |
+| `rvlm_ocr_ablation` | 12.0 | 10 | 1% |
+| `rvlm_hybrid_ablation` | 18.1 | 16 | 7% |
+| `react_baseline` | 5.1 | 4 | 0% |
+| `direct_vlm` | 30.4 | 40 | 59% |
+| `rlm_ocr` | 11.4 | 9 | 2% |
+| `raw_vlm_multi_baseline` | — (single-shot) | — | — |
+| `official_baseline` | 1.0 | 1 | 100% |
+
+Efficiency tracks the accuracy story:
+- **`rvlm` is efficient and accurate** — ~13 steps/Q, ~never hits the cap.
+- **The display channel makes `rvlm_hybrid` churn** — 18.1 steps/Q (+40%
+  vs `rvlm`) for a *lower* score: the extra image context destabilizes
+  the agent rather than helping (consistent with its 3× variance).
+- **`direct_vlm` is pathologically inefficient** — 30.4 steps/Q, **median
+  = the cap (40)**, 59% of questions pin the cap. Pixels-in-own-context
+  forces the agent to grind without converging — this is why it is the
+  run-time bottleneck (each trial dies/resumes 5–9×), and it still scores
+  in the no-recursion tier.
+- **`react` is shallow** — 5.1 steps/Q: without a REPL it can't compose
+  multi-step perception, so it terminates early *and* scores low.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
 val, current code. Detail:
