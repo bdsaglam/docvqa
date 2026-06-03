@@ -40,6 +40,7 @@ uv run python evals.py \
 | t5 | `rvlm-hybrid-cmp-val-t5` | 38.75% | 31/80 | — | back up; science_poster 7/10, slide 6/10, maps 0/10 |
 | t6 | `rvlm-hybrid-cmp-val-t6` | 37.50% | 30/80 | — | engineering_drawing 6/10, science_poster 5/10, maps 0/10 |
 | t7 | `rvlm-hybrid-cmp-val-t7` | 27.50% | 22/80 | — | lowest trial; infographics 3/10, maps 0/10 |
+| t8 | `rvlm-hybrid-cmp-val-t8` | 37.50% | 30/80 | — | science_poster 6/10, infographics 6/10, comics 1/10 |
 
 Per-category (t5): business_report 3/10, comics 2/10, engineering_drawing
 5/10, infographics 6/10, maps 0/10, science_paper 2/10, science_poster
@@ -63,13 +64,13 @@ Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
 
 ## Summary
 
-n=7 so far (target n=8): 40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 / 27.50 → running mean
-**35.18% ± 4.76pp**. Bounces between ties-with-rvlm (40/38.75/38.75) and
-low (31/32.5); vs `rvlm` (39.46% ± 1.59pp, n=7) this is now **Δ +4.28pp**
-— the read has shifted from "display channel is redundant" toward
-"mildly **harmful**" (the extra image context may distract the agent).
-High variance (±4.4pp) means n=8 still needed to confirm, but the
-direction is no longer neutral. Mean ± std at n=8.
+**n=8 COMPLETE: 35.47% ± 4.48pp** (40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 / 27.50 / 37.50).
+Bounces between ties-with-rvlm (40/38.75/38.75/37.5) and low (27.5/31/32.5);
+vs `rvlm` (39.38% ± 1.49pp) → **Δ +3.91pp**. **Verdict:** adding a direct
+`display()` image channel on top of the recursive VLM sub-call is **mildly
+harmful** — it never beats `rvlm` and the extra image context appears to
+distract the agent on a meaningful fraction of trials. High variance
+(±4.5pp, 3× rvlm's) is itself evidence the channel destabilizes the agent.
 
 ## Comparison
 
@@ -87,4 +88,4 @@ access is redundant.
 
 ## Status
 
-in progress (n=7 of 8)
+complete (n=8 of 8)
