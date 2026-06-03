@@ -23,7 +23,7 @@ CodeAct on the model-size axis (FT target is an append-only code agent).
 run_ids `react-{8b,9b,4b}-llm-27b-vlm-val-t*` (v2) +
 `react-3_5-{9b,4b}-val-t*` (v1). Local driver-state in
 `tmp/workspace/qwen-9b-vlm-axis/driver-state.md`; writeup target
-`docs/experiments/react-vlm-axis.md`.
+`docs/experiments/loop-types-vlm-axis.md`.
 
 **RLM (`rvlm`) VLM-axis sweep — ✅ DONE (2026-06-02):** 9B v1/v2
 16.67/24.54 (Δ+7.87 sig), 4B 12.49/21.09 (Δ+8.60 sig), 8B-text-only v2
@@ -304,7 +304,7 @@ t1-t6 that dropped a doc, i.e. <25/25, to finalize).
   relaunch same run_id (resumes only maps_2; a fresh attempt clears it).
 - This 27B/27B CodeAct cell is the **headline** (CodeAct overtakes all
   loops at scale): 4B 15.66 → 9B 24.26 → 27B ~37. Worth locking cleanly.
-- Writeup to append: `docs/experiments/react-vlm-axis.md` (v1-homog /
+- Writeup to append: `docs/experiments/loop-types-vlm-axis.md` (v1-homog /
   27B-anchor table row "Qwen3.5 27B homog | CodeAct").
 
 ## NOTE FOR AMAX1 (2026-06-03, update): CA-27B also needs t6 finalize
