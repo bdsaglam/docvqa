@@ -43,13 +43,27 @@ uv run python evals.py \
 
 | Budget (max_iterations) | run_id | Score | Correct | Notes |
 |---|---|---|---|---|
-| 24 | `codeact-b24-val-t1` | 37.50% | 30/80 | low budget (≈ rvlm's 25); business_report 6/10, infographics 7/10, maps 0/10 |
-| 40 | `codeact-b40-val-t1` | — | — | (running) |
-| 56 | `codeact-b56-val-t1` | — | — | (running) |
+| 24 | `codeact-b24-val-t1` | 37.50% | 30/80 | low budget (≈ rvlm's 25); business_report 6/10, infographics 7/10 |
+| 40 | `codeact-b40-val-t1` | 33.75% | 27/80 | default; lowest pilot (likely noise — comics 3, eng_drawing 3, slide 3) |
+| 56 | `codeact-b56-val-t1` | 40.00% | 32/80 | high budget; best pilot (comics 4, science_paper 4, slide 5) |
 
 Per-category (b24): business_report 6/10, comics 4/10, engineering_drawing
 3/10, infographics 7/10, maps 0/10, science_paper 2/10, science_poster
 3/10, slide 5/10.
+
+Per-category (b56): business_report 5/10, comics 4/10, engineering_drawing
+4/10, infographics 6/10, maps 0/10, science_paper 4/10, science_poster
+4/10, slide 5/10.
+
+**Read:** 37.5 / 33.75 / 40.0 — a 6.25pp spread that is **non-monotonic**
+(default-40 is the *worst*), i.e. n=1 noise (~3–5pp/trial) dominates and
+budget is not a strong lever in [24, 56]. All three sit in the
+visual-recursive tier (≈ rvlm 39.4 / rvlm_ocr 37.8): **append-only
+CodeAct does not need extra budget and does not lose accuracy vs the
+compacted rvlm.** Top two (b56 40.0, b24 37.5) are 2.5pp apart — within
+noise — so the n=8 budget pick is essentially free; leaning b56 (most
+headroom for the append-only context; scored best) pending the human's
+call.
 
 ## Per-trial table (n=8 at chosen budget)
 
@@ -74,4 +88,4 @@ nearly free; a large gap means compaction is doing real work.
 
 ## Status
 
-budget sweep (n=1 pilots; b24 done = 37.5%)
+budget sweep complete (n=1: b24 37.5 / b40 33.75 / b56 40.0); awaiting budget pick for n=8
