@@ -39,6 +39,7 @@ uv run python evals.py \
 | t5 | `rvlm-ocr-cmp-val-t5` | 43.75% | 35/80 | — | best trial; business_report 6/10, engineering_drawing 6/10, maps 0/10 |
 | t6 | `rvlm-ocr-cmp-val-t6` | 40.00% | 32/80 | — | business_report 6/10, infographics 7/10, maps 0/10 |
 | t7 | `rvlm-ocr-cmp-val-t7` | 36.25% | 29/80 | — | engineering_drawing 5/10, infographics 6/10, maps 0/10 |
+| t8 | `rvlm-ocr-cmp-val-t8` | 36.25% | 29/80 | — | comics 4/10, slide 6/10, maps 0/10 |
 
 Per-category (t6): business_report 6/10, comics 3/10, engineering_drawing
 3/10, infographics 7/10, maps 0/10, science_paper 3/10, science_poster
@@ -66,10 +67,10 @@ Per-category (t3): business_report 7/10, comics 3/10, engineering_drawing
 
 ## Summary
 
-**n=7 so far (target n=8): 38.04% ± 3.30pp** (36.25 / 35.00 / 40.00 / 35.00 / 43.75 / 40.00 / 36.25).
-vs `rvlm` (38.75% ± 1.25pp, n=3) → **Δ +2.19pp** — OCR adds nothing over
-the OCR-free method, consistently trending slightly below. maps volatile
-(0/0/3/1).
+**n=8 COMPLETE: 37.81% ± 3.12pp** (36.25 / 35.00 / 40.00 / 35.00 / 43.75 / 40.00 / 36.25 / 36.25).
+vs `rvlm` (39.46% ± 1.59pp, n=7) → **Δ +1.65pp** — OCR adds nothing over
+the OCR-free method, consistently trending slightly below (paired Δ
+finalizes once rvlm hits n=8). maps near-always 0 (one trial hit 3/10).
 
 ## Comparison
 
@@ -82,4 +83,4 @@ once both reach n=3.
 
 ## Status
 
-in progress (n=7 of 8)
+complete (n=8 of 8)
