@@ -11,8 +11,9 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > prompt scrub and retry-logic change moved them; their writeups are in
 > [`archive/experiments/`](../archive/experiments/) and
 > [`archive/docs/results.md`](../archive/docs/results.md). Do not cite
-> archived numbers as current. The 7-solver Qwen-27B re-run below is
-> **in progress** (n=3 target; most cells n=2); numbers lock at n=3.
+> archived numbers as current. The 8-solver Qwen-27B re-run below is
+> **complete at n=8** (val, 2026-06-03). A 9th solver (`codeact`) is
+> being added — its budget is being tuned before its n=8 run.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
@@ -23,34 +24,58 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 | Gemini 3 Flash | 33.75% | 33.75% |
 | GPT-5 Mini | — | 22.50% |
 
-## Method vs baselines — Qwen 3.5 27B, val (current code, in progress)
+## Method vs baselines — Qwen 3.5 27B, val (current code, **n=8 complete**)
 
-7-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
-local vllm :8927, n=3 target). All Δ measured vs the `rvlm` reference.
+8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
+local vllm :8927, **n=8**). Mean ± std over 8 trials; Δ vs the `rvlm`
+reference (difference of means).
 
-| Solver | Role | Val (current) | n | Status |
+| Group | Solver | Role | Val (n=8) | Δ vs `rvlm` |
 |---|---|---|---|---|
-| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **~39.4%** (40.00, 38.75) | 2/3 | reference |
-| `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | ~39.4% (40.00, 38.75) | 2/3 | Δ ≈ 0 (redundant) |
-| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | **37.08% ± 2.60** | 3/3 ✓ | Δ ≈ −2 (OCR adds nothing) |
-| `direct_vlm` | `display()` pages into own context, no sub-call | 21.25% | 1/3 | sub-call ≈ +18.75pp |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | ~20.6% (18.75, 22.50) | 2/3 | scaffold floor |
-| `react_baseline` | perception, no REPL | ~23.8% (17.50, 30.00) | 2/3 | high variance |
-| `rlm_ocr` | RLM + OCR text, no vision | — | 0/3 | queued |
-| `official_baseline` | competition `MASTER_PROMPT`, no scaffold | — | 0/3 | queued (prior kit-faithful 21.67% ± 1.91) |
+| **proposed** | **`rvlm`** | REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — |
+| ablation | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | 37.81% ± 3.12 | −1.56pp |
+| ablation | `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | 35.47% ± 4.48 | −3.91pp |
+| baseline | `react_baseline` | perception (VLM tools), **no REPL** | 25.16% ± 4.60 | −14.22pp |
+| baseline | `direct_vlm` | `display()` pages into own context, no sub-call | 22.34% ± 2.79 | −17.03pp |
+| baseline | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.47% ± 1.63 | −18.91pp |
+| anchor | `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 17.81% ± 1.86 | −21.56pp |
+| **control** | **`rlm_ocr`** | RLM + OCR text, **no vision** (perception modality swap) | **13.91% ± 1.56** | **−25.47pp** |
 
 Detail: `docs/experiments/{solver}-qwen-3_5-27b.md` for each row.
+`official_baseline` is an external anchor (competition kit prompt +
+`max_pages=10` downscale; the strict kit-faithful config is 21.67% ±
+1.91). `direct_vlm`'s n=8 required ~7 resumes — `comics_3`/`comics_4`
+(dense multi-panel comics) crash its long-image in-context display and
+only clear stochastically.
+
+**Headlines (all hold at n=8):**
+1. **Three clean tiers, every gap ≫ the std:** visual-recursive
+   (`rvlm`/`rvlm_ocr`/`rvlm_hybrid`, 35–39%) ≫ no-recursion
+   (`react`/`direct_vlm`/`raw_vlm_multi`, 20–25%) ≫ OCR-only floor
+   (`rlm_ocr`, 14%).
+2. **OCR-free is decisive (the headline control):** `rlm_ocr` — same
+   LeanRLM scaffold as `rvlm` with visual perception swapped for OCR
+   text — is the matrix floor, **−25.5pp** below `rvlm`, with
+   engineering_drawing & maps 0/10 in **all 8 trials**. Recursive
+   *visual* perception does work OCR text cannot replace.
+3. **OCR adds nothing on top of vision** (`rvlm_ocr` −1.6pp); the
+   **direct display channel is mildly harmful** (`rvlm_hybrid` −3.9pp,
+   3× the variance — it destabilizes the agent).
+4. **Parity prompt is honest:** the competition `official` prompt sits
+   *below* our minimized-prompt `raw_vlm_multi` (17.8 vs 20.5) — our
+   prompt scrub is not sandbagging the baselines.
 
 ## Active-perception mechanism (prediction 3)
 
 The matrix above triangulates the mechanism — both halves of the scaffold
 are load-bearing and the recursive sub-call is the active ingredient:
 
-| Component dropped | Solver | vs `rvlm` (~39.4%) | Reading |
+| Component dropped | Solver | vs `rvlm` (39.38%) | Reading |
 |---|---|---|---|
-| Recursive sub-call | `raw_vlm_multi_baseline` (~20.6%) | **≈ +21pp** | recursive agent↔VLM dominates one-shot multi-image |
-| The REPL | `react_baseline` (~23.8%) | **≈ +16pp** | code REPL is load-bearing (crop/arith/compose) |
-| Sub-call (kept pixels) | `direct_vlm` (21.25%) | **≈ +18pp** | raw pixels in-context ≠ a focused VLM sub-call |
+| Recursive sub-call | `raw_vlm_multi_baseline` (20.47%) | **+18.9pp** | recursive agent↔VLM dominates one-shot multi-image |
+| The REPL | `react_baseline` (25.16%) | **+14.2pp** | code REPL is load-bearing (crop/arith/compose) |
+| Sub-call (kept pixels) | `direct_vlm` (22.34%) | **+17.0pp** | raw pixels in-context ≠ a focused VLM sub-call |
+| All perception (OCR-only) | `rlm_ocr` (13.91%) | **+25.5pp** | swapping visual perception for OCR text collapses the score |
 
 Dropping either half of the scaffold collapses the score: perception
 served one-shot instead of via the recursive sub-call (`raw_vlm_multi`,
