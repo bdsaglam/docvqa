@@ -1,0 +1,77 @@
+# codeact — Qwen 3.5 27B (val)
+
+## Hypothesis / question
+
+`codeact` is `rvlm`'s twin — **identical tools, names, and prompt body**
+(recursive VLM perception via `batch_look` in a Python REPL) — with one
+change: a **strictly append-only** transcript. Every `(reasoning, code,
+stdout)` step is appended and shown in full next step; there is no
+variable sidecar and no `RESET_HISTORY` compaction. The agent's
+observation is its complete history — a clean, fully-observable
+trajectory (MDP, not the POMDP that `rvlm`'s LeanRLM compaction creates).
+This is the property we want for an **RL fine-tuning target**.
+
+Question: does removing compaction (append-only MDP) cost accuracy vs
+`rvlm`'s managed/compacted context, and what iteration budget does the
+append-only agent need?
+
+## Setup
+
+- Solver: `codeact` (append-only CodeAct loop; rvlm's tools/prompt/`batch_look`)
+- Model: Qwen 3.5 27B local vllm 8927 (lm + vlm), `enable_thinking=false`
+- Profile: DocVQA-2026 (default)
+- max_concurrency: 8
+- **Budget knob:** `solver.max_iterations` (default 40 vs rvlm's 25 — the
+  append-only context grows with no compaction, so the agent gets more
+  steps before the extract fallback fires). Effective budget =
+  max_iterations + page_bonus (same as rvlm).
+- Added 2026-06-03 (user request); budget sweep first, then n=8.
+
+## Command
+
+```bash
+uv run python evals.py \
+  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false \
+  solver=codeact solver.max_iterations=<B> \
+  data.split=val data.num_samples=null \
+  max_concurrency=8 \
+  run_id=codeact-b<B>-val-tN
+```
+
+## Budget sweep (n=1 pilots)
+
+| Budget (max_iterations) | run_id | Score | Correct | Notes |
+|---|---|---|---|---|
+| 24 | `codeact-b24-val-t1` | 37.50% | 30/80 | low budget (≈ rvlm's 25); business_report 6/10, infographics 7/10, maps 0/10 |
+| 40 | `codeact-b40-val-t1` | — | — | (running) |
+| 56 | `codeact-b56-val-t1` | — | — | (running) |
+
+Per-category (b24): business_report 6/10, comics 4/10, engineering_drawing
+3/10, infographics 7/10, maps 0/10, science_paper 2/10, science_poster
+3/10, slide 5/10.
+
+## Per-trial table (n=8 at chosen budget)
+
+| Trial | run_id | Score | Correct | Wall | Notes |
+|---|---|---|---|---|---|
+| — | (pending budget pick) | — | — | — | — |
+
+## Summary
+
+Budget sweep in progress (b40, b56 pending). Early read: **b24 = 37.5%**
+— even at the low rvlm-like budget, append-only CodeAct is in the
+visual-recursive tier (≈ `rvlm` 39.4 / `rvlm_ocr` 37.8), i.e. dropping
+compaction does **not** collapse accuracy. Final budget pick + n=8 mean
+± std pending the other two pilots.
+
+## Comparison
+
+vs `rvlm` (39.38% ± 1.49pp, n=8) — same scaffold/tools, the only
+difference is append-only (MDP) vs compacted (POMDP) context. A small or
+zero gap means the append-only trajectory (the RL-friendly form) is
+nearly free; a large gap means compaction is doing real work.
+
+## Status
+
+budget sweep (n=1 pilots; b24 done = 37.5%)
