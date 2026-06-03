@@ -37,6 +37,7 @@ uv run python evals.py \
 | t4 | `raw-vlm-multi-cmp-val-t4` | 18.75% | 15/80 | — | business_report 0/10, comics 0/10 (fourth time) |
 | t5 | `raw-vlm-multi-cmp-val-t5` | 21.25% | 17/80 | — | business_report 0/10, comics 0/10 (fifth time) |
 | t6 | `raw-vlm-multi-cmp-val-t6` | 18.75% | 15/80 | — | business_report 0/10, comics 0/10 (sixth time) |
+| t7 | `raw-vlm-multi-cmp-val-t7` | 20.00% | 16/80 | — | business_report 0/10, comics 0/10 (seventh time) |
 
 Per-category (t5): business_report 0/10, comics 0/10, engineering_drawing
 3/10, infographics 4/10, maps 1/10, science_paper 3/10, science_poster
@@ -60,8 +61,8 @@ Per-category (t3): business_report 0/10, comics 0/10, engineering_drawing
 
 ## Summary
 
-**n=6 so far (target n=8): 20.21% ± 1.66pp** (18.75 / 22.50 / 21.25 / 18.75 / 21.25 / 18.75).
-business_report and comics are **0/10 in all six trials** — a single
+**n=7 so far (target n=8): 20.18% ± 1.52pp** (18.75 / 22.50 / 21.25 / 18.75 / 21.25 / 18.75 / 20.00).
+business_report and comics are **0/10 in all seven trials** — a single
 multi-image read cannot resolve their fine print, the exact failure the
 recursive scaffold targets.
 
@@ -78,4 +79,4 @@ categories (business_report, comics near-zero here vs rvlm's 4-6/10).
 
 ## Status
 
-in progress (n=6 of 8)
+in progress (n=7 of 8)
