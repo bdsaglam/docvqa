@@ -24,7 +24,7 @@ micro-average.
 | Reasoner | RLM | ReAct | CodeAct |
 |---|---|---|---|
 | Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | **9.50% ± 1.44** (n=8) |
-| Qwen3.5 9B | 24.54% ± 5.30 | _queued (R2)_ | _queued (CA-9Bv2)_ |
+| Qwen3.5 9B | 24.54% ± 5.30 | _queued (R2)_ | **24.26% ± 4.68** (n=8) |
 | Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | _queued (CA-4Bv2)_ |
 
 ## Results — v1 homog (LLM = VLM) + 27B anchor
@@ -59,6 +59,20 @@ micro-average.
   only pay off with a stronger reasoner; the 9B and 27B CodeAct cells
   test whether it crosses over. Also: CA-8Bv2 needed 5 finalize-gap
   resumes (heaviest docs error under CodeAct+8B), more than RLM/ReAct.
+
+### 9B v2 CodeAct (CA-9Bv2) — 2026-06-03
+- run_ids `codeact-9b-llm-27b-vlm-val-t{1..8}`.
+- per-trial: 22.74 / 25.08 / 19.84 / 33.38 / 17.73 / 26.07 / 25.51 / 23.78.
+- **mean 24.26% ± 4.68, n=8.**
+- **CodeAct crossover (vs RLM, same VLM):** 8B v2 = 9.50 (worst of 3
+  loops) → 9B v2 = 24.26, **statistically tied with 9B RLM (24.54 ±
+  5.30)**. CodeAct's accuracy scales much harder with reasoner
+  capability than ReAct or RLM — exactly what the append-only-code FT
+  design needs (a weak reasoner drowns in the growing context; a
+  capable one exploits the code expressivity). The 27B/27B CodeAct cell
+  (CA-27B) tests whether it overtakes at the top. One IPC-deadlock hang
+  this cell (t2/maps_2, batch_look bridge frozen 30min past the HTTP
+  timeout) — killed+resumed; first such hang in the CodeAct sweep.
 
 ## Status
 
