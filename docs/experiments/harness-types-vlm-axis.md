@@ -31,7 +31,7 @@ micro-average.
 
 | Config | RLM | ReAct | CodeAct |
 |---|---|---|---|
-| Qwen3.5 9B homog | 16.67% ± 3.40 | _queued (R4)_ | _queued (CA-9Bv1)_ |
+| Qwen3.5 9B homog | 16.67% ± 3.40 | _running (R4)_ | **19.35% ± 4.24** (n=8) |
 | Qwen3.5 4B homog | 12.49% ± 3.74 | _queued (R5)_ | _queued (CA-4Bv1)_ |
 | Qwen3.5 27B homog | — | ~23.8% (n=4, see `react_baseline-qwen-3_5-27b.md`) | _queued (CA-27B)_ |
 
