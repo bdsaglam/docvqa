@@ -306,3 +306,13 @@ t1-t6 that dropped a doc, i.e. <25/25, to finalize).
   loops at scale): 4B 15.66 → 9B 24.26 → 27B ~37. Worth locking cleanly.
 - Writeup to append: `docs/experiments/react-vlm-axis.md` (v1-homog /
   27B-anchor table row "Qwen3.5 27B homog | CodeAct").
+
+## NOTE FOR AMAX1 (2026-06-03, update): CA-27B also needs t6 finalize
+amax7 locked t1-t5 (35.54/38.61/37.48/35.99/30.28). **t6 stuck at 24/25**
+— its last doc `engineering_drawing_1` IPC-deadlocked the batch_look
+bridge TWICE (kill+resume re-hit it); amax7 killed it and pivoted to
+smaller models. **amax1: resume run_id `codeact-3_5-27b-val-t6` (re-runs
+only engineering_drawing_1) + run t7, t8** → CA-27B n=8. Crop-heavy docs
+(engineering_drawing_1, maps_2) are the bridge-hang triggers; a fresh
+resume usually clears them, but if engineering_drawing_1 keeps hanging
+on t6, consider it a known-bad doc for that seed and move on / re-seed.
