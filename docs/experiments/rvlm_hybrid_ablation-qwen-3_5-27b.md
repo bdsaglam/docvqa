@@ -39,6 +39,7 @@ uv run python evals.py \
 | t4 | `rvlm-hybrid-cmp-val-t4` | 32.50% | 26/80 | — | low again; stuck 24/25 ~3 ticks, finished after kill+resume |
 | t5 | `rvlm-hybrid-cmp-val-t5` | 38.75% | 31/80 | — | back up; science_poster 7/10, slide 6/10, maps 0/10 |
 | t6 | `rvlm-hybrid-cmp-val-t6` | 37.50% | 30/80 | — | engineering_drawing 6/10, science_poster 5/10, maps 0/10 |
+| t7 | `rvlm-hybrid-cmp-val-t7` | 27.50% | 22/80 | — | lowest trial; infographics 3/10, maps 0/10 |
 
 Per-category (t5): business_report 3/10, comics 2/10, engineering_drawing
 5/10, infographics 6/10, maps 0/10, science_paper 2/10, science_poster
@@ -62,9 +63,9 @@ Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
 
 ## Summary
 
-n=6 so far (target n=8): 40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 → running mean
-**36.46% ± 3.66pp**. Bounces between ties-with-rvlm (40/38.75/38.75) and
-low (31/32.5); vs `rvlm` (39.79% ± 1.46pp, n=6) this is now **Δ +3.33pp**
+n=7 so far (target n=8): 40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 / 27.50 → running mean
+**35.18% ± 4.76pp**. Bounces between ties-with-rvlm (40/38.75/38.75) and
+low (31/32.5); vs `rvlm` (39.46% ± 1.59pp, n=7) this is now **Δ +4.28pp**
 — the read has shifted from "display channel is redundant" toward
 "mildly **harmful**" (the extra image context may distract the agent).
 High variance (±4.4pp) means n=8 still needed to confirm, but the
@@ -86,4 +87,4 @@ access is redundant.
 
 ## Status
 
-in progress (n=6 of 8)
+in progress (n=7 of 8)
