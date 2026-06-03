@@ -83,11 +83,25 @@ noise — so the n=8 budget pick is essentially free; leaning b56 (most
 headroom for the append-only context; scored best) pending the human's
 call.
 
-## Per-trial table (n=8 at chosen budget)
+## n=8 per budget (in progress — running all 3 budgets, the pilots are t1/t2)
 
-| Trial | run_id | Score | Correct | Wall | Notes |
-|---|---|---|---|---|---|
-| — | (pending budget pick) | — | — | — | — |
+Given the high trial variance, all three budgets are taken to n=8 so
+"budget" is a proper axis with error bars rather than a single noisy pick.
+
+**budget 24** (`codeact-b24-val-t*`)
+| t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
+|---|---|---|---|---|---|---|---|
+| 37.50 | 43.75 | 40.00 | — | — | — | — | — |
+
+**budget 40** (`codeact-b40-val-t*`)
+| t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
+|---|---|---|---|---|---|---|---|
+| 33.75 | (run) | 40.00 | — | — | — | — | — |
+
+**budget 56** (`codeact-b56-val-t*`)
+| t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
+|---|---|---|---|---|---|---|---|
+| 40.00 | 33.75 | — | — | — | — | — | — |
 
 ## Summary
 
