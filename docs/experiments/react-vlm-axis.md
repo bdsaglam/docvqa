@@ -25,7 +25,7 @@ micro-average.
 |---|---|---|---|
 | Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | **9.50% ± 1.44** (n=8) |
 | Qwen3.5 9B | 24.54% ± 5.30 | _queued (R2)_ | **24.26% ± 4.68** (n=8) |
-| Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | _queued (CA-4Bv2)_ |
+| Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | **15.66% ± 3.00** (n=8) |
 
 ## Results — v1 homog (LLM = VLM) + 27B anchor
 
@@ -73,6 +73,17 @@ micro-average.
   (CA-27B) tests whether it overtakes at the top. One IPC-deadlock hang
   this cell (t2/maps_2, batch_look bridge frozen 30min past the HTTP
   timeout) — killed+resumed; first such hang in the CodeAct sweep.
+
+### 4B v2 CodeAct (CA-4Bv2) — 2026-06-03
+- run_ids `codeact-4b-llm-27b-vlm-val-t{1..8}`.
+- per-trial: 13.40 / 14.84 / 19.53 / 14.38 / 14.10 / 20.31 / 16.90 / 11.80.
+- **mean 15.66% ± 3.00, n=8** (vs 4B RLM 21.09 → CodeAct −5.4pp).
+- **CodeAct reasoner-scaling slope (Qwen3.5, clean):** 4B 15.66 → 9B
+  24.26 = **+8.6pp**, vs RLM 4B 21.09 → 9B 24.54 = +3.5pp. CodeAct
+  benefits ~2.5× more from reasoner scale — it starts behind small
+  models and catches RLM by 9B. One IPC-deadlock hang this cell
+  (t5/slide_2, batch_look bridge) — killed+resumed (2nd of the CodeAct
+  sweep, after t2/maps_2 at 9B).
 
 ## Status
 
