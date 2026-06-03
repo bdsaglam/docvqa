@@ -91,16 +91,20 @@ question, aggregated over all 8 trials. `%@cap` = fraction of questions
 that hit the iteration cap (a churn signal). Reproduce with
 `python scripts/iter_stats.py '<run_id_glob>'`.
 
-| Solver | avg iters/Q | median | %@cap |
-|---|---|---|---|
-| `rvlm` | 13.0 | 11 | 1% |
-| `rvlm_ocr_ablation` | 12.0 | 10 | 1% |
-| `rvlm_hybrid_ablation` | 18.1 | 16 | 7% |
-| `react_baseline` | 5.1 | 4 | 0% |
-| `direct_vlm` | 30.4 | 40 | 59% |
-| `rlm_ocr` | 11.4 | 9 | 2% |
-| `raw_vlm_multi_baseline` | — (single-shot) | — | — |
-| `official_baseline` | 1.0 | 1 | 100% |
+`budget` = configured `solver.max_iterations`; the effective per-question
+cap is `budget` + a page-bonus (up to +10 on long docs), so observed
+iterations can exceed the budget.
+
+| Solver | budget | avg iters/Q | median | %@cap |
+|---|---|---|---|---|
+| `rvlm` | 25 | 13.0 | 11 | 1% |
+| `rvlm_ocr_ablation` | 25 | 12.0 | 10 | 1% |
+| `rvlm_hybrid_ablation` | 25 | 18.1 | 16 | 7% |
+| `react_baseline` | 25 | 5.1 | 4 | 0% |
+| `direct_vlm` | 40 | 30.4 | 40 | 59% |
+| `rlm_ocr` | 25 | 11.4 | 9 | 2% |
+| `raw_vlm_multi_baseline` | — | — (single-shot) | — | — |
+| `official_baseline` | — | 1.0 | 1 | 100% |
 
 Efficiency tracks the accuracy story:
 - **`rvlm` is efficient and accurate** — ~13 steps/Q, ~never hits the cap.

@@ -29,6 +29,19 @@ from pathlib import Path
 
 RUNS_DIR = Path("output/runs")
 ITER_PAT = re.compile(r"Trajectory \((\d+) iterations\)")
+BUDGET_PAT = re.compile(r"^\s*max_iterations:\s*(\d+)", re.MULTILINE)
+
+
+def _budget_for_run(run_dir: Path) -> str:
+    """Configured `solver.max_iterations` from the run's resolved config.yaml.
+    The effective per-question cap is this budget + a page-bonus (up to +10
+    for long docs), so the observed `max` column can exceed `budget`."""
+    cfg = run_dir / "config.yaml"
+    if cfg.is_file():
+        m = BUDGET_PAT.search(cfg.read_text())
+        if m:
+            return m.group(1)
+    return "—"
 
 
 def _run_dirs(arg: str) -> list[Path]:
@@ -49,8 +62,8 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 1
 
-    hdr = (f"{'run_id':<30}{'Qs':>5}{'mean':>7}{'med':>5}{'std':>6}"
-           f"{'max':>5}{'%@cap':>7}")
+    hdr = (f"{'run_id':<30}{'budget':>7}{'Qs':>5}{'mean':>7}{'med':>5}"
+           f"{'std':>6}{'max':>5}{'%@cap':>7}")
     print(hdr)
     print("-" * len(hdr))
 
@@ -62,15 +75,17 @@ def main(argv: list[str]) -> int:
             continue
         for rd in run_dirs:
             matched_any = True
+            budget = _budget_for_run(rd)
             v = _iters_for_run(rd)
             if not v:
-                print(f"{rd.name:<30}{0:>5}{'n/a (single-shot / no trajectory)':>40}")
+                print(f"{rd.name:<30}{budget:>7}{0:>5}"
+                      f"{'n/a (single-shot / no trajectory)':>40}")
                 continue
             cap = max(v)  # per-run cap = max observed (iteration budget + page bonus)
             at_cap = 100.0 * sum(1 for x in v if x >= cap) / len(v)
             sd = st.stdev(v) if len(v) > 1 else 0.0
-            print(f"{rd.name:<30}{len(v):>5}{st.mean(v):>7.1f}{st.median(v):>5.0f}"
-                  f"{sd:>6.1f}{cap:>5}{at_cap:>6.0f}%")
+            print(f"{rd.name:<30}{budget:>7}{len(v):>5}{st.mean(v):>7.1f}"
+                  f"{st.median(v):>5.0f}{sd:>6.1f}{cap:>5}{at_cap:>6.0f}%")
     return 0 if matched_any else 2
 
 
