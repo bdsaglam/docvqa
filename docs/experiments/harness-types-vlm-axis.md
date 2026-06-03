@@ -25,7 +25,7 @@ micro-average.
 |---|---|---|---|
 | Qwen3 8B (text-only) | 11.73% ± 2.96 | **15.79% ± 2.03** (n=8) | **9.50% ± 1.44** (n=8) |
 | Qwen3.5 9B | 24.54% ± 5.30 | **21.01% ± 4.63** (n=8) | **24.26% ± 4.68** (n=8) |
-| Qwen3.5 4B | 21.09% ± 3.16 | _queued (R3)_ | **15.66% ± 3.00** (n=8) |
+| Qwen3.5 4B | 21.09% ± 3.16 | **15.66% ± 4.73** (n=8) | **15.66% ± 3.00** (n=8) |
 
 ## Results — v1 homog (LLM = VLM) + 27B anchor
 
@@ -96,6 +96,31 @@ micro-average.
   Narrative: ReAct is the floor-raiser for weak reasoners; CodeAct is
   the ceiling-raiser for strong ones; RLM tracks CodeAct but plateaus.
   Supports an append-only-code FT target *given* a capable base model.
+
+### 4B v2 ReAct (R3) — 2026-06-03
+- run_ids `react-4b-llm-27b-vlm-val-t{1..8}`.
+- per-trial: 11.38 / 17.97 / 13.60 / 26.07 / 16.55 / 12.64 / 12.70 / 14.37.
+- **mean 15.66% ± 4.73, n=8** (identical mean to CodeAct 4B; both below RLM 4B 21.09).
+
+### v2 column complete — harness × reasoner-size summary (27B VLM, n=8)
+| Reasoner | RLM | ReAct | CodeAct | best |
+|---|---|---|---|---|
+| 8B (text-only) | 11.73 | **15.79** | 9.50 | ReAct |
+| 4B | **21.09** | 15.66 | 15.66 | RLM |
+| 9B | **24.54** | 21.01 | 24.26 | RLM≈CodeAct |
+| 27B/27B | — | ~23.8 (n=4) | **~35.6** (amax1) | CodeAct |
+
+**Reading (refined, less a clean monotonic flip):**
+- **CodeAct scales hardest** — worst at 8B (9.50), ties RLM at 9B
+  (24.26), pulls clear at 27B (~35.6). The append-only code harness needs
+  a capable reasoner; given one, it wins.
+- **RLM is the robust mid-range** — best at 4B and 9B; its hidden-state
+  REPL helps a mid reasoner but plateaus (24.5 at 9B, no 27B gain shown).
+- **ReAct is the floor** — only wins at the weakest reasoner (8B), where
+  the simplest trace beats code/state harnesses that the 8B can't drive.
+- FT implication: an append-only-code harness is the right target **iff**
+  the base reasoner is strong enough (≥9B here); below that, RLM or even
+  plain ReAct is safer.
 
 ## Status
 
