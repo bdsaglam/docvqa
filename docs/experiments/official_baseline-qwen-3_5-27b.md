@@ -47,6 +47,7 @@ uv run python evals.py \
 | t4 | `official-cmp-val-t4` | 17.50% | 14/80 | — | business_report/comics 0/10, infographics 6/10 |
 | t5 | `official-cmp-val-t5` | 21.25% | 17/80 | — | best trial; infographics 6/10, comics 0/10 |
 | t6 | `official-cmp-val-t6` | 16.25% | 13/80 | — | comics/maps 0/10, science_paper 3/10 |
+| t7 | `official-cmp-val-t7` | 17.50% | 14/80 | — | business_report/comics 0/10, science_paper 3/10 |
 
 Per-category (t5): business_report 1/10, comics 0/10, engineering_drawing
 3/10, infographics 6/10, maps 1/10, science_paper 3/10, science_poster
@@ -75,7 +76,7 @@ comparison-matrix number.
 
 ## Summary
 
-n=6 so far (target n=8): 15.00 / 18.75 / 18.75 / 17.50 / 21.25 / 16.25 → running mean **17.92% ± 2.19pp**, below our parity-prompt `raw_vlm_multi_baseline` (20.83%, n=3), so the minimized prompt is NOT crippling the baseline (if anything the official prompt + max_pages=10 downscale is weaker). Mean ± std at n=8.
+n=7 so far (target n=8): 15.00 / 18.75 / 18.75 / 17.50 / 21.25 / 16.25 / 17.50 → running mean **17.86% ± 2.00pp**, below our parity-prompt `raw_vlm_multi_baseline` (20.83%, n=3), so the minimized prompt is NOT crippling the baseline (if anything the official prompt + max_pages=10 downscale is weaker). Mean ± std at n=8.
 
 ## Comparison
 
@@ -85,4 +86,4 @@ competition's own VLM baseline sits relative to our `raw_vlm_multi_baseline`
 
 ## Status
 
-in progress (n=6 of 8)
+in progress (n=7 of 8)
