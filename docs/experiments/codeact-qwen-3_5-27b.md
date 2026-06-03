@@ -52,7 +52,18 @@ uv run python evals.py \
 | Budget | run_id | Score | n=2 mean |
 |---|---|---|---|
 | 24 | `codeact-b24-val-t2` | 43.75% | **40.6%** (37.5, 43.75) |
-| 56 | `codeact-b56-val-t2` | (running) | — |
+| 56 | `codeact-b56-val-t2` | 33.75% | **36.9%** (40.0, 33.75) |
+
+**Verdict: budget is noise-dominated.** The n=2 confirm *flipped* the n=1
+ranking (n=1: b56 40.0 > b24 37.5; n=2: b24 40.6 > b56 36.9), and the two
+budgets' trials interleave completely (b24: 37.5/43.75; b56: 33.75/40.0).
+The 5 pilots across all budgets average **37.75%** — squarely in the
+visual-recursive tier (≈ `rvlm_ocr` 37.81, `rvlm` 39.38). Efficiency
+(`iter_stats.py`) confirms the cap never binds (≤1% @cap at any budget),
+so a lower budget loses nothing. **Chosen budget for n=8: 24** — slightly
+ahead at n=2, cheapest/fastest, never caps, and the cleanest narrative
+("append-only CodeAct matches `rvlm` even at `rvlm`'s own ~25-step
+budget"). The 2 b24 pilots become t1, t2 of the n=8 run.
 
 Per-category (b24): business_report 6/10, comics 4/10, engineering_drawing
 3/10, infographics 7/10, maps 0/10, science_paper 2/10, science_poster
