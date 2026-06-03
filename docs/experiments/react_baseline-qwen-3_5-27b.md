@@ -38,6 +38,7 @@ uv run python evals.py \
 | t5 | `react-cmp-val-t5` | 31.25% | 25/80 | — | high trial; engineering_drawing 5/10, slide 5/10, maps 0/10 |
 | t6 | `react-cmp-val-t6` | 25.00% | 20/80 | — | comics 4/10, maps 0/10 |
 | t7 | `react-cmp-val-t7` | 27.50% | 22/80 | — | engineering_drawing 5/10, slide 5/10, maps 0/10; recovered once at 24/25 |
+| t8 | `react-cmp-val-t8` | 22.50% | 18/80 | — | infographics 5/10, slide 4/10, maps 0/10 |
 
 Per-category (t5): business_report 2/10, comics 2/10, engineering_drawing
 5/10, infographics 5/10, maps 0/10, science_paper 3/10, science_poster
@@ -61,11 +62,12 @@ Per-category (t3): business_report 2/10, comics 3/10, engineering_drawing
 
 ## Summary
 
-**n=7 so far (target n=8): 25.54% ± 4.83pp** (17.50 / 30.00 / 26.25 / 21.25 / 31.25 / 25.00 / 27.50) —
-**high variance** (±5.8pp, widest in the matrix), as expected for the
-no-REPL ReAct baseline. vs `rvlm` (39.75% ± 1.63pp): **Δ +14.50pp** — the
+**n=8 COMPLETE: 25.16% ± 4.60pp** (17.50 / 30.00 / 26.25 / 21.25 / 31.25 / 25.00 / 27.50 / 22.50) —
+**high variance** (±4.6pp, widest in the matrix), as expected for the
+no-REPL ReAct baseline. vs `rvlm` (39.38% ± 1.49pp): **Δ +14.22pp** — the
 REPL scaffold is load-bearing even though react keeps the same perception
-tools.
+tools (react has perception + reasoning but no programmatic REPL; the
+14pp gap is what the code-execution scaffold buys).
 
 ## Comparison
 
@@ -82,4 +84,4 @@ REPL and the recursive sub-call.
 
 ## Status
 
-in progress (n=7 of 8)
+complete (n=8 of 8)
