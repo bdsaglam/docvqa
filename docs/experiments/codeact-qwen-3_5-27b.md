@@ -47,6 +47,13 @@ uv run python evals.py \
 | 40 | `codeact-b40-val-t1` | 33.75% | 27/80 | default; lowest pilot (likely noise — comics 3, eng_drawing 3, slide 3) |
 | 56 | `codeact-b56-val-t1` | 40.00% | 32/80 | high budget; best pilot (comics 4, science_paper 4, slide 5) |
 
+**n=2 confirm** (b24 vs b56, to disambiguate the top two before n=8):
+
+| Budget | run_id | Score | n=2 mean |
+|---|---|---|---|
+| 24 | `codeact-b24-val-t2` | 43.75% | **40.6%** (37.5, 43.75) |
+| 56 | `codeact-b56-val-t2` | (running) | — |
+
 Per-category (b24): business_report 6/10, comics 4/10, engineering_drawing
 3/10, infographics 7/10, maps 0/10, science_paper 2/10, science_poster
 3/10, slide 5/10.
