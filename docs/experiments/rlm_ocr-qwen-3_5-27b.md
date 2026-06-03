@@ -51,6 +51,7 @@ uv run python evals.py \
 | t5 | `ocr-only-cmp-val-t5` | 13.75% | 11/80 | — | engineering_drawing 0/10, maps 0/10, science_poster 0/10 (fifth time) |
 | t6 | `ocr-only-cmp-val-t6` | 15.00% | 12/80 | — | engineering_drawing 0/10, maps 0/10 (sixth time); comics 2/10 |
 | t7 | `ocr-only-cmp-val-t7` | 11.25% | 9/80 | — | lowest trial; engineering_drawing/maps/science_poster 0/10 (seventh time) |
+| t8 | `ocr-only-cmp-val-t8` | 16.25% | 13/80 | — | best trial; engineering_drawing/maps 0/10 (eighth time); business_report 3/10, comics 3/10 |
 
 (run_id prefix is `ocr-only-cmp-val-*`, kept distinct from `rvlm-ocr-cmp-val-*`
 to avoid one-letter confusion; solver is `rlm_ocr`.)
@@ -69,15 +70,17 @@ Per-category (t3): business_report 2/10, comics 1/10, engineering_drawing
 
 ## Summary
 
-n=7 so far (target n=8): 12.50 / 13.75 / 13.75 / 15.00 / 13.75 / 15.00 / 11.25 → running mean
-**13.57% ± 1.34pp** — extremely tight. The OCR-text-only control lands
-**far below** the OCR-free visual method `rvlm` (39.38% ± 1.61pp, n=4):
-**Δ +25.63pp**. Also well below the no-scaffold visual baselines
-`raw_vlm_multi` (20.31%) and `direct_vlm` (~21%) — and below the
-competition `official` anchor (17.50%). **engineering_drawing and maps
-are 0/10 in all seven trials** (OCR captures none of the figure/drawing
-content). Decisive support for the OCR-free framing: recursive visual
-perception does work OCR text cannot replace. Mean ± std at n=8.
+**n=8 COMPLETE: 13.91% ± 1.56pp** (12.50 / 13.75 / 13.75 / 15.00 / 13.75 / 15.00 / 11.25 / 16.25)
+— tight variance. The OCR-text-only control lands **far below** the
+OCR-free visual method `rvlm` (39.38% ± 1.49pp): **Δ +25.47pp**. It is the
+**lowest solver in the entire matrix** — below the no-scaffold visual
+baselines `raw_vlm_multi` (20.47%) and `direct_vlm` (~22%), and below the
+competition `official` anchor (17.81%). **engineering_drawing and maps
+are 0/10 in all eight trials** (OCR captures none of the figure/drawing
+content). **Decisive support for the OCR-free framing:** holding the
+LeanRLM scaffold constant and swapping visual perception for OCR text
+collapses the score by ~25pp — recursive *visual* perception does work
+OCR text cannot replace.
 
 ## Comparison
 
@@ -96,4 +99,4 @@ slide) where OCR text is reliable.
 
 ## Status
 
-in progress (n=7 of 8)
+complete (n=8 of 8)
