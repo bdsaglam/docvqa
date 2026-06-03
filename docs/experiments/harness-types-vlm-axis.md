@@ -1,10 +1,10 @@
-# Loop-type VLM-axis sweep — ReAct & CodeAct vs RLM (val, n=8)
+# Harness-type VLM-axis sweep — ReAct & CodeAct vs RLM (val, n=8)
 
 ## Question
 
 The RLM (`rvlm`) VLM-axis sweep established the **perception-budget**
 result (swap only the VLM →27B, reasoner fixed, +~8pp at 9B & 4B). This
-sweep repeats the design with two other agent **loop types**, because
+sweep repeats the design with two other agent **harness types**, because
 the fine-tuning target is **not** an RLM:
 
 - **ReAct** (`react_baseline`): thought→tool→observation, no code.
@@ -42,16 +42,16 @@ micro-average.
 - per-trial: 13.00 / 17.67 / 16.74 / 15.54 / 13.28 / 15.54 / 18.98 / 15.58.
 - **mean 15.79% ± 2.03, n=8.**
 - **vs 8B v2 RLM (11.73% ± 2.96): +4.06pp**, and lower variance.
-  For the weak 8B text-only reasoner, the append-only ReAct loop beats
-  RLM's hidden-state loop — the first evidence that the loop type (not
+  For the weak 8B text-only reasoner, the append-only ReAct harness beats
+  RLM's hidden-state harness — the first evidence that the harness type (not
   just perception budget) matters, and in the FT-relevant direction.
 
 ### 8B v2 CodeAct (CA-8Bv2) — 2026-06-02
 - run_ids `codeact-8b-llm-27b-vlm-val-t{1..8}`.
 - per-trial: 8.68 / 11.87 / 9.30 / 10.27 / 8.31 / 7.87 / 11.14 / 8.54.
 - **mean 9.50% ± 1.44, n=8.**
-- **8B v2 loop ranking (n=8 each): ReAct 15.79 > RLM 11.73 > CodeAct 9.50.**
-  For the weak 8B text-only reasoner the loop type dominates, and the
+- **8B v2 harness ranking (n=8 each): ReAct 15.79 > RLM 11.73 > CodeAct 9.50.**
+  For the weak 8B text-only reasoner the harness type dominates, and the
   ordering is the *opposite* of "more expressive = better": ReAct's
   short observation trace is easiest; CodeAct's append-only **growing
   code** context is hardest (lowest mean, lowest variance — it fails
@@ -65,7 +65,7 @@ micro-average.
 - per-trial: 22.74 / 25.08 / 19.84 / 33.38 / 17.73 / 26.07 / 25.51 / 23.78.
 - **mean 24.26% ± 4.68, n=8.**
 - **CodeAct crossover (vs RLM, same VLM):** 8B v2 = 9.50 (worst of 3
-  loops) → 9B v2 = 24.26, **statistically tied with 9B RLM (24.54 ±
+  harnesses) → 9B v2 = 24.26, **statistically tied with 9B RLM (24.54 ±
   5.30)**. CodeAct's accuracy scales much harder with reasoner
   capability than ReAct or RLM — exactly what the append-only-code FT
   design needs (a weak reasoner drowns in the growing context; a
@@ -89,8 +89,8 @@ micro-average.
 - run_ids `react-9b-llm-27b-vlm-val-t{1..8}`.
 - per-trial: 24.31 / 21.64 / 22.80 / 19.10 / 15.44 / 22.00 / 28.45 / 14.34.
 - **mean 21.01% ± 4.63, n=8.**
-- **Loop rank-flip with scale (confirmed at n=8, 27B VLM):**
-  - 8B v2: **ReAct 15.79 > RLM 11.73 > CodeAct 9.50** (simplest loop wins for the weak reasoner; code-state loops drown it).
+- **Harness rank-flip with scale (confirmed at n=8, 27B VLM):**
+  - 8B v2: **ReAct 15.79 > RLM 11.73 > CodeAct 9.50** (simplest harness wins for the weak reasoner; code-state harnesses drown it).
   - 9B v2: **RLM 24.54 ≈ CodeAct 24.26 > ReAct 21.01** (RLM/CodeAct overtake ReAct once the reasoner can exploit code+state).
   - 27B: CodeAct ~35.6 pulls clear of the field.
   Narrative: ReAct is the floor-raiser for weak reasoners; CodeAct is
