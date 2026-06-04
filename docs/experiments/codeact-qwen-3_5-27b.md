@@ -98,7 +98,13 @@ Given the high trial variance, all three budgets are taken to n=8 so
 **budget 40** (`codeact-b40-val-t*`)
 | t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
 |---|---|---|---|---|---|---|---|
-| 33.75 | 43.75 | 40.00 | 32.50 | 36.25 | 42.50 | 30.00 | — |
+| 33.75 | 43.75 | 40.00 | 32.50 | 36.25 | 42.50 | 30.00 | ✗ |
+
+**budget 40 mean ± std (n=7): 36.96 ± 5.25** (Δ vs rvlm 39.38 = −2.42pp).
+t8 excluded: its `maps_2` doc hit the 14400s task-timeout once then
+re-hung the batch_look bridge on resume (telemetry-choke); per
+don't-block-on-one-doc it was dropped. n=7 is adequate — b24/b56 are
+locked n=8 and budget is noise-dominated.
 
 **budget 56** (`codeact-b56-val-t*`)
 | t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
