@@ -32,7 +32,7 @@ micro-average.
 | Config | RLM | ReAct | CodeAct |
 |---|---|---|---|
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
-| Qwen3.5 4B homog | 12.49% ± 3.74 | _in progress (R5)_ | **12.19% ± 3.50** (n=8) |
+| Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | — | ~23.8% (n=4, see `react_baseline-qwen-3_5-27b.md`) | _queued (CA-27B)_ |
 
 ## Locked cells
@@ -136,6 +136,20 @@ micro-average.
   +8.6pp). The weak 4B reasoner can't exploit a stronger VLM through the
   append-only-code harness as well as through RLM's hidden-state REPL —
   consistent with CodeAct needing a capable reasoner.
+
+### 4B v1 ReAct (R5) — 2026-06-04
+- run_ids `react-3_5-4b-val-t{1..8}`.
+- per-trial: 8.97 / 12.50 / 11.91 / 9.60 / 10.04 / 14.50 / 13.10 / 14.90.
+- **mean 11.94% ± 2.23, n=8.**
+- **The 4B/4B floor — all three harnesses tie:** RLM 12.49 ± 3.74,
+  ReAct 11.94 ± 2.23, CodeAct 12.19 ± 3.50 — statistically
+  indistinguishable (~12%, every pairwise gap ≪ the stds). With both
+  reasoner and perception at 4B, the harness type carries no signal: a
+  weak reasoner served by a weak VLM collapses to the same floor
+  regardless of how its action/observation context is structured. The
+  harness-type effects (the 8B rank-flip, the CodeAct scaling slope)
+  only emerge once *either* perception (v2's 27B VLM) or the reasoner
+  (9B/27B) is strong enough to exploit the harness.
 
 ## Status
 
