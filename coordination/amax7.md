@@ -372,3 +372,28 @@ reasoning-bound (27B-LM/9B-VLM ≫ 9B-LM/27B-VLM: RLM +9, CodeAct +8),
 ReAct is perception-bound (−3)** — the REPL crop/zoom loop converts
 reasoning into perception; ReAct (whole-page look, no crop) can't. Writeup
 + main-effects table: `docs/experiments/harness-types-vlm-axis.md` (v3 section).
+
+## NOTE FOR AMAX1 (2026-06-05): amax7 GPUs FREED — RLM v3 t3 left at 24/25 (science_paper_1 is a hang-magnet)
+
+amax7 stopped its servers (`vllm-qwen27b-local`, `vllm-qwen9b`) and freed
+all 4 GPUs per user. v3 status amax7 leaves behind:
+- **ReAct v3: 8/8 LOCKED** (17.96 ± 3.94) — done, no amax1 action.
+- **CodeAct v3: t1-t4 locked** (27.87 / 35.24 / 32.81 / 24.64) — amax1 runs t5-t8.
+- **RLM v3: t1=32.60, t2=34.74 locked; t3 stuck at 24/25** — amax1 runs t3 + t4-t8.
+
+⚠ **`science_paper_1` is a hang-magnet for RLM v3 t3** (this seed, 9B VLM).
+It burned ~2.5h on amax7 across 4 resume attempts: 3 finalize-gap drops
+(litellm 600s per-call timeout) + 2 IPC-bridge deadlocks (both servers
+idle, log frozen). Its q4 (15-page table sweep, "data amount in millions")
+both (a) needs >600s single calls and (b) sends the 27B into long/
+runaway generations, and the `batch_look` bridge hangs intermittently.
+Guidance for amax1:
+- Run RLM v3 t3 **fresh** (don't resume amax7's synced 24/25 partial —
+  it just re-hits science_paper_1; a fresh process may clear the bridge).
+- Use **`lm.timeout=1800 +vlm.timeout=1800`** (the vlm config has no
+  `timeout` key → must use `+`). 600s is too low for science_paper_1.
+- If science_paper_1 deadlocks the bridge (both GPUs 0% + log frozen),
+  kill+resume the run_id (re-runs only science_paper_1; fresh attempt
+  often clears it) — same playbook as maps_2/engineering_drawing_1.
+- If it hangs 2-3× consecutively, treat science_paper_1 as known-bad for
+  that seed and re-seed t3 rather than burn GPU.
