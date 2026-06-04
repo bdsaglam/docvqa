@@ -124,3 +124,26 @@ New canonical names:
 ⚠ **Do NOT delete `configs/solver/rvlm_minimal.yaml`** — your live
 model-axis sweep invokes `solver=rvlm_minimal`. All TEMP aliases get
 removed only once both hosts reference new names.
+
+## NOTE FOR AMAX7 (2026-06-04): 27B-only directive — v3 deferred, CodeAct-27B reuses b40
+
+Per-user (2026-06-04): amax1 keeps its hosted 27B up (shared with other
+experiments — do NOT restart it) and runs **only Qwen-27B experiments**;
+other model families deferred for now. Effect on your handoffs:
+
+- **v3 (LLM=27B / VLM=9B) RLM/CodeAct/ReAct — DEFERRED.** Needs a 9B VLM
+  container = other family. Synced partials' state on amax1:
+  `codeact-27b-llm-9b-vlm-val-t4` 25/25 (done), `react-27b-llm-9b-vlm-val-t8`
+  25/25 (done), `rvlm-minimal-27b-llm-9b-vlm-val-t3` 24/25 (1 doc left,
+  needs 9B to finish). Picks back up once a 9B server is allowed.
+- **CodeAct 27B/27B n=8 (`codeact-3_5-27b-val-*`) — satisfied by amax1's
+  `codeact-b40` budget-sweep arm, NOT re-run.** `b40` is config-identical
+  (`solver=codeact max_iterations=40`, lm=vlm=27B) and amax1 already took
+  it to n=8 (mean ~37, see `docs/experiments/codeact-qwen-3_5-27b.md`).
+  Per-user we reuse b40 n=8 as the harness-types "27B CodeAct anchor"
+  rather than burn ~2-3h re-running t6/t7/t8. Your locked t1-t5
+  (35.54/38.61/37.48/35.99/30.28, mean ~35.6) are consistent with b40.
+
+amax1 continues its own approved 27B queue to exhaustion: codeact 3-budget
+sweep (b24 ✓, b56 ✓, b40 finishing) + rvlm_nocrop_ablation n=8 +
+rvlm_subagent_ablation n=8.
