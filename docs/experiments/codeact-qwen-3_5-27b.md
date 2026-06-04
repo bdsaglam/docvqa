@@ -103,7 +103,9 @@ Given the high trial variance, all three budgets are taken to n=8 so
 **budget 56** (`codeact-b56-val-t*`)
 | t1 | t2 | t3 | t4 | t5 | t6 | t7 | t8 |
 |---|---|---|---|---|---|---|---|
-| 40.00 | 33.75 | 35.00 | 36.25 | 35.00 | 36.25 | 31.25 | — |
+| 40.00 | 33.75 | 35.00 | 36.25 | 35.00 | 36.25 | 31.25 | 37.50 |
+
+**budget 56 mean ± std (n=8): 35.62 ± 2.59** (Δ vs rvlm 39.38 = −3.76pp)
 
 ## Summary
 
