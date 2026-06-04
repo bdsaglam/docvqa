@@ -41,7 +41,7 @@ uv run python evals.py \
 
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
-| — | (running) | — | — | — | n=8 in progress |
+| t1 | `rvlm-nocrop-cmp-val-t1` | 37.50 | 30/80 | — | business_report 5/10, comics 3/10, engineering_drawing 5/10, infographics 6/10, maps 0/10, science_paper 2/10, science_poster 4/10, slide 5/10 |
 
 ## Summary
 
