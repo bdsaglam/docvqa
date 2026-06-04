@@ -15,20 +15,23 @@ future sessions don't re-derive numbers from `output/runs/`.
 
 ### Method vs baselines — Qwen 3.5 27B, val (25 docs / 80 Qs)
 
-The 7-solver comparison re-run (n=3 target, `lm.enable_thinking=false`,
-local vllm :8927). Most cells are mid-run — numbers below are the current
-per-trial means with explicit trial counts; lock at n=3.
+The 8-solver comparison re-run (`lm.enable_thinking=false`, local vllm
+:8927), **complete at n=8** (val 25 docs / 80 Qs). Mean ± std over 8
+trials; Δ vs the `rvlm` reference. A 9th solver (`codeact`, append-only/MDP
+twin) is also done (3-budget sweep). Full detail + headlines in
+[`../results.md`](../results.md).
 
-| Solver | Role | Val (current) | n | Status |
+| Solver | Role | Val (n=8) | Δ vs `rvlm` | Status |
 |---|---|---|---|---|
-| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` sub-call (OCR-free) | **~39.4%** (40.00, 38.75) | 2/3 | in progress (reference; all Δ measured vs this) |
-| `rvlm_hybrid_ablation` | + direct `display()` image channel on top of the sub-call | ~39.4% (40.00, 38.75) | 2/3 | in progress — **Δ ≈ 0** vs `rvlm` (direct image access redundant) |
-| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` (OCR extension) | **37.08% ± 2.60** | 3/3 ✓ | done — **OCR adds nothing** over OCR-free, trends ~−2pp |
-| `direct_vlm` | "see it yourself": `display()` pages into the agent's own context, **no** VLM sub-call | 21.25% | 1/3 | in progress — Δ ≈ **+18.75pp** for the sub-call |
-| `raw_vlm_multi_baseline` | raw multi-image, single VLM call, **no scaffold** | ~20.6% (18.75, 22.50) | 2/3 | in progress — scaffold-lift floor (~+21pp) |
-| `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | ~23.8% (17.50, 30.00) | 2/3 | in progress (high variance) — REPL load-bearing |
-| `rlm_ocr` | RLM + OCR text perception, **no vision** | — | 0/3 | queued — the OCR-free claim's text-modality control |
-| `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold | — | 0/3 | queued — external anchor (prior kit-faithful: 21.67% ± 1.91, n=3) |
+| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — | ✓ reference |
+| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` (OCR extension) | 37.81% ± 3.12 | −1.56pp | ✓ done — **OCR adds nothing** over OCR-free |
+| `codeact` | append-only/MDP twin of `rvlm` (no compaction; FT target) | 36.74% ± 4.29 (pooled, n=23) | −2.64pp | ✓ done — compaction ~free; budget flat |
+| `rvlm_hybrid_ablation` | + direct `display()` image channel on top of the sub-call | 35.47% ± 4.48 | −3.91pp | ✓ done — direct channel mildly harmful (3× variance) |
+| `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | 25.16% ± 4.60 | −14.22pp | ✓ done — REPL load-bearing |
+| `direct_vlm` | `display()` pages into agent's own context, **no** VLM sub-call | 22.34% ± 2.79 | −17.03pp | ✓ done — sub-call load-bearing |
+| `raw_vlm_multi_baseline` | raw multi-image, single VLM call, **no scaffold** | 20.47% ± 1.63 | −18.91pp | ✓ done — scaffold-lift floor |
+| `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold | 17.81% ± 1.86 | −21.56pp | ✓ done — external anchor (kit-faithful: 21.67% ± 1.91) |
+| `rlm_ocr` | RLM + OCR text perception, **no vision** | 13.91% ± 1.56 | −25.47pp | ✓ done — **OCR-free headline control** (matrix floor) |
 
 **Reading:** `rvlm` (~39%) lifts ~+21pp over the no-scaffold raw-VLM floor
 (~20%). The two halves of the scaffold each matter — drop the REPL
@@ -76,6 +79,8 @@ curve. A clean 8B size point would need Qwen3.5-8B.
 | [react_baseline-qwen-3_5-27b.md](react_baseline-qwen-3_5-27b.md) | no-REPL ablation |
 | [rlm_ocr-qwen-3_5-27b.md](rlm_ocr-qwen-3_5-27b.md) | RLM + OCR (text-only) control |
 | [official_baseline-qwen-3_5-27b.md](official_baseline-qwen-3_5-27b.md) | competition-prompt anchor |
+| [codeact-qwen-3_5-27b.md](codeact-qwen-3_5-27b.md) | append-only/MDP twin of `rvlm` (budget sweep, FT target) |
+| [harness-types-vlm-axis.md](harness-types-vlm-axis.md) | RLM vs ReAct vs CodeAct × reasoner-size axis |
 | [qwen-9b-rvlm-minimal-vlm-axis.md](qwen-9b-rvlm-minimal-vlm-axis.md) | VLM-quality axis (9B + 4B), n=8 |
 
 The cross-axis summary lives in [`docs/results.md`](../results.md).
