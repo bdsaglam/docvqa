@@ -32,7 +32,7 @@ micro-average.
 | Config | RLM | ReAct | CodeAct |
 |---|---|---|---|
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
-| Qwen3.5 4B homog | 12.49% ± 3.74 | _queued (R5)_ | _queued (CA-4Bv1)_ |
+| Qwen3.5 4B homog | 12.49% ± 3.74 | _in progress (R5)_ | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | — | ~23.8% (n=4, see `react_baseline-qwen-3_5-27b.md`) | _queued (CA-27B)_ |
 
 ## Locked cells
@@ -121,6 +121,21 @@ micro-average.
 - FT implication: an append-only-code harness is the right target **iff**
   the base reasoner is strong enough (≥9B here); below that, RLM or even
   plain ReAct is safer.
+
+### 4B v1 CodeAct (CA-4Bv1) — 2026-06-04
+- run_ids `codeact-3_5-4b-val-t{1..8}`.
+- per-trial: 10.60 / 9.51 / 16.48 / 6.10 / 14.21 / 16.08 / 11.50 / 13.04.
+- **mean 12.19% ± 3.50, n=8.**
+- **CodeAct ties RLM at the 4B homog floor:** CodeAct 12.19 ≈ RLM 4B
+  homog 12.49 ± 3.74 (statistically indistinguishable). With both LLM
+  and VLM at 4B (weak perception + weak reasoner), the harness type
+  stops mattering — every harness collapses to the same low floor.
+- **Perception-budget lift under CodeAct (4B):** homog 12.19 → v2 (27B
+  VLM) 15.66 = **+3.5pp**. The swap-only-the-VLM lift replicates under
+  CodeAct but is smaller than RLM's (4B RLM homog 12.49 → v2 21.09 =
+  +8.6pp). The weak 4B reasoner can't exploit a stronger VLM through the
+  append-only-code harness as well as through RLM's hidden-state REPL —
+  consistent with CodeAct needing a capable reasoner.
 
 ## Status
 
