@@ -47,24 +47,44 @@ logger = logging.getLogger(__name__)
 # optional visual context. Image present -> multimodal call; absent -> text call.
 # ---------------------------------------------------------------------------
 
-def _create_tools(subagent_mm: dspy.Predict, subagent_text: dspy.Predict,
-                  sub_lm: dspy.LM, batch_concurrency: int = 8) -> list:
+_SUBAGENT_INSTR = (
+    "You are a capable multimodal sub-agent invoked to complete ONE delegated subtask. "
+    "Use only the information provided — the image(s) below (if any) and the task. "
+    "Transcribe numbers and characters exactly. When a label is separated from the item it "
+    "identifies, trace any visual connector (leader line, arrow, callout, alignment) to "
+    "determine which item it refers to. Return ONLY the result of the task. If the information "
+    "needed is missing, say so."
+)
+
+
+def _create_tools(sub_lm: dspy.LM, batch_concurrency: int = 8) -> list:
+    """One tool: batch_subagent. Each request delegates a task to the multimodal sub-agent
+    with 0..N images (a single image, a list — e.g. a page range — or none)."""
     from PIL import Image as PILImage
 
-    def _one(task: str, path: str | None) -> str:
-        with logfire.span("subagent", task=task[:300], has_image=bool(path)) as span:
-            with dspy.context(lm=sub_lm):
-                if path:
-                    img = PILImage.open(path)
-                    res = subagent_mm(task=task, image=dspy.Image(img))
+    def _one(task: str, paths: list[str]) -> str:
+        with logfire.span("subagent", task=task[:300], n_images=len(paths)) as span:
+            parts: list[dict] = [{"type": "text", "text": _SUBAGENT_INSTR + "\n"}]
+            for i, pth in enumerate(paths):
+                if len(paths) > 1:
+                    parts.append({"type": "text", "text": f"\n[Image {i}]"})
+                formatted = dspy.Image(PILImage.open(pth)).format()
+                if isinstance(formatted, list):
+                    parts.extend(formatted)
                 else:
-                    res = subagent_text(task=task)
-                out = res.result or ""
-                span.set_attribute("result", out[:2000])
-                return out
+                    parts.append({"type": "image_url", "image_url": {"url": formatted}})
+            parts.append({"type": "text", "text": f"\nTask: {task}\n\nResult:"})
+            messages = [{"role": "user", "content": parts}]
+            with dspy.context(lm=sub_lm):
+                response = sub_lm.forward(messages=messages)
+            msg = response.choices[0].message
+            text = msg.content or getattr(msg, "reasoning_content", "") or ""
+            out = str(text or "").strip()
+            span.set_attribute("result", out[:2000])
+            return out
 
     def _batch_subagent_impl(requests_json: str) -> list[str]:
-        """Internal: parallel sub-agent calls. Input JSON list of {task, path|null}."""
+        """Internal: parallel sub-agent calls. Input JSON list of {task, paths:[...]}."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
         import json as _json
         requests = _json.loads(requests_json)
@@ -76,7 +96,7 @@ def _create_tools(subagent_mm: dspy.Predict, subagent_text: dspy.Predict,
         with logfire.span("batch_subagent", num_requests=len(requests)):
             with ThreadPoolExecutor(max_workers=max_w) as pool:
                 futures = {
-                    pool.submit(_one, r["task"], r.get("path")): i
+                    pool.submit(_one, r["task"], r.get("paths", [])): i
                     for i, r in enumerate(requests)
                 }
                 for future in as_completed(futures):
@@ -104,29 +124,37 @@ assert len(pages) == {num_pages}, f"Expected {{num_pages}} pages, got {{len(page
 
 def batch_subagent(requests):
     """Delegate one or more subtasks to a multimodal sub-agent, in parallel.
-    Each request is (task, image): `task` is a natural-language instruction (str);
-    `image` is OPTIONAL visual context — a page (pages[i]), a crop
-    (pages[i].crop((l,t,r,b))), or None for a non-visual subtask. The sub-agent is a
-    capable multimodal model: it sees the image (if any) and can also reason over text,
-    so the task can be anything well-scoped (read/describe, extract & structure,
-    summarize, a focused reasoning step), not only perception.
-    Returns: list of str results, same order. Single task: batch_subagent([(task, image)])[0]."""
+    Each request is (task, images): `task` is a natural-language instruction (str);
+    `images` is the visual context the subtask needs and may be:
+      - a single PIL Image  — one page (pages[i]) or a crop (pages[i].crop((l,t,r,b)))
+      - a LIST of PIL Images — e.g. a range of pages: pages[3:8], or [pages[0], pages[4]]
+      - None                — for a non-visual subtask (text / reasoning / computation)
+    The sub-agent is a multimodal model: it sees all images you pass and can also reason
+    over text. Returns: list of str results, same order. Single task: batch_subagent([(task, imgs)])[0].
+    Examples:
+      batch_subagent([("read the total revenue", pages[3])])
+      batch_subagent([("which of these pages contains the revenue table? give the page index", pages[3:8])])
+      batch_subagent([("normalize this date to YYYY-MM-DD: 'Jan 1st 24'", None)])"""
     import json as _json
     items = []
     for req in requests:
         if isinstance(req, (tuple, list)):
             task = req[0]
-            image = req[1] if len(req) > 1 else None
+            images = req[1] if len(req) > 1 else None
         else:
             task = req
-            image = None
-        path = None
-        if image is not None:
+            images = None
+        if images is None:
+            images = []
+        elif not isinstance(images, (list, tuple)):
+            images = [images]
+        paths = []
+        for im in images:
             tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-            image.save(tmp, format="PNG")
+            im.save(tmp, format="PNG")
             tmp.close()
-            path = tmp.name
-        items.append({{"task": str(task), "path": path}})
+            paths.append(tmp.name)
+        items.append({{"task": str(task), "paths": paths}})
     return _batch_subagent_impl(_json.dumps(items))
 '''
 
@@ -149,14 +177,15 @@ _TASK_BODY = (
     "  What: delegate one or more SUBTASKS to a capable multimodal sub-agent, run in parallel. "
     "The sub-agent is a multimodal model: it can see an image when you provide one, and it can "
     "reason over text when you do not. A subtask can be visual or not — whatever decomposing the "
-    "problem calls for. Some subtasks need an image (e.g. read a value from a region, describe a "
-    "figure); others do not (e.g. compare or normalize values you already have, reformat an "
-    "answer, work through a calculation, summarize text you pass in). Delegate whatever is "
-    "well-scoped, and combine the results in Python.\n"
-    "  How: list of (task, image) tuples. `task` is a natural-language instruction (string); "
-    "`image` is the visual context if the subtask needs one — a page (`pages[i]`) or a crop "
-    "(`pages[i].crop((left, top, right, bottom))`) — or `None` if it does not. "
-    "Returns results in the same order. For a single subtask: `batch_subagent([(task, image)])[0]`.\n"
+    "problem calls for. Some subtasks need image(s) (e.g. read a value from a region, describe a "
+    "figure, find which of a range of pages contains something); others do not (e.g. compare or "
+    "normalize values you already have, reformat an answer, work through a calculation, summarize "
+    "text you pass in). Delegate whatever is well-scoped, and combine the results in Python.\n"
+    "  How: list of (task, images) tuples. `task` is a natural-language instruction (string); "
+    "`images` is the visual context the subtask needs — a single image (a page `pages[i]` or a "
+    "crop `pages[i].crop((left, top, right, bottom))`), a LIST of images (e.g. a page range "
+    "`pages[3:8]`), or `None` if the subtask is non-visual. "
+    "Returns results in the same order. For a single subtask: `batch_subagent([(task, images)])[0]`.\n"
     "- SUBMIT(answer=\"...\")\n"
     "  What: deliver the final answer and terminate.\n"
     "  When: you have the answer and have verified it.\n\n"
@@ -215,34 +244,8 @@ class RvlmSubagentAblationProgram:
         self.page_factor = page_factor
         self.question_concurrency = question_concurrency
         self.batch_concurrency = batch_concurrency
-
-        # Multimodal sub-agent (task + image) and text-only sub-agent (task).
-        self.subagent_mm = dspy.Predict(
-            dspy.Signature(
-                {
-                    "task": (str, dspy.InputField(desc="The subtask to complete")),
-                    "image": (dspy.Image, dspy.InputField(desc="Visual context for the subtask")),
-                    "result": (str, dspy.OutputField(desc="The result of the subtask")),
-                },
-                "You are a capable multimodal sub-agent invoked to complete ONE delegated subtask. "
-                "You can see the provided image and can also reason over text. Complete the task "
-                "precisely using only the given input. Transcribe numbers and characters exactly. "
-                "When a label is separated from the item it identifies, trace any visual connector "
-                "(leader line, arrow, callout, alignment) to determine which item it refers to. "
-                "Return ONLY the result of the task. If the information needed is missing, say so.",
-            )
-        )
-        self.subagent_text = dspy.Predict(
-            dspy.Signature(
-                {
-                    "task": (str, dspy.InputField(desc="The subtask to complete (no image provided)")),
-                    "result": (str, dspy.OutputField(desc="The result of the subtask")),
-                },
-                "You are a capable sub-agent invoked to complete ONE delegated subtask (no image "
-                "provided). Complete the task precisely and return ONLY the result. If you lack the "
-                "information needed to complete it, say so.",
-            )
-        )
+        # The sub-agent is a raw multimodal `sub_lm.forward(messages=...)` call (built in
+        # `_create_tools`), so it can take 0..N images per delegated subtask.
 
     def _per_question_prefix(self, q: Question) -> str:
         if self.profile.question_format_hint_fn is None:
@@ -262,7 +265,7 @@ class RvlmSubagentAblationProgram:
             max_iter = self.max_iterations + int(page_bonus)
 
             instructions = _build_task_instructions(self.profile)
-            tools = _create_tools(self.subagent_mm, self.subagent_text, self.sub_lm, self.batch_concurrency)
+            tools = _create_tools(self.sub_lm, self.batch_concurrency)
             sandbox_code = _build_sandbox_code(tmpdir, len(document.images))
 
             def _solve_question(q: Question):
