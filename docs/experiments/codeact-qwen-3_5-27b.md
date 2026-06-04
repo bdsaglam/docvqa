@@ -130,4 +130,9 @@ nearly free; a large gap means compaction is doing real work.
 
 ## Status
 
-budget sweep complete (n=1: b24 37.5 / b40 33.75 / b56 40.0); awaiting budget pick for n=8
+**DONE (2026-06-04).** Full 3-budget sweep at n=8 (b40 n=7, t8 dropped):
+b24 37.66 ± 5.02, b40 36.96 ± 5.25, b56 35.62 ± 2.59; **pooled 36.74 ±
+4.29 (n=23), Δ vs `rvlm` 39.38 = −2.64pp.** Budget noise-dominated, cap
+never binds (~1% @cap). Append-only/MDP costs ~nothing vs compacted
+`rvlm`. Rolled into `docs/results.md` (CodeAct section) +
+`docs/experiments/harness-types-vlm-axis.md` (27B anchor, b=40).

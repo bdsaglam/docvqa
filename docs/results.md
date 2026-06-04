@@ -12,8 +12,10 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > [`archive/experiments/`](../archive/experiments/) and
 > [`archive/docs/results.md`](../archive/docs/results.md). Do not cite
 > archived numbers as current. The 8-solver Qwen-27B re-run below is
-> **complete at n=8** (val, 2026-06-03). A 9th solver (`codeact`) is
-> being added — its budget is being tuned before its n=8 run.
+> **complete at n=8** (val, 2026-06-03). A 9th solver (`codeact`,
+> append-only/MDP twin of `rvlm`) is **done** — budget sweep
+> {24,40,56} each at n=8 (pooled 36.74% ± 4.29, −2.64pp vs `rvlm`); see
+> the CodeAct section below.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
@@ -118,6 +120,38 @@ Efficiency tracks the accuracy story:
   in the no-recursion tier.
 - **`react` is shallow** — 5.1 steps/Q: without a REPL it can't compose
   multi-step perception, so it terminates early *and* scores low.
+
+## CodeAct — append-only/MDP twin of `rvlm` (budget sweep, val)
+
+`codeact` is `rvlm`'s twin — **identical tools/prompt/`batch_look`** —
+with one change: a **strictly append-only** transcript (every
+`(reasoning, code, stdout)` step shown in full, no LeanRLM compaction).
+This makes the trajectory a fully-observable **MDP** (vs `rvlm`'s
+compacted POMDP) — the property wanted for an **RL fine-tuning target**.
+Question: does dropping compaction cost accuracy, and what iteration
+budget does the append-only agent need? Budget swept at
+`max_iterations ∈ {24, 40, 56}`, each to n=8.
+
+| Budget (`max_iterations`) | Val | n | Δ vs `rvlm` 39.38 |
+|---|---|---|---|
+| 24 | 37.66% ± 5.02 | 8 | −1.72pp |
+| 40 (default) | 36.96% ± 5.25 | 7 | −2.42pp |
+| 56 | 35.62% ± 2.59 | 8 | −3.76pp |
+| **pooled** | **36.74% ± 4.29** | **23** | **−2.64pp** |
+
+Efficiency (n=23): ~13.5 iters/Q, median 11, **~1% @cap at every budget**
+— identical to `rvlm` (13.0), i.e. the append-only agent converges in the
+same ~13 steps and the cap never binds, so budget is not a lever.
+
+**Read: dropping compaction is nearly free.** All three budgets land in
+the visual-recursive tier (≈ `rvlm_ocr` 37.81), within noise of `rvlm`;
+the −2.6pp pooled gap is < the per-budget std and budget is
+noise-dominated (the n=1 ranking flipped at n=2). The RL-friendly
+append-only (MDP) form costs ~nothing vs `rvlm`'s managed context.
+(b40-t8 dropped to n=7: its `maps_2` doc hit the 14400s task-timeout
+twice — the append-only context balloons on that multi-page map until the
+`batch_look` bridge hangs; excluded rather than block the sweep.) Detail:
+`docs/experiments/codeact-qwen-3_5-27b.md`.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
 val, current code. Detail:

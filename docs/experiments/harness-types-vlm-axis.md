@@ -33,7 +33,7 @@ micro-average.
 |---|---|---|---|
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
 | Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
-| Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **37.25 ± 4.63** (b=40, n=5/8) |
+| Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **36.96 ± 5.25** (b=40, n=7) |
 
 ## Locked cells
 
@@ -92,12 +92,12 @@ micro-average.
 - **Harness rank-flip with scale (confirmed at n=8, 27B VLM):**
   - 8B v2: **ReAct 15.79 > RLM 11.73 > CodeAct 9.50** (simplest harness wins for the weak reasoner; code-state harnesses drown it).
   - 9B v2: **RLM 24.54 ≈ CodeAct 24.26 > ReAct 21.01** (RLM/CodeAct overtake ReAct once the reasoner can exploit code+state).
-  - 27B (n=8 RLM/ReAct; CodeAct n=5/8 preliminary): **RLM 39.38 ≳ CodeAct
-    ~37 ≫ ReAct 25.16** — RLM and CodeAct close at the top, ReAct far back.
+  - 27B (all n=8 except CodeAct b40 n=7): **RLM 39.38 ≳ CodeAct
+    36.96 ≫ ReAct 25.16** — RLM and CodeAct close at the top, ReAct far back.
   Narrative: ReAct is the floor-raiser for weak reasoners; at the top,
-  CodeAct draws level with RLM (provisional, locks at n=8) rather than
+  CodeAct draws *level* with RLM (−2.4pp, within noise) rather than
   pulling clear. Supports an append-only-code FT target *given* a capable
-  base model — at ~no cost vs RLM if the 27B CodeAct number holds.
+  base model — at ~no cost vs RLM.
 
 ### 4B v2 ReAct (R3) — 2026-06-03
 - run_ids `react-4b-llm-27b-vlm-val-t{1..8}`.
@@ -110,27 +110,23 @@ micro-average.
 | 8B (text-only) | 11.73 | **15.79** | 9.50 | ReAct |
 | 4B | **21.09** | 15.66 | 15.66 | RLM |
 | 9B | **24.54** | 21.01 | 24.26 | RLM≈CodeAct |
-| 27B/27B | **39.38** (`rvlm`, n=8) | 25.16 (n=8) | 37.25 (b=40, **n=5/8 — preliminary**) | RLM ≳ CodeAct* ≫ ReAct |
+| 27B/27B | **39.38** (`rvlm`, n=8) | 25.16 (n=8) | 36.96 (b=40, n=7) | RLM ≳ CodeAct ≫ ReAct |
 
-\* CodeAct-27B is **not yet locked** — see the preliminary note below.
+> **CodeAct-27B locked (2026-06-04).** Run on amax1 as a 3-budget sweep
+> (`max_iterations` ∈ {24, 40, 56}): **b24 37.66 ± 5.02 (n=8), b40 36.96 ±
+> 5.25 (n=7), b56 35.62 ± 2.59 (n=8)**; pooled **36.74 ± 4.29 (n=23)**.
+> Budget is flat (~36–38%, noise-dominated) and the cap never binds
+> (~1% @cap at every budget). The harness cell uses **b=40** (default
+> budget, comparable to the 4B/9B CodeAct cells). b40 is n=7 — its t8
+> `maps_2` doc hit the 14400s task-timeout twice and was dropped. Detail:
+> `docs/experiments/codeact-qwen-3_5-27b.md`.
 
-> **⚠ CodeAct-27B is PRELIMINARY (n<8).** It is being run on amax1 as a
-> 3-budget sweep (`max_iterations` ∈ {24, 40, 56}) to also check the
-> budget axis. Current partial means: **b24 37.92 ± 5.90 (n=6), b40
-> 37.25 ± 4.63 (n=5), b56 36.00 ± 2.40 (n=5)**; pooled 37.11 ± 4.42
-> (n=16). Budget looks flat (~36–38%, all within ~2pp). The harness-cell
-> number above uses **b=40** (the default budget, comparable to the other
-> CodeAct cells) and **will be refreshed when b40 hits n=8.** Treat the
-> 27B CodeAct reading below as provisional.
-
-**Reading (with the 27B row filled from the main matrix; CodeAct-27B provisional):**
-- **CodeAct scales hardest, and at 27B it looks set to land *near* RLM —
-  not clear of it.** Worst at 8B (9.50), catches RLM at 9B (24.26 ≈
-  24.54), and at 27B is **tracking ~37 (n=5/8), ~2pp under RLM's 39.38**.
-  (An earlier `~35.6 (n=4)` estimate suggested CodeAct "pulled clear" —
-  with the RLM-27B number now in hand, RLM ≳ CodeAct at the top, both
-  close. **This locks at n=8.**) If the n=8 number holds, the FT-relevant
-  read is: the clean append-only-code MDP target costs ~no accuracy vs
+**Reading (27B row now fully locked):**
+- **CodeAct scales hardest, and at 27B it lands *near* RLM — not clear of
+  it.** Worst at 8B (9.50), catches RLM at 9B (24.26 ≈ 24.54), and at 27B
+  is **36.96, ~2.4pp under RLM's 39.38 (within noise)**. With the RLM-27B
+  number in hand, RLM ≳ CodeAct at the top, both close. The FT-relevant
+  read: the clean append-only-code MDP target costs ~no accuracy vs
   hidden-state RLM *given a strong reasoner* (≥9B).
 - **RLM is robust across the range** — best at 4B, 9B, and 27B (39.38);
   CodeAct converges toward it as the reasoner scales but (on current
@@ -223,11 +219,13 @@ In progress. Order (per-user 2026-06-02): R1 ✅ → CodeAct sweep
 (8B v2 → 9B v2 → 4B v2 → 27B/27B → 4B v1 → 9B v1) → deferred ReAct
 R2–R5. Driver state: `tmp/workspace/qwen-9b-vlm-axis/driver-state.md`.
 
-**27B/27B CodeAct (CA-27B) — in progress on amax1 (2026-06-04).** Run as
-a 3-budget sweep (`max_iterations` ∈ {24, 40, 56}), n=8 each, at high
-concurrency. Partial: b24 n=6, b40 n=5, b56 n=5 — all ~36–38% (budget
-flat). Per-trial data accumulates in `codeact-qwen-3_5-27b.md`; the
-27B-row numbers here use **b=40** (default budget) and **refresh to n=8
-when the b40 cell completes** (autonomous cron `295678ee`). RLM-27B
-(39.38, `rvlm`) and ReAct-27B (25.16) are final from the main 8-solver
-matrix (`docs/results.md`).
+**27B/27B CodeAct (CA-27B) — LOCKED on amax1 (2026-06-04).** Ran as a
+3-budget sweep (`max_iterations` ∈ {24, 40, 56}): b24 37.66 ± 5.02 (n=8),
+b40 36.96 ± 5.25 (n=7), b56 35.62 ± 2.59 (n=8); pooled 36.74 ± 4.29
+(n=23). Budget flat, cap never binds. The 27B-row CodeAct number uses
+**b=40** (default budget, comparable to the 4B/9B cells); b40 is n=7 (t8's
+`maps_2` hit the 14400s task-timeout twice → dropped). Per-trial data:
+`codeact-qwen-3_5-27b.md`. RLM-27B (39.38, `rvlm`) and ReAct-27B (25.16)
+are final from the main 8-solver matrix (`docs/results.md`). This was the
+config-identical reuse of amax1's `codeact-b40` budget arm per the
+2026-06-04 27B-only directive (no separate `codeact-3_5-27b-val` re-run).
