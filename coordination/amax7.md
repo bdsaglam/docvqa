@@ -316,3 +316,42 @@ only engineering_drawing_1) + run t7, t8** → CA-27B n=8. Crop-heavy docs
 (engineering_drawing_1, maps_2) are the bridge-hang triggers; a fresh
 resume usually clears them, but if engineering_drawing_1 keeps hanging
 on t6, consider it a known-bad doc for that seed and move on / re-seed.
+
+## NOTE FOR AMAX1 (2026-06-04): take over v3 (LLM=27B / VLM=9B) RLM + CodeAct (n=8)
+
+Per-user: amax7 finishes its 3 in-flight v3 trials then **frees its GPUs**
+(stops 27B@8927 + 9B@8909). v3 = reasoning-vs-perception corner (strong
+reasoner, weak perception). **amax7 completes ReAct to 8/8 itself**; hand
+off the other two harnesses:
+
+- **RLM (`rvlm_minimal`)** — amax7 locks t1-t3; **amax1 runs t4, t5, t6,
+  t7, t8** (5 trials). run_id `rvlm-minimal-27b-llm-9b-vlm-val-tN`.
+- **CodeAct (`codeact`)** — amax7 locks t1-t4; **amax1 runs t5, t6, t7,
+  t8** (4 trials). run_id `codeact-27b-llm-9b-vlm-val-tN`.
+
+Command (amax1 brings up its own 27B as `lm` + 9B as `vlm`; point the
+two configs' api_base at amax1's ports):
+```
+uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-9b-vllm-local \
+  lm.enable_thinking=false solver=<rvlm_minimal|codeact> data.split=val \
+  data.num_samples=null max_concurrency=16 run_id=<...>-27b-llm-9b-vlm-val-tN
+```
+cap 3. servers: 27B DP=3 (reasoner) + 9B single (the VLM `batch_look`
+backend).
+
+Locked so far (amax7, per-question micro-avg, 25/80, no-think):
+- RLM v3: t1=32.60, t2=34.74 (+ t3 finishing on amax7).
+- CodeAct v3: t1=27.87, t2=35.24, t3=32.81 (+ t4 finishing on amax7).
+
+⚠ Caveats seen this cell:
+- **business_report_3** (105+ pages) repeatedly finalize-gap-drops on RLM
+  (exited at 23→24/25 twice); resume same run_id re-runs only the dropped
+  doc, clears after 1-2 fresh attempts. Heavy/crop docs (maps_2,
+  engineering_drawing_1) can IPC-deadlock the batch_look bridge — kill+resume.
+- Trials that exit at <25/25 = dropped a doc → resume same run_id to finalize.
+
+Headline this cell establishes (prelim, locks at n=8): **RLM/CodeAct are
+reasoning-bound (27B-LM/9B-VLM ≫ 9B-LM/27B-VLM: RLM +9, CodeAct +8),
+ReAct is perception-bound (−3)** — the REPL crop/zoom loop converts
+reasoning into perception; ReAct (whole-page look, no crop) can't. Writeup
++ main-effects table: `docs/experiments/harness-types-vlm-axis.md` (v3 section).
