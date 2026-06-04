@@ -319,29 +319,46 @@ on t6, consider it a known-bad doc for that seed and move on / re-seed.
 
 ## NOTE FOR AMAX1 (2026-06-04): take over v3 (LLM=27B / VLM=9B) RLM + CodeAct (n=8)
 
-Per-user: amax7 finishes its 3 in-flight v3 trials then **frees its GPUs**
-(stops 27B@8927 + 9B@8909). v3 = reasoning-vs-perception corner (strong
-reasoner, weak perception). **amax7 completes ReAct to 8/8 itself**; hand
-off the other two harnesses:
+Per-user (2026-06-04, UPDATED): amax7 frees its GPUs (stops 27B@8927 +
+9B@8909); **amax1 takes over ALL remaining v3** (RLM, CodeAct, AND the
+last ReAct trial). v3 = reasoning-vs-perception corner (strong reasoner,
+weak perception).
 
-- **RLM (`rvlm_minimal`)** — amax7 locks t1-t3; **amax1 runs t4, t5, t6,
-  t7, t8** (5 trials). run_id `rvlm-minimal-27b-llm-9b-vlm-val-tN`.
-- **CodeAct (`codeact`)** — amax7 locks t1-t4; **amax1 runs t5, t6, t7,
-  t8** (4 trials). run_id `codeact-27b-llm-9b-vlm-val-tN`.
+### ⬇ Partial runs already RSYNCED to amax1 — RESUME these, don't restart
+amax7 rsynced its 3 in-flight (incomplete) run dirs to
+`amax1:/home/baris/repos/docvqa/output/runs/`. They carry their completed
+docs' `result.json`, so **resuming the same run_id re-runs only the
+missing docs** (do NOT start these as fresh run_ids — you'd discard the
+synced work):
 
-Command (amax1 brings up its own 27B as `lm` + 9B as `vlm`; point the
-two configs' api_base at amax1's ports):
+| run_id | synced state | docs left |
+|---|---|---|
+| `rvlm-minimal-27b-llm-9b-vlm-val-t3` | 20/25 | 5 |
+| `codeact-27b-llm-9b-vlm-val-t4` | 24/25 | 1 |
+| `react-27b-llm-9b-vlm-val-t8` | 24/25 | 1 → completes ReAct v3 to 8/8 |
+
+Verify the sync landed (counts should be 20 / 24 / 24):
+`for r in rvlm-minimal-27b-llm-9b-vlm-val-t3 codeact-27b-llm-9b-vlm-val-t4 react-27b-llm-9b-vlm-val-t8; do echo "$r: $(ls output/runs/$r/tasks/*/result.json 2>/dev/null | wc -l)/25"; done`
+
+### Remaining trials per harness (resume synced partial, then fresh)
+- **RLM (`rvlm_minimal`)** — amax7 locked t1=32.60, t2=34.74. amax1:
+  **resume t3** (synced 20/25) **+ run fresh t4, t5, t6, t7, t8.**
+- **CodeAct (`codeact`)** — amax7 locked t1=27.87, t2=35.24, t3=32.81.
+  amax1: **resume t4** (synced 24/25) **+ run fresh t5, t6, t7, t8.**
+- **ReAct (`react_baseline`)** — amax7 locked t1-t7. amax1: **resume t8**
+  (synced 24/25) → ReAct v3 8/8, then LOCK ReAct v3 (n=8 mean + writeup row).
+
+Command (amax1 brings up its own 27B as `lm` + 9B as `vlm`; point the two
+configs' api_base at amax1's ports). For resumes, use the SAME run_id;
+for fresh trials, the next tN:
 ```
 uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-9b-vllm-local \
-  lm.enable_thinking=false solver=<rvlm_minimal|codeact> data.split=val \
-  data.num_samples=null max_concurrency=16 run_id=<...>-27b-llm-9b-vlm-val-tN
+  lm.enable_thinking=false solver=<rvlm_minimal|codeact|react_baseline> \
+  data.split=val data.num_samples=null max_concurrency=16 \
+  run_id=<...>-27b-llm-9b-vlm-val-tN
 ```
 cap 3. servers: 27B DP=3 (reasoner) + 9B single (the VLM `batch_look`
 backend).
-
-Locked so far (amax7, per-question micro-avg, 25/80, no-think):
-- RLM v3: t1=32.60, t2=34.74 (+ t3 finishing on amax7).
-- CodeAct v3: t1=27.87, t2=35.24, t3=32.81 (+ t4 finishing on amax7).
 
 ⚠ Caveats seen this cell:
 - **business_report_3** (105+ pages) repeatedly finalize-gap-drops on RLM
