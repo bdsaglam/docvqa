@@ -58,7 +58,7 @@ log in `docs/paper/decisions.md`).
 | Smoke runs | `*smoke*` | 2-4 doc exploratory runs; never paper-cited. |
 | Shelved-experiment runs | `pyai-*`, `flat-solo-da-mi*`, `mi-*` | Shelved per D-006; conclusions documented in `archive/docs/experiments/`. |
 | Prompt-scrub runs | `*scrub*` | Scrub-audit archived; per-trial scores in `archive/docs/experiments/scrub-audit.md`; SC-8 votes preserved in `submissions/*-scrub-sc8.json`. |
-| Model-axis pre-rerun cells | `*4-e4b*`, `*3_5-9b*`, `*4-31b*` | Used pre-D-009 prompts; re-runs scheduled per coordination/amax1.md (task #8). Direction documented in `docs/experiments/{gemma-4-e4b,qwen-9b,gemma-4-31b}-baseline-scaffold.md`. |
+| Model-axis pre-rerun cells | `*4-e4b*`, `*4-31b*`, **baseline-scaffold** `*3_5-9b*` only | Used pre-D-009 prompts; re-runs scheduled per coordination/amax1.md (task #8). Direction documented in `docs/experiments/{gemma-4-e4b,qwen-9b,gemma-4-31b}-baseline-scaffold.md`. ⚠ **DO NOT bulk-`rm` `*3_5-9b*`** — it now collides with the **harness-sweep paper cells** `codeact-3_5-9b-val-t{1..8}`, `react-3_5-9b-val-t{1..8}`, `rvlm-minimal-3_5-9b-val-t{1..8}` (the v1-homog 9B row in `harness-types-vlm-axis.md`). Delete only the old baseline-scaffold 9B dirs by their specific stem, never the glob. Same caution applies to any `*3_5-4b*` harness cells. |
 | Legacy cross-benchmark cells (non-DA) | `flat-solo-mmlb-remote-*`, `flat-solo-mpdv-local-*`, `leanest-solo-mmlb-remote-*`, `leanest-solo-mpdv-local-*`, `no-loop-multi-mmlb-remote-*`, `no-loop-multi-mpdv-local-*`, `no-loop-multi-pages80-mmlb-local-*` | Used DocVQA-2026 prompts mis-applied; the clean numbers come from the DA cells. Legacy headline was inflated by prompt-mismatch — documented. |
 
 ## Keep (do NOT delete)
@@ -97,7 +97,10 @@ grep -A1 '`\[→\]`' ../coordination/<host>.md | head -20
 # 3. Delete safe categories (skip patterns that match your in-progress cells).
 rm -rf 2026-*/ *smoke*/ pyai-*/ flat-solo-da-mi*/ mi-*/
 rm -rf *scrub*/
-rm -rf *4-e4b*/ *3_5-9b*/ *4-31b*/
+rm -rf *4-e4b*/ *4-31b*/
+# ⚠ NOT `rm -rf *3_5-9b*/` — collides with harness-sweep paper cells
+#   (codeact/react/rvlm-minimal-3_5-9b-val-t*). Delete only old
+#   baseline-scaffold 9B dirs by their exact stem if you need the space.
 rm -rf flat-solo-mmlb-remote-*/ flat-solo-mpdv-local-*/ \
        leanest-solo-mmlb-remote-*/ leanest-solo-mpdv-local-*/ \
        no-loop-multi-mmlb-remote-*/ no-loop-multi-mpdv-local-*/ \
