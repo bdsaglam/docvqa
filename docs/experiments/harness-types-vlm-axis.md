@@ -172,6 +172,43 @@ micro-average.
   only emerge once *either* perception (v2's 27B VLM) or the reasoner
   (9B/27B) is strong enough to exploit the harness.
 
+## v3 — reasoning vs perception (LLM=27B / VLM=9B), in progress
+
+The missing factorial corner: a **strong reasoner on weak perception**,
+to pair against v2's weak-reasoner-on-strong-perception (9B-LM/27B-VLM).
+run_ids `{rvlm-minimal,react,codeact}-27b-llm-9b-vlm-val-t*`, n=8 target,
+cap 3 on 27B DP=3 @8927 + 9B @8909.
+
+**Preliminary (n=1–2, NOT locked):**
+
+| Harness | 9B-LM / 27B-VLM (v2) | 27B-LM / 9B-VLM (v3) | Δ | lean |
+|---|---|---|---|---|
+| RLM | 24.54 | 32.60 (n=1) | **+8.1** | reasoning-bound |
+| CodeAct | 24.26 | 27.87 (n=1) | **+3.6** | reasoning-bound |
+| ReAct | 21.01 | ~16.4 (n=2) | **−4.6** | **perception-bound** |
+
+**Mechanism — the REPL is what converts reasoning into perception
+(why ReAct is the lone perception-bound harness).** ReAct's only
+perception actuators are `look(page, query)` / `look_many(pages, query)`
+— **whole-page** VLM queries at fixed page granularity. It cannot crop a
+region, zoom, composite, or do coordinate arithmetic on an image (no
+Python execution; `react_baseline_solver.py` docstring: *"no crops … no
+PIL.crop on retrieved page images"*). So ReAct's perception ceiling **is**
+the VLM's whole-page acuity: a stronger reasoner has no actuator to
+direct finer-grained perception, so swapping 9B→27B reasoner while the
+VLM stays at 9B buys nothing (it even regresses) — ReAct is
+**perception-bound**, and to improve it you must improve the raw VLM.
+
+RLM and CodeAct write Python around the same `batch_look`: they crop to
+the evidence region, zoom, retry tighter, composite panels, and arithmetic
+on coordinates. A stronger reasoner therefore produces **better-targeted
+sub-images** and extracts more *even from a weaker (9B) VLM* — so the
+27B-reasoner/9B-VLM corner *gains* (RLM +8, CodeAct +3.6) → these harnesses
+are **reasoning-bound**. This is a direct corollary of the D-006
+active-perception thesis: the REPL crop/zoom loop is the mechanism that
+**turns reasoning capability into perception quality**; remove it (ReAct)
+and reasoning can no longer buy perception. Locks at n=8.
+
 ## Status
 
 In progress. Order (per-user 2026-06-02): R1 ✅ → CodeAct sweep
