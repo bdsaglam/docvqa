@@ -45,20 +45,43 @@ uv run python evals.py \
 | t4 | `rvlm-subagent-cmp-val-t4` | 35.00 | 28/80 | — | business_report 4/10, comics 4/10, engineering_drawing 2/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster 4/10, slide 5/10 |
 | t5 | `rvlm-subagent-cmp-val-t5` | 42.50 | 34/80 | — | business_report 5/10, comics 4/10, engineering_drawing 7/10, infographics 6/10, maps 1/10, science_paper 2/10, science_poster 4/10, slide 5/10 |
 | t6 | `rvlm-subagent-cmp-val-t6` | 43.75 | 35/80 | — | business_report 4/10, comics 3/10, engineering_drawing 7/10, infographics 6/10, maps 2/10, science_paper 4/10, science_poster 3/10, slide 6/10 |
+| t7 | `rvlm-subagent-cmp-val-t7` | 37.50 | 30/80 | — | business_report 4/10, comics 2/10, engineering_drawing 4/10, infographics 6/10, maps 0/10, science_paper 5/10, science_poster 4/10, slide 5/10 |
 | t8 | `rvlm-subagent-cmp-val-t8` | 41.25 | 33/80 | — | business_report 6/10, comics 5/10, engineering_drawing 3/10, infographics 5/10, maps 1/10, science_paper 4/10, science_poster 4/10, slide 5/10 |
 
 ## Summary
 
-n=0 (queued). Mean ± std at n=8; paired Δ vs `rvlm` (39.38% ± 1.49)
-tests whether general delegation beats the perception-only sub-call.
+**n=8 mean ± std: 39.22 ± 3.34** (Δ vs `rvlm` 39.38 = **−0.16pp** — dead
+parity). Generalizing the sub-call from perception (`batch_look`) to
+arbitrary delegation (`batch_subagent`, image optional) **neither helps nor
+hurts**.
+
+**Why parity: the general affordance is barely used.** Across all 8 trials,
+**~1.0%** of delegations are non-visual (image=`None`): 45 text-only vs
+4527 image-bearing. The main agent overwhelmingly delegates *perception*
+subtasks — it uses `batch_subagent` essentially as `batch_look`. On the
+DocVQA-2026 val set (short docs, 80 Qs) the questions rarely decompose into
+non-visual reasoning subtasks the agent chooses to hand off, so the general
+framing is exercised ~never and the result collapses onto `rvlm`.
+
+Efficiency (iter_stats, n=8): **~9.7 iters/Q, median 8** — *fewer* than
+`rvlm` (13.0). Packing a richer instruction into each delegation lets the
+main agent terminate in fewer of its own steps, but with no accuracy change.
+
+**Read:** a single focused perception sub-call already captures the benefit;
+generalizing it to "any subtask" adds an affordance the agent doesn't take
+up here. This **bounds the necessary sub-call interface** (supports minimal
+`rvlm` as the method) and motivates the follow-up `rvlm_subagent_full`
+variant — does upgrading the (perception) sub-call to a *full agent* with its
+own iterative `batch_look` help, or is one forward enough?
 
 ## Comparison
 
 vs `rvlm` (perception-only `batch_look`) — same scaffold/model, only the
-sub-call's interface + framing change. Also worth checking: how often does
-the main agent actually delegate **non-visual** subtasks (image=None), and
-does its iteration count (`iter_stats.py`) differ from `rvlm`?
+sub-call's interface + framing change. Δ ≈ 0; non-visual delegation ~1%;
+iters lower (9.7 vs 13.0).
 
 ## Status
 
-queued (n=0 of 8)
+**DONE (2026-06-05).** n=8 = 39.22 ± 3.34, Δ vs `rvlm` −0.16pp; non-visual
+delegation ~1%. Rolled into `docs/results.md` (ablations group + iter row).
+Follow-up: `rvlm_subagent_full` (full-agent sub-call) pilot.

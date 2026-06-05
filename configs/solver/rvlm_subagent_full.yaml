@@ -1,0 +1,11 @@
+_target_: docvqa.solvers.rvlm_subagent_full_solver.create_rvlm_subagent_full_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+subagent_max_iterations: 6
+vlm: ${vlm}
+rlm_type: lean
+subagent_rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
