@@ -48,19 +48,49 @@ uv run python evals.py \
 | t5 | `rvlm-nocrop-cmp-val-t5` | 41.25 | 33/80 | — | business_report 4/10, comics 6/10, engineering_drawing 4/10, infographics 8/10, maps 0/10, science_paper 2/10, science_poster 3/10, slide 6/10 |
 | t6 | `rvlm-nocrop-cmp-val-t6` | 32.50 | 26/80 | — | business_report 3/10, comics 3/10, engineering_drawing 5/10, infographics 5/10, maps 0/10, science_paper 3/10, science_poster 2/10, slide 5/10 |
 | t7 | `rvlm-nocrop-cmp-val-t7` | 36.25 | 29/80 | — | business_report 4/10, comics 4/10, engineering_drawing 3/10, infographics 8/10, maps 0/10, science_paper 4/10, science_poster 2/10, slide 4/10 |
+| t8 | `rvlm-nocrop-cmp-val-t8` | 37.50 | 30/80 | — | business_report 4/10, comics 4/10, engineering_drawing 4/10, infographics 5/10, maps 2/10, science_paper 3/10, science_poster 2/10, slide 6/10 |
 
 ## Summary
 
-n=0 (running). Mean ± std at n=8; paired Δ vs `rvlm` (39.38% ± 1.49)
-isolates the contribution of cropping.
+**n=8 mean ± std: 36.88 ± 3.20** (Δ vs `rvlm` 39.38 = **−2.51pp**).
+Removing cropping (whole-page `batch_look((page_index, query))`, no PIL
+crops) costs a **modest ~2.5pp overall** — cropping helps but is not
+decisive at the dataset level.
+
+Efficiency (iter_stats, n=8): ~11.8 iters/Q, median 9, ~1% @cap —
+**slightly *fewer* than `rvlm` (13.0)**, not more. Losing the
+crop-zoom-reread affordance doesn't make the agent churn; it just can't
+resolve fine detail (it reads whole pages and moves on).
+
+**Per-category drop vs `rvlm` (pooled n=8) — supports the
+detail-density hypothesis:**
+
+| Category | `rvlm` | nocrop | Δ |
+|---|---|---|---|
+| engineering_drawing | 50.0% | 38.8% | **−11.2pp** |
+| science_poster | 42.5% | 25.0% | **−17.5pp** |
+| business_report | 47.5% | 45.0% | −2.5pp |
+| science_paper | 27.5% | 27.5% | 0.0pp |
+| maps | 3.8% | 5.0% | +1.2pp (both floor) |
+| infographics | 62.5% | 63.8% | +1.3pp |
+| slide | 47.5% | 50.0% | +2.5pp |
+| comics | 33.8% | 40.0% | +6.2pp |
+
+The two **detail-dense** categories — `engineering_drawing` (fine
+technical print) and `science_poster` (dense small-font panels) — take
+the largest hits (−11.2, −17.5), exactly where zoom-to-region is
+load-bearing. Whole-page/large-layout categories (infographics, slide,
+comics) are unaffected or noisily up. `maps` is at the floor in both
+(uninformative). Net −2.5pp = the average of "crop matters a lot on a
+few detail-dense categories" and "crop is irrelevant on the rest."
 
 ## Comparison
 
-vs `rvlm` (vision + crop) — same scaffold, only cropping removed. Also
-informative vs `rvlm` on per-category breakdown (expect the largest drop
-on detail-dense categories) and vs the efficiency metric (does losing
-crop raise iteration count?).
+vs `rvlm` (vision + crop) — same scaffold, only cropping removed.
+Confirms: crop is a **category-specific** lever (detail-dense docs), not
+a global one; and removing it does **not** raise iteration count.
 
 ## Status
 
-in progress (n=0 of 8)
+**DONE (2026-06-05).** n=8 = 36.88 ± 3.20, Δ vs `rvlm` −2.51pp. Rolled
+into `docs/results.md` (ablations group + per-category note + iter row).

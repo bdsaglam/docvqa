@@ -37,6 +37,7 @@ reference (difference of means).
 | **proposed** | **`rvlm`** | REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — |
 | ablation | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | 37.81% ± 3.12 | −1.56pp |
 | ablation | `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | 35.47% ± 4.48 | −3.91pp |
+| ablation | `rvlm_nocrop_ablation` | `batch_look` by **page index, no crop/zoom** (whole pages only) | 36.88% ± 3.20 | −2.51pp |
 | baseline | `react_baseline` | perception (VLM tools), **no REPL** | 25.16% ± 4.60 | −14.22pp |
 | baseline | `direct_vlm` | `display()` pages into own context, no sub-call | 22.34% ± 2.79 | −17.03pp |
 | baseline | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.47% ± 1.63 | −18.91pp |
@@ -63,6 +64,13 @@ only clear stochastically.
 3. **OCR adds nothing on top of vision** (`rvlm_ocr` −1.6pp); the
    **direct display channel is mildly harmful** (`rvlm_hybrid` −3.9pp,
    3× the variance — it destabilizes the agent).
+3b. **Cropping is a category-specific lever, not a global one**
+   (`rvlm_nocrop` −2.5pp overall): removing crop/zoom (whole-page reads
+   only) costs −11.2pp on `engineering_drawing` and −17.5pp on
+   `science_poster` — the detail-dense categories where zoom is
+   load-bearing — but is ≈ 0 elsewhere. It does **not** raise iteration
+   count (11.8 vs `rvlm` 13.0). Detail:
+   `docs/experiments/rvlm_nocrop_ablation-qwen-3_5-27b.md`.
 4. **Parity prompt is honest:** the competition `official` prompt sits
    *below* our minimized-prompt `raw_vlm_multi` (17.8 vs 20.5) — our
    prompt scrub is not sandbagging the baselines.
@@ -102,6 +110,7 @@ iterations can exceed the budget.
 | `rvlm` | 25 | 13.0 | 11 | 1% |
 | `rvlm_ocr_ablation` | 25 | 12.0 | 10 | 1% |
 | `rvlm_hybrid_ablation` | 25 | 18.1 | 16 | 7% |
+| `rvlm_nocrop_ablation` | 25 | 11.8 | 9 | 1% |
 | `react_baseline` | 25 | 5.1 | 4 | 0% |
 | `direct_vlm` | 40 | 30.4 | 40 | 59% |
 | `rlm_ocr` | 25 | 11.4 | 9 | 2% |

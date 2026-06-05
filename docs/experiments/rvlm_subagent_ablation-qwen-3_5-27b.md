@@ -39,7 +39,8 @@ uv run python evals.py \
 
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
-| — | (queued) | — | — | — | n=8 queued (after codeact + nocrop) |
+| t1 | `rvlm-subagent-cmp-val-t1` | 41.25 | 33/80 | — | business_report 4/10, comics 4/10, engineering_drawing 6/10, infographics 7/10, maps 1/10, science_paper 2/10, science_poster 4/10, slide 5/10 |
+| t2 | `rvlm-subagent-cmp-val-t2` | 36.25 | 29/80 | — | business_report 4/10, comics 2/10, engineering_drawing 4/10, infographics 6/10, maps 2/10, science_paper 4/10, science_poster 2/10, slide 5/10 |
 
 ## Summary
 
