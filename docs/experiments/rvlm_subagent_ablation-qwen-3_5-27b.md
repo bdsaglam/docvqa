@@ -44,6 +44,8 @@ uv run python evals.py \
 | t3 | `rvlm-subagent-cmp-val-t3` | 36.25 | 29/80 | — | business_report 4/10, comics 4/10, engineering_drawing 5/10, infographics 6/10, maps 1/10, science_paper 2/10, science_poster 3/10, slide 4/10 |
 | t4 | `rvlm-subagent-cmp-val-t4` | 35.00 | 28/80 | — | business_report 4/10, comics 4/10, engineering_drawing 2/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster 4/10, slide 5/10 |
 | t5 | `rvlm-subagent-cmp-val-t5` | 42.50 | 34/80 | — | business_report 5/10, comics 4/10, engineering_drawing 7/10, infographics 6/10, maps 1/10, science_paper 2/10, science_poster 4/10, slide 5/10 |
+| t6 | `rvlm-subagent-cmp-val-t6` | 43.75 | 35/80 | — | business_report 4/10, comics 3/10, engineering_drawing 7/10, infographics 6/10, maps 2/10, science_paper 4/10, science_poster 3/10, slide 6/10 |
+| t8 | `rvlm-subagent-cmp-val-t8` | 41.25 | 33/80 | — | business_report 6/10, comics 5/10, engineering_drawing 3/10, infographics 5/10, maps 1/10, science_paper 4/10, science_poster 4/10, slide 5/10 |
 
 ## Summary
 
