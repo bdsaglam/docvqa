@@ -182,8 +182,10 @@ for i in range({num_pages}):
 assert len(pages) == {num_pages}, f"Expected {{num_pages}} pages, got {{len(pages)}}"
 
 def batch_subagent(requests):
-    """Delegate one or more subtasks to a full sub-agent, in parallel. Each sub-agent has its
-    own tools and can examine the images you pass it closely (crop/zoom/re-read) before answering.
+    """Delegate a subtask to a FULL sub-agent. Each sub-agent runs its own multi-step loop
+    (survey/crop/zoom/re-read/verify) over the images you pass — so each delegation is EXPENSIVE.
+    Hand it a substantial, self-contained subtask; do NOT fan out many sub-agents in parallel
+    (one at a time, or a small batch of <=2-3 genuinely-independent subtasks).
     Each request is (task, images): `task` is a natural-language instruction (str);
     `images` is the visual context the subtask needs and may be:
       - a single PIL Image  — one page (pages[i]) or a crop (pages[i].crop((l,t,r,b)))
@@ -234,15 +236,23 @@ _TASK_BODY = (
 
     "## TOOLS\n"
     "- batch_subagent(requests) -> list[str]\n"
-    "  What: delegate one or more SUBTASKS to a capable sub-agent, run in parallel. The sub-agent "
-    "is a full agent: when you give it image(s) it can examine them closely — crop, zoom, and "
-    "re-read to resolve fine detail — and it can also reason over text. A subtask can be visual or "
-    "not — whatever decomposing the problem calls for. Some subtasks need image(s) (e.g. read a "
-    "value from a region, describe a figure, find which of a range of pages contains something); "
-    "others do not (e.g. compare or normalize values you already have, reformat an answer, work "
-    "through a calculation, summarize text you pass in). Delegate whatever is well-scoped, and "
-    "combine the results in Python.\n"
-    "  How: list of (task, images) tuples. `task` is a natural-language instruction (string); "
+    "  What: delegate a SUBTASK to a capable sub-agent. **The sub-agent is a full agent, not a "
+    "single look** — given an image it runs its OWN multi-step loop (survey, crop, zoom, re-read, "
+    "verify) to resolve the subtask, and it can also reason over text. **Each delegation is "
+    "therefore expensive — a whole agent run — so delegate deliberately, not reflexively.**\n"
+    "  How to use it well:\n"
+    "    * Hand the sub-agent a SUBSTANTIAL, self-contained subtask and let it do the iterative "
+    "looking internally — e.g. \"find and read the total revenue figure, verifying it\" — rather "
+    "than driving many tiny one-look reads yourself. One capable delegation replaces several "
+    "micro-calls.\n"
+    "    * **Do NOT fan out many sub-agents in parallel.** Prefer ONE delegation at a time; only "
+    "batch a SMALL number (≤2-3) when they are genuinely independent and each is worth a full "
+    "agent run. A long list of parallel sub-agents is wasteful and slow — that is not what this "
+    "tool is for.\n"
+    "    * A subtask can be visual or not. Visual: read/verify a value from a region, describe a "
+    "figure, locate which page holds something. Non-visual: compare or normalize values you "
+    "already have, reformat, compute, summarize text you pass in.\n"
+    "  Signature: list of (task, images) tuples. `task` is a natural-language instruction (string); "
     "`images` is the visual context the subtask needs — a single image (a page `pages[i]` or a "
     "crop `pages[i].crop((left, top, right, bottom))`), a LIST of images (e.g. a page range "
     "`pages[3:8]`), or `None` if the subtask is non-visual. "
@@ -252,10 +262,11 @@ _TASK_BODY = (
     "  When: you have the answer and have verified it.\n\n"
 
     "## APPROACH\n"
-    "1. UNDERSTAND — read the question and work out which subtasks would answer it.\n"
-    "2. DECOMPOSE & DELEGATE — break the problem into well-scoped subtasks and delegate each to "
-    "the sub-agent. Give a subtask an image when it needs to look at something; leave the image "
-    "out when it is a text or reasoning step. Batch independent subtasks into one call.\n"
+    "1. UNDERSTAND — read the question and work out the few substantial subtasks that would answer it.\n"
+    "2. DELEGATE DELIBERATELY — hand each substantial subtask to the sub-agent, one (or a small "
+    "few) at a time, and let it do its own iterative looking/verification internally. Give it an "
+    "image when it needs to look; leave the image out for a text or reasoning step. Do not spawn a "
+    "swarm of tiny parallel sub-agents.\n"
     "3. COMBINE — assemble the sub-agent results in Python (count, compare, compute, select), or "
     "delegate the combination itself as a subtask.\n"
     "4. VERIFY — for any result you are unsure of, do not commit it after a single delegation. "
@@ -272,8 +283,9 @@ _TASK_BODY = (
     "- **Verify precise values.** Numbers, fine text, and small labels are where results are least "
     "reliable; confirm them with a second, differently-framed delegation before committing.\n"
     "- **Many-part questions** (\"how many...\", \"which is largest...\", \"list all...\"): gather "
-    "ALL the parts first (do not stop at the first one), then combine or compare them — in Python "
-    "or via a delegated reasoning subtask.\n\n"
+    "all the parts (do not stop at the first one), then combine or compare them. Prefer delegating "
+    "the enumeration as ONE substantial subtask (\"find and list all X across these pages\") over "
+    "spawning a separate sub-agent per candidate.\n\n"
 
     "## OUTPUT FORMAT\n"
     "- SUBMIT a single answer string: `SUBMIT(answer=\"42\")`.\n"
