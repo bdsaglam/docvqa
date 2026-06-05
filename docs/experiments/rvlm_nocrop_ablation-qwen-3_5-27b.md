@@ -46,6 +46,8 @@ uv run python evals.py \
 | t3 | `rvlm-nocrop-cmp-val-t3` | 41.25 | 33/80 | — | business_report 6/10, comics 5/10, engineering_drawing 4/10, infographics 7/10, maps 1/10, science_paper 3/10, science_poster 2/10, slide 5/10 |
 | t4 | `rvlm-nocrop-cmp-val-t4` | 35.00 | 28/80 | — | business_report 4/10, comics 5/10, engineering_drawing 3/10, infographics 5/10, maps 1/10, science_paper 3/10, science_poster 4/10, slide 3/10 |
 | t5 | `rvlm-nocrop-cmp-val-t5` | 41.25 | 33/80 | — | business_report 4/10, comics 6/10, engineering_drawing 4/10, infographics 8/10, maps 0/10, science_paper 2/10, science_poster 3/10, slide 6/10 |
+| t6 | `rvlm-nocrop-cmp-val-t6` | 32.50 | 26/80 | — | business_report 3/10, comics 3/10, engineering_drawing 5/10, infographics 5/10, maps 0/10, science_paper 3/10, science_poster 2/10, slide 5/10 |
+| t7 | `rvlm-nocrop-cmp-val-t7` | 36.25 | 29/80 | — | business_report 4/10, comics 4/10, engineering_drawing 3/10, infographics 8/10, maps 0/10, science_paper 4/10, science_poster 2/10, slide 4/10 |
 
 ## Summary
 
