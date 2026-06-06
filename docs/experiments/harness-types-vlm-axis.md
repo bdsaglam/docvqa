@@ -168,28 +168,31 @@ micro-average.
   only emerge once *either* perception (v2's 27B VLM) or the reasoner
   (9B/27B) is strong enough to exploit the harness.
 
-## v3 — reasoning vs perception (LLM=27B / VLM=9B), in progress
+## v3 — reasoning vs perception (LLM=27B / VLM=9B), DONE (n=8)
 
 The missing factorial corner: a **strong reasoner on weak perception**,
 to pair against v2's weak-reasoner-on-strong-perception (9B-LM/27B-VLM).
-run_ids `{rvlm-minimal,react,codeact}-27b-llm-9b-vlm-val-t*`, n=8 target,
-cap 3 on 27B DP=3 @8927 + 9B @8909.
+run_ids `{rvlm-minimal,react,codeact}-27b-llm-9b-vlm-val-t*`, **n=8 locked**
+(RLM/CodeAct completed on amax1 2026-06-06, 27B DP=2 @8927 + 9B @8909).
 
-**Current (ReAct locked n=8; RLM/CodeAct partial — rest on amax1):**
+**Locked n=8 — all three harnesses:**
 
 | Harness | 9B-LM / 27B-VLM (v2) | 27B-LM / 9B-VLM (v3) | Δ | lean |
 |---|---|---|---|---|
-| RLM | 24.54 | 33.67 (n=2: 32.60, 34.74) | **+9.1** | reasoning-bound |
-| CodeAct | 24.26 | 30.14 (n=4: 27.87, 35.24, 32.81, 24.64) | **+5.9** | reasoning-bound |
+| RLM | 24.54 | **34.82 ± 3.01 (n=8)** | **+10.3** | **reasoning-bound** |
+| CodeAct | 24.26 | **30.43 ± 2.86 (n=8)** | **+6.2** | **reasoning-bound** |
 | ReAct | 21.01 | **17.96 ± 3.94 (n=8)** | **−3.05** | **perception-bound** |
+
+RLM v3 per-trial: 32.60 / 34.74 / 32.50 / 35.00 / 32.50 / 32.50 / 40.00 / 38.75.
+CodeAct v3 per-trial: 27.87 / 35.24 / 32.81 / 28.75 / 30.00 / 31.25 / 31.25 / 26.25.
+(amax7 ran t1–t2 RLM / t1–t3 CodeAct + ReAct; amax1 finished the rest.)
 
 ReAct v3 per-trial: 14.83 / 17.91 / 21.44 / 19.27 / 14.23 / 15.71 / 25.48
 / 14.84. **ReAct v3 is the only harness that *loses* going from
 9B-LM/27B-VLM → 27B-LM/9B-VLM** (−3.05pp, n=8) — a stronger reasoner on
 weaker perception can't recover the lost VLM acuity because it has no
-crop/zoom actuator. RLM (+9.1) and CodeAct (+5.9) both *gain* from the
-reasoner swap (partial n; locks on amax1). RLM/CodeAct v3 remaining
-trials run on amax1 (see `coordination/amax7.md` 2026-06-04 note).
+crop/zoom actuator. RLM (+10.3) and CodeAct (+6.2) both *gain* from the
+reasoner swap (n=8, locked).
 
 **Mechanism — the REPL is what converts reasoning into perception
 (why ReAct is the lone perception-bound harness).** ReAct's only
@@ -207,11 +210,11 @@ RLM and CodeAct write Python around the same `batch_look`: they crop to
 the evidence region, zoom, retry tighter, composite panels, and arithmetic
 on coordinates. A stronger reasoner therefore produces **better-targeted
 sub-images** and extracts more *even from a weaker (9B) VLM* — so the
-27B-reasoner/9B-VLM corner *gains* (RLM +8, CodeAct +3.6) → these harnesses
-are **reasoning-bound**. This is a direct corollary of the D-006
+27B-reasoner/9B-VLM corner *gains* (RLM +10.3, CodeAct +6.2) → these
+harnesses are **reasoning-bound**. This is a direct corollary of the D-006
 active-perception thesis: the REPL crop/zoom loop is the mechanism that
 **turns reasoning capability into perception quality**; remove it (ReAct)
-and reasoning can no longer buy perception. Locks at n=8.
+and reasoning can no longer buy perception. **Locked at n=8.**
 
 ## Status
 
