@@ -34,7 +34,47 @@ already suffices and the extra agency is pure overhead.
 - run_id `subagent-full-mp8-t1`. The earlier full-val attempt was killed
   (nested-loop cost ~10–15h); this scoped subset is the bounded pilot.
 
-## Result — paired contrast (split by page count)
+## Result — n=8 (the verdict; the pilot below was n=1 noise)
+
+The n=1 pilot (next section) showed an exciting crossover (+8.9pp many-page
+/ −10.4pp single-page). **It did not survive n=8.** Running all 8 docs ×8
+trials (same config) and computing each group's score per trial → mean ± std:
+
+| Group | full-agent (n=8) | rvlm (n=8) | subagent (n=8) | Δ vs rvlm | Δ vs subagent |
+|---|---|---|---|---|---|
+| **MANY-PAGE** (5 docs, 21 Q) | **41.1 ± 6.2** | 38.7 | 41.7 | **+2.4pp** | **−0.6pp** |
+| **SINGLE-PAGE** (3 docs, 18 Q) | **45.8 ± 7.1** | 49.3 | 44.4 | **−3.5pp** | **+1.4pp** |
+
+**The crossover collapsed and neither delta clears the noise.** The group
+stds are **±6–7pp** — larger than the +2.4 / −3.5 deltas. Full-agent is
+**statistically indistinguishable from both rvlm and the cheap single-forward
+`subagent`** on both groups. The 10×-more-expensive agentic sub-call buys
+**nothing reliable**.
+
+Why the pilot was misleading — it was trial t1, which happened to be a
+**high-many-page / low-single-page draw**; that single trajectory
+manufactured the whole crossover. The two "driver" docs across n=8:
+
+| Doc | full-agent n=8 | rvlm-n8 | note |
+|---|---|---|---|
+| comics_2 (the "+56") | **53 ± 31** (range 0→100) | 44 | pure variance on 4 Q; t1=100 was luck |
+| science_paper_1 (the "−14") | **30 ± 12** | 29 | **tied** at n=8; t1=14 was a low draw |
+| slide_3 | 60 ± 0 | 55 | the one consistent small +5 |
+
+**Verdict:** on DocVQA-2026 val, upgrading the sub-call from a single VLM
+forward (`subagent`) to a full agent (`subagent_full`) gives **no
+measurable benefit** — many-page or otherwise — at ~10× the cost. The
+many-page hypothesis is **not confirmed here**. Caveat the other way: this
+test bed is weak for it — only 5 many-page docs, several with 2–4 Q, so
+per-doc variance (±26–31pp on comics_2 / science_paper_3) swamps any modest
+real effect. So this **fails to confirm**, but can't definitively kill, the
+hypothesis. A genuine test needs MMLongBench-Doc (many long docs, many Q) —
+but given the flat result + 10× cost here, that's a deliberate spend, not an
+obvious next step.
+
+---
+
+## Result — n=1 PILOT (SUPERSEDED by n=8 above; kept for the record)
 
 | Group | full-agent (n=1) | rvlm (n=8) | subagent (n=8) | Δ vs rvlm | Δ vs subagent |
 |---|---|---|---|---|---|
@@ -94,8 +134,12 @@ regressing, **cannot lock it**. Two ways to firm it up:
 
 ## Status
 
-**PILOT DONE (2026-06-05).** n=1 8-doc contrast: many-page **+8.9pp** vs
-rvlm, single-page **−10.4pp**, aggregate 0.0pp. Direction confirms the
-many-page hypothesis; magnitude unlocked (n=1, comics_2-driven,
-science_paper_1 regressed). Awaiting user call on n=8-many-page vs
-MMLongBench-Doc.
+**DONE — n=8 (2026-06-06). NEGATIVE / not confirmed.** The n=1 pilot
+crossover (+8.9/−10.4) did **not** survive n=8: many-page **+2.4pp** vs rvlm
+(−0.6 vs subagent), single-page **−3.5pp** vs rvlm (+1.4 vs subagent), both
+**within the ±6–7pp trial std**. Full-agent ≈ subagent ≈ rvlm; the 10×-cost
+agentic sub-call buys nothing measurable on DocVQA-2026 val. The pilot was a
+single lucky draw (t1); comics_2 is 53±31 over n=8, science_paper_1 tied.
+Many-page hypothesis not confirmed (weak test bed — tiny per-doc Q counts).
+Proper test would be MMLongBench-Doc, but the flat result + 10× cost make
+that a deliberate, not obvious, next step. Awaiting user call.
