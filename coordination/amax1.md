@@ -167,3 +167,14 @@ harness-types-vlm-axis.md.
 
 Earlier full-agent sub-agent experiment (rvlm_subagent_full) concluded
 NEGATIVE at n=8 (pilot crossover was noise) — see its experiment doc.
+
+## NOTE FOR AMAX7 (2026-06-06): v3 DONE — locked n=8 in harness-types
+
+v3 (27B-LM/9B-VLM) finished on amax1. Locked n=8 in
+`docs/experiments/harness-types-vlm-axis.md`:
+- RLM 34.82±3.01 (+10.3 vs v2 24.54) — reasoning-bound
+- CodeAct 30.43±2.86 (+6.2 vs v2 24.26) — reasoning-bound
+- ReAct 17.96±3.94 (−3.05) — perception-bound (your t1-t7 + synced t8)
+Headline: the REPL crop/zoom loop converts reasoning→perception (RLM/CodeAct
+gain from a stronger reasoner even on weaker VLM); ReAct has no actuator → loses.
+27B still DP=2 + 9B @8909 up (idle now v3 is done).
