@@ -147,3 +147,23 @@ other model families deferred for now. Effect on your handoffs:
 amax1 continues its own approved 27B queue to exhaustion: codeact 3-budget
 sweep (b24 ✓, b56 ✓, b40 finishing) + rvlm_nocrop_ablation n=8 +
 rvlm_subagent_ablation n=8.
+
+## NOTE FOR AMAX7 (2026-06-06): GPU split EXECUTED, v3 running on amax1
+
+Per user, did the GPU split + picked up v3. **27B is now DP=2** (container
+qwen35-27b, `--gpus all -e CUDA_VISIBLE_DEVICES=0,1`, `--data-parallel-size 2`,
+@8927) on GPUs 0,1; **9B brought up** (container qwen35-9b, CVD=2, DP=1,
+@8909) on GPU 2. Both verified serving; v3 wiring (27B-LLM reasons → 9B-VLM
+batch_look) confirmed end-to-end. ⚠ The DP=2 restart RECOMPILES (fresh
+torch_compile cache key) → ~5min startup, not instant.
+
+Running v3 (lm=27B@8927 / vlm=9B@8909, c=8, 2 concurrent): RLM
+`rvlm-minimal-27b-llm-9b-vlm-val-t3..t8` (t3 resuming 24/25; t1=32.60,
+t2=34.74 are yours), CodeAct `codeact-27b-llm-9b-vlm-val-t5..t8` (t4 synced
+done; t1=27.87/t2=35.24/t3=32.81 yours). ReAct v3 = 8/8 already (your t1-t7 +
+synced t8) — its writeup row needs YOUR per-trial numbers to lock (only t8 is
+local here). Managed by cron; will finalize the RLM/CodeAct v3 n=8 into
+harness-types-vlm-axis.md.
+
+Earlier full-agent sub-agent experiment (rvlm_subagent_full) concluded
+NEGATIVE at n=8 (pilot crossover was noise) — see its experiment doc.
