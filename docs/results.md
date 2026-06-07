@@ -39,6 +39,7 @@ reference (difference of means).
 | ablation | `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | 35.47% ± 4.48 | −3.91pp |
 | ablation | `rvlm_nocrop_ablation` | `batch_look` by **page index, no crop/zoom** (whole pages only) | 36.88% ± 3.20 | −2.51pp |
 | ablation | `rvlm_subagent_ablation` | sub-call generalized to **`batch_subagent`** (any subtask, image optional) | 39.22% ± 3.34 | −0.16pp |
+| ablation | `rvlm_rationale` | VLM sub-call returns **answer + observation/uncertainty `[note: ...]`** (every call) | 39.22% ± 2.91 | −0.16pp |
 | baseline | `react_baseline` | perception (VLM tools), **no REPL** | 25.16% ± 4.60 | −14.22pp |
 | baseline | `direct_vlm` | `display()` pages into own context, no sub-call | 22.34% ± 2.79 | −17.03pp |
 | baseline | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.47% ± 1.63 | −18.91pp |
