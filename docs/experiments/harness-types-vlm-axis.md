@@ -34,6 +34,19 @@ micro-average.
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
 | Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **36.96 ± 5.25** (b=40, n=7) |
+| Gemma-4 E4B homog | **6.88** (6.25, 7.50; n=2) | — (not run) | **7.50** (8.75, 6.25; n=2) |
+| Gemma-4 31B homog | _in progress (TP=2)_ | — (not run) | _pending_ |
+
+**Cross-family Gemma points (2026-06-07, user request):** homogeneous Gemma
+(lm=vlm=Gemma) × {rvlm, codeact}, n=2 pilots. **Gemma-4 E4B is far below
+Qwen 3.5 4B** (rvlm 6.9 vs 21.1; codeact 7.5 vs 12.2) — the tiny elastic
+model burns its iteration budget on coding mistakes and has weak homogeneous
+vision, so it can barely drive the code+perception loop. The Gemma-4 31B
+point (running) will disambiguate "Gemma is weak at this task" from "small
+models can't drive the scaffold." Config verified non-garbage (batch_look
+fires, model self-corrects from real sandbox errors; Gemma needs no special
+tool/reasoning parser — rvlm/codeact parse code from text). n>2 escalation
+left to the user. Detail: `gemma-model-axis.md`.
 
 ## Locked cells
 

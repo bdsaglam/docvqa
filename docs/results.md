@@ -5,6 +5,13 @@ hypothesis). Scores are **mean ± std across trials** (no SC voting in the
 headline per D-003 — SC-8 numbers shown only where they anchor an ICDAR
 submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 
+> **Status / queue / how-to-run:** see `docs/experiment-status.md` (single
+> source of truth for what's done, in progress, and queued). Negative-result
+> variants not in the table below: **`rvlm_subagent_full`** (full-agent
+> sub-call, ≈ subagent at 10× cost — `rvlm_subagent_full-qwen-3_5-27b.md`);
+> the model-size axis incl. **Gemma** is in `harness-types-vlm-axis.md` +
+> `gemma-model-axis.md`.
+
 > **⚠ All current numbers are from the post-2026-06-01 code** (minimized /
 > parity-stripped prompts + per-call `num_retries=5` only; whole-agent
 > `@retry` removed). **Pre-change numbers are no longer valid** — the
