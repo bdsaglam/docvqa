@@ -15,8 +15,8 @@ Last updated 2026-06-07. Quick view of what's **done**, **in progress**, and
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
 | **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-types-vlm-axis.md |
-| Gemma-4 E4B homog (n=2) | rvlm 6.88, codeact 7.50 | — (model-axis point) | gemma-model-axis.md |
-| Gemma-4 31B homog (n=1) | rvlm 30.00, codeact 37.50 | same ballpark as Qwen 27B; E4B collapse is scale, not family | gemma-model-axis.md |
+| Gemma-4 E4B homog (n=2) | rvlm 6.88, react 4.38, codeact 7.50 | — (model-axis point) | gemma-model-axis.md |
+| Gemma-4 31B homog (n=1) | rvlm 30.00, react 20.00, codeact 37.50 | full harness sweep; ReAct weakest (REPL>tool-only, both families); E4B collapse is scale | gemma-model-axis.md |
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel
@@ -47,13 +47,17 @@ reasoning into perception (v3).
   `tmp/workspace/solver-cmp/GPU_SWITCH_PLAN.md`, `GEMMA_PHASE_PLAN.md`.
 - **Always keep a 27B up.** Serve one model per full GPU set sequentially;
   DP for small models, TP for large.
+- **Gemma serving:** canonical image is **`vllm/vllm-openai:gemma4`** +
+  **`--reasoning-parser gemma4`** (see `docs/scratchpad.md`), NOT generic
+  `:latest`. Image entrypoint is already `["vllm","serve"]` → container
+  command must start with `--port` (a leading `serve` → instant exit(2)).
 
 ## How to run (canonical commands)
 
 ```bash
 # rvlm (proposed method), 27B homog, n=1
 uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false solver=rvlm_minimal data.split=val data.num_samples=null \
+  lm.enable_thinking=false solver=rvlm data.split=val data.num_samples=null \
   max_concurrency=16 run_id=rvlm-val-t1
 # swap solver= for the variant: codeact | rvlm_ocr_ablation | rvlm_hybrid_ablation |
 #   rvlm_nocrop_ablation | rvlm_subagent_ablation | rvlm_subagent_full | rvlm_rationale |

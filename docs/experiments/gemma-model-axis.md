@@ -27,10 +27,10 @@ vs the Qwen curve?
 
 ## Results (n=2 pilots)
 
-| Model | rvlm | codeact | vs Qwen 3.5 4B homog |
-|---|---|---|---|
-| **Gemma-4 E4B** | **6.88%** (6.25, 7.50) | **7.50%** (8.75, 6.25) | rvlm 21.1 / codeact 12.2 — **Gemma E4B far lower** |
-| **Gemma-4 31B** | **30.00%** (n=1) | **37.50%** (n=1) | Qwen 27B homog: rvlm 39.4 / codeact 37.0 — Gemma 31B ~2-9pp lower, same ballpark |
+| Model | rvlm | ReAct | codeact | vs Qwen homog |
+|---|---|---|---|---|
+| **Gemma-4 E4B** | **6.88%** (6.25, 7.50; n=2) | **4.38%** (2.50, 6.25; n=2) | **7.50%** (8.75, 6.25; n=2) | Qwen 4B: rvlm 21.1 / react 11.9 / codeact 12.2 — **E4B far lower** |
+| **Gemma-4 31B** | **30.00%** (n=1) | **20.00%** (n=1) | **37.50%** (n=1) | Qwen 27B: rvlm 39.4 / react 25.2 / codeact 37.0 — same ballpark |
 
 **Read (E4B):** Gemma-4 E4B scores ~7% on both harnesses — well below Qwen
 3.5 4B (21% rvlm). The tiny elastic model burns its iteration budget on
@@ -47,6 +47,22 @@ Qwen 27B ordering (rvlm 39.4 > codeact 37.0). At n=1 per cell this is inside
 trial noise (recall Qwen rvlm/codeact sit ~2pp apart with ±1.5-5pp std), so
 read it as "the two harnesses are close on Gemma 31B," not a robust
 cross-family inversion — n>2 would be needed to claim one.
+
+**Read (ReAct, added 2026-06-07):** ReAct is the **weakest harness on both
+Gemma sizes**, same as Qwen. E4B ReAct **4.38** (n=2) is below its own rvlm
+6.9 / codeact 7.5 — near the floor; a 4B model can't sustain the tool-only
+ReAct trajectory. 31B ReAct **20.00** (n=1) ≪ its rvlm 30.0 / codeact 37.5,
+exactly mirroring Qwen 27B (react 25.2 ≪ rvlm 39.4 / codeact 37.0). The
+harness ordering — REPL-bearing rvlm/codeact > tool-only ReAct — is therefore
+**robust across model families**: lacking a Python REPL costs ReAct the most,
+regardless of model. Predictions verified real (e.g. map place-names read off
+the page, not all-Unknown).
+
+**Serving note:** the canonical Gemma image is **`vllm/vllm-openai:gemma4`**
+with **`--reasoning-parser gemma4`** (per `docs/scratchpad.md`) — NOT the
+generic `:latest`. The image ENTRYPOINT is already `["vllm","serve"]`, so the
+container command must start with `--port` (passing a leading `serve` →
+`unrecognized arguments: serve` → instant exit).
 
 ## How to run
 
@@ -70,6 +86,9 @@ Configs: `configs/{lm,vlm}/gemma-4-{e4b,31b}-vllm-local.yaml` (E4B @8904, 31B @8
 
 ## Status
 
-**DONE (2026-06-07).** E4B (n=2): rvlm 6.88%, codeact 7.50%. 31B (n=1, TP=2):
-rvlm 30.00%, codeact 37.50%. n>2 escalation left to the user. Rolled into
-`harness-types-vlm-axis.md` (v1 homog table) + `experiment-status.md`.
+**DONE (2026-06-07).** Full harness sweep:
+- **E4B** (n=2): rvlm 6.88 / react 4.38 / codeact 7.50.
+- **31B** (n=1): rvlm 30.00 / react 20.00 / codeact 37.50.
+ReAct weakest on both (REPL > tool-only, robust across families). n>2
+escalation left to the user. Rolled into `harness-types-vlm-axis.md` (v1
+homog table) + `experiment-status.md`.

@@ -34,8 +34,8 @@ micro-average.
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
 | Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **36.96 ± 5.25** (b=40, n=7) |
-| Gemma-4 E4B homog | **6.88** (6.25, 7.50; n=2) | — (not run) | **7.50** (8.75, 6.25; n=2) |
-| Gemma-4 31B homog | **30.00** (n=1) | — (not run) | **37.50** (n=1) |
+| Gemma-4 E4B homog | **6.88** (6.25, 7.50; n=2) | **4.38** (2.50, 6.25; n=2) | **7.50** (8.75, 6.25; n=2) |
+| Gemma-4 31B homog | **30.00** (n=1) | **20.00** (n=1) | **37.50** (n=1) |
 
 **Cross-family Gemma points (2026-06-07, user request):** homogeneous Gemma
 (lm=vlm=Gemma) × {rvlm, codeact}, n=2 pilots. **Gemma-4 E4B is far below
@@ -48,9 +48,18 @@ vision, so it can barely drive the code+perception loop. **Gemma-4 31B
 at 31B Gemma drives both harnesses competently. Note codeact > rvlm on
 Gemma 31B (37.5 vs 30.0) — the reverse of Qwen 27B (rvlm 39.4 > codeact
 37.0); at n=1 each this is within trial noise, not a robust family
-inversion. Config verified non-garbage (batch_look fires, model
-self-corrects from real sandbox errors; Gemma needs no special
-tool/reasoning parser — rvlm/codeact parse code from text). n>2 escalation
+inversion. **ReAct column (n=2/n=1, added 2026-06-07): E4B 4.38, 31B 20.00.**
+ReAct is the **weakest harness on Gemma too**, same as Qwen: E4B ReAct 4.38
+sits below its own rvlm 6.9 / codeact 7.5 (near the floor — a 4B model can't
+sustain the ReAct trajectory); 31B ReAct 20.00 ≪ its rvlm 30.0 / codeact 37.5,
+mirroring Qwen 27B (react 25.2 ≪ rvlm 39.4 / codeact 37.0). So the
+harness ordering (REPL-bearing rvlm/codeact > tool-only ReAct) is robust
+across both model families — ReAct's lack of a Python REPL costs it the most.
+Config verified non-garbage (batch_look fires, model self-corrects from real
+sandbox errors; real ReAct predictions e.g. map place-names read off the
+page). **Serving:** canonical Gemma image is `vllm/vllm-openai:gemma4` +
+`--reasoning-parser gemma4` (per `docs/scratchpad.md`); rvlm/codeact/react all
+parse tool calls from text (no native tool parser needed). n>2 escalation
 left to the user. Detail: `gemma-model-axis.md`.
 
 ## Locked cells
