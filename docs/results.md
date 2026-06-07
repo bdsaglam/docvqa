@@ -212,8 +212,12 @@ clean reasoner-*quality* signal, kept off the Qwen3.5 9B↔4B size curve
 because it's a different generation. A clean 8B size point would need
 **Qwen3.5-8B** (same family). Detail in the experiment writeup.
 
-The baseline-vs-scaffold model-axis sweep (Gemma E4B / Gemma 31B / Qwen
-27B on clean prompts) is queued on amax1 — numbers TBD.
+Homogeneous cross-family **Gemma** model-axis pilots landed (2026-06-07,
+val): **E4B** (n=2) rvlm 6.88 / codeact 7.50; **31B** (n=1) rvlm 30.00 /
+codeact 37.50 — 31B is the same regime as Qwen 27B (rvlm 39.4 / codeact
+37.0), so the E4B collapse is a scale effect, not a Gemma-family one.
+Detail: `harness-types-vlm-axis.md` + `gemma-model-axis.md`. (n>2
+escalation left to the user.)
 
 ## Document-length axis (prediction 2)
 

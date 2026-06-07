@@ -30,14 +30,23 @@ vs the Qwen curve?
 | Model | rvlm | codeact | vs Qwen 3.5 4B homog |
 |---|---|---|---|
 | **Gemma-4 E4B** | **6.88%** (6.25, 7.50) | **7.50%** (8.75, 6.25) | rvlm 21.1 / codeact 12.2 — **Gemma E4B far lower** |
-| **Gemma-4 31B** | _in progress (TP=2)_ | _pending_ | (Qwen 27B homog: rvlm 39.4 / codeact 37.0) |
+| **Gemma-4 31B** | **30.00%** (n=1) | **37.50%** (n=1) | Qwen 27B homog: rvlm 39.4 / codeact 37.0 — Gemma 31B ~2-9pp lower, same ballpark |
 
 **Read (E4B):** Gemma-4 E4B scores ~7% on both harnesses — well below Qwen
 3.5 4B (21% rvlm). The tiny elastic model burns its iteration budget on
 coding mistakes and has weak homogeneous vision, so it can barely drive the
 recursive code+perception loop. Real scores (genuine predictions), not a
-config artifact. The 31B point (running) tells us whether this is "Gemma
-weak at this task" or "small models can't drive the scaffold."
+config artifact.
+
+**Read (31B):** Gemma-4 31B (n=1) lands at **rvlm 30.00 / codeact 37.50** —
+below Qwen 3.5 27B (rvlm 39.4 / codeact 37.0) but in the same regime, so the
+E4B collapse is a **scale/capacity** effect ("small models can't drive the
+scaffold"), not a Gemma-family weakness: at 31B Gemma runs both harnesses
+competently. Note codeact (37.5) > rvlm (30.0) here — the **reverse** of the
+Qwen 27B ordering (rvlm 39.4 > codeact 37.0). At n=1 per cell this is inside
+trial noise (recall Qwen rvlm/codeact sit ~2pp apart with ±1.5-5pp std), so
+read it as "the two harnesses are close on Gemma 31B," not a robust
+cross-family inversion — n>2 would be needed to claim one.
 
 ## How to run
 
@@ -61,6 +70,6 @@ Configs: `configs/{lm,vlm}/gemma-4-{e4b,31b}-vllm-local.yaml` (E4B @8904, 31B @8
 
 ## Status
 
-E4B **done** (n=2): rvlm 6.88%, codeact 7.50%. 31B **in progress** (TP=2):
-rvlm-t1 running, codeact-t1 pending (n=1 cost-limited). n>2 escalation left
-to the user. Rolled into `harness-types-vlm-axis.md` (v1 homog table).
+**DONE (2026-06-07).** E4B (n=2): rvlm 6.88%, codeact 7.50%. 31B (n=1, TP=2):
+rvlm 30.00%, codeact 37.50%. n>2 escalation left to the user. Rolled into
+`harness-types-vlm-axis.md` (v1 homog table) + `experiment-status.md`.

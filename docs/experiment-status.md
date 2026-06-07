@@ -16,6 +16,7 @@ Last updated 2026-06-07. Quick view of what's **done**, **in progress**, and
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
 | **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-types-vlm-axis.md |
 | Gemma-4 E4B homog (n=2) | rvlm 6.88, codeact 7.50 | — (model-axis point) | gemma-model-axis.md |
+| Gemma-4 31B homog (n=1) | rvlm 30.00, codeact 37.50 | same ballpark as Qwen 27B; E4B collapse is scale, not family | gemma-model-axis.md |
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel
@@ -25,10 +26,7 @@ reasoning into perception (v3).
 
 ## 🔄 In progress
 
-- **Gemma-4 31B homog** (model-axis): rvlm-t1 running on **TP=2 (GPUs 1,2)**;
-  codeact-t1 to follow (n=1, cost-limited — 31B is slow even at TP=2).
-  Managed by autonomous cron; finalizes into gemma-model-axis.md +
-  harness-types when done.
+- _(nothing active — Gemma 31B pilots landed; queue drained.)_
 
 ## ⏸ Queued / deferred (not active — need a go-ahead)
 
@@ -42,8 +40,10 @@ reasoning into perception (v3).
 
 ## 🖥 Infra (amax1)
 
-- 27B is docker `qwen35-27b` @8927; **currently DP=1 on GPU 0** (kept up while
-  Gemma uses GPUs 1–2). GPU recipes + the device-quoting gotcha:
+- 27B is docker `qwen35-27b` @8927; **currently DP=1 on GPU 0** (kept up;
+  Gemma 31B pilots done, GPUs 1–2 now free — tear down `gemma-31b` or
+  re-expand 27B to DP/TP across all 3 when convenient). GPU recipes + the
+  device-quoting gotcha:
   `tmp/workspace/solver-cmp/GPU_SWITCH_PLAN.md`, `GEMMA_PHASE_PLAN.md`.
 - **Always keep a 27B up.** Serve one model per full GPU set sequentially;
   DP for small models, TP for large.

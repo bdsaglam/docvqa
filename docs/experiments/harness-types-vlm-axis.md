@@ -35,16 +35,21 @@ micro-average.
 | Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **36.96 ± 5.25** (b=40, n=7) |
 | Gemma-4 E4B homog | **6.88** (6.25, 7.50; n=2) | — (not run) | **7.50** (8.75, 6.25; n=2) |
-| Gemma-4 31B homog | _in progress (TP=2)_ | — (not run) | _pending_ |
+| Gemma-4 31B homog | **30.00** (n=1) | — (not run) | **37.50** (n=1) |
 
 **Cross-family Gemma points (2026-06-07, user request):** homogeneous Gemma
 (lm=vlm=Gemma) × {rvlm, codeact}, n=2 pilots. **Gemma-4 E4B is far below
 Qwen 3.5 4B** (rvlm 6.9 vs 21.1; codeact 7.5 vs 12.2) — the tiny elastic
 model burns its iteration budget on coding mistakes and has weak homogeneous
-vision, so it can barely drive the code+perception loop. The Gemma-4 31B
-point (running) will disambiguate "Gemma is weak at this task" from "small
-models can't drive the scaffold." Config verified non-garbage (batch_look
-fires, model self-corrects from real sandbox errors; Gemma needs no special
+vision, so it can barely drive the code+perception loop. **Gemma-4 31B
+(n=1): rvlm 30.00 / codeact 37.50** — squarely below Qwen 3.5 27B (rvlm
+39.4 / codeact 37.0) but in the same ballpark, so the E4B collapse is
+"small models can't drive the scaffold," not "Gemma is weak at this task":
+at 31B Gemma drives both harnesses competently. Note codeact > rvlm on
+Gemma 31B (37.5 vs 30.0) — the reverse of Qwen 27B (rvlm 39.4 > codeact
+37.0); at n=1 each this is within trial noise, not a robust family
+inversion. Config verified non-garbage (batch_look fires, model
+self-corrects from real sandbox errors; Gemma needs no special
 tool/reasoning parser — rvlm/codeact parse code from text). n>2 escalation
 left to the user. Detail: `gemma-model-axis.md`.
 
