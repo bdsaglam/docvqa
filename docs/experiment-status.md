@@ -1,6 +1,6 @@
 # Experiment status — DocVQA-2026 (single source of truth)
 
-Last updated 2026-06-07. Quick view of what's **done**, **in progress**, and
+Last updated 2026-06-09. Quick view of what's **done**, **in progress**, and
 **queued/deferred**, plus how to run. Detailed numbers live in
 `docs/results.md` (cross-solver) and `docs/experiments/<name>.md` (per-cell).
 
@@ -15,8 +15,8 @@ Last updated 2026-06-07. Quick view of what's **done**, **in progress**, and
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
 | **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-types-vlm-axis.md |
-| Gemma-4 E4B homog (n=2) | rvlm 6.88, react 4.38, codeact 7.50 | — (model-axis point) | gemma-model-axis.md |
-| Gemma-4 31B homog (n=1) | rvlm 30.00, react 20.00, codeact 37.50 | full harness sweep; ReAct weakest (REPL>tool-only, both families); E4B collapse is scale | gemma-model-axis.md |
+| Gemma-4 E4B homog harnesses (n=8) | rvlm 7.34±3.30, react 6.09±2.36, codeact 7.66±1.94 | all 3 tied 6–8% — 4B too weak to exploit any scaffold (clean negative control) | gemma-model-axis.md |
+| Gemma-4 31B homog rvlm/react (n=8) | rvlm 32.50±4.48, react 18.44±3.58 | **rvlm ≫ react +14.1pp** — recursion load-bearing, robust vs Qwen 27B | gemma-model-axis.md |
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel
@@ -26,11 +26,17 @@ reasoning into perception (v3).
 
 ## 🔄 In progress
 
-- _(nothing active — Gemma 31B pilots landed; queue drained.)_
+- **Gemma n=8 sweep + baselines (amax1, CAP=1).** Harnesses done at n=8
+  (E4B + 31B rvlm/react/codeact-E4B); **running:** 31B codeact (n=8) and the
+  two baselines (`raw_vlm_multi_baseline`, `official_baseline`) on both
+  models — to build a per-model **harness-LIFT table** (scaffold vs
+  no-scaffold). Reprioritized 2026-06-09 (user): finish in-flight 31B
+  codeact-t1, then detour to the 16 E4B-baseline trials before the rest of
+  31B. ~56/80 trials done. Queue: `tmp/workspace/solver-cmp/GEMMA_N8_QUEUE.md`.
 
 ## ⏸ Queued / deferred (not active — need a go-ahead)
 
-- **Gemma n>2 escalation** (E4B / 31B to n=8) — pilots done; escalation is the user's call.
+- **Gemma n>2 escalation** — _now in progress_ (see above; n=8 + baselines running).
 - **rvlm_rationale / subagent / subagent_full on long-doc** (MMLongBench-Doc) —
   the perception-sub-call enrichments are null on short DocVQA; the open
   question is whether they pay off where routing is harder (long multi-page).

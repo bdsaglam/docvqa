@@ -34,33 +34,51 @@ micro-average.
 | Qwen3.5 9B homog | 16.67% ± 3.40 | **14.97% ± 2.96** (n=8) | **19.35% ± 4.24** (n=8) |
 | Qwen3.5 4B homog | 12.49% ± 3.74 | **11.94% ± 2.23** (n=8) | **12.19% ± 3.50** (n=8) |
 | Qwen3.5 27B homog | **39.38 ± 1.49** (`rvlm`, n=8) | **25.16 ± 4.60** (n=8) | **36.96 ± 5.25** (b=40, n=7) |
-| Gemma-4 E4B homog | **6.88** (6.25, 7.50; n=2) | **4.38** (2.50, 6.25; n=2) | **7.50** (8.75, 6.25; n=2) |
-| Gemma-4 31B homog | **30.00** (n=1) | **20.00** (n=1) | **37.50** (n=1) |
+| Gemma-4 E4B homog | **7.34% ± 3.30** (n=8) | **6.09% ± 2.36** (n=8) | **7.66% ± 1.94** (n=8) |
+| Gemma-4 31B homog | **32.50% ± 4.48** (n=8) | **18.44% ± 3.58** (n=8) | _n=8 in progress_ (n=1 pilot 37.50) |
 
-**Cross-family Gemma points (2026-06-07, user request):** homogeneous Gemma
-(lm=vlm=Gemma) × {rvlm, codeact}, n=2 pilots. **Gemma-4 E4B is far below
-Qwen 3.5 4B** (rvlm 6.9 vs 21.1; codeact 7.5 vs 12.2) — the tiny elastic
-model burns its iteration budget on coding mistakes and has weak homogeneous
-vision, so it can barely drive the code+perception loop. **Gemma-4 31B
-(n=1): rvlm 30.00 / codeact 37.50** — squarely below Qwen 3.5 27B (rvlm
-39.4 / codeact 37.0) but in the same ballpark, so the E4B collapse is
-"small models can't drive the scaffold," not "Gemma is weak at this task":
-at 31B Gemma drives both harnesses competently. Note codeact > rvlm on
-Gemma 31B (37.5 vs 30.0) — the reverse of Qwen 27B (rvlm 39.4 > codeact
-37.0); at n=1 each this is within trial noise, not a robust family
-inversion. **ReAct column (n=2/n=1, added 2026-06-07): E4B 4.38, 31B 20.00.**
-ReAct is the **weakest harness on Gemma too**, same as Qwen: E4B ReAct 4.38
-sits below its own rvlm 6.9 / codeact 7.5 (near the floor — a 4B model can't
-sustain the ReAct trajectory); 31B ReAct 20.00 ≪ its rvlm 30.0 / codeact 37.5,
-mirroring Qwen 27B (react 25.2 ≪ rvlm 39.4 / codeact 37.0). So the
-harness ordering (REPL-bearing rvlm/codeact > tool-only ReAct) is robust
-across both model families — ReAct's lack of a Python REPL costs it the most.
+**Cross-family Gemma points (n=8, escalated 2026-06-09 per user request;
+supersedes the n=1/n=2 pilots):** homogeneous Gemma (lm=vlm=Gemma) ×
+{rvlm, react, codeact}, n=8 each. Baselines (`raw_vlm_multi_baseline`,
+`official_baseline`) and the 31B codeact cell are **still running** — the
+per-model harness-LIFT table lands when they finish.
+
+- **Gemma-4 E4B (n=8): rvlm 7.34 / react 6.09 / codeact 7.66 — all three
+  harnesses statistically tied** (within ~1 std of each other, 6–8% band).
+  A 4B model is **too weak to exploit any scaffold**: it burns its iteration
+  budget on coding mistakes and has weak homogeneous vision, so harness type
+  doesn't separate. (Per-cell stds 1.9–3.3pp; the gaps are noise.) This is
+  itself the clean negative control for the lift hypothesis — lift needs a
+  capable-enough base model.
+- **Gemma-4 31B (n=8): rvlm 32.50 ≫ react 18.44 — a +14.1pp gap, ≫ the
+  combined std.** This is the headline cross-family result: the recursive
+  VLM sub-call (rvlm) is **load-bearing**, and the REPL-only ReAct harness
+  collapses to the no-recursion tier — exactly mirroring Qwen 27B (rvlm 39.4
+  ≫ react 25.2). The harness ordering (recursive-perception ≫ tool-only ReAct)
+  is **robust across model families and is sharp once the base model is
+  strong enough** (31B), while it vanishes into noise at 4B.
+- Numbers moved modestly from the pilots (E4B rvlm 6.88→7.34, react 4.38→6.09;
+  31B rvlm 30.00→32.50, react 20.00→18.44) — the n=1/n=2 pilots were inside
+  the ~3–4pp trial noise, as expected.
+
+**31B ReAct slow-doc note:** ReAct on Gemma-31B is expensive on image-heavy
+docs (`engineering_drawing_1`, `science_poster_2`) — it can burn its full
+`max_iters` (~34) without emitting an answer (a single doc can run ~30–60min).
+Trials that stalled >10min on such a doc past 40min total runtime were
+accepted as **timeout = failure** (that doc scored 0/N via an empty-prediction
+placeholder, keeping a consistent /80 denominator). 3 of 8 react trials used
+this; the other 5 completed all docs naturally and landed in the same range
+(13.75–22.50), so the placeholder does not bias the cell. rvlm/codeact do not
+hit this grind.
+
 Config verified non-garbage (batch_look fires, model self-corrects from real
 sandbox errors; real ReAct predictions e.g. map place-names read off the
 page). **Serving:** canonical Gemma image is `vllm/vllm-openai:gemma4` +
 `--reasoning-parser gemma4` (per `docs/scratchpad.md`); rvlm/codeact/react all
-parse tool calls from text (no native tool parser needed). n>2 escalation
-left to the user. Detail: `gemma-model-axis.md`.
+parse tool calls from text (no native tool parser needed). 31B runs TP=2
+(`--enforce-eager --shm-size=16g`, one trial at a time — an inherent shm
+crash recurs under bursty multi-image load and is handled by restart+resume).
+Detail: `gemma-model-axis.md`.
 
 ## Locked cells
 

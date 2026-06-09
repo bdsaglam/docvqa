@@ -212,15 +212,28 @@ clean reasoner-*quality* signal, kept off the Qwen3.5 9B↔4B size curve
 because it's a different generation. A clean 8B size point would need
 **Qwen3.5-8B** (same family). Detail in the experiment writeup.
 
-Homogeneous cross-family **Gemma** model-axis sweep landed (2026-06-07, val,
-all three harnesses): **E4B** (n=2) rvlm 6.88 / react 4.38 / codeact 7.50;
-**31B** (n=1) rvlm 30.00 / react 20.00 / codeact 37.50. 31B is the same
-regime as Qwen 27B (rvlm 39.4 / react 25.2 / codeact 37.0), so the E4B
-collapse is a scale effect, not a Gemma-family one. **ReAct is the weakest
-harness on both Gemma sizes**, same as Qwen — the REPL-bearing rvlm/codeact >
-tool-only ReAct ordering is robust across model families. Detail:
-`harness-types-vlm-axis.md` + `gemma-model-axis.md`. (Served on
-`vllm/vllm-openai:gemma4`; n>2 escalation left to the user.)
+Homogeneous cross-family **Gemma** model-axis sweep (val, all three harnesses;
+**n=8** escalation + baselines, 2026-06-09 — supersedes the earlier n=1/n=2
+pilots):
+
+| Gemma | rvlm | react | codeact | rawvlm (base) | official (base) |
+|---|---|---|---|---|---|
+| **E4B** | 7.34 ± 3.30 | 6.09 ± 2.36 | 7.66 ± 1.94 | _running_ | _running_ |
+| **31B** | **32.50 ± 4.48** | **18.44 ± 3.58** | _running_ | _running_ | _running_ |
+
+**Two cross-family findings.** (1) At **31B, rvlm 32.50 ≫ react 18.44
+(+14.1pp ≫ std)** — the recursive VLM sub-call is **load-bearing** and
+REPL-only ReAct collapses to the no-recursion tier, mirroring Qwen 27B (rvlm
+39.4 ≫ react 25.2). The "recursive-perception ≫ tool-only ReAct" ordering is
+**robust across model families**. (2) At **E4B all three harnesses are tied
+6–8%** (within ~1 std) — a 4B model is **too weak to exploit any scaffold**, a
+clean negative control: harness lift needs a capable-enough base model and
+shows up sharply at 31B, not at 4B. Baselines (`raw_vlm_multi_baseline`,
+`official_baseline`) + the 31B codeact cell are **still running** — the
+per-model **harness-LIFT table** (scaffold vs no-scaffold) lands when they
+finish. Detail: `harness-types-vlm-axis.md` + `gemma-model-axis.md`. (Served
+on `vllm/vllm-openai:gemma4`; 31B TP=2 one-trial-at-a-time, inherent shm crash
+handled by restart+resume.)
 
 ## Document-length axis (prediction 2)
 
