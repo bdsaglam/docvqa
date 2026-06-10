@@ -48,6 +48,13 @@ def _get_embedder(model_name: str, device: str | None):
     if _EMBEDDER is not None and _EMBEDDER[:2] == (model_name, resolved):
         return _EMBEDDER[2], _EMBEDDER[3], resolved
 
+    if _EMBEDDER is not None:
+        logger.warning(
+            "vsearch: replacing embedder %s with %s — old model memory is not reclaimed",
+            _EMBEDDER[:2],
+            (model_name, resolved),
+        )
+
     import torch
     from colpali_engine.models import ColModernVBert, ColModernVBertProcessor
 
@@ -96,6 +103,7 @@ class PageIndex:
                 q_emb = _embed([query], processor.process_images, model, device)
             else:
                 q_emb = _embed([str(query)], processor.process_texts, model, device)
+        # score is CPU-only MaxSim over cpu tensors — no lock needed
         scores = processor.score(
             [q_emb[0].float()], [e.float() for e in self.embeddings]
         )  # [1, num_pages]
@@ -124,14 +132,23 @@ def build_page_index(
 
 
 def save_page_index(index: PageIndex, vsearch_dir: Path | None = None) -> None:
+    import os
+
     import torch
 
     index_dir = (vsearch_dir or DEFAULT_VSEARCH_DIR) / index.doc_id
     index_dir.mkdir(parents=True, exist_ok=True)
-    torch.save(index.embeddings, index_dir / "embeddings.pt")
-    (index_dir / "meta.json").write_text(
+    # Atomic writes: two eval-trial processes can share this cache dir, so write
+    # each file to a temp path in the same dir then os.replace() it into place
+    # (atomic rename). Write meta.json LAST so its presence signals a complete index.
+    emb_tmp = index_dir / f"embeddings.pt.tmp.{os.getpid()}"
+    torch.save(index.embeddings, emb_tmp)
+    os.replace(emb_tmp, index_dir / "embeddings.pt")
+    meta_tmp = index_dir / f"meta.json.tmp.{os.getpid()}"
+    meta_tmp.write_text(
         json.dumps({"model": index.model_name, "num_pages": len(index.embeddings)})
     )
+    os.replace(meta_tmp, index_dir / "meta.json")
 
 
 def load_page_index(
