@@ -135,4 +135,4 @@ b24 37.66 ± 5.02, b40 36.96 ± 5.25, b56 35.62 ± 2.59; **pooled 36.74 ±
 4.29 (n=23), Δ vs `rvlm` 39.38 = −2.64pp.** Budget noise-dominated, cap
 never binds (~1% @cap). Append-only/MDP costs ~nothing vs compacted
 `rvlm`. Rolled into `docs/results.md` (CodeAct section) +
-`docs/experiments/harness-types-vlm-axis.md` (27B anchor, b=40).
+`docs/experiments/harness-axis-summary.md` (27B anchor row, b=40).

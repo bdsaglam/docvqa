@@ -9,8 +9,9 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > source of truth for what's done, in progress, and queued). Negative-result
 > variants not in the table below: **`rvlm_subagent_full`** (full-agent
 > sub-call, ≈ subagent at 10× cost — `rvlm_subagent_full-qwen-3_5-27b.md`);
-> the model-size axis incl. **Gemma** is in `harness-types-vlm-axis.md` +
-> `gemma-model-axis.md`.
+> the model-size / harness × model axis incl. **Gemma** is in
+> `harness-axis-summary.md` (synthesis) + the by-model files
+> (`qwen-3_5-{4b,9b}.md`, `qwen3-8b.md`, `gemma-4-{e4b,31b}.md`).
 
 > **⚠ All current numbers are from the post-2026-06-01 code** (minimized /
 > parity-stripped prompts + per-call `num_retries=5` only; whole-agent
@@ -181,8 +182,9 @@ twice — the append-only context balloons on that multi-page map until the
 `docs/experiments/codeact-qwen-3_5-27b.md`.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
-val, current code. Detail:
-`docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md`.
+val, current code. Detail: `docs/experiments/qwen-3_5-9b.md` and
+`qwen-3_5-4b.md` (per-model, all harnesses); `qwen3-8b.md` for the
+older-gen point; cross-cutting synthesis in `harness-axis-summary.md`.
 
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
@@ -231,7 +233,8 @@ clean negative control: harness lift needs a capable-enough base model and
 shows up sharply at 31B, not at 4B. Baselines (`raw_vlm_multi_baseline`,
 `official_baseline`) + the 31B codeact cell are **still running** — the
 per-model **harness-LIFT table** (scaffold vs no-scaffold) lands when they
-finish. Detail: `harness-types-vlm-axis.md` + `gemma-model-axis.md`. (Served
+finish. Detail: `gemma-4-e4b.md` + `gemma-4-31b.md` (per-model) +
+`harness-axis-summary.md` (cross-family synthesis). (Served
 on `vllm/vllm-openai:gemma4`; 31B TP=2 one-trial-at-a-time, inherent shm crash
 handled by restart+resume.)
 

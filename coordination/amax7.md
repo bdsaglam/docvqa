@@ -23,7 +23,7 @@ CodeAct on the model-size axis (FT target is an append-only code agent).
 run_ids `react-{8b,9b,4b}-llm-27b-vlm-val-t*` (v2) +
 `react-3_5-{9b,4b}-val-t*` (v1). Local driver-state in
 `tmp/workspace/qwen-9b-vlm-axis/driver-state.md`; writeup target
-`docs/experiments/harness-types-vlm-axis.md`.
+`docs/experiments/harness-axis-summary.md`.
 
 **RLM (`rvlm`) VLM-axis sweep — ✅ DONE (2026-06-02):** 9B v1/v2
 16.67/24.54 (Δ+7.87 sig), 4B 12.49/21.09 (Δ+8.60 sig), 8B-text-only v2
@@ -37,7 +37,7 @@ Per-user direction 2026-05-31 ~21:20: escalate both VLM-axis variants
 to **n=8**. t1 = the original run (renamed `*-val-t1`). t2 launched,
 t3-t8 driven by heartbeat cron (one trial per variant at a time,
 c=16, stall-detect + resume). Full writeup:
-`docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md`.
+`docs/experiments/qwen-3_5-9b.md`.
 
 - run_ids: `rvlm-minimal-3_5-9b-val-t{1..8}`,
   `rvlm-minimal-9b-llm-27b-vlm-val-t{1..8}`.
@@ -55,7 +55,7 @@ c=16, stall-detect + resume). Full writeup:
   by ~+5pp** — the stronger VLM *does* help the 9B reasoner. Lock the
   paired Δ + t-stat after the re-run completes a homogeneous-code n=8.
 - On both arms clean-n=8: paired Δ → update
-  `docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md`, move to Done.
+  `docs/experiments/qwen-3_5-9b.md`, move to Done.
 
 ### `[ ]` Qwen 3.5 4B model-axis: rvlm_minimal n=8 (val) — PHASE 2, after 9B
 
@@ -230,7 +230,7 @@ needed (context-rationing, not the sub-call, may be load-bearing).
 ## Done
 
 ### `[✓]` Qwen 3.5 9B model-axis: rvlm_minimal, two VLM variants (val n=1) — 2026-05-31
-Both variants 17/80 = 21.2%; VLM 9B→27B = 0.0pp at n=1 (perception slack for 9B reasoner). Superseded by the n=8 escalation in In progress. → docs/experiments/qwen-9b-rvlm-minimal-vlm-axis.md
+Both variants 17/80 = 21.2%; VLM 9B→27B = 0.0pp at n=1 (perception slack for 9B reasoner). Superseded by the n=8 escalation in In progress. → docs/experiments/qwen-3_5-9b.md
 
 ### `[✓]` rvlm_skeletal + rvlm_naked + rvlm_hybrid n=1 val (tasks #32/#33/#35) — 2026-05-29
 skeletal +0.00pp, naked −10.00pp (~4.3σ, shelved), hybrid −7.50pp; display:ask_vlm = 1397:706. → docs/experiments/strip-chain-naked-hybrid.md
@@ -304,7 +304,7 @@ t1-t6 that dropped a doc, i.e. <25/25, to finalize).
   relaunch same run_id (resumes only maps_2; a fresh attempt clears it).
 - This 27B/27B CodeAct cell is the **headline** (CodeAct overtakes all
   loops at scale): 4B 15.66 → 9B 24.26 → 27B ~37. Worth locking cleanly.
-- Writeup to append: `docs/experiments/harness-types-vlm-axis.md` (v1-homog /
+- Writeup to append: `docs/experiments/harness-axis-summary.md` (v1-homog /
   27B-anchor table row "Qwen3.5 27B homog | CodeAct").
 
 ## NOTE FOR AMAX1 (2026-06-03, update): CA-27B also needs t6 finalize
@@ -371,7 +371,7 @@ Headline this cell establishes (prelim, locks at n=8): **RLM/CodeAct are
 reasoning-bound (27B-LM/9B-VLM ≫ 9B-LM/27B-VLM: RLM +9, CodeAct +8),
 ReAct is perception-bound (−3)** — the REPL crop/zoom loop converts
 reasoning into perception; ReAct (whole-page look, no crop) can't. Writeup
-+ main-effects table: `docs/experiments/harness-types-vlm-axis.md` (v3 section).
++ main-effects table: `docs/experiments/harness-axis-summary.md` (v3 section).
 
 ## NOTE FOR AMAX1 (2026-06-05): amax7 GPUs FREED — RLM v3 t3 left at 24/25 (science_paper_1 is a hang-magnet)
 

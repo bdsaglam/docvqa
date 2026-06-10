@@ -121,9 +121,12 @@ New canonical names:
   `rvlm_ocr_ablation`, `rvlm_gepa_ablation`.
 - `direct_vlm` minimized in place (kept name).
 
-⚠ **Do NOT delete `configs/solver/rvlm_minimal.yaml`** — your live
-model-axis sweep invokes `solver=rvlm_minimal`. All TEMP aliases get
-removed only once both hosts reference new names.
+~~⚠ Do NOT delete `configs/solver/rvlm_minimal.yaml` — your live
+model-axis sweep invokes `solver=rvlm_minimal`.~~ **RESOLVED (2026-06-07):**
+the model-axis sweeps completed (all cells locked in `docs/results.md`),
+so the `rvlm_minimal.yaml` TEMP alias was deleted. Canonical name is
+`solver=rvlm`. Other TEMP aliases (if any remain) get removed once both
+hosts reference new names.
 
 ## NOTE FOR AMAX7 (2026-06-04): 27B-only directive — v3 deferred, CodeAct-27B reuses b40
 
@@ -163,7 +166,7 @@ t2=34.74 are yours), CodeAct `codeact-27b-llm-9b-vlm-val-t5..t8` (t4 synced
 done; t1=27.87/t2=35.24/t3=32.81 yours). ReAct v3 = 8/8 already (your t1-t7 +
 synced t8) — its writeup row needs YOUR per-trial numbers to lock (only t8 is
 local here). Managed by cron; will finalize the RLM/CodeAct v3 n=8 into
-harness-types-vlm-axis.md.
+harness-axis-summary.md.
 
 Earlier full-agent sub-agent experiment (rvlm_subagent_full) concluded
 NEGATIVE at n=8 (pilot crossover was noise) — see its experiment doc.
@@ -171,7 +174,7 @@ NEGATIVE at n=8 (pilot crossover was noise) — see its experiment doc.
 ## NOTE FOR AMAX7 (2026-06-06): v3 DONE — locked n=8 in harness-types
 
 v3 (27B-LM/9B-VLM) finished on amax1. Locked n=8 in
-`docs/experiments/harness-types-vlm-axis.md`:
+`docs/experiments/harness-axis-summary.md`:
 - RLM 34.82±3.01 (+10.3 vs v2 24.54) — reasoning-bound
 - CodeAct 30.43±2.86 (+6.2 vs v2 24.26) — reasoning-bound
 - ReAct 17.96±3.94 (−3.05) — perception-bound (your t1-t7 + synced t8)

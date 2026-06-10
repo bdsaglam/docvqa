@@ -14,9 +14,9 @@ Last updated 2026-06-09. Quick view of what's **done**, **in progress**, and
 | subagent ablation (general delegation) | 39.22 ± 3.34 | −0.16pp (parity; affordance unused ~1%) | rvlm_subagent_ablation-…md |
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
-| **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-types-vlm-axis.md |
-| Gemma-4 E4B homog harnesses (n=8) | rvlm 7.34±3.30, react 6.09±2.36, codeact 7.66±1.94 | all 3 tied 6–8% — 4B too weak to exploit any scaffold (clean negative control) | gemma-model-axis.md |
-| Gemma-4 31B homog rvlm/react (n=8) | rvlm 32.50±4.48, react 18.44±3.58 | **rvlm ≫ react +14.1pp** — recursion load-bearing, robust vs Qwen 27B | gemma-model-axis.md |
+| **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-axis-summary.md |
+| Gemma-4 E4B homog harnesses (n=8) | rvlm 7.34±3.30, react 6.09±2.36, codeact 7.66±1.94 | all 3 tied 6–8% — 4B too weak to exploit any scaffold (clean negative control) | gemma-4-e4b.md |
+| Gemma-4 31B homog rvlm/react (n=8) | rvlm 32.50±4.48, react 18.44±3.58 | **rvlm ≫ react +14.1pp** — recursion load-bearing, robust vs Qwen 27B | gemma-4-31b.md |
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel

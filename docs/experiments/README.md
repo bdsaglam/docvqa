@@ -45,7 +45,11 @@ buys ~0 — supporting the OCR-free recursive-perception framing.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend — does a
 bigger VLM lift the headline (perception-bound) or not (reasoner-bound)?
-n=8 per arm, val. Detail: [`qwen-9b-rvlm-minimal-vlm-axis.md`](qwen-9b-rvlm-minimal-vlm-axis.md).
+n=8 per arm, val. RLM-only summary below; the full harness×model matrix
+(RLM / ReAct / CodeAct × sizes, incl. the v2↔v3 reasoning-vs-perception
+factorial and Gemma) is in
+[`harness-axis-summary.md`](harness-axis-summary.md), with per-model raw
+numbers in the by-model files (see *Active files*).
 
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
@@ -69,19 +73,50 @@ curve. A clean 8B size point would need Qwen3.5-8B.
 
 ## Active files
 
+Two organizing axes (see *Conventions*): the **27B ablation matrix** is
+**by solver** (one solver per file, single model); the **cross-model
+sweeps** are **by model** (one model per file, all harnesses), with the
+cross-cutting narratives in a single synthesis doc.
+
+**27B ablation matrix — `{solver}-qwen-3_5-27b.md`** (Qwen 3.5 27B homog):
+
 | File | What |
 |---|---|
 | [rvlm-qwen-3_5-27b.md](rvlm-qwen-3_5-27b.md) | proposed method (reference) |
 | [rvlm_ocr_ablation-qwen-3_5-27b.md](rvlm_ocr_ablation-qwen-3_5-27b.md) | OCR extension ablation |
 | [rvlm_hybrid_ablation-qwen-3_5-27b.md](rvlm_hybrid_ablation-qwen-3_5-27b.md) | hybrid display+sub-call ablation |
+| [rvlm_nocrop_ablation-qwen-3_5-27b.md](rvlm_nocrop_ablation-qwen-3_5-27b.md) | no crop/zoom (whole-page reads) ablation |
+| [rvlm_subagent_ablation-qwen-3_5-27b.md](rvlm_subagent_ablation-qwen-3_5-27b.md) | generalized `batch_subagent` ablation |
+| [rvlm_subagent_full-qwen-3_5-27b.md](rvlm_subagent_full-qwen-3_5-27b.md) | sub-call = full agent (negative, 10× cost) |
+| [rvlm_rationale-qwen-3_5-27b.md](rvlm_rationale-qwen-3_5-27b.md) | VLM answer + `[note:]` channel ablation |
 | [direct_vlm-qwen-3_5-27b.md](direct_vlm-qwen-3_5-27b.md) | see-it-yourself (no sub-call) |
 | [raw_vlm_multi_baseline-qwen-3_5-27b.md](raw_vlm_multi_baseline-qwen-3_5-27b.md) | raw multi-image baseline |
 | [react_baseline-qwen-3_5-27b.md](react_baseline-qwen-3_5-27b.md) | no-REPL ablation |
 | [rlm_ocr-qwen-3_5-27b.md](rlm_ocr-qwen-3_5-27b.md) | RLM + OCR (text-only) control |
 | [official_baseline-qwen-3_5-27b.md](official_baseline-qwen-3_5-27b.md) | competition-prompt anchor |
 | [codeact-qwen-3_5-27b.md](codeact-qwen-3_5-27b.md) | append-only/MDP twin of `rvlm` (budget sweep, FT target) |
-| [harness-types-vlm-axis.md](harness-types-vlm-axis.md) | RLM vs ReAct vs CodeAct × reasoner-size axis |
-| [qwen-9b-rvlm-minimal-vlm-axis.md](qwen-9b-rvlm-minimal-vlm-axis.md) | VLM-quality axis (9B + 4B), n=8 |
+
+**Cross-model sweeps — by model** (all harnesses RLM / ReAct / CodeAct per file):
+
+| File | Model | Covers |
+|---|---|---|
+| [qwen-3_5-4b.md](qwen-3_5-4b.md) | Qwen 3.5 4B reasoner | v1 homog + v2 mixed (VLM=27B), 6 cells |
+| [qwen-3_5-9b.md](qwen-3_5-9b.md) | Qwen 3.5 9B reasoner | v1 homog + v2 mixed, 6 cells |
+| [qwen3-8b.md](qwen3-8b.md) | Qwen3 8B (older gen, text-only) | v2 mixed only, 3 cells |
+| [gemma-4-e4b.md](gemma-4-e4b.md) | Gemma-4 E4B homog | 3 harnesses (+ baselines running) |
+| [gemma-4-31b.md](gemma-4-31b.md) | Gemma-4 31B homog | rvlm + react (codeact + baselines running) |
+| [harness-axis-summary.md](harness-axis-summary.md) | — synthesis — | cross-size tables, rank-flip, v2↔v3 mechanism, cross-family read |
+
+**Find numbers by model** (where a given model's RLM headline lives):
+
+| Model | RLM (`rvlm`) headline | File |
+|---|---|---|
+| Qwen 3.5 27B | 39.38 ± 1.49 | `rvlm-qwen-3_5-27b.md` |
+| Qwen 3.5 9B | 16.67 (homog) / 24.54 (VLM=27B) | `qwen-3_5-9b.md` |
+| Qwen 3.5 4B | 12.49 (homog) / 21.09 (VLM=27B) | `qwen-3_5-4b.md` |
+| Qwen3 8B (older gen) | 11.73 (VLM=27B) | `qwen3-8b.md` |
+| Gemma-4 31B | 32.50 ± 4.48 (homog) | `gemma-4-31b.md` |
+| Gemma-4 E4B | 7.34 ± 3.30 (homog) | `gemma-4-e4b.md` |
 
 The cross-axis summary lives in [`docs/results.md`](../results.md).
 
@@ -102,10 +137,21 @@ Each experiment file has these sections:
 
 ## Conventions
 
-- **File name:** `{solver}-{model}.md` — one file per solver×model pairing,
-  accumulating all trials. `{solver}` = canonical post-D-010 name incl.
-  any `_ablation`/`_baseline` suffix; `{model}` = config slug minus the
-  infra suffix (`qwen-3_5-27b-vllm-local` → `qwen-3_5-27b`).
+- **File naming — two axes:**
+  - **27B ablation matrix → by solver:** `{solver}-qwen-3_5-27b.md`, one file
+    per solver, accumulating all trials. `{solver}` = canonical post-D-010 name
+    incl. any `_ablation`/`_baseline` suffix; `{model}` = config slug minus the
+    infra suffix (`qwen-3_5-27b-vllm-local` → `qwen-3_5-27b`). Use this whenever
+    the cell is one solver on the headline 27B model.
+  - **Cross-model sweeps → by model:** `{model}.md` (e.g. `qwen-3_5-4b.md`,
+    `gemma-4-31b.md`), one file per model holding **all** harness/perception
+    cells for that model. Use this for the model-size / VLM-quality / model-family
+    sweeps — they are indexed by model, not solver, so a reader can find e.g.
+    all Qwen 3.5 4B numbers in one place.
+  - **Cross-cutting narratives** that span models (rank-flip with scale, the
+    v2↔v3 reasoning-vs-perception factorial, cross-family reads) go in the
+    single synthesis doc `harness-axis-summary.md`, which references the
+    by-model files for raw numbers rather than duplicating them.
 - **Run IDs** use post-D-010 solver names. Historical IDs
   (`flat-solo-*`, `leanest-*`, `no-loop-*`) stay as-is per D-010.
 - **Trial budget per D-008:** cells start n=1 → n=2 if direction holds →
