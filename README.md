@@ -12,11 +12,14 @@ Headline comparison on the DocVQA-2026 val subset (25 docs / 80 questions, Qwen 
 |---|---|---|
 | **proposed** | **`rvlm`** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** |
 | + OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
+| RL-target twin | `codeact` — append-only/MDP twin of `rvlm` | 36.74% ± 4.29 (n=23) |
 | no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
 | competition anchor | `official_baseline` (`MASTER_PROMPT`, no scaffold) | 17.81% ± 1.86 |
 | OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
 
 External official baselines (ICDAR 2026, for context): Gemini 3 Pro **37.5%** test, GPT-5.2 **35.0%** test.
+
+`codeact` is `rvlm`'s twin — identical tools, prompt, and `batch_look` — but with a strictly **append-only** transcript (no LeanRLM compaction), making the trajectory a fully-observable MDP suited as an RL fine-tuning target. Dropping compaction is nearly free: pooled **36.74% ± 4.29** over a `max_iterations ∈ {24, 40, 56}` budget sweep (n=23), within noise of `rvlm` (−2.6pp, < the per-budget std) and in the same visual-recursive tier.
 
 See [`docs/results.md`](docs/results.md) for the full cross-solver matrix (ablations, the document-length axis, and the model/perception sweeps) and [`docs/experiment-status.md`](docs/experiment-status.md) for run status.
 
