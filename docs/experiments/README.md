@@ -103,8 +103,8 @@ cross-cutting narratives in a single synthesis doc.
 | [qwen-3_5-4b.md](qwen-3_5-4b.md) | Qwen 3.5 4B reasoner | v1 homog + v2 mixed (VLM=27B), 6 cells |
 | [qwen-3_5-9b.md](qwen-3_5-9b.md) | Qwen 3.5 9B reasoner | v1 homog + v2 mixed, 6 cells |
 | [qwen3-8b.md](qwen3-8b.md) | Qwen3 8B (older gen, text-only) | v2 mixed only, 3 cells |
-| [gemma-4-e4b.md](gemma-4-e4b.md) | Gemma-4 E4B homog | 3 harnesses (+ baselines running) |
-| [gemma-4-31b.md](gemma-4-31b.md) | Gemma-4 31B homog | rvlm + react (codeact + baselines running) |
+| [gemma-4-e4b.md](gemma-4-e4b.md) | Gemma-4 E4B homog | 3 harnesses + 2 baselines (n=8) — harness-lift |
+| [gemma-4-31b.md](gemma-4-31b.md) | Gemma-4 31B homog | rvlm + react + codeact (n=5) + 2 baselines — harness-lift |
 | [harness-axis-summary.md](harness-axis-summary.md) | — synthesis — | cross-size tables, rank-flip, v2↔v3 mechanism, cross-family read |
 
 **Find numbers by model** (where a given model's RLM headline lives):
