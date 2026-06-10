@@ -24,58 +24,11 @@ uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
   data.split=val data.num_samples=null max_concurrency=24 run_id=rvlm-vsearch-val-tN
 ```
 
-### `[→]` solver-comparison re-run (val, n=3) — started 2026-06-01T11:03
-
-Running the locked 7-solver × n=3 matrix below. **c=24**, overlap-the-
-tail (launch next when current ≥80% docs = 20/25, cap 2 concurrent),
-driven by an OS-crontab heartbeat
-(`tmp/workspace/solver-cmp/heartbeat.sh`, every 10 min) + queue
-(`queue.txt`). run_ids use a `-cmp-` tag to avoid resuming the kept
-prior-session `rvlm-val-*` / `react-val-*` dirs. t1 launched:
-`rvlm-cmp-val-t1`. Results land in
-`docs/experiments/{solver}-qwen-3_5-27b.md` as trials complete.
+_(The 2026-06-01 solver-comparison re-run that used to sit here is **done** —
+all 7 solvers locked at n≥3 in `docs/results.md` / `docs/experiments/
+{solver}-qwen-3_5-27b.md`. Removed from In progress 2026-06-10.)_
 
 ## Queued
-
-### ★ solver-comparison re-run (val, n=3) — LOCKED PLAN, 2026-06-01
-
-**Why:** retry logic changed (whole-agent `@retry` removed; per-call
-`num_retries=5` is the only retry layer now) AND prompts were minimized
-+ parity-stripped vs the `rvlm` reference (`bc20ba8`). Old numbers
-aren't comparable → re-run all comparison solvers under current code.
-This SUPERSEDES the earlier "pending re-val" list.
-
-**Matrix:** n=3, **val** split, **Qwen 3.5 27B** (lm+vlm local,
-`lm.enable_thinking=false`).
-
-**Solvers (7, LOCKED — `rvlm_full` + `raw_vlm_single` excluded):**
-- method: `rvlm`
-- ablations: `rvlm_ocr_ablation`, `rvlm_hybrid_ablation`
-  (`rvlm_full` deferred — `rvlm_ocr` already covers the OCR-extension
-  insight; the only delta is the extra `look()` tool, expected
-  immaterial per user hunch)
-- baselines: `raw_vlm_multi_baseline`, `react_baseline`, `direct_vlm`
-  (`raw_vlm_single` excluded — `raw_vlm_multi` is the stronger baseline)
-
-**Orchestration (NOT chained):** launch each trial individually; when a
-run reaches its long tail (~21/25 docs), launch the next in parallel
-(overlap-the-tail), cap ~2 concurrent so vllm 8927 isn't double-
-saturated. 21 runs total. `direct_vlm` uses `solver.max_iterations`
-default=40.
-
-**Results → `docs/experiments/{solver}-qwen-3_5-27b.md`** (per the
-README naming convention); cross-solver head-to-head table in
-`docs/results.md`.
-
-```bash
-uv run python evals.py \
-  lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
-  lm.enable_thinking=false \
-  solver=<solver> \
-  data.split=val data.num_samples=null \
-  max_concurrency=16 \
-  run_id=<solver>-val-tN
-```
 
 ### Test submission (deferred)
 
@@ -87,19 +40,27 @@ trials, tie-break by trial-with-highest-val-score → write
 `output/submissions/rvlm-test-sc8.json`. User uploads to the
 competition server manually.
 
-### Model-axis re-runs (clean prompts) — deferred
+### Dataset / document-length axis — deferred, needs go-ahead
 
-Gemma-4 E4B / Gemma-4 31B baseline+scaffold n=1 val on clean prompts.
-Direction robust from the original n=3 (lift sign preserved); just
-locking magnitudes. Per-model vllm bringup is unscripted — Gemma-4 needs
-the right tool-call parser (wrong parser → silent tool-call failure →
-fake-low scores), and 31B as-written wants TP=4 (amax1 has 3 GPUs).
-vllm template + ports in
-`tmp/workspace/amax1-model-axis/vllm-bringup-notes.md`. (Qwen 3.5 9B
-model-axis is claimed by amax7.)
+rvlm / codeact / `raw_vlm_multi_baseline` / `official_baseline`
+(±`rvlm_ocr_ablation`) on **MP-DocVQA + MMLongBench-Doc**, Qwen 3.5 27B.
+MANDATORY cross-benchmark rules: `data.dataset=<id>`,
+`data.use_profile_scoring=true`, and **raise `solver.max_pages`** so the
+raw-VLM baseline sees evidence pages (else the lift double-counts
+truncation). Earlier MP-DocVQA/MMLongBench numbers are pre-2026-06-01 /
+invalid. n=1 → escalate. Plan: `tmp/workspace/solver-cmp/DATASET_AXIS_QUEUE.md`.
 
 ## Done (coordination log — findings live in docs/experiments/)
 
+- **Gemma n=8 model-axis sweep + harness-lift** (2026-06-10, `7f5a320`):
+  E4B + 31B homog, all 3 harnesses (rvlm/react/codeact) + 2 no-scaffold
+  baselines (raw_vlm_multi, official). Per-model harness-LIFT table:
+  31B every harness ≫ both baselines (rvlm +21.4); E4B no lift (4B
+  negative control). 31B codeact n=5 (stopped early per user; gemma4-31B
+  codeact operationally fragile — 8 shm-crashes + degenerate/max-iter
+  runaways). → `docs/experiments/gemma-4-{e4b,31b}.md`,
+  `harness-axis-summary.md` (Finding 5). Supersedes the old "model-axis
+  re-runs n=1" cell.
 - **Solver minimization + rename cascade** (2026-06-01, `feae419` +
   `693c0c9`): minimal→canonical (`rvlm`), baselines get `_baseline`,
   variants get `_ablation`; `direct_vlm` minimized in place; deleted old

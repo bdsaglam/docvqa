@@ -8,7 +8,13 @@ AMAX1` section at the bottom so it's seen on the next pull.
 
 ## In progress
 
-### `[→]` ReAct VLM-axis sweep (val, n=8) — started 2026-06-02
+### `[✓]` ReAct + CodeAct VLM-axis sweep (val, n=8) — DONE (locked 2026-06-10)
+
+**Done.** Both the ReAct (R1-R5) and CodeAct (C1-C5) VLM-axis cells are
+locked at n=8 in `docs/experiments/harness-axis-summary.md` (Tables 1-2 +
+Findings 2-3); the v2↔v3 reasoning-vs-perception factorial is also locked
+there. No amax7 cell is actively running. Original plan preserved below
+for the coordination record.
 
 Per-user direction 2026-06-02: repeat the VLM-axis design with the
 `react_baseline` solver (FT target is a ReAct agent, not RLM — RLM's
