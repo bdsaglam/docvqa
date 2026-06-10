@@ -107,3 +107,13 @@ def test_document_vsearch_dir_derived_from_bm25_dir():
 
     doc_no_dir = Document(doc_id="d", doc_category="c", images=[], questions=[])
     assert doc_no_dir.vsearch_dir is None
+
+
+def test_vsearch_solver_sandbox_code_compiles():
+    from docvqa.solvers.rvlm_vsearch_solver import _build_sandbox_code
+
+    code = _build_sandbox_code("/tmp/x", 3)
+    compile(code, "<sandbox>", "exec")
+    assert "def search(query, k=5):" in code
+    assert "def batch_look(requests):" in code
+    assert "def look(" not in code
