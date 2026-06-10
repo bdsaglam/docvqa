@@ -12,6 +12,13 @@ D-007 (same minimal ``_TASK_BODY`` plus the generic ``search`` tool
 docs, mirroring how ``rvlm_ocr_ablation`` documents its lexical
 ``search``). No single-image ``look()`` is registered — single visual
 queries use ``batch_look([(image, query)])[0]``.
+
+Operational note: on a cold cache, ``get_or_build_page_index`` embeds
+all pages while holding vsearch's process-wide embedder lock —
+concurrent runner threads block behind it. For large cold runs,
+pre-warm the per-doc cache (any single pass over the split) or set
+``vsearch_device: cuda``; with a warm cache the per-doc cost is one
+load from disk.
 """
 
 from __future__ import annotations

@@ -124,10 +124,19 @@ def build_page_index(
     """Embed all pages of a document. Returns None if there are no pages."""
     if not images:
         return None
+    import time
+
+    t0 = time.perf_counter()
     with _EMBEDDER_LOCK:
         model, processor, resolved = _get_embedder(model_name, device)
-        logger.info("vsearch: embedding %d pages for %s", len(images), doc_id)
+        logger.info("vsearch: embedding %d pages for %s on %s", len(images), doc_id, resolved)
         embeddings = _embed(images, processor.process_images, model, resolved)
+    logger.info(
+        "vsearch: embedded %d pages for %s in %.1fs",
+        len(images),
+        doc_id,
+        time.perf_counter() - t0,
+    )
     return PageIndex(doc_id=doc_id, model_name=model_name, embeddings=embeddings, device=device)
 
 
