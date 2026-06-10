@@ -21,6 +21,7 @@ dependencies = [
     "gepa>=0.1.1",
     "pypdfium2>=5.8.0",
     "pydantic-ai-rlm",
+    "colpali-engine>=0.3.17",
 ]
 
 [build-system]
