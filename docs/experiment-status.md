@@ -1,6 +1,6 @@
 # Experiment status — DocVQA-2026 (single source of truth)
 
-Last updated 2026-06-09. Quick view of what's **done**, **in progress**, and
+Last updated 2026-06-10. Quick view of what's **done**, **in progress**, and
 **queued/deferred**, plus how to run. Detailed numbers live in
 `docs/results.md` (cross-solver) and `docs/experiments/<name>.md` (per-cell).
 
@@ -15,8 +15,8 @@ Last updated 2026-06-09. Quick view of what's **done**, **in progress**, and
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
 | **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-axis-summary.md |
-| Gemma-4 E4B homog harnesses (n=8) | rvlm 7.34±3.30, react 6.09±2.36, codeact 7.66±1.94 | all 3 tied 6–8% — 4B too weak to exploit any scaffold (clean negative control) | gemma-4-e4b.md |
-| Gemma-4 31B homog rvlm/react (n=8) | rvlm 32.50±4.48, react 18.44±3.58 | **rvlm ≫ react +14.1pp** — recursion load-bearing, robust vs Qwen 27B | gemma-4-31b.md |
+| Gemma-4 E4B harness-lift (n=8) | rvlm 7.34/codeact 7.66/react 6.09 vs base 6.25 | **no lift at 4B** — all 3 within noise of `official_baseline` (clean negative control) | gemma-4-e4b.md |
+| Gemma-4 31B harness-lift (n=8; codeact n=5) | rvlm 32.50 (+21.4), codeact 29.25 (+18.2), react 18.44 (+7.4) vs base 11.09 | **every harness ≫ both no-scaffold baselines**; lift is a capacity gate (sharp @31B, absent @4B) | gemma-4-31b.md, harness-axis-summary.md |
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel
@@ -26,17 +26,18 @@ reasoning into perception (v3).
 
 ## 🔄 In progress
 
-- **Gemma n=8 sweep + baselines (amax1, CAP=1).** Harnesses done at n=8
-  (E4B + 31B rvlm/react/codeact-E4B); **running:** 31B codeact (n=8) and the
-  two baselines (`raw_vlm_multi_baseline`, `official_baseline`) on both
-  models — to build a per-model **harness-LIFT table** (scaffold vs
-  no-scaffold). Reprioritized 2026-06-09 (user): finish in-flight 31B
-  codeact-t1, then detour to the 16 E4B-baseline trials before the rest of
-  31B. ~56/80 trials done. Queue: `tmp/workspace/solver-cmp/GEMMA_N8_QUEUE.md`.
+- _(none — Gemma n=8 sweep + baselines complete; see below.)_
 
 ## ⏸ Queued / deferred (not active — need a go-ahead)
 
-- **Gemma n>2 escalation** — _now in progress_ (see above; n=8 + baselines running).
+- **Dataset/document-length axis (current code) — QUEUED, needs go-ahead.**
+  rvlm/codeact/`raw_vlm_multi_baseline`/`official_baseline` (±`rvlm_ocr_ablation`)
+  on **MP-DocVQA + MMLongBench-Doc**, Qwen 3.5 27B, with the mandatory
+  cross-benchmark rules (dataset-aware profile, `use_profile_scoring=true`,
+  **raised page budget** so baselines see evidence pages). The earlier numbers
+  are pre-2026-06-01 / invalid. Plan: `tmp/workspace/solver-cmp/DATASET_AXIS_QUEUE.md`.
+- **Gemma n>2 escalation** — _done_ (n=8 harnesses + n=8 baselines, both models;
+  31B codeact n=5 stopped early per user — Done rows above + harness-axis-summary.md).
 - **rvlm_rationale / subagent / subagent_full on long-doc** (MMLongBench-Doc) —
   the perception-sub-call enrichments are null on short DocVQA; the open
   question is whether they pay off where routing is harder (long multi-page).

@@ -9,14 +9,17 @@ per-question micro-average. Cross-family synthesis:
 
 ## Results
 
-| Harness | Val (n=8) |
-|---|---|
-| RLM (`rvlm`) | 7.34% ± 3.30 |
-| ReAct | 6.09% ± 2.36 |
-| CodeAct | 7.66% ± 1.94 |
-| `raw_vlm_multi_baseline` | _running (n=8 + baselines started 2026-06-09)_ |
-| `official_baseline` | _running_ |
+| Harness / baseline | Val (n=8) | Lift vs no-scaffold |
+|---|---|---|
+| RLM (`rvlm`) | 7.34% ± 3.30 | +1.1pp (n.s.) |
+| CodeAct | 7.66% ± 1.94 | +1.4pp (n.s.) |
+| ReAct | 6.09% ± 2.36 | −0.2pp (n.s.) |
+| `raw_vlm_multi_baseline` | 3.75% ± 0.00 | — |
+| `official_baseline` | 6.25% ± 1.16 | — |
 
+**No-scaffold baseline = max(rawvlm 3.75, official 6.25) = 6.25.** All three
+harnesses sit **within noise of the `official_baseline`** — no scaffold lift at
+4B. This is the clean **negative control**: lift requires a capable-enough base.
 vs Qwen 3.5 4B homog: RLM 21.1 / ReAct 11.9 / CodeAct 12.2 — E4B lands far
 lower (weak homogeneous vision + weak reasoner).
 
@@ -62,9 +65,7 @@ Configs: `configs/{lm,vlm}/gemma-4-e4b-vllm-local.yaml` (@8904).
 
 ## Status
 
-`done` (harnesses, n=8) / `in progress` (baselines). The three harnesses are
-locked at n=8 (2026-06-09 escalation, supersedes the n=1/n=2 pilots).
-`raw_vlm_multi_baseline` + `official_baseline` are running to build the
-per-model **harness-lift table** (scaffold vs no-scaffold) — update the rows
-above and `harness-axis-summary.md` when they land. Coordination:
-`coordination/amax1.md`.
+`done` — full per-model harness-lift table complete: all three harnesses (n=8)
++ both baselines (n=8). At 4B no harness clears the `official_baseline` (clean
+negative control). See `harness-axis-summary.md` for the cross-family synthesis.
+Coordination: `coordination/amax1.md`.

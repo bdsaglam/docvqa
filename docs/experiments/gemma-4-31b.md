@@ -7,16 +7,28 @@ Cross-family synthesis: [`harness-axis-summary.md`](harness-axis-summary.md).
 
 ## Results
 
-| Harness | Val (n=8) |
-|---|---|
-| RLM (`rvlm`) | **32.50% ± 4.48** |
-| ReAct | **18.44% ± 3.58** |
-| CodeAct | _n=8 running (n=1 pilot 37.50 — inside trial noise, do not cite as final)_ |
-| `raw_vlm_multi_baseline` | _running_ |
-| `official_baseline` | _running_ |
+| Harness / baseline | Val | Lift vs no-scaffold |
+|---|---|---|
+| RLM (`rvlm`) | **32.50% ± 4.48** (n=8) | **+21.4pp** |
+| CodeAct | **29.25% ± 5.77** (n=5) | **+18.2pp** |
+| ReAct | **18.44% ± 3.58** (n=8) | **+7.4pp** |
+| `raw_vlm_multi_baseline` | 10.78% ± 0.93 (n=8) | — |
+| `official_baseline` | 11.09% ± 1.82 (n=8) | — |
 
-vs Qwen 3.5 27B homog: RLM 39.4 / ReAct 25.2 / CodeAct 37.0 — Gemma 31B is in
-the same regime, the headline ordering preserved.
+**No-scaffold baseline = max(rawvlm 10.78, official 11.09) = 11.09.** All three
+harnesses clear both no-scaffold baselines by a wide margin — every lift ≫ the
+combined std. vs Qwen 3.5 27B homog: RLM 39.4 / ReAct 25.2 / CodeAct 37.0 —
+Gemma 31B is in the same regime, the headline ordering preserved.
+
+> **CodeAct caveat (n=5, stopped early per user call).** The CodeAct score is
+> **depressed by slow-doc guards** (zeros from placeholder-failed docs: t2 4-doc,
+> t3 1-doc, t4 3-doc, t5 1-doc) **and by gemma4-31B CodeAct operational
+> instability** — across the sweep CodeAct hit **8 shm-crashes plus repeated
+> degenerate-generation and max-iteration-loop runaways** (a single question
+> emitting 10k+ tokens, never terminating, at a steady ~20 tok/s). This fragility
+> is itself an operational finding: **CodeAct-on-gemma4-31B is brittle**, whereas
+> `rvlm`/`react`/the baselines ran clean. True (un-guarded) CodeAct accuracy is
+> likely somewhat higher than 29.25; it remains clearly in the scaffold tier.
 
 ## Reads
 
@@ -63,8 +75,7 @@ Configs: `configs/{lm,vlm}/gemma-4-31b-vllm-local.yaml` (@8931).
 
 ## Status
 
-`done` (rvlm + react, n=8) / `in progress` (codeact n=8, both baselines). The
-31B codeact cell and `raw_vlm_multi_baseline` / `official_baseline` on both
-Gemma sizes are running to complete the per-model **harness-lift table** —
-update the rows above and `harness-axis-summary.md` when they land.
+`done` — full per-model harness-lift table complete: rvlm (n=8), react (n=8),
+codeact (n=5, stopped early per user), both baselines (n=8). See
+`harness-axis-summary.md` for the cross-family synthesis.
 Coordination: `coordination/amax1.md`.

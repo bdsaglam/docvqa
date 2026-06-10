@@ -30,7 +30,11 @@ files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 | Qwen3.5 9B homog | 16.67 ± 3.40 | 14.97 ± 2.96 | 19.35 ± 4.24 |
 | Qwen3.5 27B homog | **39.38 ± 1.49** | 25.16 ± 4.60 | 36.96 ± 5.25 (b=40, n=7) |
 | Gemma-4 E4B homog | 7.34 ± 3.30 | 6.09 ± 2.36 | 7.66 ± 1.94 |
-| Gemma-4 31B homog | **32.50 ± 4.48** | 18.44 ± 3.58 | _n=8 running_ |
+| Gemma-4 31B homog | **32.50 ± 4.48** | 18.44 ± 3.58 | 29.25 ± 5.77 (n=5†) |
+
+† Gemma-31B CodeAct n=5 (stopped early per user); score depressed by slow-doc
+guards + gemma4-31B CodeAct operational instability — see below and
+[`gemma-4-31b.md`](gemma-4-31b.md).
 
 ## Table 2 — v2 mixed (reasoner + 27B VLM), n=8
 
@@ -125,10 +129,37 @@ The harness ordering reproduces on a second model family:
   weak to exploit any scaffold. Clean negative control: capacity gates whether
   the scaffold can be driven; lift is *sharp* at 31B, *absent* at 4B.
 
+## Finding 5 — harness-lift vs no-scaffold baselines (per-model)
+
+Each harness measured against the two no-scaffold baselines on the same model.
+**Baseline = max(`raw_vlm_multi_baseline`, `official_baseline`)** (the stronger
+no-scaffold point). All n=8 except Gemma-31B CodeAct (n=5, stopped early).
+
+| Model | rawvlm | official | base | rvlm (lift) | CodeAct (lift) | ReAct (lift) |
+|---|---|---|---|---|---|---|
+| **Gemma-4 31B** | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **32.50 (+21.4)** | 29.25 n=5 (+18.2) | 18.44 (+7.4) |
+| **Gemma-4 E4B** | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | 7.34 (+1.1 n.s.) | 7.66 (+1.4 n.s.) | 6.09 (−0.2 n.s.) |
+
+**The lift is a capacity gate, cleanly bracketed by one model family.** At 31B
+**every harness clears both no-scaffold baselines by ≫ the std** — scaffolding
+buys +7 to +21pp. At 4B **no harness clears the `official_baseline`** — every
+lift is within noise. Same family, same code, same prompts: the only thing that
+changes is base capability, and it gates whether *any* scaffold pays off. This
+is the clean cross-family confirmation of the D-006 active-perception thesis.
+
+> **Gemma-31B CodeAct operational caveat.** CodeAct n=5 (stopped early per user
+> call). Its 29.25 is **depressed by slow-doc guards** (placeholder-zeroed docs:
+> t2 4-doc, t3 1-doc, t4 3-doc, t5 1-doc) **and by gemma4-31B CodeAct
+> instability** — across the sweep CodeAct hit **8 shm-crashes + repeated
+> degenerate-generation and max-iteration runaways** (single question emitting
+> 10k+ tokens at ~20 tok/s, never terminating). `rvlm`/`react`/the baselines ran
+> clean. **CodeAct-on-gemma4-31B is operationally fragile** — itself a finding;
+> true accuracy is likely somewhat above 29.25 but clearly in the scaffold tier.
+
 ## Status
 
 n=8 locked for: Qwen3.5 {4B, 9B} (v1+v2, all harnesses), Qwen3 8B (v2),
-v2↔v3 factorial (all harnesses), Gemma {E4B (3 harnesses), 31B (rvlm+react)}.
-**Running:** Gemma 31B codeact + `raw_vlm_multi_baseline`/`official_baseline`
-on both Gemma sizes (per-model harness-lift table). Coordination:
-`coordination/amax1.md`, `coordination/amax7.md`.
+v2↔v3 factorial (all harnesses), Gemma {E4B (3 harnesses + 2 baselines), 31B
+(rvlm+react + 2 baselines)}; Gemma-31B CodeAct n=5 (stopped early per user).
+**Per-model harness-lift table (Finding 5) complete for both Gemma sizes.**
+Coordination: `coordination/amax1.md`, `coordination/amax7.md`.

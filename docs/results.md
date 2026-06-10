@@ -214,27 +214,31 @@ clean reasoner-*quality* signal, kept off the Qwen3.5 9B↔4B size curve
 because it's a different generation. A clean 8B size point would need
 **Qwen3.5-8B** (same family). Detail in the experiment writeup.
 
-Homogeneous cross-family **Gemma** model-axis sweep (val, all three harnesses;
-**n=8** escalation + baselines, 2026-06-09 — supersedes the earlier n=1/n=2
-pilots):
+Homogeneous cross-family **Gemma** model-axis sweep with **per-model
+harness-LIFT** (val, all three harnesses + both no-scaffold baselines; **n=8**
+unless noted — supersedes the earlier n=1/n=2 pilots). **Baseline =
+max(rawvlm, official).**
 
-| Gemma | rvlm | react | codeact | rawvlm (base) | official (base) |
-|---|---|---|---|---|---|
-| **E4B** | 7.34 ± 3.30 | 6.09 ± 2.36 | 7.66 ± 1.94 | _running_ | _running_ |
-| **31B** | **32.50 ± 4.48** | **18.44 ± 3.58** | _running_ | _running_ | _running_ |
+| Gemma | rvlm | codeact | react | rawvlm | official | base | best lift |
+|---|---|---|---|---|---|---|---|
+| **E4B** | 7.34 ± 3.30 | 7.66 ± 1.94 | 6.09 ± 2.36 | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | **+1.4 (n.s.)** |
+| **31B** | **32.50 ± 4.48** | 29.25 ± 5.77† | 18.44 ± 3.58 | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **+21.4** |
 
-**Two cross-family findings.** (1) At **31B, rvlm 32.50 ≫ react 18.44
-(+14.1pp ≫ std)** — the recursive VLM sub-call is **load-bearing** and
-REPL-only ReAct collapses to the no-recursion tier, mirroring Qwen 27B (rvlm
-39.4 ≫ react 25.2). The "recursive-perception ≫ tool-only ReAct" ordering is
-**robust across model families**. (2) At **E4B all three harnesses are tied
-6–8%** (within ~1 std) — a 4B model is **too weak to exploit any scaffold**, a
-clean negative control: harness lift needs a capable-enough base model and
-shows up sharply at 31B, not at 4B. Baselines (`raw_vlm_multi_baseline`,
-`official_baseline`) + the 31B codeact cell are **still running** — the
-per-model **harness-LIFT table** (scaffold vs no-scaffold) lands when they
-finish. Detail: `gemma-4-e4b.md` + `gemma-4-31b.md` (per-model) +
-`harness-axis-summary.md` (cross-family synthesis). (Served
+† 31B codeact n=5 (stopped early per user); score depressed by slow-doc guards +
+gemma4-31B codeact operational instability (8 shm-crashes + degenerate-gen /
+max-iter runaways during the sweep) — `rvlm`/`react`/baselines ran clean. An
+operational finding in its own right; see `gemma-4-31b.md`.
+
+**Cross-family findings.** (1) At **31B every harness clears both no-scaffold
+baselines by ≫ the std** — rvlm +21.4, codeact +18.2, react +7.4 over base
+11.09. rvlm 32.50 ≫ react 18.44 (+14.1pp): the recursive VLM sub-call is
+**load-bearing**, mirroring Qwen 27B (rvlm 39.4 ≫ react 25.2) — "recursive-
+perception ≫ tool-only ReAct" is **robust across model families**. (2) At
+**E4B no harness clears `official_baseline`** (all within ~1 std) — a 4B model
+is **too weak to exploit any scaffold**, a clean negative control. **The lift
+is a capacity gate**, cleanly bracketed by one model family: sharp at 31B,
+absent at 4B. Detail: `gemma-4-e4b.md` + `gemma-4-31b.md` (per-model) +
+`harness-axis-summary.md` (cross-family synthesis, Finding 5). (Served
 on `vllm/vllm-openai:gemma4`; 31B TP=2 one-trial-at-a-time, inherent shm crash
 handled by restart+resume.)
 
