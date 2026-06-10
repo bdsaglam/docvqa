@@ -96,3 +96,14 @@ def test_cache_invalidated_on_page_count_mismatch(pages, tmp_path: Path):
     loaded = load_page_index("doc_c", tmp_path, model_name=idx.model_name,
                              num_pages=5)
     assert loaded is None
+
+
+def test_document_vsearch_dir_derived_from_bm25_dir():
+    from docvqa.data import Document
+
+    doc = Document(doc_id="d", doc_category="c", images=[], questions=[],
+                   bm25_dir=Path("data/docvqa-2026/val/bm25"))
+    assert doc.vsearch_dir == Path("data/docvqa-2026/val/vsearch")
+
+    doc_no_dir = Document(doc_id="d", doc_category="c", images=[], questions=[])
+    assert doc_no_dir.vsearch_dir is None

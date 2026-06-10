@@ -31,6 +31,12 @@ class Document:
     def question_ids(self) -> list[str]:
         return [q.question_id for q in self.questions]
 
+    @property
+    def vsearch_dir(self) -> Path | None:
+        """Where this doc's visual-embedding index lives — sibling of bm25_dir
+        (``data/{slug}/{split}/vsearch``). None when bm25_dir is unset."""
+        return self.bm25_dir.parent / "vsearch" if self.bm25_dir else None
+
 
 DATA_DIR = Path("data")
 
