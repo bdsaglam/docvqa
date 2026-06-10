@@ -1,0 +1,11 @@
+_target_: docvqa.solvers.rvlm_vsearch_solver.create_rvlm_vsearch_program
+dataset: ${data.dataset}
+profile_name: null
+max_iterations: 25
+vlm: ${vlm}
+rlm_type: lean
+page_factor: 1.5
+question_concurrency: 4
+batch_concurrency: 8
+vsearch_model: ModernVBERT/colmodernvbert
+vsearch_device: null   # auto: cuda if available else cpu
