@@ -12,6 +12,7 @@ implication: pick a non-RVLM name to avoid arXiv:2603.24224 collision).
 |---|---|---|---|
 | **`rvlm`** | Proposed method (M) | `batch_look` only | [rvlm.md](rvlm.md) |
 | **`rvlm_ocr`** | +OCR extension | `batch_look` + `search` + `page_texts` | [rvlm-ocr.md](rvlm-ocr.md) |
+| **`rvlm_vsearch`** | OCR-free retrieval extension (visual embeddings; no OCR dependency) | `batch_look` + `search` (multimodal page embeddings, text-or-image query) | [ablations.md](ablations.md) |
 | **`rvlm_full`** | Kitchen-sink (appendix, role TBD per task #16) | `batch_look` + `look` + `search` + `page_texts` | [rvlm-full.md](rvlm-full.md) |
 | **`direct_vlm`** | Alternative-angle method | Multimodal LLM in REPL, `display()` only | [direct-vlm.md](direct-vlm.md) |
 | **`raw_vlm_multi`** | Raw-VLM baseline (multi-image) | one forward pass, no scaffold | [baselines.md](baselines.md) |
