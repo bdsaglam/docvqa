@@ -9,6 +9,21 @@ AMAX7` section at the bottom so it's seen on the next pull.
 
 ## In progress
 
+### `[→]` rvlm_vsearch n=8 (val) — started 2026-06-10T19:40
+
+New solver: rvlm + multimodal embedding `search` (ColModernVBERT via
+colpali-engine, OCR-free; see `docs/superpowers/specs/2026-06-10-rvlm-vsearch-design.md`).
+Per-user: straight to n=8, c=24. Sequential t1→t8 with overlap-the-tail
+(≥21/25, cap 2 concurrent), session-cron heartbeat. `solver.vsearch_device=cuda:1`
+(embedder on the idle GPU; placement only). run_ids `rvlm-vsearch-val-t1..t8`,
+tmux `rvlm-vsearch-val-tN`. Results → `docs/experiments/rvlm-vsearch-qwen-3_5-27b.md`.
+
+```bash
+uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false solver=rvlm_vsearch solver.vsearch_device=cuda:1 \
+  data.split=val data.num_samples=null max_concurrency=24 run_id=rvlm-vsearch-val-tN
+```
+
 ### `[→]` solver-comparison re-run (val, n=3) — started 2026-06-01T11:03
 
 Running the locked 7-solver × n=3 matrix below. **c=24**, overlap-the-
