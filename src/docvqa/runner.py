@@ -75,6 +75,18 @@ def _load_completed(tasks_dir: Path) -> dict[str, DocumentResult]:
     return completed
 
 
+def _is_chat_trajectory(trajectories: dict[str, list[dict]] | None) -> bool:
+    """True if trajectories use the chat-messages ({role, content}) format.
+
+    All questions in a run share one solver, so the first non-empty
+    trajectory's shape is representative.
+    """
+    for msgs in (trajectories or {}).values():
+        if msgs and isinstance(msgs[0], dict):
+            return "role" in msgs[0]
+    return False
+
+
 def _save_result(
     tasks_dir: Path,
     result: DocumentResult,
@@ -104,6 +116,17 @@ def _save_result(
     # for a single doc), are redundant with summary.md + logfire, and are
     # never read back on resume (_load_completed only reads questions/ids).
     (doc_dir / "result.json").write_text(json.dumps(data, indent=2))
+
+    # Chat-messages trajectories (codeact_chat: a clean, text-only
+    # {role, content} transcript = the MDP rollout) are dumped raw as
+    # trajectory.json for downstream use (e.g. RL fine-tuning). Scoped to
+    # the chat format on purpose: legacy {reasoning, code, output}
+    # trajectories can carry base64 images and would reintroduce the
+    # disk-bloat the result.json exclusion above avoids.
+    if _is_chat_trajectory(trajectories):
+        (doc_dir / "trajectory.json").write_text(
+            json.dumps(trajectories, indent=2, ensure_ascii=False)
+        )
 
     # Save document page images
     if document:
@@ -150,6 +173,18 @@ def _save_summary_md(
             lines.append(f"")
             for i, step in enumerate(traj):
                 lines.append(f"#### Iteration {i + 1}")
+                # Chat-messages format ({role, content}) — e.g. codeact_chat,
+                # whose trajectory IS the raw conversation transcript.
+                if "role" in step:
+                    content = step.get("content", "") or ""
+                    if len(content) > 4000:
+                        content = content[:4000] + "\n... [truncated]"
+                    lines.append(f"**{step.get('role', '?')}:**")
+                    lines.append(f"")
+                    lines.append(content)
+                    lines.append(f"")
+                    continue
+                # Legacy step format ({reasoning, code, output}).
                 if step.get("reasoning"):
                     lines.append(f"**Reasoning:** {step['reasoning']}")
                     lines.append(f"")
