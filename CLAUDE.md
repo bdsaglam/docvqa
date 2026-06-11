@@ -2,25 +2,26 @@
 
 ICDAR 2026 DocVQA competition. RLM agents with active document perception.
 
-> **Paper framing pivot (2026-05-27, D-006).** The paper is now framed
+> **Paper framing pivot (2026-05-27, D-006).** The paper is framed
 > around a **visual context-budget hypothesis** — mid-sized open VLMs
 > are perception-budget-bound, not reasoning-bound; recursive perception
-> (RLM with VLM sub-call) is the fix. **Proposed method = OCR-free RLM**
-> (currently `leanest_solo`). **OCR/search is an extension**, requires
-> a new solver (clean fork of leanest, distinct from `flat_solo` which
-> conflates OCR with a `look()` ergonomic wrapper). See
-> `docs/paper/decisions.md` (D-006/D-007/D-008) and
-> `docs/paper/README.md` for the full framing.
+> (RLM with a VLM sub-call) is the fix. **Proposed method = OCR-free RLM**
+> = the **`rvlm`** solver (REPL + recursive VLM `batch_look`, no OCR).
+> **OCR/search is an extension** (`rvlm_ocr` / `rvlm_ocr_ablation`), kept
+> clean and distinct from `rvlm_full`, which bundles OCR with a `look()`
+> ergonomic wrapper. See `docs/paper/decisions.md` (esp. D-006/D-009/D-010)
+> and `docs/paper/README.md` for the full framing; `docs/solvers/README.md`
+> for the solver↔paper-role map.
 >
 > Operating principles flowing from this:
 > - **Prompt parity (D-007).** Every paper solver passes the same
 >   prompt audit standard.
-> - **Semantic-per-profile, tool-routing-per-solver (D-009, refines
->   D-007).** Tool-agnostic per-category content lives in the dataset
->   profile (`datasets/profile.py`); tool-routing lives in the solver
->   (`TASK_INSTRUCTIONS` + optional per-category overlay). All paper
->   solvers are dataset-aware by default — `solo`/`_da` pairs are
->   being merged.
+> - **Semantic-per-profile, tool-routing-per-solver (D-009).** Tool-agnostic
+>   per-category content lives in the dataset profile
+>   (`datasets/profile.py`); tool-routing lives in the solver
+>   (`TASK_INSTRUCTIONS` + optional per-category overlay). **All solvers
+>   are dataset-aware by default** — the old `solo`/`_da` split is gone
+>   (D-010); there are no more `*_da_solver.py` files.
 > - **Trial-budget escalation (D-008).** New cells: n=1 → n=2 → n=8
 >   only after the paper headline locks.
 > - **No prompt-iteration narrative in the paper.** No v1/v2/scrub
@@ -127,59 +128,82 @@ What's OK: single-purpose launcher scripts (`tmux new-session ...
 evals.py ...`), the eval runner itself, utility scripts. Not
 multi-step orchestrators.
 
-## Best Results
+## Results — where to look
 
-| Config | Val | Test |
-|--------|-----|------|
-| Flat Solo SC-8 (lean, no-think, Qwen 3.6 27B / Qwen 3.6 27B) | **51.2%** | **43.75%** |
-| Flat Solo SC-8 (lean, no-think, Qwen 3.5 27B / Qwen 3.5 27B) | 51.2% | 39.0% |
-| Flat Solo single run (lean, no-think, Qwen 3.5) | 48.8% | 35.6% |
-| Flat Batch (Pro+Flash) | 55.0% | — |
-| Gemini 3 Pro baseline | 37.5% | 37.5% |
+**`docs/results.md`** is the single source of truth for cross-solver
+numbers; **`docs/experiment-status.md`** for what's done / in progress /
+queued; `docs/experiments/{solver}-{model}.md` for per-cell detail.
 
-## Best Config Per Solver
+> ⚠ **Numbers moved on 2026-06-01** (prompt scrub + per-call retry change).
+> Pre-change numbers are archived under `archive/` and are **no longer
+> valid** — don't cite them. The competition-submission headline
+> (legacy `flat_solo` SC-8: val 51.2% / test 43.75% on Qwen 3.6 27B) lives
+> in the public `README.md` and the submission report; it predates the
+> current code/framing.
 
-| Solver | Config Override | Best Val |
-|--------|----------------|----------|
-| **Flat Solo** | `solver=flat_solo solver.rlm_type=lean` | **48.8%** |
-| Leanest Solo | `solver=leanest_solo` | 43.8% |
-| Lean Solo | `solver=lean_solo` | 42.5% |
-| Flat Batch | `solver=flat_batch` | 37.5% |
-| Ensemble | `solver=ensemble_lean_solo` | — |
+Current headline (Qwen 3.5 27B, val 25-doc/80-Q subset, `n=8`, current
+code — three clean tiers, every gap ≫ the std):
 
-**IMPORTANT**: `flat_solo` yaml default is `rlm_type=code` (~40%). ALWAYS override to `lean`.
+| Tier | Solver | Val (n=8) |
+|---|---|---|
+| **proposed** | **`rvlm`** (REPL + recursive VLM `batch_look`, OCR-free) | **39.38% ± 1.49** |
+| +OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
+| no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
+| OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
+| competition anchor | `official_baseline` (MASTER_PROMPT, no scaffold) | 17.81% ± 1.86 |
+
+Official ICDAR baselines (external): Gemini 3 Pro 37.5% test, GPT-5.2 35.0% test.
 
 ## Infrastructure
 
-- **LLM**: `vertex_ai/gemini-3-pro-preview` (best) or `qwen-3_5-27b` (local)
-- **VLM**: Qwen/Qwen3.5-27B at localhost:8927 (3x A100 GPUs)
-- **OCR data**: `data/docvqa-2026/{split}/ocr/{doc_id}/page_*.md` (new dataset layout: `data/{dataset-slug}/{split}/...`)
-- **BM25 indexes**: auto-built per doc during eval
+- **LLM / VLM configs**: `configs/{lm,vlm}/<model>-<provider>.yaml`. Headline
+  runs use Qwen 3.5 27B for both. Model axis: `qwen-3_5-{4b,9b,27b}`,
+  `qwen-3_6-{27b,35b}`, `gemma-4-{e4b,31b}`; closed: `gemini-3_1-pro`,
+  `gemini-3-flash` (`-vertex` / `-studio` / `-openrouter`).
+- **Local VLM server**: Qwen 3.5 27B vllm at `localhost:8927`. amax1 is the
+  active host; brings up per-model containers as needed (always keep a 27B up).
+- **OCR data**: `data/docvqa-2026/{split}/ocr/{doc_id}/page_*.md`
+  (layout `data/{dataset-slug}/{split}/...`). BM25 indexes auto-built per doc.
 
 ## Key Commands
 
 ```bash
-# Best single-run solver
-uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local lm.enable_thinking=false \
-  solver=flat_solo solver.rlm_type=lean \
-  data.split=val data.num_samples=null max_concurrency=16 run_id=flat-solo-val
+# Proposed method (rvlm), 27B homog, single trial. rvlm is the config default.
+uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
+  lm.enable_thinking=false solver=rvlm \
+  data.split=val data.num_samples=null max_concurrency=16 run_id=rvlm-val-t1
+# swap solver= for a variant: codeact | rvlm_ocr_ablation | rvlm_hybrid_ablation |
+#   rvlm_nocrop_ablation | rvlm_subagent_ablation | rvlm_subagent_full | rvlm_rationale |
+#   react_baseline | raw_vlm_multi_baseline | direct_vlm | official_baseline | rlm_ocr
+# cross-model: set lm=/vlm= to a config above (e.g. lm=qwen-3_5-9b-vllm-local vlm=qwen-3_5-27b-vllm-local)
 
-# Ensemble (5x lean solo)
-uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local lm.enable_thinking=false \
-  solver=ensemble_lean_solo data.split=val data.num_samples=null \
-  max_concurrency=15 run_id=ens-val
-
-# Generate report
-python scripts/report.py --all --min-questions 80 --recent 7
+# Reports
+python scripts/report.py --all --min-questions 80 --recent 7   # results report
+python scripts/iter_stats.py '<run_id_glob>'                    # per-run agent iterations
 ```
 
-## Key Findings
+Concurrency: `c=16–24` on a healthy 27B; lower (`c=4–8`) for heavy/nested
+solvers (`subagent_full`, `codeact` on long docs) and small/slow servers.
 
-1. **Solo >> Batch**: ~10pp gap — one question at a time is much better
-2. **Lean RLM > Code RLM** for solo: lean+nothink = 46.2%, code+think = 40.0%
-3. **Thinking hurts lean**: 38.8% (think) vs 41.6% mean (nothink)
-4. **High variance**: ~3-4% std across trials — always run 3+ trials
-5. **Per-category tips** in `src/docvqa/prompts.py` help precision-heavy categories
+## Key Findings (current code; see `docs/results.md`)
+
+1. **Three clean tiers**: visual-recursive (`rvlm` ~39%) ≫ no-recursion
+   (`react`/`direct_vlm`/`raw_vlm_multi` 20–25%) ≫ OCR-only floor (`rlm_ocr` 14%).
+2. **OCR-free is decisive**: swapping visual perception for OCR text
+   (`rlm_ocr`) is the matrix floor, **−25.5pp** vs `rvlm`. Adding OCR *on top*
+   of vision (`rvlm_ocr`) buys ≈ 0 on moderate-doc DocVQA; it pays off on
+   long-doc benchmarks (the OCR extension's job).
+3. **Both halves of the scaffold are load-bearing**: dropping the recursive
+   sub-call (`raw_vlm_multi`) or the REPL (`react`) both collapse to the
+   no-recursion tier.
+4. **Enriching the sub-call doesn't help on DocVQA val** — generality
+   (`subagent`), full agency (`subagent_full`), rationale channel
+   (`rvlm_rationale`) are all ≈ parity; the minimal `batch_look` is sufficient.
+5. **Perception-budget-bound**: fixing the reasoner and swapping only the VLM
+   →27B lifts ~8pp at 9B/4B — the signature of a perception (not reasoning)
+   bottleneck (supports D-006).
+6. **High variance**: ~3pp std across trials — always run ≥3 (headline n=8).
+7. **Per-category tips** live in `src/docvqa/prompts.py` + `datasets/profile.py`.
 
 ## Cross-benchmark methodology rule (critical)
 
@@ -190,49 +214,44 @@ a **fair page budget**, or the scaffold lift double-counts prompt fit
 
 Concretely:
 
-- Use `*_da` solver variants (`solver=no_loop_multi_da`,
-  `solver=flat_solo_da`, `solver=leanest_solo_da`). They pull from
+- All solvers are dataset-aware by default — pass `data.dataset=<id>` and
+  the right solver (`solver=rvlm`, `rvlm_ocr_ablation`,
+  `raw_vlm_multi_baseline`, …). They pull from
   `docvqa.datasets.profile.get_profile(dataset)` for prompt, tips,
-  per-question hint, and scorer.
-- Pass `data.use_profile_scoring=true` so the runner uses the
-  profile's `score_fn` (e.g. Qwen judge for MMLongBench) instead of
-  ANLS.
-- On long-doc benchmarks, override `solver.max_pages=80` (or the
-  loader's `DEFAULT_MAX_PAGES`) so the raw-VLM baseline can see the
-  evidence pages. The default `max_pages=10` is fine for short-doc
-  benchmarks.
+  per-question hint, and scorer. (The old `*_da` variants no longer exist —
+  D-010 merged them.)
+- Pass `data.use_profile_scoring=true` so the runner uses the profile's
+  `score_fn` (e.g. Qwen judge for MMLongBench) instead of ANLS.
+- On long-doc benchmarks, raise the page budget (`solver.max_pages`, or the
+  loader's `DEFAULT_MAX_PAGES`) so the raw-VLM baseline can see the evidence
+  pages. The default is fine for short-doc benchmarks.
 
-**Empirical evidence (2026-05-14, Qwen 3.5 27B, 200Q val samples):**
+> ⚠ **The earlier MP-DocVQA / MMLongBench-Doc numbers are invalid** — they
+> were run on pre-2026-06-01 prompts/retry logic (archived under
+> `archive/experiments/`). The *mechanism* (lift sign + magnitude scale with
+> the benchmark's page-count distribution) is robust, but the magnitudes need
+> a current-code re-run before citing. See `docs/results.md`
+> ("Document-length axis") — **pending**.
 
-| Benchmark | Legacy lift | Fair lift (DA + pages) | Δ from baseline crippling |
-|---|---|---|---|
-| MP-DocVQA (ANLS) | −4.88pp (leanest "regresses") | **~0pp** | +5pp |
-| MMLongBench-Doc (judge) | +26.43pp (leanest) | **+14.81pp** | +11.6pp |
-| MMLongBench-Doc (judge) | +26.60pp (flat_solo) | **+16.84pp** | +9.8pp |
-
-About half the MMLongBench legacy headline came from baseline
-crippling (+5pp from max_pages=10→80, +8pp from DocVQA-2026 prompt →
-MMLongBench profile). The MP-DocVQA legacy "regression" was 100%
-prompt mismatch.
-
-See `docs/experiments/mp-docvqa-qwen27b.md` and
-`docs/experiments/mmlongbench-doc-qwen27b.md` for the full closed-loop
-numbers and `src/docvqa/datasets/profile.py` for the registered
-profiles.
+Registered profiles: `src/docvqa/datasets/profile.py`
+(+ `mmlongbench_doc.py`, `mp_docvqa.py`).
 
 ## Project Structure
 
 | File | Purpose |
 |------|---------|
-| `evals.py` | Hydra entry point |
-| `src/docvqa/solvers/` | Solver implementations |
-| `src/docvqa/solvers/*_da_solver.py` | Dataset-aware variants (profile-driven) |
+| `evals.py` | Hydra entry point (defaults: `solver=rvlm`, Qwen 3.5 27B lm+vlm) |
+| `src/docvqa/solvers/` | Solver implementations (all dataset-aware; see `docs/solvers/README.md`) |
+| `src/docvqa/rlm/` | LeanRLM / CodeRLM scaffold + subprocess REPL interpreter |
 | `src/docvqa/datasets/profile.py` | `DatasetProfile` + `get_profile(dataset_id)` |
 | `src/docvqa/prompts.py` | DocVQA-2026 answer-formatting rules + per-category tips |
 | `src/docvqa/data.py` | Dataset loading, OCR integration |
+| `src/docvqa/search.py` | BM25 index (bm25s) |
+| `src/docvqa/judges/` | LLM judges (e.g. Qwen judge for MMLongBench scoring) |
 | `src/docvqa/runner.py` | Eval runner (concurrent, resumable; accepts profile `score_fn`) |
 | `src/docvqa/metrics.py` | ANLS evaluation |
 | `scripts/report.py` | Results report from run IDs |
+| `scripts/iter_stats.py` | Per-run agent-iteration stats |
 
 ## GCP Credits
 

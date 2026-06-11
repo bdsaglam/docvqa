@@ -12,7 +12,7 @@ Headline comparison on the DocVQA-2026 val subset (25 docs / 80 questions, Qwen 
 |---|---|---|
 | **proposed** | **`rvlm`** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** |
 | + OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
-| RL-target twin | `codeact` — append-only/MDP twin of `rvlm` | 36.74% ± 4.29 (n=23) |
+| CodeAct harness | `codeact` — append-only/MDP twin of `rvlm` | 36.74% ± 4.29 (n=23) |
 | no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
 | competition anchor | `official_baseline` (`MASTER_PROMPT`, no scaffold) | 17.81% ± 1.86 |
 | OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |

@@ -398,7 +398,7 @@ def create_codeact_program(
         model=vlm["model"],
         api_base=vlm.get("api_base"),
         api_key=vlm.get("api_key"),
-        max_tokens=vlm.get("max_tokens", 65536),
+        max_tokens=vlm.get("max_tokens", 16384),
         temperature=vlm.get("temperature", 1.0),
         top_p=vlm.get("top_p"),
         top_k=vlm.get("top_k"),

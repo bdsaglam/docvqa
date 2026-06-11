@@ -798,5 +798,4 @@ docker run --runtime nvidia --gpus all \
     --gpu-memory-utilization 0.85 \
     --dtype bfloat16 \
     --max-model-len 131072 \
-    --enable-auto-tool-choice --tool-call-parser qwen3_coder \
     --reasoning-parser qwen3 
