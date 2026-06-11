@@ -103,9 +103,13 @@ class PageIndex:
                 q_emb = _embed([query], processor.process_images, model, device)
             else:
                 q_emb = _embed([str(query)], processor.process_texts, model, device)
-        # score is CPU-only MaxSim over cpu tensors — no lock needed
+        # MaxSim scoring on the embedder's own device. colpali's score()
+        # defaults device to get_torch_device("auto") == "cuda:0", which would
+        # run the pad+einsum on GPU 0 — where the vllm server lives — and
+        # contend with it. Pin to `device` (the embedder GPU, e.g. cuda:1) so
+        # scoring never touches GPU 0.
         scores = processor.score(
-            [q_emb[0].float()], [e.float() for e in self.embeddings]
+            [q_emb[0].float()], [e.float() for e in self.embeddings], device=device
         )  # [1, num_pages]
         row = scores[0].tolist()
         order = sorted(range(len(row)), key=lambda i: row[i], reverse=True)
