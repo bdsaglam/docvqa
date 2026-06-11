@@ -9,19 +9,30 @@ AMAX7` section at the bottom so it's seen on the next pull.
 
 ## In progress
 
-### `[→]` rvlm_vsearch n=8 (val) — started 2026-06-10T19:40
+### `[→] PAUSED at n=6` rvlm_vsearch (val) — started 2026-06-10T19:40, paused 2026-06-11
 
 New solver: rvlm + multimodal embedding `search` (ColModernVBERT via
 colpali-engine, OCR-free; see `docs/superpowers/specs/2026-06-10-rvlm-vsearch-design.md`).
-Per-user: straight to n=8, c=24. Sequential t1→t8 with overlap-the-tail
-(≥21/25, cap 2 concurrent), session-cron heartbeat. `solver.vsearch_device=cuda:1`
-(embedder on the idle GPU; placement only). run_ids `rvlm-vsearch-val-t1..t8`,
-tmux `rvlm-vsearch-val-tN`. Results → `docs/experiments/rvlm-vsearch-qwen-3_5-27b.md`.
+c=24, `solver.vsearch_device=cuda:1`. **t1–t6 done; t7/t8 deferred — user
+paused.** Provisional **n=6 = 36.67% ± 2.36** (t1–t6:
+40.00/33.75/33.75/38.75/37.50/36.25), ≈ `rvlm_ocr_ablation` (37.81),
+~2.7pp under `rvlm` (39.38) but within std → no real diff on moderate val
+docs. Full writeup: `docs/experiments/rvlm-vsearch-qwen-3_5-27b.md`.
 
+**⚠ batch_look wedge found + fixed (`0bd0f80`).** Large multi-page docs
+(comics, science_paper) wedged batch_look: under load, VLM calls hit the
+600s×5-retry budget and the blocking pool shutdown waited on them → ~90min
+CPU hang per doc (3/6 trials needed kill+relaunch recovery). Fix (scoped
+to rvlm_vsearch): bounded batch_look wall-clock + capped vlm
+timeout=150/retries=2; validated on t6. **The same unbounded batch_look is
+in `rvlm`/`rvlm_ocr_ablation` — propagating the bound is a recommended
+follow-up (AMAX7 take note).**
+
+To resume t7/t8 (run under the fix):
 ```bash
 uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
   lm.enable_thinking=false solver=rvlm_vsearch solver.vsearch_device=cuda:1 \
-  data.split=val data.num_samples=null max_concurrency=24 run_id=rvlm-vsearch-val-tN
+  data.split=val data.num_samples=null max_concurrency=24 run_id=rvlm-vsearch-val-t7
 ```
 
 _(The 2026-06-01 solver-comparison re-run that used to sit here is **done** —

@@ -54,6 +54,14 @@ reference (difference of means).
 | anchor | `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 17.81% ± 1.86 | −21.56pp |
 | **control** | **`rlm_ocr`** | RLM + OCR text, **no vision** (perception modality swap) | **13.91% ± 1.56** | **−25.47pp** |
 
+> **Provisional (not in the table above — n=6, paused):**
+> **`rvlm_vsearch`** (OCR-free *visual* retrieval extension — `batch_look`
+> + multimodal page-embedding `search` via ColModernVBERT, no OCR) =
+> **36.67% ± 2.36 (n=6)**, ≈ `rvlm_ocr_ablation`, ~2.7pp below `rvlm`
+> (within combined std → no real difference on moderate val docs, same as
+> lexical search). t7/t8 pending. See
+> `docs/experiments/rvlm-vsearch-qwen-3_5-27b.md`.
+
 Detail: `docs/experiments/{solver}-qwen-3_5-27b.md` for each row.
 `official_baseline` is an external anchor (competition kit prompt +
 `max_pages=10` downscale; the strict kit-faithful config is 21.67% ±
