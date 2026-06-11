@@ -117,3 +117,49 @@ def test_vsearch_solver_sandbox_code_compiles():
     assert "def search(query, k=5):" in code
     assert "def batch_look(requests):" in code
     assert "def look(" not in code
+
+
+def test_collect_with_deadline_bounds_slow_calls():
+    """A stalled future must not block past the budget; fast ones still land."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    from docvqa.solvers.rvlm_vsearch_solver import _collect_with_deadline
+
+    results = ["sentinel"] * 3
+
+    def work(i, delay):
+        time.sleep(delay)
+        return i, f"ans{i}"
+
+    pool = ThreadPoolExecutor(max_workers=3)
+    futures = {
+        pool.submit(work, 0, 0.05): 0,
+        pool.submit(work, 1, 5.0): 1,   # exceeds the 1s budget → left as sentinel
+        pool.submit(work, 2, 0.05): 2,
+    }
+    t0 = time.monotonic()
+    _collect_with_deadline(futures, results, budget_s=1.0)
+    elapsed = time.monotonic() - t0
+    pool.shutdown(wait=False, cancel_futures=True)
+
+    assert results[0] == "ans0"
+    assert results[2] == "ans2"
+    assert results[1] == "sentinel"      # slow call untouched, not awaited
+    assert elapsed < 3.0                 # returned ~at budget, did not wait 5s
+
+
+def test_collect_with_deadline_records_exceptions():
+    """A raising future records an error string, never propagates."""
+    from concurrent.futures import ThreadPoolExecutor
+    from docvqa.solvers.rvlm_vsearch_solver import _collect_with_deadline
+
+    results = ["sentinel"]
+
+    def boom(i):
+        raise ValueError("kaboom")
+
+    pool = ThreadPoolExecutor(max_workers=1)
+    futures = {pool.submit(boom, 0): 0}
+    _collect_with_deadline(futures, results, budget_s=2.0)
+    pool.shutdown(wait=False)
+    assert results[0].startswith("[VLM call failed:")

@@ -61,6 +61,37 @@ def _build_signature(instructions: str) -> dspy.Signature:
     return dspy.Signature(fields, instructions)
 
 
+# Wall-clock budget per "wave" of concurrent VLM calls in batch_look. A wave is
+# up to `batch_concurrency` images; the whole call is capped at budget*waves so a
+# stalled VLM call (litellm timeout*retries, ~tens of minutes) can't block the
+# agent — the guard against the many-page-survey runaway (large comics wedging).
+_BATCH_LOOK_BUDGET_S = 120.0
+
+
+def _collect_with_deadline(futures: dict, results: list, budget_s: float) -> None:
+    """Fill ``results`` from completed futures within a wall-clock budget.
+
+    Each future resolves to ``(index, answer)``; ``results[index]`` is set for
+    every future that completes within ``budget_s``. Futures still running when
+    the budget elapses are left untouched (keeping their pre-set sentinel) and
+    are not waited on. A future that raises records an error string instead of
+    propagating — a tool call must never crash the question.
+    """
+    from concurrent.futures import as_completed
+    from concurrent.futures import TimeoutError as _FTimeout
+
+    try:
+        for future in as_completed(futures, timeout=budget_s):
+            idx = futures[future]
+            try:
+                _, answer = future.result()
+                results[idx] = answer
+            except Exception as e:  # noqa: BLE001 — surface as a tool result
+                results[idx] = f"[VLM call failed: {e}]"
+    except _FTimeout:
+        pass  # remaining slots keep their sentinel; caller drains the pool
+
+
 def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, page_index: PageIndex | None, batch_concurrency: int = 8) -> list:
     from PIL import Image as PILImage
 
@@ -75,28 +106,39 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, page_index: PageIn
                 return answer
 
     def _batch_look_impl(requests_json: str) -> list[str]:
-        """Internal: batch VLM calls in parallel. Input is JSON list of {path, query}."""
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        """Internal: batch VLM calls in parallel. Input is JSON list of {path, query}.
+
+        Bounded by a wall-clock budget: a stalled VLM call (a slow image under
+        server load hitting the litellm timeout*retries) cannot block the batch —
+        and thus the whole question — indefinitely. Unfinished slots get a
+        timeout sentinel so the agent continues. Guard against the many-page
+        survey runaway (large comics wedging on batch_look).
+        """
+        from concurrent.futures import ThreadPoolExecutor
         import json as _json
         requests = _json.loads(requests_json)
         if not requests:
             return []
-        results: list[str] = [""] * len(requests)
+        # Default sentinel; overwritten for every slot that completes in time.
+        results: list[str] = ["[VLM call timed out]"] * len(requests)
 
         def _do(idx: int, path: str, query: str) -> tuple[int, str]:
             return idx, _look_impl(path, query)
 
         is_vertex = "vertex_ai" in (vlm_lm.model if hasattr(vlm_lm, 'model') else str(vlm_lm))
         max_w = min(len(requests), 2 if is_vertex else batch_concurrency)
+        waves = math.ceil(len(requests) / max_w)
         with logfire.span("batch_look", num_requests=len(requests)):
-            with ThreadPoolExecutor(max_workers=max_w) as pool:
+            pool = ThreadPoolExecutor(max_workers=max_w)
+            try:
                 futures = {
                     pool.submit(_do, i, r["path"], r["query"]): i
                     for i, r in enumerate(requests)
                 }
-                for future in as_completed(futures):
-                    idx, answer = future.result()
-                    results[idx] = answer
+                _collect_with_deadline(futures, results, _BATCH_LOOK_BUDGET_S * waves)
+            finally:
+                # Never block on stalled threads (the wedge); let them drain.
+                pool.shutdown(wait=False, cancel_futures=True)
         return results
 
     def _search(query: str, k: int = 5, is_image: bool = False) -> list[dict]:
@@ -453,6 +495,11 @@ def create_rvlm_vsearch_program(
         presence_penalty=vlm.get("presence_penalty"),
         enable_thinking=vlm.get("enable_thinking", False),
         vertex_location=vlm.get("vertex_location"),
+        # Perception sub-call: one image read shouldn't burn the default 600s*5
+        # retry budget. Cap it so a stalled call fails fast (agent gets a
+        # sentinel and continues) rather than feeding a multi-minute wedge.
+        timeout=vlm.get("timeout", 150),
+        num_retries=vlm.get("num_retries", 2),
     ) if vlm and vlm.get("model") else LMConfig()
 
     vlm_lm = vlm_config.to_dspy_lm()
