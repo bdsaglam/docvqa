@@ -1,6 +1,6 @@
 # Experiment status — DocVQA-2026 (single source of truth)
 
-Last updated 2026-06-10. Quick view of what's **done**, **in progress**, and
+Last updated 2026-06-12. Quick view of what's **done**, **in progress**, and
 **queued/deferred**, plus how to run. Detailed numbers live in
 `docs/results.md` (cross-solver) and `docs/experiments/<name>.md` (per-cell).
 
@@ -10,6 +10,8 @@ Last updated 2026-06-10. Quick view of what's **done**, **in progress**, and
 |---|---|---|---|
 | 8-solver matrix (rvlm + ablations + baselines) | rvlm 39.38; tiers hold | — | results.md |
 | codeact 3-budget sweep {24,40,56} | pooled 36.74 ± 4.29 | −2.6pp | codeact-qwen-3_5-27b.md |
+| **codeact_chat** (corrected codeact: true chat MDP, no dspy) | **39.53 ± 2.83**; +2.7pp vs old codeact | +0.15pp (tied) | codeact-chat-qwen-3_5-27b.md |
+| codeact_chat thinking ablation (n=7) | 37.68 ± 4.42; −1.85pp vs no-think | thinking = **no gain** (worse/slower/hang-prone) | codeact-chat-qwen-3_5-27b.md |
 | nocrop ablation (no crop/zoom) | 36.88 ± 3.20 | −2.5pp (crop is category-specific) | rvlm_nocrop_ablation-…md |
 | subagent ablation (general delegation) | 39.22 ± 3.34 | −0.16pp (parity; affordance unused ~1%) | rvlm_subagent_ablation-…md |
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |

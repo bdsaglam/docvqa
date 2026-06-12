@@ -24,6 +24,13 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > append-only/MDP twin of `rvlm`) is **done** — budget sweep
 > {24,40,56} each at n=8 (pooled 36.74% ± 4.29, −2.64pp vs `rvlm`); see
 > the CodeAct section below.
+> **`codeact_chat`** (2026-06-12) — the *corrected* codeact (true
+> multi-turn chat MDP, no dspy in the loop) — is **done at n=8: 39.53% ±
+> 2.83**, i.e. **+2.7pp over old `codeact` and tied with `rvlm`**; a
+> thinking ablation (n=7, 37.68%) shows `enable_thinking` gives **no
+> gain**. See [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md).
+> Cross-model B/C re-runs with `codeact_chat` (no-think) are **in
+> progress / paused after the 4b/27b cell**.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
@@ -43,6 +50,7 @@ reference (difference of means).
 | Group | Solver | Role | Val (n=8) | Δ vs `rvlm` |
 |---|---|---|---|---|
 | **proposed** | **`rvlm`** | REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — |
+| corrected twin | **`codeact_chat`** | true multi-turn chat MDP (no dspy in loop); RL-target transcript | **39.53% ± 2.83** | +0.15pp (tied) |
 | ablation | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | 37.81% ± 3.12 | −1.56pp |
 | ablation | `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | 35.47% ± 4.48 | −3.91pp |
 | ablation | `rvlm_nocrop_ablation` | `batch_look` by **page index, no crop/zoom** (whole pages only) | 36.88% ± 3.20 | −2.51pp |

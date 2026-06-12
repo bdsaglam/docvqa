@@ -78,15 +78,23 @@ _CHAT_MECHANICS = (
 
 # All fenced code blocks in an assistant turn (```python / ```py / bare ```).
 _FENCE_RE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)```", re.DOTALL)
+# Reasoning block emitted when enable_thinking=true.
+_THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
+
+
+def _strip_think(text: str) -> str:
+    return _THINK_RE.sub("", text or "")
 
 
 def _extract_code(text: str) -> str:
     """Concatenate every fenced code block in the assistant message.
 
     Robust to a turn that bundles setup + action across multiple blocks.
+    Strips any ``<think>...</think>`` reasoning first so example code the model
+    writes *inside* its reasoning is never mistaken for the action.
     Returns "" when the message carries no code.
     """
-    blocks = _FENCE_RE.findall(text or "")
+    blocks = _FENCE_RE.findall(_strip_think(text))
     return "\n\n".join(b.strip() for b in blocks if b.strip()).strip()
 
 
@@ -150,13 +158,34 @@ class CodeActChatProgram:
 
     @staticmethod
     def _complete(lm: dspy.LM, messages: list[dict]) -> str:
+        """One reasoner turn. Returns the assistant's FULL text.
+
+        With ``enable_thinking=true`` + vllm ``--reasoning-parser qwen3`` the
+        reasoning arrives in a separate ``reasoning_content`` field (NOT in
+        ``content``). We splice it back into a ``<think>...</think>`` block so
+        the reasoning is preserved verbatim in the transcript (the MDP rollout
+        / RL target) and re-fed to the model on the next turn. Falls back
+        cleanly when thinking is off or already inlined as ``<think>``.
+        """
         resp = litellm.completion(
             model=lm.model,
             messages=messages,
             num_retries=getattr(lm, "num_retries", 0),
             **lm.kwargs,
         )
-        return resp.choices[0].message.content or ""
+        msg = resp.choices[0].message
+        content = msg.content or ""
+        reasoning = (getattr(msg, "reasoning_content", None) or "").strip()
+        if reasoning and "<think>" not in content:
+            # reasoning-parser ON: reasoning split into its own field → re-wrap.
+            return f"<think>\n{reasoning}\n</think>\n\n{content}"
+        if "</think>" in content and "<think>" not in content:
+            # reasoning-parser OFF: the chat template pre-fills the opening
+            # <think> in the prompt, so content starts *inside* the think block
+            # ("{reasoning}</think>...{answer}"). Restore the opener so the
+            # block is well-formed (and _strip_think / _extract_code work).
+            return f"<think>\n{content}"
+        return content
 
     def _truncate(self, output: str) -> str:
         if not output:
@@ -270,8 +299,10 @@ class CodeActChatProgram:
                     "final answer value now — no code, no sentences, no explanation."
                 ),
             })
-            answer = self._complete(lm, messages).strip()
-            messages.append({"role": "assistant", "content": answer})
+            full = self._complete(lm, messages)
+            messages.append({"role": "assistant", "content": full})
+            # The prediction is the answer value only — drop any <think> block.
+            answer = _strip_think(full).strip()
             return answer, messages
         finally:
             repl.shutdown()

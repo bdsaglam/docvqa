@@ -9,3 +9,5 @@ top_p: 0.95
 top_k: 20
 presence_penalty: null
 enable_thinking: true
+# Per-HTTP-request timeout (s). ReAct-style solvers override via lm.timeout=1800.
+timeout: 600
