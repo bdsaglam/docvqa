@@ -17,9 +17,19 @@ import os
 import select
 import subprocess
 import sys
+import time
 from typing import Any, Callable
 
 from dspy.primitives.code_interpreter import CodeInterpreterError, FinalOutput
+
+
+class ExecutionTimeout(CodeInterpreterError):
+    """Raised when a single code cell exceeds the per-cell wall-clock limit.
+
+    Distinct from the per-IPC-message read timeout: this fires when the
+    *aggregate* time of one execute() call (e.g. many sequential tool calls)
+    blows the budget, even though each individual message arrives in time.
+    """
 
 logger = logging.getLogger(__name__)
 
@@ -288,6 +298,7 @@ class SubprocessInterpreter:
         dspy_lm: Any | None = None,
         allowed_modules: list[str] | None = None,
         timeout: float = 120.0,
+        exec_timeout: float = 600.0,
         display_max_pixels: int = 1_000_000,
     ):
         """
@@ -299,7 +310,13 @@ class SubprocessInterpreter:
                      dict (model, temperature, etc.) is serialized and used to
                      create a matching LM in the subprocess.
             allowed_modules: Additional modules the subprocess is allowed to import.
-            timeout: Per-execution timeout in seconds.
+            timeout: Per-IPC-message read timeout in seconds (detects a single
+                hung tool call or pure-compute hang).
+            exec_timeout: Per-cell wall-clock timeout in seconds. Bounds the
+                total time of one execute() call so a cell that fires many
+                individually-fast tool calls (e.g. a sequential batch_look scan
+                over every page) is aborted instead of running for tens of
+                minutes.
         """
         self._sandbox_code = sandbox_code
         self._tools: dict[str, Callable] = dict(tools or {})
@@ -307,6 +324,7 @@ class SubprocessInterpreter:
         self._dspy_lm = dspy_lm
         self._allowed_modules = allowed_modules
         self._timeout = timeout
+        self._exec_timeout = exec_timeout
         self._display_max_pixels = display_max_pixels
         self._process: subprocess.Popen | None = None
         self._started = False
@@ -417,6 +435,24 @@ class SubprocessInterpreter:
             import shutil
             shutil.rmtree(self._sandbox_tmpdir, ignore_errors=True)
 
+    def _kill_and_reset(self) -> None:
+        """Hard-kill the subprocess and reset state for a clean restart.
+
+        After this, the next execute() sees ``_started is False`` and calls
+        start() again, spawning a fresh subprocess that re-runs sandbox_code
+        (restoring `pages`). This is what makes a timed-out / hung cell
+        recoverable instead of contaminating the rest of the question.
+        """
+        if self._process is not None:
+            try:
+                self._process.kill()
+                self._process.wait(timeout=5)
+            except Exception:
+                pass
+        self._process = None
+        self._started = False
+        self._tools_registered = False
+
     def execute(
         self,
         code: str,
@@ -446,8 +482,22 @@ class SubprocessInterpreter:
         self._send({"code": code, "variables": serialized_vars})
         self._pending_images = []  # Reset before each execution
 
+        # Per-cell wall-clock deadline. The subprocess emits a message (tool
+        # call / output) at least every per-message timeout, so checking at the
+        # top of each loop iteration bounds the cell to ~exec_timeout even when
+        # every individual tool call returns within the per-message window.
+        deadline = time.monotonic() + self._exec_timeout
+
         # Read and handle messages until we get output
         while True:
+            if time.monotonic() >= deadline:
+                # Cell blew its wall-clock budget (e.g. a sequential per-page
+                # batch_look scan). Kill + reset so the next execute() restarts
+                # a clean subprocess (sandbox_code re-runs, `pages` restored).
+                self._kill_and_reset()
+                raise ExecutionTimeout(
+                    f"code block exceeded the {self._exec_timeout:.0f}s execution limit"
+                )
             result = self._recv()
 
             # Handle display_image requests
@@ -517,9 +567,11 @@ class SubprocessInterpreter:
         ready, _, _ = select.select([fd], [], [], self._timeout)
 
         if not ready:
-            # Timeout - kill the subprocess and raise
-            self._process.kill()
-            self._process.wait()
+            # Per-message hang (single tool call or pure-compute loop stuck).
+            # Reset cleanly so the next execute() restarts a fresh subprocess
+            # instead of erroring with "Subprocess is not running" on every
+            # subsequent cell.
+            self._kill_and_reset()
             raise CodeInterpreterError(f"Subprocess read timeout after {self._timeout}s")
 
         line = self._process.stdout.readline()

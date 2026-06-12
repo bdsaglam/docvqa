@@ -47,7 +47,11 @@ from dspy.primitives.code_interpreter import CodeInterpreterError, FinalOutput
 
 from docvqa.data import Document, Question
 from docvqa.datasets.profile import DatasetProfile, get_profile
-from docvqa.rlm.subprocess_interpreter import HistoryReset, SubprocessInterpreter
+from docvqa.rlm.subprocess_interpreter import (
+    ExecutionTimeout,
+    HistoryReset,
+    SubprocessInterpreter,
+)
 from docvqa.solvers.rvlm_solver import (
     _build_sandbox_code,
     _build_task_instructions,
@@ -216,6 +220,7 @@ class CodeActChatProgram:
             tools={getattr(t, "__name__", str(t)): t for t in tools},
             output_fields=[{"name": "answer", "type": "str"}],
             timeout=120.0,
+            exec_timeout=600.0,  # 10-min per-cell wall-clock cap (degenerate scans)
             sandbox_code=sandbox_code,
         )
         messages: list[dict] = [
@@ -256,6 +261,17 @@ class CodeActChatProgram:
 
                 try:
                     result = repl.execute(code, variables=repl_vars)
+                except ExecutionTimeout:
+                    messages.append({"role": "user", "content": (
+                        "```output\n[Timed out] The code block took too long and was "
+                        "aborted (the REPL was reset, so variables you defined are "
+                        "cleared, but `pages` and `question` are still available). "
+                        "Make sure it's not running batch_look sequentially or running "
+                        "too many of them at once — put the (page, question) pairs you "
+                        "need into a single batch_look call, and only look at the few "
+                        "pages you actually need rather than scanning every page.\n```"
+                    )})
+                    continue
                 except (CodeInterpreterError, SyntaxError) as e:
                     messages.append({"role": "user", "content": f"```output\n[Error] {e}\n```"})
                     continue
