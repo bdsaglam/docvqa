@@ -12,6 +12,9 @@ Last updated 2026-06-12. Quick view of what's **done**, **in progress**, and
 | codeact 3-budget sweep {24,40,56} | pooled 36.74 ± 4.29 | −2.6pp | codeact-qwen-3_5-27b.md |
 | **codeact_chat** (corrected codeact: true chat MDP, no dspy) | **39.53 ± 2.83**; +2.7pp vs old codeact | +0.15pp (tied) | codeact-chat-qwen-3_5-27b.md |
 | codeact_chat thinking ablation (n=7) | 37.68 ± 4.42; −1.85pp vs no-think | thinking = **no gain** (worse/slower/hang-prone) | codeact-chat-qwen-3_5-27b.md |
+| **codeact_chat 4b/27b** (4B-LM / 27B-VLM, n=8) | **22.34 ± 3.44** | +6.7pp vs old codeact; +6.5pp vs 4b-homog (perception-budget lift) | codeact-chat-qwen-3_5-27b.md |
+| codeact_chat 4b-homog (4B/4B, n=6, paused) | 15.83 ± 2.20 | +3.6pp vs old codeact; t7/t8 deferred | codeact-chat-qwen-3_5-27b.md |
+| codeact_chat v3 (27B-LM / 9B-VLM, n=3) | 32.9 | +2.5pp vs old codeact | codeact-chat-qwen-3_5-27b.md |
 | nocrop ablation (no crop/zoom) | 36.88 ± 3.20 | −2.5pp (crop is category-specific) | rvlm_nocrop_ablation-…md |
 | subagent ablation (general delegation) | 39.22 ± 3.34 | −0.16pp (parity; affordance unused ~1%) | rvlm_subagent_ablation-…md |
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
@@ -28,7 +31,11 @@ reasoning into perception (v3).
 
 ## 🔄 In progress
 
-- _(none — Gemma n=8 sweep + baselines complete; see below.)_
+- _(none — codeact_chat 4b/27b n=8 complete; cross-model campaign **paused**
+  per user 2026-06-12. amax1 GPUs being repurposed to a single DP=3 27B
+  across all 3 GPUs. A per-cell 10-min `exec_timeout` + clean
+  subprocess-reset (commit `f7f497e`) was added — see
+  codeact-chat-qwen-3_5-27b.md.)_
 
 ## ⏸ Queued / deferred (not active — need a go-ahead)
 

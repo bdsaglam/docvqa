@@ -100,22 +100,55 @@ downstream cells.
 > parser on, the solver instead re-wraps `reasoning_content`.) Both paths
 > verified.
 
-## B/C cross-model campaign — IN PROGRESS (no-think)
+## B/C cross-model campaign (no-think)
 
 Topology: one model per GPU — 27B@:8927 (GPU0), 9B@:8909 (GPU2),
-4B@:8904 (GPU1) — running 27B-dependent and homog-small tracks
-concurrently on disjoint GPUs.
+4B@:8904 (GPU1) — ran 27B-dependent and homog-small tracks concurrently
+on disjoint GPUs.
 
-| cell | config | status | partial | old `codeact` ref |
+| cell | config | result | old `codeact` ref | Δ |
 |---|---|---|---|---|
-| v3 | 27B-LM / 9B-VLM | n=2 + t3 in-flight | 28.7 / 37.5 | 30.43% |
-| 4b-homog | 4B / 4B | n≈2–3 (winding to n=8) | 15.0 / 17.5 | 12.19% |
-| 4b/27b | 4B-LM / 27B-VLM | **priority, running** | — | 15.66% |
+| **4b/27b** | 4B-LM / 27B-VLM | **22.34% ± 3.44 (n=8)** | 15.66% | **+6.7pp** |
+| v3 | 27B-LM / 9B-VLM | 32.9% (n=3) | 30.43% | +2.5pp |
+| 4b-homog | 4B / 4B | 15.83% ± 2.20 (n=6, paused) | 12.19% | +3.6pp |
 
-**Paused per user (2026-06-12)** after `4b/27b` n=8 completes. **Deferred**
-(resumable): v3 beyond n=3, 9b/27b, 9b-homog, qwen3-8B (8b/27b), gemma
-E4B/31B homog. Old `codeact` refs for those: 9b-homog 19.35, 9b/27b 24.26,
-8b/27b 9.50, gemma-E4B 7.66, gemma-31B 29.25 (n=5).
+- **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 / 16.2.
+  Swapping the 4B VLM → 27B VLM under a fixed 4B reasoner lifts **+6.5pp**
+  over `4b-homog` — the perception-budget signature (supports D-006), and
+  `codeact_chat` clears old `codeact` by +6.7pp.
+- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stopped at n=3 per pause).
+- **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 (n=6;
+  **t7/t8 deferred** — user held t7 mid-run, "resume later").
+
+**Code provenance / 10-min exec-timeout fix (2026-06-12, commit
+`f7f497e`).** The 4B reasoner intermittently writes a **degenerate
+per-page `batch_look` scan** (e.g. 120 sequential VLM calls on a 60–89pp
+doc) that ran ~40min/cell and stalled trials; and heavy docs
+(`science_paper_1`, `maps_2`, `engineering_drawing_1`) drop under VLM
+saturation when a call exceeds the 120s per-message timeout. Fix: a
+per-cell **wall-clock `exec_timeout=600s`** (`SubprocessInterpreter`) that
+aborts the cell with a corrective message, plus a **`_kill_and_reset`** so
+both timeout paths restart a clean subprocess (re-runs `sandbox_code`,
+restores `pages`) instead of contaminating the rest of the question.
+Within this n=8: **t1/t6/t7/t8 ran (or were resumed) on the fixed code**;
+t2–t5 on the prior code. The fix only changes behavior on >600s degenerate
+cells, and t1/t6 specifically *needed* it to complete validly (they'd hung
+/ short-exited otherwise) — so the mix gives valid completions, not a
+solver change. A fully-homogeneous re-run is optional/pending.
+
+**Paused per user (2026-06-12)** after `4b/27b` n=8. **Deferred**
+(resumable): 4b-homog t7/t8, v3 beyond n=3, 9b/27b, 9b-homog, qwen3-8B
+(8b/27b), gemma E4B/31B homog. Old `codeact` refs for those: 9b-homog
+19.35, 9b/27b 24.26, 8b/27b 9.50, gemma-E4B 7.66, gemma-31B 29.25 (n=5).
+
+### VLM-load diagnosis (2026-06-12, amax1 27B@:8927)
+The doc-drops under multi-trial contention are **VLM saturation, not a
+deadlock**: 27B mean e2e **70s/call**, 36s of it queue wait, TTFT 39s;
+**~18% of calls exceed the 120s** per-message timeout (→ dropped heavy
+docs). Responses are short (mean **78 output tok**, p75 ≤100, thinking
+off) — the load is **prefill-bound** (33:1 prompt:gen ratio, large image
+prompts). Lever = concurrency, not generation: serial trials / a DP=3 27B
+across all GPUs removes the queue (see infra notes).
 
 ## Key findings
 

@@ -29,8 +29,16 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > 2.83**, i.e. **+2.7pp over old `codeact` and tied with `rvlm`**; a
 > thinking ablation (n=7, 37.68%) shows `enable_thinking` gives **no
 > gain**. See [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md).
-> Cross-model B/C re-runs with `codeact_chat` (no-think) are **in
-> progress / paused after the 4b/27b cell**.
+> Cross-model B/C re-runs with `codeact_chat` (no-think), **paused after
+> the 4b/27b cell** (2026-06-12): **4b/27b** (4B-LM / 27B-VLM) **22.34% ±
+> 3.44 (n=8)** — **+6.7pp** vs old `codeact` (15.66) and **+6.5pp** vs
+> `4b-homog` (15.83 ± 2.20, n=6), the perception-budget lift from swapping
+> the 4B VLM → 27B VLM under a fixed 4B reasoner (supports D-006); **v3**
+> (27B-LM / 9B-VLM) 32.9% (n=3). Deferred: 4b-homog t7/t8, 9b/27b,
+> 9b-homog, 8b/27b, gemma homog. A per-cell **10-min `exec_timeout`** +
+> clean subprocess-reset (commit `f7f497e`) was added to cap the 4B's
+> degenerate per-page `batch_look` scans and recover from VLM-saturation
+> doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed on the fixed code.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
