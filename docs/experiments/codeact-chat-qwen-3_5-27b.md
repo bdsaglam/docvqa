@@ -106,11 +106,12 @@ Topology: one model per GPU — 27B@:8927 (GPU0), 9B@:8909 (GPU2),
 4B@:8904 (GPU1) — ran 27B-dependent and homog-small tracks concurrently
 on disjoint GPUs.
 
-| cell | config | result | old `codeact` ref | Δ |
-|---|---|---|---|---|
-| **4b/27b** | 4B-LM / 27B-VLM | **22.34% ± 3.44 (n=8)** | 15.66% | **+6.7pp** |
-| v3 | 27B-LM / 9B-VLM | 32.9% (n=3) | 30.43% | +2.5pp |
-| 4b-homog | 4B / 4B | 15.83% ± 2.20 (n=6, paused) | 12.19% | +3.6pp |
+| cell | config | `codeact_chat` | old `codeact` | Δ vs old | `rvlm` (proposed) | vs `rvlm` |
+|---|---|---|---|---|---|---|
+| 27B-homog | 27B / 27B | 39.53% ± 2.83 (n=8) | 36.74% | +2.8pp | 39.38% ± 1.49 | +0.15 — **tied** |
+| **4b/27b** | 4B-LM / 27B-VLM | **22.34% ± 3.44 (n=8)** | 15.66% | **+6.7pp** | 21.09% ± 3.16 | +1.25 — **tied** |
+| 4b-homog | 4B / 4B | 15.83% ± 2.20 (n=6) | 12.19% | +3.6pp | 12.49% ± 3.74 | +3.34 — borderline |
+| v3 | 27B-LM / 9B-VLM | 32.9% (n=3) | 30.43% | +2.5pp | _(no clean rvlm v3 ref)_ | — |
 
 - **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 / 16.2.
   Swapping the 4B VLM → 27B VLM under a fixed 4B reasoner lifts **+6.5pp**
@@ -119,6 +120,19 @@ on disjoint GPUs.
 - **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stopped at n=3 per pause).
 - **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 (n=6;
   **t7/t8 deferred** — user held t7 mid-run, "resume later").
+
+- **vs `rvlm` (the key comparison):** old `codeact` *trailed* `rvlm` at
+  every config; the corrected `codeact_chat` **catches up to a statistical
+  tie** — 27B +0.15, 4b/27b +1.25 (Δ ≪ combined std), and only a borderline
+  nominal edge at 4b-homog (+3.34, Δ/SE≈2.1, p≈0.05, but `codeact_chat`
+  n=6 vs `rvlm` n=8 and overlapping stds → don't lean on it). So the
+  finding is **`codeact_chat` ≈ `rvlm` across the model axis** — the
+  append-only MDP matches the compacted-POMDP proposed method at no
+  accuracy cost. It does **not** beat `rvlm`; `rvlm` remains the proposed
+  method, and this *strengthens* the codeact-as-RL-target narrative.
+  Caveat: `rvlm` cross-model is clean n=8; `codeact_chat` 4b/27b is a
+  5-old/3-new-code mix (`f7f497e`) and 4b-homog is n=6 — a homogeneous
+  re-run would firm up the smaller-model rows.
 
 **Code provenance / 10-min exec-timeout fix (2026-06-12, commit
 `f7f497e`).** The 4B reasoner intermittently writes a **degenerate

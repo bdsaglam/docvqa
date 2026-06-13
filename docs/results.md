@@ -34,7 +34,12 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > 3.44 (n=8)** — **+6.7pp** vs old `codeact` (15.66) and **+6.5pp** vs
 > `4b-homog` (15.83 ± 2.20, n=6), the perception-budget lift from swapping
 > the 4B VLM → 27B VLM under a fixed 4B reasoner (supports D-006); **v3**
-> (27B-LM / 9B-VLM) 32.9% (n=3). Deferred: 4b-homog t7/t8, 9b/27b,
+> (27B-LM / 9B-VLM) 32.9% (n=3). **vs `rvlm`:** `codeact_chat` **ties
+> `rvlm` across the model axis** — 27B 39.53 vs 39.38 (+0.15), 4b/27b
+> 22.34 vs 21.09 (+1.25), 4b-homog 15.83 vs 12.49 (+3.34, borderline, n=6);
+> old `codeact` trailed `rvlm` at every config, so the corrected MDP loop
+> *catches up* to the proposed method at no accuracy cost (it does not beat
+> it). Deferred: 4b-homog t7/t8, 9b/27b,
 > 9b-homog, 8b/27b, gemma homog. A per-cell **10-min `exec_timeout`** +
 > clean subprocess-reset (commit `f7f497e`) was added to cap the 4B's
 > degenerate per-page `batch_look` scans and recover from VLM-saturation
