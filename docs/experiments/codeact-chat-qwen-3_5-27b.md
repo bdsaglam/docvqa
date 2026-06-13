@@ -1,6 +1,6 @@
-# codeact_chat — Qwen 3.5 27B (val)
+# codeact_chat — Qwen 3.5 model-axis (val/80-Q)
 
-## Hypothesis / question
+## (a) What `codeact_chat` is — the MDP / RL-target framing
 
 `codeact_chat` is the **corrected** `codeact`: a true multi-turn agentic
 chat loop. State is a genuine `messages` array — `system` → `assistant`
@@ -21,21 +21,20 @@ a clean, fully-observable **MDP**, RL-ready, persisted verbatim to
 `trajectory.json`.
 
 Questions: (1) does the corrected MDP loop cost accuracy vs the old
-`codeact` / vs `rvlm`? (2) does `enable_thinking=true` help?
+`codeact` / vs `rvlm`? (2) does `enable_thinking=true` help? (3) how does
+it behave across the model axis (homog 4B/9B/27B + cross-model ladders)?
 
-## Setup
+### Setup
 
 - Solver: `codeact_chat` (`src/docvqa/solvers/codeact_chat_solver.py`;
   config `solver=codeact_chat`). Reuses `rvlm`'s prompt body, `batch_look`,
   `_build_sandbox_code`, `SubprocessInterpreter`, `SUBMIT()`.
-- Model: Qwen 3.5 27B local vllm (lm + vlm), `enable_thinking=false` (headline).
 - Profile: DocVQA-2026 (default). `max_iterations=40` (+ page bonus).
-- n=8, overlap-the-tail heartbeat. Dates: 2026-06-11 / 06-12.
+- val 25 docs / 80 questions, `data.num_samples=null`,
+  `enable_thinking=false` (headline). n=8, overlap-the-tail heartbeat.
 - Artifacts: each doc writes `trajectory.json` (raw role-tagged transcript;
   runner change, scoped to chat-format trajectories so legacy base64
-  trajectories don't bloat disk).
-
-## Command
+  trajectories don't bloat disk) — the intended RL fine-tuning target.
 
 ```bash
 uv run python evals.py \
@@ -43,9 +42,13 @@ uv run python evals.py \
   lm.enable_thinking=false lm.timeout=1800 solver=codeact_chat \
   data.split=val data.num_samples=null max_concurrency=24 \
   run_id=codeact-chat-val-tN
+# cross-model: set lm=/vlm= to the desired pair (e.g. lm=qwen-3_5-4b-vllm-local
+#   vlm=qwen-3_5-27b-vllm-local), run_id=codeact-chat-<tag>-val-tN
 ```
 
-## Results — A-group (27B homog, val/80-Q)
+---
+
+## (b) 27B-homog headline (27B-LM / 27B-VLM, val/80-Q)
 
 ### Headline — `enable_thinking=false`, n=8
 
@@ -100,80 +103,126 @@ downstream cells.
 > parser on, the solver instead re-wraps `reasoning_content`.) Both paths
 > verified.
 
-## B/C cross-model campaign (no-think)
+---
 
-Topology: one model per GPU — 27B@:8927 (GPU0), 9B@:8909 (GPU2),
-4B@:8904 (GPU1) — ran 27B-dependent and homog-small tracks concurrently
-on disjoint GPUs.
+## (c) Cross-model / model-axis results (no-think, val/80-Q)
 
-| cell | config | `codeact_chat` | old `codeact` | Δ vs old | `rvlm` (proposed) | vs `rvlm` |
-|---|---|---|---|---|---|---|
-| 27B-homog | 27B / 27B | 39.53% ± 2.83 (n=8) | 36.74% | +2.8pp | 39.38% ± 1.49 | +0.15 — **tied** |
-| **4b/27b** | 4B-LM / 27B-VLM | **22.34% ± 3.44 (n=8)** | 15.66% | **+6.7pp** | 21.09% ± 3.16 | +1.25 — **tied** |
-| 4b-homog | 4B / 4B | 15.83% ± 2.20 (n=6) | 12.19% | +3.6pp | 12.49% ± 3.74 | +3.34 — borderline |
-| v3 | 27B-LM / 9B-VLM | 32.9% (n=3) | 30.43% | +2.5pp | _(no clean rvlm v3 ref)_ | — |
+Two ladders intersect at 27B/27B: a **perception-fixed** ladder (fix the
+reasoner, scale the VLM) and a **reasoner-fixed** ladder (fix the VLM,
+scale the reasoner). Cells run smaller-models-first, DP=3-per-model on
+amax1 (swap model → run to n=8 → swap). Queue:
+`tmp/workspace/codeact-chat-remaining/QUEUE.md`.
 
-- **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 / 16.2.
-  Swapping the 4B VLM → 27B VLM under a fixed 4B reasoner lifts **+6.5pp**
-  over `4b-homog` — the perception-budget signature (supports D-006), and
-  `codeact_chat` clears old `codeact` by +6.7pp.
-- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stopped at n=3 per pause).
-- **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 (n=6;
-  **t7/t8 deferred** — user held t7 mid-run, "resume later").
+### Homogeneous (same model both roles)
 
-- **vs `rvlm` (the key comparison):** old `codeact` *trailed* `rvlm` at
-  every config; the corrected `codeact_chat` **catches up to a statistical
-  tie** — 27B +0.15, 4b/27b +1.25 (Δ ≪ combined std), and only a borderline
-  nominal edge at 4b-homog (+3.34, Δ/SE≈2.1, p≈0.05, but `codeact_chat`
-  n=6 vs `rvlm` n=8 and overlapping stds → don't lean on it). So the
-  finding is **`codeact_chat` ≈ `rvlm` across the model axis** — the
-  append-only MDP matches the compacted-POMDP proposed method at no
-  accuracy cost. It does **not** beat `rvlm`; `rvlm` remains the proposed
-  method, and this *strengthens* the codeact-as-RL-target narrative.
-  Caveat: `rvlm` cross-model is clean n=8; `codeact_chat` 4b/27b is a
-  5-old/3-new-code mix (`f7f497e`) and 4b-homog is n=6 — a homogeneous
-  re-run would firm up the smaller-model rows.
+| cell | model | n | `codeact_chat` | old `codeact` ref | status |
+|---|---|---|---|---|---|
+| 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
+| 9b-homog | 9B / 9B | 8 | _running_ | 19.35 | **IN PROGRESS** |
+| 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
+| gemma-E4B | gemma-4-E4B / E4B | 8 | _queued_ | 7.66 | QUEUED |
+| gemma-31B | gemma-4-31B / 31B | 4 | _queued_ | 29.25 (n=5) | QUEUED |
 
-**Code provenance / 10-min exec-timeout fix (2026-06-12, commit
-`f7f497e`).** The 4B reasoner intermittently writes a **degenerate
-per-page `batch_look` scan** (e.g. 120 sequential VLM calls on a 60–89pp
-doc) that ran ~40min/cell and stalled trials; and heavy docs
-(`science_paper_1`, `maps_2`, `engineering_drawing_1`) drop under VLM
-saturation when a call exceeds the 120s per-message timeout. Fix: a
-per-cell **wall-clock `exec_timeout=600s`** (`SubprocessInterpreter`) that
-aborts the cell with a corrective message, plus a **`_kill_and_reset`** so
-both timeout paths restart a clean subprocess (re-runs `sandbox_code`,
-restores `pages`) instead of contaminating the rest of the question.
-Within this n=8: **t1/t6/t7/t8 ran (or were resumed) on the fixed code**;
-t2–t5 on the prior code. The fix only changes behavior on >600s degenerate
-cells, and t1/t6 specifically *needed* it to complete validly (they'd hung
-/ short-exited otherwise) — so the mix gives valid completions, not a
-solver change. A fully-homogeneous re-run is optional/pending.
+- **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 / 17.5 /
+  17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the
+  resumed DP=3 4B server → **16.25% ± 2.00 (n=8)**, +4.1pp vs old
+  `codeact`. This is the matrix floor among the codeact_chat cells.
 
-**Paused per user (2026-06-12)** after `4b/27b` n=8. **Deferred**
-(resumable): 4b-homog t7/t8, v3 beyond n=3, 9b/27b, 9b-homog, qwen3-8B
-(8b/27b), gemma E4B/31B homog. Old `codeact` refs for those: 9b-homog
-19.35, 9b/27b 24.26, 8b/27b 9.50, gemma-E4B 7.66, gemma-31B 29.25 (n=5).
+### Perception-fixed ladder (fixed 4B reasoner, scale the VLM)
 
-### VLM-load diagnosis (2026-06-12, amax1 27B@:8927)
+| cell | lm / vlm | n | `codeact_chat` | old `codeact` ref | status |
+|---|---|---|---|---|---|
+| 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
+| 4b/27b | 4B-LM / 27B-VLM | 8 | **22.34% ± 3.44** | 15.66 | **DONE** |
+| 9b/27b | 9B-LM / 27B-VLM | 8 | _queued_ | 24.26 | QUEUED |
+| 8b/27b | qwen-3-8B-LM / 27B-VLM | 8 | _queued_ | 9.50 | QUEUED |
+
+- **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 /
+  16.2 (n=8). Swapping the 4B VLM → 27B VLM under a fixed 4B reasoner
+  lifts **+6.1pp** over `4b-homog` (22.34 vs 16.25) — the
+  perception-budget signature (supports D-006); `codeact_chat` clears old
+  `codeact` by **+6.7pp**.
+
+### Reasoner-fixed ladder (fixed VLM at the strong end, scale the reasoner)
+
+| cell | lm / vlm | n | `codeact_chat` | old `codeact` ref | status |
+|---|---|---|---|---|---|
+| 27b/4b | 27B-LM / 4B-VLM | 8 | _queued (Phase 4, deprioritized)_ | — | QUEUED |
+| v3 (27B/9B) | 27B-LM / 9B-VLM | 3 | **32.9%** (n=3) | 30.43 | **DONE (n=3)** |
+| 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
+
+- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stays n=3 — partial). Per-cell
+  reading is provisional at n=3.
+- **27b/4b** (strongest reasoner × weakest VLM) is the ladder's bottom
+  rung; it was **never run for any harness**. Phase 4 (deprioritized) runs
+  it across **all 3 harnesses** (rvlm + codeact_chat + react) so the rung
+  is comparable, not an orphan.
+
+---
+
+## (d) vs `rvlm` — the key comparison
+
+These `rvlm` numbers are already-locked references (don't recompute).
+
+| cell | `codeact_chat` | `rvlm` (proposed) | Δ (cc − rvlm) | read |
+|---|---|---|---|---|
+| 27B-homog | 39.53% ± 2.83 (n=8) | 39.38% ± 1.49 (n=8) | +0.15 | **tied** |
+| 4b/27b | 22.34% ± 3.44 (n=8) | 21.09% ± 3.16 (n=8) | +1.25 | tied (Δ ≪ combined std) |
+| 4b-homog | 16.25% ± 2.00 (n=8) | 12.49% ± 3.74 (n=8) | +3.76 | borderline (overlapping std) |
+
+Old `codeact` *trailed* `rvlm` at every config; the corrected
+`codeact_chat` **catches up to a statistical tie** — 27B +0.15, 4b/27b
++1.25 (both Δ ≪ combined std), and only a borderline nominal edge at
+4b-homog (+3.76, both n=8 now, but overlapping stds → don't lean on it).
+So the finding is **`codeact_chat` ≈ `rvlm` across the model axis** — the
+append-only MDP matches the compacted-POMDP proposed method at no accuracy
+cost. It does **not** beat `rvlm`; `rvlm` remains the proposed method, and
+this *strengthens* the codeact-as-RL-target narrative.
+
+Caveat: `rvlm` cross-model is clean n=8; `codeact_chat` 4b/27b is a
+5-old/3-new-code mix (`f7f497e`, see below). The 4b-homog row is now a
+clean n=8 (t7/t8 ran on the resumed server).
+
+---
+
+## (e) Exec-timeout fix — commit `f7f497e` (2026-06-12) + provenance
+
+The 4B reasoner intermittently writes a **degenerate per-page
+`batch_look` scan** (e.g. 120 sequential VLM calls on a 60–89pp doc) that
+ran ~40min/cell and stalled trials; and heavy docs (`science_paper_1`,
+`maps_2`, `engineering_drawing_1`) drop under VLM saturation when a call
+exceeds the 120s per-message timeout.
+
+**Fix:** a per-cell **wall-clock `exec_timeout=600s`**
+(`SubprocessInterpreter`) that aborts the cell with a corrective message,
+plus a **`_kill_and_reset`** so both timeout paths restart a clean
+subprocess (re-runs `sandbox_code`, restores `pages`) instead of
+contaminating the rest of the question. The fix only changes behavior on
+>600s degenerate cells. It is in main.
+
+**Provenance note (4b/27b n=8):** within that cell, **t1/t6/t7/t8 ran (or
+were resumed) on the fixed code**; t2–t5 on the prior code. t1/t6
+specifically *needed* it to complete validly (they'd hung / short-exited
+otherwise) — so the mix gives valid completions, not a solver change. A
+fully-homogeneous re-run is optional/pending. The 4b-homog n=8 and
+27B-homog n=8 cells are not affected by this mix.
+
+---
+
+## (f) VLM-load diagnosis (2026-06-12, amax1 27B@:8927)
+
 The doc-drops under multi-trial contention are **VLM saturation, not a
 deadlock**: 27B mean e2e **70s/call**, 36s of it queue wait, TTFT 39s;
 **~18% of calls exceed the 120s** per-message timeout (→ dropped heavy
 docs). Responses are short (mean **78 output tok**, p75 ≤100, thinking
 off) — the load is **prefill-bound** (33:1 prompt:gen ratio, large image
 prompts). Lever = concurrency, not generation: serial trials / a DP=3 27B
-across all GPUs removes the queue (see infra notes).
+across all GPUs removes the queue (see infra notes). The campaign now runs
+one model on all 3 GPUs (DP=3) at a time to avoid cross-trial contention.
 
-## Key findings
+---
 
-1. **Corrected MDP loop ≥ old `codeact` (+2.7pp), ties `rvlm`** — fixing
-   the POMDP cost no accuracy and plausibly helped.
-2. **Thinking: no benefit** on DocVQA val; use no-think (also avoids the
-   thinking-amplified `batch_look` hangs).
-3. `trajectory.json` persists the clean role-tagged MDP transcript — the
-   intended RL fine-tuning target.
-
-## Operational caveats
+## (g) Operational caveats
 
 - `science_paper_1` (19pp) and `business_report_1` (89pp) are the slow
   tail; `science_paper_1` + thinking deterministically hangs the
@@ -181,3 +230,19 @@ across all GPUs removes the queue (see infra notes).
   thinking sweep was abandoned).
 - High variance (~3pp no-think, ~4.4pp think) — always n≥8; an early n=3
   read mis-signaled a `rvlm`-beating result that regressed to parity.
+- **Completeness gate:** a trial counts only at **80/80 questions**; heavy
+  docs can drop under load → resume the same `run_id`.
+
+## Key findings
+
+1. **Corrected MDP loop ≥ old `codeact` (+2.7pp at 27B), ties `rvlm`** —
+   fixing the POMDP cost no accuracy and plausibly helped.
+2. **`codeact_chat` ≈ `rvlm` across the model axis** (27B, 4b/27b,
+   4b-homog all tied within combined std) — append-only MDP matches the
+   compacted-POMDP proposed method at no accuracy cost.
+3. **Perception-budget signature reproduces** (4b-homog 16.25 → 4b/27b
+   22.34, +6.1pp from swapping only the VLM → 27B) — supports D-006.
+4. **Thinking: no benefit** on DocVQA val; use no-think (also avoids the
+   thinking-amplified `batch_look` hangs).
+5. `trajectory.json` persists the clean role-tagged MDP transcript — the
+   intended RL fine-tuning target.

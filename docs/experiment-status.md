@@ -1,6 +1,6 @@
 # Experiment status — DocVQA-2026 (single source of truth)
 
-Last updated 2026-06-12. Quick view of what's **done**, **in progress**, and
+Last updated 2026-06-14. Quick view of what's **done**, **in progress**, and
 **queued/deferred**, plus how to run. Detailed numbers live in
 `docs/results.md` (cross-solver) and `docs/experiments/<name>.md` (per-cell).
 
@@ -9,11 +9,10 @@ Last updated 2026-06-12. Quick view of what's **done**, **in progress**, and
 | Experiment | Result | Δ vs `rvlm` 39.38 | Doc |
 |---|---|---|---|
 | 8-solver matrix (rvlm + ablations + baselines) | rvlm 39.38; tiers hold | — | results.md |
-| codeact 3-budget sweep {24,40,56} | pooled 36.74 ± 4.29 | −2.6pp | codeact-qwen-3_5-27b.md |
 | **codeact_chat** (corrected codeact: true chat MDP, no dspy) | **39.53 ± 2.83**; +2.7pp vs old codeact | +0.15pp (tied) | codeact-chat-qwen-3_5-27b.md |
 | codeact_chat thinking ablation (n=7) | 37.68 ± 4.42; −1.85pp vs no-think | thinking = **no gain** (worse/slower/hang-prone) | codeact-chat-qwen-3_5-27b.md |
 | **codeact_chat 4b/27b** (4B-LM / 27B-VLM, n=8) | **22.34 ± 3.44** | +6.7pp vs old codeact; +6.5pp vs 4b-homog (perception-budget lift) | codeact-chat-qwen-3_5-27b.md |
-| codeact_chat 4b-homog (4B/4B, n=6, paused) | 15.83 ± 2.20 | +3.6pp vs old codeact; t7/t8 deferred | codeact-chat-qwen-3_5-27b.md |
+| **codeact_chat 4b-homog** (4B/4B, n=8) | **16.25 ± 2.00** | +4.1pp vs old codeact; +3.76pp vs rvlm 4b-homog | codeact-chat-qwen-3_5-27b.md |
 | codeact_chat v3 (27B-LM / 9B-VLM, n=3) | 32.9 | +2.5pp vs old codeact | codeact-chat-qwen-3_5-27b.md |
 | nocrop ablation (no crop/zoom) | 36.88 ± 3.20 | −2.5pp (crop is category-specific) | rvlm_nocrop_ablation-…md |
 | subagent ablation (general delegation) | 39.22 ± 3.34 | −0.16pp (parity; affordance unused ~1%) | rvlm_subagent_ablation-…md |
@@ -31,14 +30,23 @@ reasoning into perception (v3).
 
 ## 🔄 In progress
 
-- _(none — codeact_chat 4b/27b n=8 complete; cross-model campaign **paused**
-  per user 2026-06-12. amax1 GPUs being repurposed to a single DP=3 27B
-  across all 3 GPUs. A per-cell 10-min `exec_timeout` + clean
-  subprocess-reset (commit `f7f497e`) was added — see
-  codeact-chat-qwen-3_5-27b.md.)_
+- **codeact_chat 9b-homog** (9B/9B, val/80-Q, n=8, no-think) — running on
+  amax1 (DP=3 9B, all 3 GPUs); t1 partial so far. Part of the resumed
+  smaller-models-first model-axis campaign (queue:
+  `tmp/workspace/codeact-chat-remaining/QUEUE.md`). See
+  codeact-chat-qwen-3_5-27b.md.
 
 ## ⏸ Queued / deferred (not active — need a go-ahead)
 
+- **codeact_chat model-axis campaign (no-think, val/80-Q) — ACTIVE.**
+  Smaller-models-first, DP=3-per-model (swap model → run to n=8 → swap).
+  Done: 27B-homog (39.53), 4b-homog (16.25, n=8), 4b/27b (22.34), v3 27B/9B
+  (32.9, n=3). Running: 9b-homog (see In progress). Queued: gemma-E4B,
+  Phase-2 cross-model (9b/27b, 8b/27b, v3→n=8), gemma-31B (n=4), and a
+  **deprioritized** Phase-4 27B/4B matched set across all 3 harnesses
+  (rvlm + codeact_chat + react — the reasoner-fixed perception-ladder
+  bottom rung). Queue: `tmp/workspace/codeact-chat-remaining/QUEUE.md`;
+  detail in codeact-chat-qwen-3_5-27b.md.
 - **Dataset/document-length axis (current code) — QUEUED, needs go-ahead.**
   rvlm/codeact/`raw_vlm_multi_baseline`/`official_baseline` (±`rvlm_ocr_ablation`)
   on **MP-DocVQA + MMLongBench-Doc**, Qwen 3.5 27B, with the mandatory

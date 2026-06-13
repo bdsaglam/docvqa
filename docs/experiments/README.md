@@ -17,15 +17,16 @@ future sessions don't re-derive numbers from `output/runs/`.
 
 The 8-solver comparison re-run (`lm.enable_thinking=false`, local vllm
 :8927), **complete at n=8** (val 25 docs / 80 Qs). Mean ± std over 8
-trials; Δ vs the `rvlm` reference. A 9th solver (`codeact`, append-only/MDP
-twin) is also done (3-budget sweep). Full detail + headlines in
-[`../results.md`](../results.md).
+trials; Δ vs the `rvlm` reference. The append-only/MDP twin is the
+**`codeact_chat`** solver (corrected — ties `rvlm` at 39.53 ± 2.83); the
+old dspy `codeact` budget sweep is deprecated/archived. Full detail +
+headlines in [`../results.md`](../results.md).
 
 | Solver | Role | Val (n=8) | Δ vs `rvlm` | Status |
 |---|---|---|---|---|
 | **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — | ✓ reference |
 | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` (OCR extension) | 37.81% ± 3.12 | −1.56pp | ✓ done — **OCR adds nothing** over OCR-free |
-| `codeact` | append-only/MDP twin of `rvlm` (no compaction; FT target) | 36.74% ± 4.29 (pooled, n=23) | −2.64pp | ✓ done — compaction ~free; budget flat |
+| **`codeact_chat`** | corrected append-only/MDP twin of `rvlm` (true chat MDP, no dspy; FT target) | **39.53% ± 2.83** | +0.15pp (tied) | ✓ done — MDP ~free; old dspy `codeact` deprecated |
 | `rvlm_hybrid_ablation` | + direct `display()` image channel on top of the sub-call | 35.47% ± 4.48 | −3.91pp | ✓ done — direct channel mildly harmful (3× variance) |
 | `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | 25.16% ± 4.60 | −14.22pp | ✓ done — REPL load-bearing |
 | `direct_vlm` | `display()` pages into agent's own context, **no** VLM sub-call | 22.34% ± 2.79 | −17.03pp | ✓ done — sub-call load-bearing |
@@ -94,7 +95,7 @@ cross-cutting narratives in a single synthesis doc.
 | [react_baseline-qwen-3_5-27b.md](react_baseline-qwen-3_5-27b.md) | no-REPL ablation |
 | [rlm_ocr-qwen-3_5-27b.md](rlm_ocr-qwen-3_5-27b.md) | RLM + OCR (text-only) control |
 | [official_baseline-qwen-3_5-27b.md](official_baseline-qwen-3_5-27b.md) | competition-prompt anchor |
-| [codeact-qwen-3_5-27b.md](codeact-qwen-3_5-27b.md) | append-only/MDP twin of `rvlm` (budget sweep, FT target) |
+| [codeact-chat-qwen-3_5-27b.md](codeact-chat-qwen-3_5-27b.md) | corrected append-only/MDP twin of `rvlm` (chat MDP; 27B-homog + model axis; FT target) |
 
 **Cross-model sweeps — by model** (all harnesses RLM / ReAct / CodeAct per file):
 

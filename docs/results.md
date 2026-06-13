@@ -20,30 +20,31 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > [`archive/experiments/`](../archive/experiments/) and
 > [`archive/docs/results.md`](../archive/docs/results.md). Do not cite
 > archived numbers as current. The 8-solver Qwen-27B re-run below is
-> **complete at n=8** (val, 2026-06-03). A 9th solver (`codeact`,
-> append-only/MDP twin of `rvlm`) is **done** — budget sweep
-> {24,40,56} each at n=8 (pooled 36.74% ± 4.29, −2.64pp vs `rvlm`); see
-> the CodeAct section below.
+> **complete at n=8** (val, 2026-06-03). The append-only/MDP twin of `rvlm`
+> is the **`codeact_chat`** solver (corrected; see below + its per-cell
+> doc); the **old dspy `codeact`** budget sweep is **deprecated/archived**
+> (its "compaction ~free" finding holds — `archive/experiments/`).
 > **`codeact_chat`** (2026-06-12) — the *corrected* codeact (true
 > multi-turn chat MDP, no dspy in the loop) — is **done at n=8: 39.53% ±
 > 2.83**, i.e. **+2.7pp over old `codeact` and tied with `rvlm`**; a
 > thinking ablation (n=7, 37.68%) shows `enable_thinking` gives **no
 > gain**. See [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md).
-> Cross-model B/C re-runs with `codeact_chat` (no-think), **paused after
-> the 4b/27b cell** (2026-06-12): **4b/27b** (4B-LM / 27B-VLM) **22.34% ±
-> 3.44 (n=8)** — **+6.7pp** vs old `codeact` (15.66) and **+6.5pp** vs
-> `4b-homog` (15.83 ± 2.20, n=6), the perception-budget lift from swapping
-> the 4B VLM → 27B VLM under a fixed 4B reasoner (supports D-006); **v3**
-> (27B-LM / 9B-VLM) 32.9% (n=3). **vs `rvlm`:** `codeact_chat` **ties
-> `rvlm` across the model axis** — 27B 39.53 vs 39.38 (+0.15), 4b/27b
-> 22.34 vs 21.09 (+1.25), 4b-homog 15.83 vs 12.49 (+3.34, borderline, n=6);
-> old `codeact` trailed `rvlm` at every config, so the corrected MDP loop
-> *catches up* to the proposed method at no accuracy cost (it does not beat
-> it). Deferred: 4b-homog t7/t8, 9b/27b,
-> 9b-homog, 8b/27b, gemma homog. A per-cell **10-min `exec_timeout`** +
-> clean subprocess-reset (commit `f7f497e`) was added to cap the 4B's
-> degenerate per-page `batch_look` scans and recover from VLM-saturation
-> doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed on the fixed code.
+> Cross-model `codeact_chat` model-axis (no-think): **4b/27b** (4B-LM /
+> 27B-VLM) **22.34% ± 3.44 (n=8)** — **+6.7pp** vs old `codeact` (15.66)
+> and **+6.1pp** vs `4b-homog` (16.25 ± 2.00, n=8), the perception-budget
+> lift from swapping the 4B VLM → 27B VLM under a fixed 4B reasoner
+> (supports D-006); **4b-homog** (4B/4B) **16.25% ± 2.00 (n=8)**; **v3**
+> (27B-LM / 9B-VLM) 32.9% (n=3). **9b-homog** is running. **vs `rvlm`:**
+> `codeact_chat` **ties `rvlm` across the model axis** — 27B 39.53 vs 39.38
+> (+0.15), 4b/27b 22.34 vs 21.09 (+1.25), 4b-homog 16.25 vs 12.49 (+3.76,
+> borderline, both n=8); old `codeact` trailed `rvlm` at every config, so
+> the corrected MDP loop *catches up* to the proposed method at no accuracy
+> cost (it does not beat it). Queued: 9b-homog (running), gemma-E4B,
+> Phase-2 cross-model (9b/27b, 8b/27b, v3→n=8), gemma-31B (n=4). A per-cell
+> **10-min `exec_timeout`** + clean subprocess-reset (commit `f7f497e`) was
+> added to cap the 4B's degenerate per-page `batch_look` scans and recover
+> from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed
+> on the fixed code.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
@@ -178,37 +179,22 @@ Efficiency tracks the accuracy story:
 - **`react` is shallow** — 5.1 steps/Q: without a REPL it can't compose
   multi-step perception, so it terminates early *and* scores low.
 
-## CodeAct — append-only/MDP twin of `rvlm` (budget sweep, val)
+## CodeAct (append-only/MDP twin of `rvlm`) — superseded by `codeact_chat`
 
-`codeact` is `rvlm`'s twin — **identical tools/prompt/`batch_look`** —
-with one change: a **strictly append-only** transcript (every
-`(reasoning, code, stdout)` step shown in full, no LeanRLM compaction).
-This makes the trajectory a fully-observable **MDP** (vs `rvlm`'s
-compacted POMDP) — the property wanted for an **RL fine-tuning target**.
-Question: does dropping compaction cost accuracy, and what iteration
-budget does the append-only agent need? Budget swept at
-`max_iterations ∈ {24, 40, 56}`, each to n=8.
-
-| Budget (`max_iterations`) | Val | n | Δ vs `rvlm` 39.38 |
-|---|---|---|---|
-| 24 | 37.66% ± 5.02 | 8 | −1.72pp |
-| 40 (default) | 36.96% ± 5.25 | 7 | −2.42pp |
-| 56 | 35.62% ± 2.59 | 8 | −3.76pp |
-| **pooled** | **36.74% ± 4.29** | **23** | **−2.64pp** |
-
-Efficiency (n=23): ~13.5 iters/Q, median 11, **~1% @cap at every budget**
-— identical to `rvlm` (13.0), i.e. the append-only agent converges in the
-same ~13 steps and the cap never binds, so budget is not a lever.
-
-**Read: dropping compaction is nearly free.** All three budgets land in
-the visual-recursive tier (≈ `rvlm_ocr` 37.81), within noise of `rvlm`;
-the −2.6pp pooled gap is < the per-budget std and budget is
-noise-dominated (the n=1 ranking flipped at n=2). The RL-friendly
-append-only (MDP) form costs ~nothing vs `rvlm`'s managed context.
-(b40-t8 dropped to n=7: its `maps_2` doc hit the 14400s task-timeout
-twice — the append-only context balloons on that multi-page map until the
-`batch_look` bridge hangs; excluded rather than block the sweep.) Detail:
-`docs/experiments/codeact-qwen-3_5-27b.md`.
+The append-only/MDP twin is now the **`codeact_chat`** solver (corrected:
+true multi-turn chat MDP, no dspy in the loop) — see
+[`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md)
+(27B-homog **39.53% ± 2.83**, ties `rvlm`; full model-axis above). The
+**old dspy `codeact`** (single-turn `dspy.Predict` re-rendering history into
+a `trajectory` string — POMDP-shaped, not a clean RL rollout) is
+**deprecated**; its budget sweep `max_iterations ∈ {24,40,56}` is archived
+in [`archive/experiments/codeact-qwen-3_5-27b.md`](../archive/experiments/codeact-qwen-3_5-27b.md).
+Its one durable finding — **dropping compaction is ~free** (pooled 36.74% ±
+4.29, n=23, ~13 iters/Q, cap never binds, within noise of `rvlm`) — is
+confirmed and strengthened by `codeact_chat` (which closes the gap to a tie).
+Old `codeact` still appears as the **CodeAct harness** in the harness×model
+axis (`harness-axis-summary.md`, by-model files); those rows will be
+replaced as the `codeact_chat` model-axis campaign completes.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
 val, current code. Detail: `docs/experiments/qwen-3_5-9b.md` and
