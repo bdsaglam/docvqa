@@ -234,7 +234,7 @@ harness-LIFT** (val, all three harnesses + both no-scaffold baselines; **n=8**
 unless noted — supersedes the earlier n=1/n=2 pilots). **Baseline =
 max(rawvlm, official).**
 
-| Gemma | rvlm | codeact | react | rawvlm | official | base | best lift |
+| Gemma | rvlm | codeactᶜ | react | rawvlm | official | base | best lift |
 |---|---|---|---|---|---|---|---|
 | **E4B** | 7.34 ± 3.30 | 7.66 ± 1.94 | 6.09 ± 2.36 | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | **+1.4 (n.s.)** |
 | **31B** | **32.50 ± 4.48** | 29.25 ± 5.77† | 18.44 ± 3.58 | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **+21.4** |
@@ -244,8 +244,12 @@ gemma4-31B codeact operational instability (8 shm-crashes + degenerate-gen /
 max-iter runaways during the sweep) — `rvlm`/`react`/baselines ran clean. An
 operational finding in its own right; see `gemma-4-31b.md`.
 
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+
 **Cross-family findings.** (1) At **31B every harness clears both no-scaffold
-baselines by ≫ the std** — rvlm +21.4, codeact +18.2, react +7.4 over base
+baselines by ≫ the std** — rvlm +21.4, codeact +18.2ᶜ, react +7.4 over base
 11.09. rvlm 32.50 ≫ react 18.44 (+14.1pp): the recursive VLM sub-call is
 **load-bearing**, mirroring Qwen 27B (rvlm 39.4 ≫ react 25.2) — "recursive-
 perception ≫ tool-only ReAct" is **robust across model families**. (2) At

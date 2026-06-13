@@ -18,9 +18,13 @@ Last updated 2026-06-14. Quick view of what's **done**, **in progress**, and
 | subagent ablation (general delegation) | 39.22 ± 3.34 | −0.16pp (parity; affordance unused ~1%) | rvlm_subagent_ablation-…md |
 | **subagent_full** (sub-call = full agent) | **negative** | +2.4 many-page / −3.5 single-page, within noise; ≈ subagent at 10× cost | rvlm_subagent_full-…md |
 | **rvlm_rationale** (VLM answer + `[note:]`) | 39.22 ± 2.91 | −0.16pp (parity; note redundant w/ verify loop) | rvlm_rationale-…md |
-| **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-axis-summary.md |
-| Gemma-4 E4B harness-lift (n=8) | rvlm 7.34/codeact 7.66/react 6.09 vs base 6.25 | **no lift at 4B** — all 3 within noise of `official_baseline` (clean negative control) | gemma-4-e4b.md |
-| Gemma-4 31B harness-lift (n=8; codeact n=5) | rvlm 32.50 (+21.4), codeact 29.25 (+18.2), react 18.44 (+7.4) vs base 11.09 | **every harness ≫ both no-scaffold baselines**; lift is a capacity gate (sharp @31B, absent @4B) | gemma-4-31b.md, harness-axis-summary.md |
+| **v3 reasoning-vs-perception** (27B-LM / 9B-VLM vs v2) | RLM +10.3, CodeAct +6.2ᶜ, ReAct −3.05 | RLM/CodeAct reasoning-bound; ReAct perception-bound | harness-axis-summary.md |
+| Gemma-4 E4B harness-lift (n=8) | rvlm 7.34/codeact 7.66ᶜ/react 6.09 vs base 6.25 | **no lift at 4B** — all 3 within noise of `official_baseline` (clean negative control) | gemma-4-e4b.md |
+| Gemma-4 31B harness-lift (n=8; codeact n=5) | rvlm 32.50 (+21.4), codeact 29.25ᶜ (+18.2), react 18.44 (+7.4) vs base 11.09 | **every harness ≫ both no-scaffold baselines**; lift is a capacity gate (sharp @31B, absent @4B) | gemma-4-31b.md, harness-axis-summary.md |
+
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel

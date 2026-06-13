@@ -17,7 +17,11 @@ live in [`harness-axis-summary.md`](harness-axis-summary.md).
 |---|---|---|---|
 | RLM (`rvlm`) | 16.67% ± 3.40 | **24.54% ± 5.30** | **+7.87pp** — Welch t=3.54, 95% CI [+3.4,+12.3], **sig.** |
 | ReAct | 14.97% ± 2.96 | 21.01% ± 4.63 | +6.04pp |
-| CodeAct | 19.35% ± 4.24 | 24.26% ± 4.68 | +4.91pp |
+| CodeActᶜ | 19.35% ± 4.24 | 24.26% ± 4.68 | +4.91pp |
+
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
 
 At v2, RLM ≈ CodeAct (24.54 ≈ 24.26) > ReAct (21.01): once the reasoner is
 strong enough to exploit code+state, RLM/CodeAct overtake the no-REPL ReAct.

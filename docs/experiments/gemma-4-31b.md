@@ -10,7 +10,7 @@ Cross-family synthesis: [`harness-axis-summary.md`](harness-axis-summary.md).
 | Harness / baseline | Val | Lift vs no-scaffold |
 |---|---|---|
 | RLM (`rvlm`) | **32.50% ± 4.48** (n=8) | **+21.4pp** |
-| CodeAct | **29.25% ± 5.77** (n=5) | **+18.2pp** |
+| CodeActᶜ | **29.25% ± 5.77** (n=5) | **+18.2pp** |
 | ReAct | **18.44% ± 3.58** (n=8) | **+7.4pp** |
 | `raw_vlm_multi_baseline` | 10.78% ± 0.93 (n=8) | — |
 | `official_baseline` | 11.09% ± 1.82 (n=8) | — |
@@ -29,6 +29,10 @@ Gemma 31B is in the same regime, the headline ordering preserved.
 > is itself an operational finding: **CodeAct-on-gemma4-31B is brittle**, whereas
 > `rvlm`/`react`/the baselines ran clean. True (un-guarded) CodeAct accuracy is
 > likely somewhat higher than 29.25; it remains clearly in the scaffold tier.
+
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
 
 ## Reads
 

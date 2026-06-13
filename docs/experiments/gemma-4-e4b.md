@@ -12,7 +12,7 @@ per-question micro-average. Cross-family synthesis:
 | Harness / baseline | Val (n=8) | Lift vs no-scaffold |
 |---|---|---|
 | RLM (`rvlm`) | 7.34% ± 3.30 | +1.1pp (n.s.) |
-| CodeAct | 7.66% ± 1.94 | +1.4pp (n.s.) |
+| CodeActᶜ | 7.66% ± 1.94 | +1.4pp (n.s.) |
 | ReAct | 6.09% ± 2.36 | −0.2pp (n.s.) |
 | `raw_vlm_multi_baseline` | 3.75% ± 0.00 | — |
 | `official_baseline` | 6.25% ± 1.16 | — |
@@ -22,6 +22,10 @@ harnesses sit **within noise of the `official_baseline`** — no scaffold lift a
 4B. This is the clean **negative control**: lift requires a capable-enough base.
 vs Qwen 3.5 4B homog: RLM 21.1 / ReAct 11.9 / CodeAct 12.2 — E4B lands far
 lower (weak homogeneous vision + weak reasoner).
+
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
 
 ## Reads
 

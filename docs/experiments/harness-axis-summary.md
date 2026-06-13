@@ -24,7 +24,7 @@ files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 
 ## Table 1 — v1 homog (LLM = VLM) + 27B anchor (n=8)
 
-| Config | RLM (`rvlm`) | ReAct | CodeAct |
+| Config | RLM (`rvlm`) | ReAct | CodeActᶜ |
 |---|---|---|---|
 | Qwen3.5 4B homog | 12.49 ± 3.74 | 11.94 ± 2.23 | 12.19 ± 3.50 |
 | Qwen3.5 9B homog | 16.67 ± 3.40 | 14.97 ± 2.96 | 19.35 ± 4.24 |
@@ -36,14 +36,18 @@ files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 guards + gemma4-31B CodeAct operational instability — see below and
 [`gemma-4-31b.md`](gemma-4-31b.md).
 
+ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
+**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
+campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+
 ## Table 2 — v2 mixed (reasoner + 27B VLM), n=8
 
-| Reasoner | RLM | ReAct | CodeAct | best |
+| Reasoner | RLM | ReAct | CodeActᶜ | best |
 |---|---|---|---|---|
 | Qwen3 8B (text-only, older gen) | 11.73 ± 2.96 | **15.79 ± 2.03** | 9.50 ± 1.44 | ReAct |
 | Qwen3.5 4B | **21.09 ± 3.16** | 15.66 ± 4.73 | 15.66 ± 3.00 | RLM |
 | Qwen3.5 9B | **24.54 ± 5.30** | 21.01 ± 4.63 | 24.26 ± 4.68 | RLM ≈ CodeAct |
-| (27B/27B homog, for reference) | **39.38** | 25.16 | 36.96 (b40) | RLM ≳ CodeAct ≫ ReAct |
+| (27B/27B homog, for reference) | **39.38** | 25.16 | 36.96ᶜ (b40) | RLM ≳ CodeAct ≫ ReAct |
 
 ## Finding 1 — perception-budget lift (v1 → v2, swap only the VLM)
 
@@ -60,18 +64,18 @@ hidden-state REPL.
 
 The best harness changes with reasoner capability:
 
-- **8B (text-only): ReAct 15.79 > RLM 11.73 > CodeAct 9.50.** The simplest
+- **8B (text-only): ReAct 15.79 > RLM 11.73 > CodeAct 9.50ᶜ.** The simplest
   harness wins for the weakest reasoner; CodeAct's append-only growing-code
   context is *hardest* (fails consistently — lowest mean, lowest variance).
-- **4B: RLM 21.09 > ReAct ≈ CodeAct 15.66.** RLM already leads.
-- **9B: RLM 24.54 ≈ CodeAct 24.26 > ReAct 21.01.** RLM/CodeAct overtake ReAct
+- **4B: RLM 21.09 > ReAct ≈ CodeAct 15.66ᶜ.** RLM already leads.
+- **9B: RLM 24.54 ≈ CodeAct 24.26ᶜ > ReAct 21.01.** RLM/CodeAct overtake ReAct
   once the reasoner can exploit code + state.
-- **27B: RLM 39.38 ≳ CodeAct 36.96 ≫ ReAct 25.16.** RLM and CodeAct close at
+- **27B: RLM 39.38 ≳ CodeAct 36.96ᶜ ≫ ReAct 25.16.** RLM and CodeAct close at
   the top; ReAct far back.
 
 **CodeAct scales hardest.** Worst at 8B → catches RLM at 9B → lands ~2.4pp under
 RLM at 27B (within noise). **CodeAct reasoner-scaling slope (Qwen3.5):** 4B
-15.66 → 9B 24.26 = **+8.6pp**, vs RLM 4B 21.09 → 9B 24.54 = +3.5pp — CodeAct
+15.66 → 9B 24.26 = **+8.6pp**ᶜ, vs RLM 4B 21.09 → 9B 24.54 = +3.5pp — CodeAct
 benefits ~2.5× more from reasoner scale.
 
 **FT implication.** The clean append-only-code **MDP** target (CodeAct) costs
@@ -89,7 +93,7 @@ The missing factorial corner: **strong reasoner on weak perception** (v3:
 | Harness | v2 (9B-LM / 27B-VLM) | v3 (27B-LM / 9B-VLM) | Δ | lean |
 |---|---|---|---|---|
 | RLM | 24.54 | **34.82 ± 3.01** | **+10.3** | **reasoning-bound** |
-| CodeAct | 24.26 | **30.43 ± 2.86** | **+6.2** | **reasoning-bound** |
+| CodeActᶜ | 24.26 | **30.43 ± 2.86** | **+6.2** | **reasoning-bound** |
 | ReAct | 21.01 | **17.96 ± 3.94** | **−3.05** | **perception-bound** |
 
 Per-trial — RLM v3: 32.60 / 34.74 / 32.50 / 35.00 / 32.50 / 32.50 / 40.00 /
@@ -135,7 +139,7 @@ Each harness measured against the two no-scaffold baselines on the same model.
 **Baseline = max(`raw_vlm_multi_baseline`, `official_baseline`)** (the stronger
 no-scaffold point). All n=8 except Gemma-31B CodeAct (n=5, stopped early).
 
-| Model | rawvlm | official | base | rvlm (lift) | CodeAct (lift) | ReAct (lift) |
+| Model | rawvlm | official | base | rvlm (lift) | CodeActᶜ (lift) | ReAct (lift) |
 |---|---|---|---|---|---|---|
 | **Gemma-4 31B** | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **32.50 (+21.4)** | 29.25 n=5 (+18.2) | 18.44 (+7.4) |
 | **Gemma-4 E4B** | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | 7.34 (+1.1 n.s.) | 7.66 (+1.4 n.s.) | 6.09 (−0.2 n.s.) |
