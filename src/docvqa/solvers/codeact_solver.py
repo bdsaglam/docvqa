@@ -1,4 +1,19 @@
-"""CodeAct: a ReAct-style agent whose action is Python code, with an
+"""CodeAct (DEPRECATED — use ``codeact_chat``).
+
+.. deprecated::
+    This is the original dspy-based CodeAct: a single-turn ``dspy.Predict``
+    that re-renders the full history into a ``trajectory`` *string field*
+    each step — a POMDP-shaped approximation of an append-only MDP, with
+    dspy adapter-parse fragility. It is **superseded by**
+    ``codeact_chat_solver`` (``solver=codeact_chat``), which implements the
+    same loop as a true multi-turn chat MDP (direct ``litellm.completion``,
+    no dspy, RL-target ``trajectory.json``) and scores **39.53% ± 2.83**,
+    tied with ``rvlm``. This file is kept **only** to reproduce its
+    still-cited cross-model CodeAct-harness numbers (``codeact-3_5-*`` /
+    ``codeact-*-llm-*`` runs); it will be archived once the ``codeact_chat``
+    model-axis campaign completes. Do not start new work from it.
+
+CodeAct: a ReAct-style agent whose action is Python code, with an
 **append-only** context.
 
 Same task as ``rvlm`` (recursive VLM perception via ``batch_look`` in a

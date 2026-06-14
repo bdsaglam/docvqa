@@ -1,3 +1,7 @@
+# DEPRECATED: original dspy-based CodeAct (POMDP-shaped, adapter-parse fragility).
+# Use `solver=codeact_chat` (true multi-turn chat MDP, no dspy, RL-target; ties rvlm
+# at 39.53% ± 2.83). Kept runnable only to reproduce still-cited cross-model
+# CodeAct-harness numbers; will be archived once the codeact_chat axis completes.
 _target_: docvqa.solvers.codeact_solver.create_codeact_program
 dataset: ${data.dataset}
 profile_name: null

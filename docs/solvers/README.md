@@ -11,6 +11,7 @@ implication: pick a non-RVLM name to avoid arXiv:2603.24224 collision).
 | Engineering name | Paper role | Tool surface | Doc |
 |---|---|---|---|
 | **`rvlm`** | Proposed method (M) | `batch_look` only | [rvlm.md](rvlm.md) |
+| **`codeact_chat`** | CodeAct twin of `rvlm` — append-only chat MDP (RL-target form); ties `rvlm` | same as `rvlm` (`batch_look`) | [../experiments/codeact-chat-qwen-3_5-27b.md](../experiments/codeact-chat-qwen-3_5-27b.md) |
 | **`rvlm_ocr`** | +OCR extension | `batch_look` + `search` + `page_texts` | [rvlm-ocr.md](rvlm-ocr.md) |
 | **`rvlm_vsearch`** | OCR-free retrieval extension (visual embeddings; no OCR dependency) | `batch_look` + `search` (multimodal page embeddings, text-or-image query) | — |
 | **`rvlm_full`** | Kitchen-sink (appendix, role TBD per task #16) | `batch_look` + `look` + `search` + `page_texts` | [rvlm-full.md](rvlm-full.md) |
@@ -47,6 +48,10 @@ the principle the codebase converged on after D-007 / D-009.
   the pre-rename names (`leanest-solo-*`, `flat-solo-*`, …).
 - The full rename map is in
   [D-010](../paper/decisions.md#d-010-solver-renames--behavior-based-engineering-names).
+- **`codeact` (old dspy CodeAct) is DEPRECATED** — superseded by
+  `codeact_chat` (corrected chat-MDP twin). It stays runnable only to
+  reproduce its still-cited cross-model CodeAct-harness numbers and will be
+  archived once the `codeact_chat` model-axis campaign completes.
 
 ## See also
 

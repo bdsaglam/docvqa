@@ -151,6 +151,7 @@ code — three clean tiers, every gap ≫ the std):
 | Tier | Solver | Val (n=8) |
 |---|---|---|
 | **proposed** | **`rvlm`** (REPL + recursive VLM `batch_look`, OCR-free) | **39.38% ± 1.49** |
+| CodeAct twin (MDP/RL-target) | **`codeact_chat`** (append-only chat MDP; ties `rvlm`) | **39.53% ± 2.83** |
 | +OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
 | no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
 | OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
@@ -176,9 +177,11 @@ Official ICDAR baselines (external): Gemini 3 Pro 37.5% test, GPT-5.2 35.0% test
 uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
   lm.enable_thinking=false solver=rvlm \
   data.split=val data.num_samples=null max_concurrency=16 run_id=rvlm-val-t1
-# swap solver= for a variant: codeact | rvlm_ocr_ablation | rvlm_hybrid_ablation |
+# swap solver= for a variant: codeact_chat | rvlm_ocr_ablation | rvlm_hybrid_ablation |
 #   rvlm_nocrop_ablation | rvlm_subagent_ablation | rvlm_subagent_full | rvlm_rationale |
 #   react_baseline | raw_vlm_multi_baseline | direct_vlm | official_baseline | rlm_ocr
+#   (`codeact` = DEPRECATED dspy twin, superseded by codeact_chat; kept runnable
+#    only to reproduce its still-cited cross-model harness numbers)
 # cross-model: set lm=/vlm= to a config above (e.g. lm=qwen-3_5-9b-vllm-local vlm=qwen-3_5-27b-vllm-local)
 
 # Reports
@@ -187,7 +190,7 @@ python scripts/iter_stats.py '<run_id_glob>'                    # per-run agent 
 ```
 
 Concurrency: `c=16–24` on a healthy 27B; lower (`c=4–8`) for heavy/nested
-solvers (`subagent_full`, `codeact` on long docs) and small/slow servers.
+solvers (`subagent_full`, `codeact_chat` on long docs) and small/slow servers.
 
 ## Key Findings (current code; see `docs/results.md`)
 

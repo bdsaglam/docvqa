@@ -11,15 +11,15 @@ Headline comparison on the DocVQA-2026 val subset (25 docs / 80 questions, Qwen 
 | Tier | Solver | Val (n=8) |
 |---|---|---|
 | **proposed** | **`rvlm`** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** |
+| CodeAct harness (MDP twin) | `codeact_chat` — append-only chat-MDP twin of `rvlm` (RL-target form) | 39.53% ± 2.83 |
 | + OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
-| CodeAct harness | `codeact` — append-only/MDP twin of `rvlm` | 36.74% ± 4.29 (n=23) |
 | no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
 | competition anchor | `official_baseline` (`MASTER_PROMPT`, no scaffold) | 17.81% ± 1.86 |
 | OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
 
 External official baselines (ICDAR 2026, for context): Gemini 3 Pro **37.5%** test, GPT-5.2 **35.0%** test.
 
-`codeact` is `rvlm`'s twin — identical tools, prompt, and `batch_look` — but with a strictly **append-only** transcript (no LeanRLM compaction), making the trajectory a fully-observable MDP suited as an RL fine-tuning target. Dropping compaction is nearly free: pooled **36.74% ± 4.29** over a `max_iterations ∈ {24, 40, 56}` budget sweep (n=23), within noise of `rvlm` (−2.6pp, < the per-budget std) and in the same visual-recursive tier.
+`codeact_chat` is `rvlm`'s twin — identical tools, prompt, and `batch_look` — but with a strictly **append-only** multi-turn chat transcript (no LeanRLM compaction), making the trajectory a fully-observable MDP suited as an RL fine-tuning target. The append-only MDP costs essentially nothing: **39.53% ± 2.83** (n=8), statistically **tied** with `rvlm` (+0.15pp) and in the same visual-recursive tier. (An earlier dspy-based `codeact` solver — single-turn `dspy.Predict` re-rendering history into a string field, a POMDP-shaped approximation — is **deprecated** in favor of this corrected chat-MDP version; its budget-sweep writeup is archived.)
 
 See [`docs/results.md`](docs/results.md) for the full cross-solver matrix (ablations, the document-length axis, and the model/perception sweeps) and [`docs/experiment-status.md`](docs/experiment-status.md) for run status.
 
@@ -123,7 +123,7 @@ uv run python evals.py \
   max_concurrency=8 run_id=rvlm-val-vertex
 ```
 
-Swap `solver=` for a variant: `rvlm_ocr_ablation` (OCR extension), `codeact`, `direct_vlm`, `react_baseline`, `raw_vlm_multi_baseline`, `official_baseline`, `rlm_ocr`. See `docs/solvers/README.md` for the full map.
+Swap `solver=` for a variant: `rvlm_ocr_ablation` (OCR extension), `codeact_chat` (MDP/RL-target twin), `direct_vlm`, `react_baseline`, `raw_vlm_multi_baseline`, `official_baseline`, `rlm_ocr`. See `docs/solvers/README.md` for the full map.
 
 All runs are resumable — re-running with the same `run_id` skips already-completed questions.
 
@@ -133,7 +133,7 @@ All runs are resumable — re-running with the same `run_id` skips already-compl
 evals.py                              # Hydra entry point (default solver=rvlm)
 configs/
   config.yaml                         # Global defaults
-  solver/                             # rvlm (proposed), rvlm_ocr, rvlm_full, codeact, direct_vlm,
+  solver/                             # rvlm (proposed), rvlm_ocr, rvlm_full, codeact_chat, direct_vlm,
                                       #   react_baseline, raw_vlm_{multi,single}_baseline,
                                       #   official_baseline, rlm_ocr, + rvlm_* ablations
   lm/                                 # qwen-3_5-{4b,9b,27b}, qwen-3_6-{27b,35b}, gemma-4-{e4b,31b},
@@ -161,7 +161,8 @@ src/docvqa/
     react_baseline_solver.py          # dspy.ReAct + VLM tools, no REPL
     raw_vlm_multi_baseline_solver.py  # Raw multi-image, single VLM pass, no scaffold
     official_baseline_solver.py       # Competition MASTER_PROMPT, verbatim
-    codeact_solver.py                 # Append-only/MDP twin of rvlm (RL-target form)
+    codeact_chat_solver.py            # Append-only chat-MDP twin of rvlm (RL-target form)
+    codeact_solver.py                 # DEPRECATED dspy-based codeact (superseded by codeact_chat)
 scripts/
   report.py                           # Generate results reports
   iter_stats.py                       # Per-run agent-iteration stats
