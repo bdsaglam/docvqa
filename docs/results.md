@@ -123,6 +123,40 @@ only clear stochastically.
    *below* our minimized-prompt `raw_vlm_multi` (17.8 vs 20.5) — our
    prompt scrub is not sandbagging the baselines.
 
+## Oracle ceiling & self-consistency (pass@k / SC@k) — diagnostic
+
+Per [D-003](paper/decisions.md) the headline stays **mean ± std** (`avg@1`) and
+SC is out of the method framing; these are **analysis-only** numbers. Full
+per-cell table, method, and findings: **[`pass-at-k.md`](pass-at-k.md)**
+(computed by [`scripts/pass_at_k.py`](../scripts/pass_at_k.py), same binary
+DocVQA scorer; incomplete trials dropped so pass@k/SC@k are over the full 80 Qs).
+
+- **pass@k** = oracle (any of the k trials correct); **SC@k** = majority-vote
+  the k answers, then score.
+- ⚠ **The published Qwen-27B `*-cmp-val` headline matrix (rvlm/react/baselines/
+  ablations) has no retained per-trial artifacts** (deleted on both hosts) → its
+  pass@k/SC@k are **pending a re-run**. Surviving `rvlm-minimal/-unified/
+  -skeletal-val` are earlier *prompt-scrub variants*, not the published runs.
+
+Headline-tier cells with retained artifacts:
+
+| Cell | k | avg@1 (±std) | pass@k | SC@k |
+|---|---|---|---|---|
+| `codeact-chat` 27B homog (corrected twin) | 8 | 39.53 ± 2.83 | **63.75** | 45.00 |
+| `rvlm-vsearch` (OCR-free visual-retrieval ext) | 6 | 36.67 ± 2.58 | 66.25 | 37.50 |
+| `codeact-chat` 4B-LM / 27B-VLM | 8 | 22.34 ± 3.44 | 55.00 | 26.25 |
+| `codeact-chat` 4B homog | 8 | 16.25 ± 2.00 | 47.50 | 20.00 |
+| Gemma-4 31B `rvlm` | 7 | 33.04 ± 4.56 | 60.00 | 42.50 |
+
+**Two findings worth carrying into the paper's analysis** (detail in
+`pass-at-k.md`): (1) **large oracle headroom** on strong scaffolds — pass@8
+nearly doubles avg@1 (`codeact-chat` 39.5→63.8) → ~25pp recoverable by a
+verifier / best-of-n / RL reward model; (2) **pass@k cleanly marks
+perception-budget-bound cells** — small reasoner + 27B VLM reaches the answer in
+*some* trial on most questions (`rvlm` 4B/27B avg@1 21 but pass@8 56) but can't
+land it consistently, whereas Gemma-E4B stays low even at pass@8 (a true
+capacity floor).
+
 ## Active-perception mechanism (prediction 3)
 
 The matrix above triangulates the mechanism — both halves of the scaffold

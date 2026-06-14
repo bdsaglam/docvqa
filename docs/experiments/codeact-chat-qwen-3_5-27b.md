@@ -54,7 +54,10 @@ uv run python evals.py \
 
 Per-trial: 40.0 / 43.8 / 42.5 / 38.8 / 37.5 / 36.2 / 36.2 / 41.2
 
-**39.53% ± 2.83** (n=8)
+**39.53% ± 2.83** (n=8) · **pass@8 63.75% · SC@8 45.00%** (diagnostic, not
+headline per D-003 — oracle ceiling +24.2pp over avg@1 → large recoverable
+headroom for a verifier/RL reward; SC@8 +5.5pp. Full axis in
+[`../pass-at-k.md`](../pass-at-k.md): 4b/27b pass@8 55.0/SC 26.2; 4b-homog 47.5/20.0.)
 
 | comparison | value | Δ vs codeact_chat |
 |---|---|---|
