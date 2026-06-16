@@ -123,8 +123,14 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
 | 9b-homog | 9B / 9B | 8 | **22.97% ± 2.75** | 19.35 | **DONE** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
-| gemma-E4B | gemma-4-E4B / E4B | 8 | _queued_ | 7.66 | QUEUED |
+| gemma-E4B | gemma-4-E4B / E4B | 8 | **6.56% ± 2.19** | 7.66 | **DONE** |
 | gemma-31B | gemma-4-31B / 31B | 4 | _queued_ | 29.25 (n=5) | QUEUED |
+
+- **gemma-E4B** per-trial: 10.0 / 5.0 / 5.0 / 8.8 / 5.0 / 7.5 / 3.8 / 7.5 (n=8)
+  → **6.56% ± 2.19**, pass@8 17.50, SC@8 7.50 (2026-06-16, gemma4 DP=3). ≈ parity
+  with old `codeact` (7.66) and the `official_baseline` floor (6.25) → **no
+  harness lift at 4B**, the clean negative control holds for `codeact_chat` too
+  (a 4B model is too weak to exploit any scaffold).
 
 - **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 / 17.5 /
   17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the
