@@ -121,7 +121,7 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | cell | model | n | `codeact_chat` | old `codeact` ref | status |
 |---|---|---|---|---|---|
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
-| 9b-homog | 9B / 9B | 8 | _running_ | 19.35 | **IN PROGRESS** |
+| 9b-homog | 9B / 9B | 8 | **22.97% ± 2.75** | 19.35 | **DONE** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
 | gemma-E4B | gemma-4-E4B / E4B | 8 | _queued_ | 7.66 | QUEUED |
 | gemma-31B | gemma-4-31B / 31B | 4 | _queued_ | 29.25 (n=5) | QUEUED |
@@ -130,6 +130,13 @@ amax1 (swap model → run to n=8 → swap). Queue:
   17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the
   resumed DP=3 4B server → **16.25% ± 2.00 (n=8)**, +4.1pp vs old
   `codeact`. This is the matrix floor among the codeact_chat cells.
+- **9b-homog** per-trial: 20.0 / 27.5 / 18.8 / 25.0 / 22.5 / 23.8 / 22.5 /
+  23.8 (n=8) → **22.97% ± 2.75**, **pass@8 61.25 · SC@8 32.50** (2026-06-16,
+  DP=3 9B). +1.4pp vs old `codeact` (19.35) and **+4.1pp vs `rvlm` 9b-homog
+  (18.91)** — at 9B homog the corrected MDP loop leads the proposed method.
+  `engineering_drawing_1` + `science_paper_1` were stochastic blockers (9B
+  degenerate `batch_look` scans → repeated 10-min exec-timeouts) that needed
+  several resume cycles per trial; the exec-timeout guard kept them bounded.
 
 ### Perception-fixed ladder (fixed 4B reasoner, scale the VLM)
 
