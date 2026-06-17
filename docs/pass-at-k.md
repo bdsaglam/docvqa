@@ -49,6 +49,7 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 |---|---|---|---|---|---|
 | **`rvlm-cmp-val` (proposed M, headline)** | 8 | **41.88 ± 5.79** | **68.75** | **47.50** | 39.38 → **+2.5** (re-rolls higher) |
 | `rvlm-ocr-cmp-val` (+OCR ablation) | 8 | **36.56 ± 2.89** | 67.50 | 40.00 | 37.81 → −1.2 (✓ reproduces) |
+| `rvlm-nocrop-cmp-val` (no-crop ablation) | 8 | **35.78 ± 2.31** | 58.75 | 42.50 | 36.88 → −1.1 (✓ reproduces) |
 | `react-cmp-val` (ReAct, no-REPL baseline) | 8 | **27.19 ± 3.19** | 53.75 | 32.50 | 25.16 → +2.0 (✓ reproduces) |
 | `raw-vlm-multi-cmp-val` (raw-VLM baseline) | 8 | **20.94 ± 1.60** | 27.50 | 20.00 | 20.47 → +0.5 (✓ reproduces) |
 | `official-cmp-val` (competition anchor) | 8 | **18.91 ± 1.94** | 33.75 | 21.25 | 17.81 → +1.1 (✓ reproduces) |
