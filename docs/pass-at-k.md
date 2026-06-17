@@ -48,6 +48,7 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 | cmp cell | k | avg@1 (±std) | pass@k | SC@k | vs old avg@1 |
 |---|---|---|---|---|---|
 | **`rvlm-cmp-val` (proposed M, headline)** | 8 | **41.88 ± 5.79** | **68.75** | **47.50** | 39.38 → **+2.5** (re-rolls higher) |
+| `official-cmp-val` (competition anchor) | 8 | **18.91 ± 1.94** | 33.75 | 21.25 | 17.81 → +1.1 (✓ reproduces) |
 | `rlm-ocr-cmp-val` (OCR-floor control) | 8 | **14.69 ± 2.19** | 27.50 | 15.00 | 13.91 → +0.8 (✓ reproduces) |
 
 `rvlm-cmp` per-trial: 30.0 / 43.8 / 45.0 / 50.0 / 43.8 / 42.5 / 41.2 / 38.8 (n=8) —

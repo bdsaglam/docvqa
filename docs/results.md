@@ -66,7 +66,8 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > **re-run** with fresh, retained artifacts + the full metric triple. Recovered
 > so far (see [`pass-at-k.md`](pass-at-k.md) for the live table):
 > **`rvlm` 41.88% ± 5.79** (pass@8 68.75, SC@8 47.50) — *+2.5pp above the old
-> 39.38*; **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91.
+> 39.38*; **`official` 18.91% ± 1.94** (pass@8 33.75) — reproduces old 17.81;
+> **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91.
 > The table's `avg@1` and Δ values will be refreshed once all rows re-run.
 
 8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
