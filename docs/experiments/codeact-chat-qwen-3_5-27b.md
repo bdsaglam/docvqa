@@ -87,8 +87,8 @@ headroom for a verifier/RL reward; SC@8 +5.5pp. Full axis in
 Per-trial: 43.8 / 41.2 / 38.8 / 37.5 / 35.0 / 37.5 / 30.0
 
 **37.68% ± 4.42** (n=7; t8 excluded — pathological `science_paper_1`
-`batch_look` hang that survived 3 resume attempts). **Δ vs no-think =
-−1.85pp.**
+`batch_look` hang that survived 3 resume attempts). **pass@7 58.75 · SC@7
+38.75.** **Δ vs no-think = −1.85pp.**
 
 **Verdict: thinking does NOT help** — marginally *worse* on the mean,
 **higher variance** (±4.42 vs ±2.83), **~2× slower** (long think blocks =
@@ -134,8 +134,9 @@ amax1 (swap model → run to n=8 → swap). Queue:
 
 - **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 / 17.5 /
   17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the
-  resumed DP=3 4B server → **16.25% ± 2.00 (n=8)**, +4.1pp vs old
-  `codeact`. This is the matrix floor among the codeact_chat cells.
+  resumed DP=3 4B server → **16.25% ± 2.00 (n=8)**, **pass@8 47.50 · SC@8
+  20.00**, +4.1pp vs old `codeact`. This is the matrix floor among the
+  codeact_chat cells.
 - **9b-homog** per-trial: 20.0 / 27.5 / 18.8 / 25.0 / 22.5 / 23.8 / 22.5 /
   23.8 (n=8) → **22.97% ± 2.75**, **pass@8 61.25 · SC@8 32.50** (2026-06-16,
   DP=3 9B). +1.4pp vs old `codeact` (19.35) and **+4.1pp vs `rvlm` 9b-homog
@@ -154,10 +155,10 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | 8b/27b | qwen-3-8B-LM / 27B-VLM | 8 | _queued_ | 9.50 | QUEUED |
 
 - **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 /
-  16.2 (n=8). Swapping the 4B VLM → 27B VLM under a fixed 4B reasoner
-  lifts **+6.1pp** over `4b-homog` (22.34 vs 16.25) — the
-  perception-budget signature (supports D-006); `codeact_chat` clears old
-  `codeact` by **+6.7pp**.
+  16.2 (n=8) → **22.34% ± 3.44**, **pass@8 55.00 · SC@8 26.25**. Swapping
+  the 4B VLM → 27B VLM under a fixed 4B reasoner lifts **+6.1pp** over
+  `4b-homog` (22.34 vs 16.25) — the perception-budget signature (supports
+  D-006); `codeact_chat` clears old `codeact` by **+6.7pp**.
 
 ### Reasoner-fixed ladder (fixed VLM at the strong end, scale the reasoner)
 
@@ -167,8 +168,9 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | v3 (27B/9B) | 27B-LM / 9B-VLM | 3 | **32.9%** (n=3) | 30.43 | **DONE (n=3)** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
 
-- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stays n=3 — partial). Per-cell
-  reading is provisional at n=3.
+- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stays n=3 — partial) →
+  **32.92% ± 4.39**, **pass@3 51.25 · SC@3 32.50**. Per-cell reading is
+  provisional at n=3.
 - **27b/4b** (strongest reasoner × weakest VLM) is the ladder's bottom
   rung; it was **never run for any harness**. Phase 4 (deprioritized) runs
   it across **all 3 harnesses** (rvlm + codeact_chat + react) so the rung
