@@ -67,9 +67,19 @@ Per-category (t3): business_report 5/10, comics 4/10, engineering_drawing
 
 ## Summary
 
-**n=8 COMPLETE: 39.38% ± 1.49pp** (40.00 / 38.75 / 37.50 / 41.25 / 41.25 / 40.00 / 37.50 / 38.75) —
-tight variance (±1.5pp, lowest in the matrix). This is the reference the
-matrix is measured against. maps is the consistent weak spot.
+> **⟳ RE-RUN 2026-06-17 (fresh artifacts — supersedes the deleted run below).**
+> The original `*-cmp-val` per-trial artifacts (the table above) were **deleted
+> on both hosts**, leaving no pass@k/SC@k. Re-ran n=8 on a local 27B DP=3:
+> **41.88% ± 5.79, pass@8 68.75, SC@8 47.50** (per-trial 30.0 / 43.8 / 45.0 /
+> 50.0 / 43.8 / 42.5 / 41.2 / 38.8). The fresh re-roll lands **+2.5pp above the
+> old 39.38**, with higher std (5.79 vs 1.49 — t1's 30.0 is the low outlier; the
+> other 7 cluster 38.8–50.0). `science_paper_3`/`comics_2` are the recurring
+> degenerate-loop traps (rvlm has no exec-timeout; cleared via kill+resume).
+> The table below is the historical (deleted-artifact) run, kept for provenance.
+
+**Original run (artifacts deleted) — n=8: 39.38% ± 1.49pp** (40.00 / 38.75 /
+37.50 / 41.25 / 41.25 / 40.00 / 37.50 / 38.75) — tight variance (±1.5pp). maps
+is the consistent weak spot.
 
 ## Comparison
 

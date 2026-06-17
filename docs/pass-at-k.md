@@ -47,10 +47,14 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 
 | cmp cell | k | avg@1 (±std) | pass@k | SC@k | vs old avg@1 |
 |---|---|---|---|---|---|
+| **`rvlm-cmp-val` (proposed M, headline)** | 8 | **41.88 ± 5.79** | **68.75** | **47.50** | 39.38 → **+2.5** (re-rolls higher) |
 | `rlm-ocr-cmp-val` (OCR-floor control) | 8 | **14.69 ± 2.19** | 27.50 | 15.00 | 13.91 → +0.8 (✓ reproduces) |
 
-In progress: `rvlm-cmp-val` (the headline; ~42.5% at n=6, *above* the old 39.38),
-then react/raw_vlm_multi/official + the rvlm ablations. The surviving
+`rvlm-cmp` per-trial: 30.0 / 43.8 / 45.0 / 50.0 / 43.8 / 42.5 / 41.2 / 38.8 (n=8) —
+the fresh re-roll lands **+2.5pp above the deleted-run 39.38**, with higher std
+(5.79 vs the old 1.49; t1's 30.0 is the low outlier, the other 7 cluster 38.8–50.0).
+In progress: react / raw_vlm_multi / official baselines + the rvlm ablations
+(rvlm_ocr/nocrop/subagent/hybrid). The surviving
 `rvlm-minimal/-unified/-skeletal-val` cells are **undocumented earlier
 prompt-scrub variants** (not the published `*-cmp-val` runs) and are labeled as
 variants below.

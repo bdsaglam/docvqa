@@ -60,6 +60,15 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 
 ## Method vs baselines — Qwen 3.5 27B, val (current code, **n=8 complete**)
 
+> **⟳ Matrix RE-RUN in progress (2026-06-17).** The table below shows the
+> original published `*-cmp-val` numbers, whose per-trial artifacts were
+> **deleted on both hosts** (so they had no pass@8/SC@8). They are being
+> **re-run** with fresh, retained artifacts + the full metric triple. Recovered
+> so far (see [`pass-at-k.md`](pass-at-k.md) for the live table):
+> **`rvlm` 41.88% ± 5.79** (pass@8 68.75, SC@8 47.50) — *+2.5pp above the old
+> 39.38*; **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91.
+> The table's `avg@1` and Δ values will be refreshed once all rows re-run.
+
 8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
 local vllm :8927, **n=8**). Mean ± std over 8 trials; Δ vs the `rvlm`
 reference (difference of means).
