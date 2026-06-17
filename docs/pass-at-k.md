@@ -36,21 +36,24 @@ uv run python -m scripts.pass_at_k --all --min-trials 3 --markdown   # all multi
 uv run python -m scripts.pass_at_k codeact-chat-val rvlm-vsearch-val  # specific cells
 ```
 
-## ⚠ Headline 8-solver matrix: artifacts not retained
+## Headline 8-solver matrix — RE-RUN in progress (2026-06-17)
 
-The **published Qwen-27B headline matrix** (`rvlm-cmp-val`, `react-cmp-val`,
-`raw-vlm-multi-cmp-val`, `direct-vlm-cmp-val`, `official-cmp-val`,
-`rlm-ocr-cmp-val`, `rvlm-ocr-cmp-val`, `rvlm-nocrop-cmp-val`,
-`rvlm-subagent-cmp-val`, `rvlm-hybrid-cmp-val`, plus `rvlm_rationale` /
-`rvlm_subagent_full`) backs the `results.md` headline (`rvlm` **39.38**, react
-25.16, official 17.81, `rlm_ocr` 13.91, …). **Its per-trial `submission.json`s
-were deleted on both amax1 and amax7** (disk cleanup). Only the `avg@1` scalars
-survive in the docs; pass@k / SC@k need per-question per-trial answers, which are
-gone — **pending a re-run** to recover. The surviving `rvlm-minimal/-unified/
--skeletal-val` cells are **undocumented earlier prompt-scrub variants** (the
-history D-006 hides), *not* substitutes for the published `*-cmp-val` runs — they
-score differently (e.g. `rvlm-minimal-val` 42.0 vs published `rvlm` 39.4) and are
-labeled as variants below.
+The published Qwen-27B headline matrix (`rvlm-cmp-val`, `react-cmp-val`,
+`raw-vlm-multi-cmp-val`, `official-cmp-val`, `rlm-ocr-cmp-val`, +`rvlm_*`
+ablations) had its per-trial `submission.json`s **deleted on both hosts** (disk
+cleanup), so its pass@k/SC@k were unrecoverable. It is now being **re-run** on a
+local 27B DP=3 (rvlm+ablations) + a remote 27B (light baselines) — fresh
+artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
+
+| cmp cell | k | avg@1 (±std) | pass@k | SC@k | vs old avg@1 |
+|---|---|---|---|---|---|
+| `rlm-ocr-cmp-val` (OCR-floor control) | 8 | **14.69 ± 2.19** | 27.50 | 15.00 | 13.91 → +0.8 (✓ reproduces) |
+
+In progress: `rvlm-cmp-val` (the headline; ~42.5% at n=6, *above* the old 39.38),
+then react/raw_vlm_multi/official + the rvlm ablations. The surviving
+`rvlm-minimal/-unified/-skeletal-val` cells are **undocumented earlier
+prompt-scrub variants** (not the published `*-cmp-val` runs) and are labeled as
+variants below.
 
 ## Results (cells with retained artifacts)
 
