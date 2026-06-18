@@ -71,7 +71,10 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > **`react` 27.19% ± 3.19** (pass@8 53.75) — reproduces old 25.16;
 > **`raw_vlm_multi` 20.94% ± 1.60** (pass@8 27.50) — reproduces old 20.47;
 > **`official` 18.91% ± 1.94** (pass@8 33.75) — reproduces old 17.81;
-> **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91.
+> **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91;
+> **`rvlm_subagent` 36.72% ± 2.75** (pass@8 66.25, SC@8 41.25) — re-rolls −2.5pp
+> vs old 39.22 (still in the proposed tier).
+> **8/9 recovered** — only `rvlm_hybrid` remains.
 > The table's `avg@1` and Δ values will be refreshed once all rows re-run.
 
 8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,

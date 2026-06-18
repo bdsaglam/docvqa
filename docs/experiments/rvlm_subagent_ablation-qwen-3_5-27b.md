@@ -50,10 +50,20 @@ uv run python evals.py \
 
 ## Summary
 
-**n=8 mean ± std: 39.22 ± 3.34** (Δ vs `rvlm` 39.38 = **−0.16pp** — dead
-parity). Generalizing the sub-call from perception (`batch_look`) to
-arbitrary delegation (`batch_subagent`, image optional) **neither helps nor
-hurts**.
+> **⟳ RE-RUN 2026-06-18 (fresh artifacts — supersedes the deleted run below).**
+> The original `rvlm-subagent-cmp-val` per-trial artifacts were deleted on both
+> hosts, leaving no pass@k/SC@k. Re-ran n=8 (local 27B DP=3, c=16):
+> **36.72% ± 2.75, pass@8 66.25, SC@8 41.25**. The fresh re-roll lands −2.5pp
+> vs the old 39.22 (same direction/scale as `rvlm`'s re-roll), still in the
+> proposed tier and at parity with the fresh `rvlm` (41.88) within combined std.
+> `comics_2` is the recurring degenerate-loop trap (35-iter budget, no
+> exec-timeout); cleared via kill+resume. The verdict is unchanged — the general
+> delegation affordance neither helps nor hurts vs the narrow `batch_look`.
+
+**Original run (artifacts deleted) — n=8 mean ± std: 39.22 ± 3.34** (Δ vs
+`rvlm` 39.38 = **−0.16pp** — dead parity). Generalizing the sub-call from
+perception (`batch_look`) to arbitrary delegation (`batch_subagent`, image
+optional) **neither helps nor hurts**.
 
 **Why parity: the general affordance is barely used.** Across all 8 trials,
 **~1.0%** of delegations are non-visual (image=`None`): 45 text-only vs
