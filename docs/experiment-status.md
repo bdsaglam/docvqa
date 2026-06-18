@@ -40,11 +40,11 @@ The published `*-cmp-val` matrix lost its per-trial artifacts → no pass@8/SC@8
 Re-ran all 9 cells with retained artifacts: **8/9 recovered with the full
 triple** (rvlm 41.88 · rvlm_ocr 36.56 · rvlm_nocrop 35.78 · rvlm_subagent 36.72 ·
 react 27.19 · raw_vlm_multi 20.94 · official 18.91 · rlm_ocr 14.69 — see
-`pass-at-k.md`). The 9th, **`rvlm_hybrid`**, is **closed as a documented
-limitation**: headline 35.47% ± 4.48 retained, pass@8/SC@8 **unrecoverable** —
-its `+display()` channel emits ~163k-token requests on heavy docs that overflow
-both the 32k local (→"Unknown") and 131k remote (→scaffold spin-loop, no
-exec-timeout). Needs a solver fix, not more context.
+`pass-at-k.md`). The 9th, **`rvlm_hybrid`**, **fails at the model's context ceiling** (accepted
+negative result): its `+display()` channel emits ~163k-token requests on heavy
+docs, **exceeding Qwen 3.5 27B's 131k max context** — per policy that counts as
+the solver failing, not a harness gap. Headline 35.47% ± 4.48 (below `rvlm`)
+retained as an upper bound; true score lower, pass@8/SC@8 unavailable.
 
 ## 🔄 In progress
 

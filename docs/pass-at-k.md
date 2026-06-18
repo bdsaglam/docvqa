@@ -61,13 +61,16 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 the fresh re-roll lands **+2.5pp above the deleted-run 39.38**, with higher std
 (5.79 vs the old 1.49; t1's 30.0 is the low outlier, the other 7 cluster 38.8–50.0).
 Re-run is **8/9 recovered with the full metric triple**; the 9th cell
-(`rvlm_hybrid`) is **closed as a documented limitation** — its headline
-35.47% ± 4.48 is retained from the prior run, but a fresh pass@8/SC@8 is
-**unrecoverable**: `rvlm_hybrid_ablation`'s extra `display()` channel makes the
-heaviest docs emit ~163k-token requests that overflow **both** servers (local
-32k → 79/80 "Unknown"; remote 131k → the scaffold spin-loops on the overflow
-with no exec-timeout). A clean n=8 would need a solver fix (cap the overflow
-path), not just more context. The surviving
+(`rvlm_hybrid`) **fails at the model's context ceiling** — an accepted negative
+result, not a harness gap. `rvlm_hybrid_ablation`'s extra `display()` channel
+makes the heaviest docs emit **~163k-token requests, exceeding Qwen 3.5 27B's
+maximum context (131k)**. Per project policy, exceeding the model's max context
+counts as the **solver failing**, not something to engineer around. Its last
+clean full-context measurement (**35.47% ± 4.48**, below `rvlm`) is retained as
+an upper bound; the true score under the 131k ceiling is lower (heavy docs fail),
+and pass@8/SC@8 is not available (deleted artifacts). The ablation's conclusion
+is unchanged and in fact reinforced: the `+display` channel doesn't help accuracy
+**and** makes the solver exceed the model's context budget. The surviving
 `rvlm-minimal/-unified/-skeletal-val` cells are **undocumented earlier
 prompt-scrub variants** (not the published `*-cmp-val` runs) and are labeled as
 variants below.

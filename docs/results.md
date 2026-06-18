@@ -75,11 +75,13 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > **`rvlm_subagent` 36.72% ± 2.75** (pass@8 66.25, SC@8 41.25) — re-rolls −2.5pp
 > vs old 39.22 (still in the proposed tier).
 > **Matrix re-run complete: 8/9 cells recovered with the full triple.** The 9th,
-> `rvlm_hybrid`, is **closed as a documented limitation** — headline 35.47% ± 4.48
-> retained, but fresh pass@8/SC@8 **unrecoverable**: its extra `display()` channel
-> emits ~163k-token requests on heavy docs that overflow both the 32k local
-> (→"Unknown") and 131k remote (→scaffold spin-loop, no exec-timeout). Needs a
-> solver fix, not more context. See [`pass-at-k.md`](pass-at-k.md).
+> `rvlm_hybrid`, **fails at the model's context ceiling** (accepted negative
+> result): its extra `display()` channel emits ~163k-token requests on heavy docs,
+> **exceeding Qwen 3.5 27B's 131k max context** — per policy that counts as the
+> solver failing, not a harness gap. Headline 35.47% ± 4.48 (below `rvlm`) is
+> retained as an upper bound; true score under the ceiling is lower, pass@8/SC@8
+> unavailable. Conclusion reinforced: `+display` doesn't help **and** blows the
+> context budget. See [`pass-at-k.md`](pass-at-k.md).
 
 8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
 local vllm :8927, **n=8**). Mean ± std over 8 trials; Δ vs the `rvlm`

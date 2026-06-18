@@ -64,16 +64,18 @@ Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
 
 ## Summary
 
-> **⚠ pass@8/SC@8 UNRECOVERABLE (2026-06-18).** The deleted `*-cmp-val`
-> artifacts left no pass@k for this cell, and a fresh n=8 re-run is **infeasible
-> without a solver fix**: the extra `display()` channel makes the heaviest docs
-> emit ~163k-token requests that overflow **both** servers — local 32k → 79/80
-> "Unknown"; remote 131k → the scaffold **spin-loops** on the context-overflow
-> (no exec-timeout, infinite compact-and-retry). The **headline 35.47% ± 4.48
-> is retained** from the prior run; only the pass@8/SC@8 diagnostic is missing.
-> This is itself a finding: the `+display` channel is not just mildly harmful
-> on accuracy but operationally fragile (unbounded context growth). A clean
-> re-run needs a per-call context cap / overflow-degrade path in the solver.
+> **⚠ FAILS AT THE 131k CONTEXT CEILING — accepted negative result (2026-06-18).**
+> The extra `display()` channel makes the heaviest docs emit **~163k-token
+> requests, exceeding Qwen 3.5 27B's maximum context (131k)**. Per project policy
+> (131k is the model's architectural ceiling), a solver that exceeds it is simply
+> **failing** — not a harness limitation to engineer around. The headline
+> **35.47% ± 4.48** (prior run, measured without the ceiling enforced) is retained
+> as an **upper bound**; the true score under the 131k ceiling is lower (heavy
+> docs fail outright) and pass@8/SC@8 is unavailable (deleted artifacts). This
+> sharpens the verdict: the `+display` channel doesn't help accuracy **and** is
+> the only matrix solver that blows the model's context budget — a concrete
+> operational strike against it. (Observed: at 32k local → 79/80 "Unknown"; at
+> 131k remote → overflow on the heaviest docs.)
 
 **n=8 COMPLETE: 35.47% ± 4.48pp** (40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 / 27.50 / 37.50).
 Bounces between ties-with-rvlm (40/38.75/38.75/37.5) and low (27.5/31/32.5);
