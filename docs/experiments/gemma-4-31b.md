@@ -30,9 +30,11 @@ Gemma 31B is in the same regime, the headline ordering preserved.
 > `rvlm`/`react`/the baselines ran clean. True (un-guarded) CodeAct accuracy is
 > likely somewhat higher than 29.25; it remains clearly in the scaffold tier.
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 ## Reads
 

@@ -22,6 +22,18 @@ per-trial data live in the **per-model files** below; this doc holds the
 files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 `codeact-qwen-3_5-27b.md`) and `docs/results.md`.
 
+> **⚠ STALE CodeAct — do not cite.** Every CodeAct (`CodeActᶜ`) number in
+> this document is an **old-dspy `codeact`** result. The corrected
+> **`codeact_chat`** twin is the sole source of truth for CodeAct numbers
+> going forward, and these are retained for **provenance only**. Every
+> finding derived from CodeAct numbers below — the **reasoner-scaling
+> slope** (Finding 2), the **v3 reasoning-bound delta** (Finding 3,
+> CodeActᶜ +6.2), the **Gemma CodeAct lifts** (Findings 4–5), and the
+> **clean append-only-code MDP fine-tuning-target argument** — is
+> therefore **provisional**, pending the `codeact_chat` re-run that
+> replaces these rows. The analysis is kept intact, but no CodeAct number
+> here is a current result.
+
 ## Table 1 — v1 homog (LLM = VLM) + 27B anchor (n=8)
 
 | Config | RLM (`rvlm`) | ReAct | CodeActᶜ |
@@ -36,9 +48,11 @@ files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 guards + gemma4-31B CodeAct operational instability — see below and
 [`gemma-4-31b.md`](gemma-4-31b.md).
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 ## Table 2 — v2 mixed (reasoner + 27B VLM), n=8
 

@@ -23,9 +23,11 @@ harnesses sit **within noise of the `official_baseline`** — no scaffold lift a
 vs Qwen 3.5 4B homog: RLM 21.1 / ReAct 11.9 / CodeAct 12.2 — E4B lands far
 lower (weak homogeneous vision + weak reasoner).
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 ## Reads
 

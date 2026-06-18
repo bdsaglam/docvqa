@@ -22,9 +22,11 @@ Last updated 2026-06-14. Quick view of what's **done**, **in progress**, and
 | Gemma-4 E4B harness-lift (n=8) | rvlm 7.34/codeact 7.66ᶜ/react 6.09 vs base 6.25 | **no lift at 4B** — all 3 within noise of `official_baseline` (clean negative control) | gemma-4-e4b.md |
 | Gemma-4 31B harness-lift (n=8; codeact n=5) | rvlm 32.50 (+21.4), codeact 29.25ᶜ (+18.2), react 18.44 (+7.4) vs base 11.09 | **every harness ≫ both no-scaffold baselines**; lift is a capacity gate (sharp @31B, absent @4B) | gemma-4-31b.md, harness-axis-summary.md |
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 **Cross-cutting finding:** enriching the perception sub-call — generality
 (subagent), full agency (subagent_full), or a rationale channel
@@ -32,39 +34,48 @@ campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
 `rvlm` sub-call is sufficient. The REPL crop/zoom loop is what converts
 reasoning into perception (v3).
 
-## 🔄 In progress
+## 🔄 In progress — headline 9-solver matrix re-run (val, n=8)
 
-- **codeact_chat 9b-homog** (9B/9B, val/80-Q, n=8, no-think) — running on
-  amax1 (DP=3 9B, all 3 GPUs); t1 partial so far. Part of the resumed
-  smaller-models-first model-axis campaign (queue:
-  `tmp/workspace/codeact-chat-remaining/QUEUE.md`). See
-  codeact-chat-qwen-3_5-27b.md.
+The published `*-cmp-val` matrix lost its per-trial artifacts (deleted both
+hosts) → no pass@8/SC@8. Re-running all 9 cells with retained artifacts;
+**7/9 recovered**, 2 in flight:
 
-## ⏸ Queued / deferred (not active — need a go-ahead)
+- **`rvlm_subagent_ablation`** → n=8 — local 27B; 7 trials banked (t1-3,5-7
+  @80q + t4@76q), filling the last slot.
+- **`rvlm_hybrid_ablation`** → n=8 — remote 27B (4 GPUs @144.122.52.26:8927,
+  c=16×3); the final cell.
 
-- **codeact_chat model-axis campaign (no-think, val/80-Q) — ACTIVE.**
-  Smaller-models-first, DP=3-per-model (swap model → run to n=8 → swap).
-  Done: 27B-homog (39.53), 4b-homog (16.25, n=8), 4b/27b (22.34), v3 27B/9B
-  (32.9, n=3). Running: 9b-homog (see In progress). Queued: gemma-E4B,
-  Phase-2 cross-model (9b/27b, 8b/27b, v3→n=8), gemma-31B (n=4), and a
-  **deprioritized** Phase-4 27B/4B matched set across all 3 harnesses
-  (rvlm + codeact_chat + react — the reasoner-fixed perception-ladder
-  bottom rung). Queue: `tmp/workspace/codeact-chat-remaining/QUEUE.md`;
-  detail in codeact-chat-qwen-3_5-27b.md.
-- **Dataset/document-length axis (current code) — QUEUED, needs go-ahead.**
-  rvlm/codeact/`raw_vlm_multi_baseline`/`official_baseline` (±`rvlm_ocr_ablation`)
-  on **MP-DocVQA + MMLongBench-Doc**, Qwen 3.5 27B, with the mandatory
-  cross-benchmark rules (dataset-aware profile, `use_profile_scoring=true`,
-  **raised page budget** so baselines see evidence pages). The earlier numbers
-  are pre-2026-06-01 / invalid. Plan: `tmp/workspace/solver-cmp/DATASET_AXIS_QUEUE.md`.
-- **Gemma n>2 escalation** — _done_ (n=8 harnesses + n=8 baselines, both models;
-  31B codeact n=5 stopped early per user — Done rows above + harness-axis-summary.md).
-- **rvlm_rationale / subagent / subagent_full on long-doc** (MMLongBench-Doc) —
-  the perception-sub-call enrichments are null on short DocVQA; the open
-  question is whether they pay off where routing is harder (long multi-page).
-- **Model-axis: Gemma other sizes / base-vs-it** — only E4B + 31B configured.
-- **Test-set submission** (rvlm SC-vote) — see coordination/amax7.md.
-- **Smaller-model families beyond Gemma** (per the 27B-only directive) — parked.
+## 🎯 Paper-completion queue (user directive 2026-06-18: "all experiments must be done for the paper")
+
+Full runnable detail + commands: **`tmp/workspace/paper-completion-2026-06-18/QUEUE.md`**.
+Heartbeat-driven (cron, no chain scripts). Standing recording rule: every
+completed cell → mean±std + pass@8 + SC@8 into `pass-at-k.md` + `results.md`
++ its experiment doc; commit+push.
+
+- **T0 — finish the matrix re-run** (above): `rvlm_subagent` + `rvlm_hybrid` → n=8.
+- **T1 — `codeact_chat` grid completion** (retire stale dspy `codeact` at every
+  still-cited config; val/80-Q, no-think, n=8): **9b/27b**, **8b/27b**,
+  **v3 27B/9B** finish (t4-t8), **gemma-31B** (n=4, gemma4 image). Done already:
+  27B-homog 39.53 · 9b-homog 22.97 · 4b-homog 16.25 · 4b/27b 22.34 · gemma-E4B 6.56.
+- **T2 — Phase-4 27B/4B rung × 3 harnesses** (reasoner-fixed perception-ladder
+  bottom rung; split 27B+4B, n=8): **`rvlm`**, **`codeact_chat`**, **`react_baseline`**.
+- **T3 — dataset / document-length axis** (current code, Qwen 27B homog;
+  **mandatory** cross-benchmark rules — dataset-aware profile,
+  `use_profile_scoring=true`, **raised page budget**). Datasets: **MP-DocVQA**
+  + **MMLongBench-Doc**. Solvers: `rvlm`, `codeact_chat`, `raw_vlm_multi_baseline`,
+  `official_baseline`, `rvlm_ocr_ablation` (OCR-extension long-doc payoff test).
+  n=1 → escalate. Earlier numbers pre-2026-06-01 / invalid. Plan:
+  `tmp/workspace/solver-cmp/DATASET_AXIS_QUEUE.md`.
+- **T4 — test-set submission** (competition; 48 test docs, no gold → SC-vote →
+  submission JSON). Main solvers only: **`rvlm`**, **`codeact_chat`**,
+  **`react_baseline`** (SC-8 each).
+
+### Parked (not in the paper-completion set)
+- **rvlm_rationale / subagent / subagent_full on long-doc** — perception-sub-call
+  enrichments are null on short DocVQA; long-doc payoff is an open extension, not
+  a headline cell.
+- **Model-axis: Gemma other sizes / base-vs-it; smaller-model families beyond
+  Gemma** — parked per the 27B-only directive.
 
 ## 🖥 Infra (amax1)
 

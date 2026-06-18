@@ -19,9 +19,11 @@ live in [`harness-axis-summary.md`](harness-axis-summary.md).
 | ReAct | 14.97% ± 2.96 | 21.01% ± 4.63 | +6.04pp |
 | CodeActᶜ | 19.35% ± 4.24 | 24.26% ± 4.68 | +4.91pp |
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 At v2, RLM ≈ CodeAct (24.54 ≈ 24.26) > ReAct (21.01): once the reasoner is
 strong enough to exploit code+state, RLM/CodeAct overtake the no-REPL ReAct.

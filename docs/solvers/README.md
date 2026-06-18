@@ -49,9 +49,11 @@ the principle the codebase converged on after D-007 / D-009.
 - The full rename map is in
   [D-010](../paper/decisions.md#d-010-solver-renames--behavior-based-engineering-names).
 - **`codeact` (old dspy CodeAct) is DEPRECATED** — superseded by
-  `codeact_chat` (corrected chat-MDP twin). It stays runnable only to
-  reproduce its still-cited cross-model CodeAct-harness numbers and will be
-  archived once the `codeact_chat` model-axis campaign completes.
+  `codeact_chat` (corrected chat-MDP twin), which is now the **sole source
+  of truth** for CodeAct numbers. Its old cross-model CodeAct-harness
+  numbers are **STALE / provenance-only — not to be cited**. It stays
+  runnable only to reproduce those deprecated rows until `codeact_chat`
+  replaces them across the model axis, then it is archived.
 
 ## See also
 

@@ -16,9 +16,11 @@ micro-average. Cross-size narrative: [`harness-axis-summary.md`](harness-axis-su
 | RLM (`rvlm`) | 11.73% ± 2.96 | `rvlm-minimal-8b-llm-27b-vlm-val-t{1..8}` |
 | CodeActᶜ | 9.50% ± 1.44 | `codeact-8b-llm-27b-vlm-val-t{1..8}` |
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 **8B v2 harness ranking: ReAct 15.79 > RLM 11.73 > CodeAct 9.50.**
 

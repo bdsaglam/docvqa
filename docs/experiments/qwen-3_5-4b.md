@@ -21,9 +21,11 @@ the per-solver files (`rvlm-qwen-3_5-27b.md`, etc.).
 | ReAct | 11.94% ± 2.23 | 15.66% ± 4.73 | +3.72pp |
 | CodeActᶜ | 12.19% ± 3.50 | 15.66% ± 3.00 | +3.47pp |
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 ## Per-trial
 

@@ -244,8 +244,10 @@ Its one durable finding — **dropping compaction is ~free** (pooled 36.74% ±
 4.29, n=23, ~13 iters/Q, cap never binds, within noise of `rvlm`) — is
 confirmed and strengthened by `codeact_chat` (which closes the gap to a tie).
 Old `codeact` still appears as the **CodeAct harness** in the harness×model
-axis (`harness-axis-summary.md`, by-model files); those rows will be
-replaced as the `codeact_chat` model-axis campaign completes.
+axis (`harness-axis-summary.md`, by-model files), but those rows are now
+**STALE** (old dspy) — shown for provenance only and **not to be cited**.
+Any finding that rests on them is **provisional** until the `codeact_chat`
+re-run lands.
 
 Hold the reasoner fixed, swap **only** the VLM tool backend. n=8 per arm,
 val, current code. Detail: `docs/experiments/qwen-3_5-9b.md` and
@@ -295,9 +297,11 @@ gemma4-31B codeact operational instability (8 shm-crashes + degenerate-gen /
 max-iter runaways during the sweep) — `rvlm`/`react`/baselines ran clean. An
 operational finding in its own right; see `gemma-4-31b.md`.
 
-ᶜ old dspy `codeact` (deprecated) — these CodeAct harness scores will be
-**replaced by `codeact_chat`** (corrected chat-MDP twin) as its model-axis
-campaign completes; see `codeact-chat-qwen-3_5-27b.md`.
+ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
+**`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
+forward; a config without a `codeact_chat` value is **open** — the stale dspy
+figure is shown for provenance only, not as a current result. Tracking and
+replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 **Cross-family findings.** (1) At **31B every harness clears both no-scaffold
 baselines by ≫ the std** — rvlm +21.4, codeact +18.2ᶜ, react +7.4 over base
