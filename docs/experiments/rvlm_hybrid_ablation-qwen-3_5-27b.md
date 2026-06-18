@@ -64,6 +64,17 @@ Per-category (t3): business_report 2/10, comics 2/10, engineering_drawing
 
 ## Summary
 
+> **⚠ pass@8/SC@8 UNRECOVERABLE (2026-06-18).** The deleted `*-cmp-val`
+> artifacts left no pass@k for this cell, and a fresh n=8 re-run is **infeasible
+> without a solver fix**: the extra `display()` channel makes the heaviest docs
+> emit ~163k-token requests that overflow **both** servers — local 32k → 79/80
+> "Unknown"; remote 131k → the scaffold **spin-loops** on the context-overflow
+> (no exec-timeout, infinite compact-and-retry). The **headline 35.47% ± 4.48
+> is retained** from the prior run; only the pass@8/SC@8 diagnostic is missing.
+> This is itself a finding: the `+display` channel is not just mildly harmful
+> on accuracy but operationally fragile (unbounded context growth). A clean
+> re-run needs a per-call context cap / overflow-degrade path in the solver.
+
 **n=8 COMPLETE: 35.47% ± 4.48pp** (40.00 / 38.75 / 31.25 / 32.50 / 38.75 / 37.50 / 27.50 / 37.50).
 Bounces between ties-with-rvlm (40/38.75/38.75/37.5) and low (27.5/31/32.5);
 vs `rvlm` (39.38% ± 1.49pp) → **Δ +3.91pp**. **Verdict:** adding a direct

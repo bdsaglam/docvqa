@@ -51,6 +51,7 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 | `rvlm-ocr-cmp-val` (+OCR ablation) | 8 | **36.56 ± 2.89** | 67.50 | 40.00 | 37.81 → −1.2 (✓ reproduces) |
 | `rvlm-nocrop-cmp-val` (no-crop ablation) | 8 | **35.78 ± 2.31** | 58.75 | 42.50 | 36.88 → −1.1 (✓ reproduces) |
 | `rvlm-subagent-cmp-val` (general-delegation ablation) | 8 | **36.72 ± 2.75** | 66.25 | 41.25 | 39.22 → −2.5 (re-rolls lower) |
+| `rvlm-hybrid-cmp-val` (+display channel ablation) | — | **35.47 ± 4.48** (old, retained) | n/a | n/a | pass@k **unrecoverable** — see note |
 | `react-cmp-val` (ReAct, no-REPL baseline) | 8 | **27.19 ± 3.19** | 53.75 | 32.50 | 25.16 → +2.0 (✓ reproduces) |
 | `raw-vlm-multi-cmp-val` (raw-VLM baseline) | 8 | **20.94 ± 1.60** | 27.50 | 20.00 | 20.47 → +0.5 (✓ reproduces) |
 | `official-cmp-val` (competition anchor) | 8 | **18.91 ± 1.94** | 33.75 | 21.25 | 17.81 → +1.1 (✓ reproduces) |
@@ -59,8 +60,14 @@ artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
 `rvlm-cmp` per-trial: 30.0 / 43.8 / 45.0 / 50.0 / 43.8 / 42.5 / 41.2 / 38.8 (n=8) —
 the fresh re-roll lands **+2.5pp above the deleted-run 39.38**, with higher std
 (5.79 vs the old 1.49; t1's 30.0 is the low outlier, the other 7 cluster 38.8–50.0).
-Re-run is **8/9 recovered** — only `rvlm_hybrid` remains in progress
-(remote 27B @ c=4). The surviving
+Re-run is **8/9 recovered with the full metric triple**; the 9th cell
+(`rvlm_hybrid`) is **closed as a documented limitation** — its headline
+35.47% ± 4.48 is retained from the prior run, but a fresh pass@8/SC@8 is
+**unrecoverable**: `rvlm_hybrid_ablation`'s extra `display()` channel makes the
+heaviest docs emit ~163k-token requests that overflow **both** servers (local
+32k → 79/80 "Unknown"; remote 131k → the scaffold spin-loops on the overflow
+with no exec-timeout). A clean n=8 would need a solver fix (cap the overflow
+path), not just more context. The surviving
 `rvlm-minimal/-unified/-skeletal-val` cells are **undocumented earlier
 prompt-scrub variants** (not the published `*-cmp-val` runs) and are labeled as
 variants below.

@@ -74,8 +74,12 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91;
 > **`rvlm_subagent` 36.72% ± 2.75** (pass@8 66.25, SC@8 41.25) — re-rolls −2.5pp
 > vs old 39.22 (still in the proposed tier).
-> **8/9 recovered** — only `rvlm_hybrid` remains.
-> The table's `avg@1` and Δ values will be refreshed once all rows re-run.
+> **Matrix re-run complete: 8/9 cells recovered with the full triple.** The 9th,
+> `rvlm_hybrid`, is **closed as a documented limitation** — headline 35.47% ± 4.48
+> retained, but fresh pass@8/SC@8 **unrecoverable**: its extra `display()` channel
+> emits ~163k-token requests on heavy docs that overflow both the 32k local
+> (→"Unknown") and 131k remote (→scaffold spin-loop, no exec-timeout). Needs a
+> solver fix, not more context. See [`pass-at-k.md`](pass-at-k.md).
 
 8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
 local vllm :8927, **n=8**). Mean ± std over 8 trials; Δ vs the `rvlm`

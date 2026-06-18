@@ -34,16 +34,22 @@ replacements: `codeact-chat-qwen-3_5-27b.md`.
 `rvlm` sub-call is sufficient. The REPL crop/zoom loop is what converts
 reasoning into perception (v3).
 
-## 🔄 In progress — headline 9-solver matrix re-run (val, n=8)
+## ✅ Headline 9-solver matrix re-run — COMPLETE (val, n=8)
 
-The published `*-cmp-val` matrix lost its per-trial artifacts (deleted both
-hosts) → no pass@8/SC@8. Re-running all 9 cells with retained artifacts;
-**7/9 recovered**, 2 in flight:
+The published `*-cmp-val` matrix lost its per-trial artifacts → no pass@8/SC@8.
+Re-ran all 9 cells with retained artifacts: **8/9 recovered with the full
+triple** (rvlm 41.88 · rvlm_ocr 36.56 · rvlm_nocrop 35.78 · rvlm_subagent 36.72 ·
+react 27.19 · raw_vlm_multi 20.94 · official 18.91 · rlm_ocr 14.69 — see
+`pass-at-k.md`). The 9th, **`rvlm_hybrid`**, is **closed as a documented
+limitation**: headline 35.47% ± 4.48 retained, pass@8/SC@8 **unrecoverable** —
+its `+display()` channel emits ~163k-token requests on heavy docs that overflow
+both the 32k local (→"Unknown") and 131k remote (→scaffold spin-loop, no
+exec-timeout). Needs a solver fix, not more context.
 
-- **`rvlm_subagent_ablation`** → n=8 — local 27B; 7 trials banked (t1-3,5-7
-  @80q + t4@76q), filling the last slot.
-- **`rvlm_hybrid_ablation`** → n=8 — remote 27B (4 GPUs @144.122.52.26:8927,
-  c=16×3); the final cell.
+## 🔄 In progress
+
+- **Test-set submission (T4): `rvlm`** — 4 trials @ c=4 on local 27B (toward
+  SC-8; 48 test docs, no gold → vote → submission JSON).
 
 ## 🎯 Paper-completion queue (user directive 2026-06-18: "all experiments must be done for the paper")
 
