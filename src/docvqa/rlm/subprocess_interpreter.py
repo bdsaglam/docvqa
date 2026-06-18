@@ -17,6 +17,7 @@ import os
 import select
 import subprocess
 import sys
+import threading
 import time
 from typing import Any, Callable
 
@@ -482,55 +483,87 @@ class SubprocessInterpreter:
         self._send({"code": code, "variables": serialized_vars})
         self._pending_images = []  # Reset before each execution
 
-        # Per-cell wall-clock deadline. The subprocess emits a message (tool
-        # call / output) at least every per-message timeout, so checking at the
-        # top of each loop iteration bounds the cell to ~exec_timeout even when
-        # every individual tool call returns within the per-message window.
+        # Per-cell wall-clock deadline, enforced PREEMPTIVELY. The cooperative
+        # checks (loop-top deadline, per-message select timeout) only fire
+        # between IPC messages, so a single non-yielding operation — a tight CPU
+        # loop in child code, a slow tool call, or heavy image processing — can
+        # block the read loop for far longer than exec_timeout. A watchdog timer
+        # hard-kills the subprocess after exec_timeout regardless of where
+        # execution is stuck; the resulting dead-subprocess error is converted to
+        # a clean ExecutionTimeout below. The loop-top check stays as a backstop.
         deadline = time.monotonic() + self._exec_timeout
+        watchdog_fired = threading.Event()
 
-        # Read and handle messages until we get output
-        while True:
-            if time.monotonic() >= deadline:
-                # Cell blew its wall-clock budget (e.g. a sequential per-page
-                # batch_look scan). Kill + reset so the next execute() restarts
-                # a clean subprocess (sandbox_code re-runs, `pages` restored).
+        def _watchdog() -> None:
+            proc = self._process
+            if proc is not None and proc.poll() is None:
+                watchdog_fired.set()
+                try:
+                    proc.kill()
+                except Exception:
+                    pass
+
+        watchdog = threading.Timer(self._exec_timeout, _watchdog)
+        watchdog.daemon = True
+        watchdog.start()
+
+        try:
+            # Read and handle messages until we get output
+            while True:
+                if watchdog_fired.is_set() or time.monotonic() >= deadline:
+                    # Cell blew its wall-clock budget. Kill + reset so the next
+                    # execute() restarts a clean subprocess (sandbox_code
+                    # re-runs, `pages` restored).
+                    self._kill_and_reset()
+                    raise ExecutionTimeout(
+                        f"code block exceeded the {self._exec_timeout:.0f}s execution limit"
+                    )
+                result = self._recv()
+
+                # Handle display_image requests
+                if result.get("type") == "display_image":
+                    self._handle_display_image(result)
+                    continue
+
+                # Handle tool call requests
+                if result.get("type") == "tool_call":
+                    self._handle_tool_call(result)
+                    continue
+
+                # Handle RESET_HISTORY signal
+                if result.get("type") == "reset_history":
+                    return HistoryReset(result.get("summary", ""))
+
+                # Handle errors
+                if "error" in result:
+                    error_msg = result["error"]
+                    error_type = result.get("errorType", "RuntimeError")
+                    error_args = result.get("errorArgs", [])
+
+                    if error_type == "FinalOutput":
+                        final_data = error_args[0] if error_args else None
+                        captured_output = result.get("output", "")
+                        return FinalOutput(final_data), captured_output
+                    elif error_type == "SyntaxError":
+                        raise SyntaxError(f"Invalid Python syntax: {error_msg}")
+                    else:
+                        raise CodeInterpreterError(f"{error_type}: {error_msg}")
+
+                # Normal output
+                return result.get("output", "")
+        except ExecutionTimeout:
+            raise
+        except CodeInterpreterError:
+            # The watchdog killed the subprocess mid-recv or mid-tool-call → the
+            # dead-subprocess error surfaces here; convert to a clean timeout.
+            if watchdog_fired.is_set():
                 self._kill_and_reset()
                 raise ExecutionTimeout(
                     f"code block exceeded the {self._exec_timeout:.0f}s execution limit"
                 )
-            result = self._recv()
-
-            # Handle display_image requests
-            if result.get("type") == "display_image":
-                self._handle_display_image(result)
-                continue
-
-            # Handle tool call requests
-            if result.get("type") == "tool_call":
-                self._handle_tool_call(result)
-                continue
-
-            # Handle RESET_HISTORY signal
-            if result.get("type") == "reset_history":
-                return HistoryReset(result.get("summary", ""))
-
-            # Handle errors
-            if "error" in result:
-                error_msg = result["error"]
-                error_type = result.get("errorType", "RuntimeError")
-                error_args = result.get("errorArgs", [])
-
-                if error_type == "FinalOutput":
-                    final_data = error_args[0] if error_args else None
-                    captured_output = result.get("output", "")
-                    return FinalOutput(final_data), captured_output
-                elif error_type == "SyntaxError":
-                    raise SyntaxError(f"Invalid Python syntax: {error_msg}")
-                else:
-                    raise CodeInterpreterError(f"{error_type}: {error_msg}")
-
-            # Normal output
-            return result.get("output", "")
+            raise
+        finally:
+            watchdog.cancel()
 
     # ---- Internal helpers ----
 
