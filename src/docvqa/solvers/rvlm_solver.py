@@ -77,9 +77,20 @@ def _create_tools(vlm_predict: dspy.Predict, vlm_lm: dspy.LM, batch_concurrency:
     from PIL import Image as PILImage
 
     def _look_impl(image_path: str, query: str) -> str:
-        """Internal: load image from path and send to VLM."""
+        """Internal: load image from path and send to VLM.
+
+        ``image_path`` is an ephemeral temp PNG written by the in-subprocess
+        ``batch_look`` (cross-process image hand-off). Delete it as soon as its
+        pixels are loaded so /tmp doesn't accumulate one PNG per VLM call over a
+        run (this previously leaked 100k+ files / hundreds of GB).
+        """
         with logfire.span("look", image_path=image_path, query=query) as span:
             img = PILImage.open(image_path)
+            img.load()  # force pixel read so the temp file is no longer needed
+            try:
+                os.unlink(image_path)
+            except OSError:
+                pass
             with dspy.context(lm=vlm_lm):
                 result = vlm_predict(image=dspy.Image(img), query=query)
                 answer = result.answer or ""
