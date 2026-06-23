@@ -39,13 +39,14 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > proposed method at 9B homog; **9b/27b** (9B-LM / 27B-VLM) **26.56% ± 4.21
 > (n=8)** — +2.3pp vs old `codeact` (24.26), +3.6pp vs `9b-homog` (perception
 > lift one rung up); **v3**
-> (27B-LM / 9B-VLM) 32.9% (n=3). **vs `rvlm`:**
+> (27B-LM / 9B-VLM) **32.81% ± 3.04 (n=8)** — +2.4pp vs old `codeact` (30.43),
+> the reasoner-fixed middle rung (39.53 → 32.81 as VLM 27B→9B). **vs `rvlm`:**
 > `codeact_chat` **ties `rvlm` across the model axis** — 27B 39.53 vs 39.38
 > (+0.15), 4b/27b 22.34 vs 21.09 (+1.25), 4b-homog 16.25 vs 12.49 (+3.76,
 > borderline, both n=8); old `codeact` trailed `rvlm` at every config, so
 > the corrected MDP loop *catches up* to the proposed method at no accuracy
 > cost (it does not beat it). Queued:
-> Phase-2 cross-model (8b/27b, v3→n=8), gemma-31B (n=4). A per-cell
+> Phase-2 cross-model (8b/27b), gemma-31B (n=4). A per-cell
 > **10-min `exec_timeout`** + clean subprocess-reset (commit `f7f497e`) was
 > added to cap the 4B's degenerate per-page `batch_look` scans and recover
 > from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed

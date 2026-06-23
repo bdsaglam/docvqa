@@ -171,12 +171,15 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | cell | lm / vlm | n | `codeact_chat` | old `codeact` ref | status |
 |---|---|---|---|---|---|
 | 27b/4b | 27B-LM / 4B-VLM | 8 | _queued (Phase 4, deprioritized)_ | — | QUEUED |
-| v3 (27B/9B) | 27B-LM / 9B-VLM | 3 | **32.9%** (n=3) | 30.43 | **DONE (n=3)** |
+| v3 (27B/9B) | 27B-LM / 9B-VLM | 8 | **32.81% ± 3.04** | 30.43 | **DONE** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
 
-- **v3** per-trial: 28.7 / 37.5 / 32.5 (n=3; stays n=3 — partial) →
-  **32.92% ± 4.39**, **pass@3 51.25 · SC@3 32.50**. Per-cell reading is
-  provisional at n=3.
+- **v3** (n=8): **32.81% ± 3.04**, **pass@8 67.50 · SC@8 37.50** — **+2.4pp**
+  over old `codeact` (30.43). Fills the reasoner-fixed ladder's middle rung
+  (27B-LM holding, VLM 27B→9B): 39.53 (27B-VLM) → **32.81** (9B-VLM), a
+  **−6.7pp** perception drop from halving-and-then-some the VLM, mirroring the
+  perception-budget signature on the reasoner-fixed axis. Run entirely local on
+  amax1 (27B-LM TP=2 @ `:8927`, 9B-VLM @ `:8909`, both 131k/64k windows).
 - **27b/4b** (strongest reasoner × weakest VLM) is the ladder's bottom
   rung; it was **never run for any harness**. Phase 4 (deprioritized) runs
   it across **all 3 harnesses** (rvlm + codeact_chat + react) so the rung

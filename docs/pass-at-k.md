@@ -97,7 +97,7 @@ variants below.
 
 | Cell | config | k | avg@1 (±std) | pass@k | SC@k |
 |---|---|---|---|---|---|
-| `codeact-chat-27b-llm-9b-vlm-val` | v3 27B-LM / 9B-VLM | 3 | 32.92 ± 4.39 | 51.25 | 32.50 |
+| `codeact-chat-27b-llm-9b-vlm-val` | v3 27B-LM / 9B-VLM | 8 | 32.81 ± 3.04 | 67.50 | 37.50 |
 | `codeact-chat-4b-llm-27b-vlm-val` | 4B-LM / 27B-VLM | 8 | 22.34 ± 3.44 | 55.00 | 26.25 |
 | `codeact-chat-4b-val` | 4B homog | 8 | 16.25 ± 2.00 | 47.50 | 20.00 |
 
