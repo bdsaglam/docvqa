@@ -152,7 +152,7 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
 | 4b/27b | 4B-LM / 27B-VLM | 8 | **22.34% ± 3.44** | 15.66 | **DONE** |
 | 9b/27b | 9B-LM / 27B-VLM | 8 | **26.56% ± 4.21** | 24.26 | **DONE** |
-| 8b/27b | qwen-3-8B-LM / 27B-VLM | 8 | _queued_ | 9.50 | QUEUED |
+| 8b/27b | qwen-3-8B-LM / 27B-VLM | 8 | **16.72% ± 3.20** | 9.50 | **DONE** |
 
 - **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 /
   16.2 (n=8) → **22.34% ± 3.44**, **pass@8 55.00 · SC@8 26.25**. Swapping
@@ -165,6 +165,16 @@ amax1 (swap model → run to n=8 → swap). Queue:
   ladder. Run on the cross-model topology: **9B reasoner local (131k) +
   27B VLM on the remote**. (The 9B needed its full 131k window — at 64k the
   append-only trajectory overflowed on image/question-heavy docs.)
+- **8b/27b** (n=8): **16.72% ± 3.20**, **pass@8 37.50 · SC@8 17.50** —
+  **+7.2pp** over old `codeact` (9.50). Off the main Qwen-3.5 axis: this is
+  **Qwen3-8B** (older family), served at 131k via YaRN
+  (`original_max_position_embeddings=32768, factor=4.0`). It underperforms the
+  Qwen-3.5-**4B**/27B rung (22.34) despite being larger — the Qwen3-8B reasoner
+  degenerates into page-by-page `batch_look` scans (one page per step, marching
+  to the 50-step cap then defaulting to "Unknown"; 32% Unknown overall), so it
+  floods the VLM and self-limits. A weak-reasoner data point, not a perception
+  one; still clears old `codeact` decisively. Run fully local on amax1 (8B-LM @
+  `:8908` GPU2, 27B-VLM **DP=2** @ `:8927` GPU0+1).
 
 ### Reasoner-fixed ladder (fixed VLM at the strong end, scale the reasoner)
 
