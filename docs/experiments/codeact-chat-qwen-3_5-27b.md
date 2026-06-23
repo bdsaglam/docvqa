@@ -151,7 +151,7 @@ amax1 (swap model → run to n=8 → swap). Queue:
 |---|---|---|---|---|---|
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
 | 4b/27b | 4B-LM / 27B-VLM | 8 | **22.34% ± 3.44** | 15.66 | **DONE** |
-| 9b/27b | 9B-LM / 27B-VLM | 8 | _queued_ | 24.26 | QUEUED |
+| 9b/27b | 9B-LM / 27B-VLM | 8 | **26.56% ± 4.21** | 24.26 | **DONE** |
 | 8b/27b | qwen-3-8B-LM / 27B-VLM | 8 | _queued_ | 9.50 | QUEUED |
 
 - **4b/27b** per-trial: 25.0 / 18.8 / 22.5 / 26.2 / 23.8 / 25.0 / 21.2 /
@@ -159,6 +159,12 @@ amax1 (swap model → run to n=8 → swap). Queue:
   the 4B VLM → 27B VLM under a fixed 4B reasoner lifts **+6.1pp** over
   `4b-homog` (22.34 vs 16.25) — the perception-budget signature (supports
   D-006); `codeact_chat` clears old `codeact` by **+6.7pp**.
+- **9b/27b** (n=8): **26.56% ± 4.21**, **pass@8 62.50 · SC@8 35.00** —
+  **+2.3pp** over old `codeact` (24.26) and **+3.6pp** over `9b-homog`
+  (22.97), continuing the perception-budget lift one rung up the reasoner
+  ladder. Run on the cross-model topology: **9B reasoner local (131k) +
+  27B VLM on the remote**. (The 9B needed its full 131k window — at 64k the
+  append-only trajectory overflowed on image/question-heavy docs.)
 
 ### Reasoner-fixed ladder (fixed VLM at the strong end, scale the reasoner)
 
