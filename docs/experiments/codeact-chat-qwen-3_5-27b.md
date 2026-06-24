@@ -123,14 +123,32 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
 | 9b-homog | 9B / 9B | 8 | **22.97% ± 2.75** | 19.35 | **DONE** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
-| gemma-E4B | gemma-4-E4B / E4B | 8 | **6.56% ± 2.19** | 7.66 | **DONE** |
-| gemma-31B | gemma-4-31B / 31B | 4 | _queued_ | 29.25 (n=5) | QUEUED |
+| gemma-E4B | gemma-4-E4B / E4B | 8 | _rerun pending (stop-token fix)_ | 7.66 | RERUN |
+| gemma-31B | gemma-4-31B / 31B | 4 | **30.31% ± 2.13** | 29.25 (n=5) | **DONE** |
 
-- **gemma-E4B** per-trial: 10.0 / 5.0 / 5.0 / 8.8 / 5.0 / 7.5 / 3.8 / 7.5 (n=8)
-  → **6.56% ± 2.19**, pass@8 17.50, SC@8 7.50 (2026-06-16, gemma4 DP=3). ≈ parity
-  with old `codeact` (7.66) and the `official_baseline` floor (6.25) → **no
-  harness lift at 4B**, the clean negative control holds for `codeact_chat` too
-  (a 4B model is too weak to exploit any scaffold).
+> **Stop-token fix (2026-06-24, commit in `codeact_chat_solver.py`).** gemma-4
+> uses a harmony/channel format and never emits a turn-final EOS in the
+> hand-rolled `litellm` chat loop, so it generated the **entire multi-turn
+> rollout in one completion** — fabricating observations + many code blocks +
+> a premature `SUBMIT` — which ran concatenated → garbage. A first pass scored
+> gemma-31B at a bogus **5.00%** (vs `rvlm` 33). Diagnosis was decisive: direct
+> image probe shows perception works; the trajectory showed gemma role-playing
+> both sides of the loop. Fix = `_split_first_turn` truncates each assistant
+> turn to its first code block (enforcing the one-action-per-turn protocol);
+> no-op for self-stopping Qwen. After the fix gemma-31B → **30.31%**, in line
+> with `rvlm`/old `codeact`. The gemma-E4B 6.56% below is from the **pre-fix**
+> loop and is being re-run.
+
+- **gemma-31B** (n=4, post-fix): **30.31% ± 2.13**, **pass@4 47.50 · SC@4
+  28.75**, Unknown 8% (gemma4 image, TP=2 GPU0+1 @ `:8931`, shm32g/ipc=host,
+  `c=2` for TP stability). Matches `rvlm` 33.04 and old `codeact` 29.25 — gemma-4
+  is a competent codeact_chat reasoner once it actually takes turns. Confirms
+  `codeact_chat` ties `rvlm` for **both** model families at the strong-reasoner
+  end (Qwen-27B 39.5≈39.4; gemma-31B 30.3≈33.0).
+
+- **gemma-E4B** (pre-fix, n=8): 6.56% ± 2.19 — **confounded by the same
+  stop-token bug** (gemma-4 family); rerun queued. Old reading ("no harness lift
+  at 4B") is suspended pending the post-fix number.
 
 - **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 / 17.5 /
   17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the

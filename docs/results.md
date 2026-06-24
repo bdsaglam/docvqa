@@ -44,13 +44,17 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > **8b/27b** (Qwen3-8B-LM / 27B-VLM) **16.72% ± 3.20 (n=8)** — +7.2pp vs old
 > `codeact` (9.50); off-axis (older Qwen3-8B reasoner degenerates into
 > page-by-page scans, 32% Unknown), a weak-reasoner point that still clears old
-> `codeact`. **vs `rvlm`:**
-> `codeact_chat` **ties `rvlm` across the model axis** — 27B 39.53 vs 39.38
-> (+0.15), 4b/27b 22.34 vs 21.09 (+1.25), 4b-homog 16.25 vs 12.49 (+3.76,
-> borderline, both n=8); old `codeact` trailed `rvlm` at every config, so
-> the corrected MDP loop *catches up* to the proposed method at no accuracy
-> cost (it does not beat it). Queued:
-> gemma-31B (n=4), Phase-4 27b/4b ×3 harnesses, dataset axis. A per-cell
+> `codeact`; **gemma-31B** (gemma-4-31B homog) **30.31% ± 2.13 (n=4)** — in line
+> with old `codeact` (29.25) and `rvlm` (33.04), after a **stop-token fix** to
+> `codeact_chat` (gemma-4 doesn't self-stop → it had hallucinated the whole
+> rollout in one turn for a bogus 5%; `_split_first_turn` enforces one action
+> per turn). **vs `rvlm`:**
+> `codeact_chat` **ties `rvlm` across the model axis, both families** — Qwen-27B
+> 39.53 vs 39.38 (+0.15), gemma-31B 30.31 vs 33.04 (−2.7), 4b/27b 22.34 vs 21.09
+> (+1.25), 4b-homog 16.25 vs 12.49 (+3.76, borderline); old `codeact` trailed
+> `rvlm` at every config, so the corrected MDP loop *catches up* to the proposed
+> method at no accuracy cost (it does not beat it). Queued:
+> gemma-E4B rerun (post-fix), Phase-4 27b/4b ×3 harnesses, dataset axis. A per-cell
 > **10-min `exec_timeout`** + clean subprocess-reset (commit `f7f497e`) was
 > added to cap the 4B's degenerate per-page `batch_look` scans and recover
 > from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed
