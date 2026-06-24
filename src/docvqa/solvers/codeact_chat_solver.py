@@ -80,6 +80,14 @@ _CHAT_MECHANICS = (
     "Do not try to solve everything in one turn. You have up to {max_iterations} turns."
 )
 
+# Stop the reasoner if it tries to *write its own* ```output``` block — that is
+# the harness's observation delimiter, so a model emitting it is fabricating the
+# environment's response. Harmless to well-behaved models (they never do this).
+# NB: do NOT stop on gemma's channel tokens (``<|channel|>``) — gemma opens every
+# turn with one, so stopping there yields empty completions. The real fix for
+# non-stopping models is first-action truncation (``_split_first_turn``) below.
+_TURN_STOP = ["\n```output", "\n``` output"]
+
 # All fenced code blocks in an assistant turn (```python / ```py / bare ```).
 _FENCE_RE = re.compile(r"```(?:python|py)?[ \t]*\n(.*?)```", re.DOTALL)
 # Reasoning block emitted when enable_thinking=true.
@@ -100,6 +108,29 @@ def _extract_code(text: str) -> str:
     """
     blocks = _FENCE_RE.findall(_strip_think(text))
     return "\n\n".join(b.strip() for b in blocks if b.strip()).strip()
+
+
+def _split_first_turn(content: str) -> tuple[str, str]:
+    """Truncate an assistant turn to its first code block; return (content, code).
+
+    The REPL protocol is **one action per turn**: reason, emit a single code
+    block, then stop and wait for the ```output``` observation. Models that
+    self-stop (Qwen via EOS) naturally produce exactly that, so this is a no-op
+    for them. Models that DON'T self-stop (gemma-4's channel format never emits
+    a turn-final EOS) keep generating — fabricating the observation and further
+    code blocks in one completion, role-playing the whole rollout and ending on
+    a premature ``SUBMIT``. Keeping only up to the first code block discards that
+    hallucinated continuation: we execute the turn's one real action and let the
+    harness feed back the real observation. Truncation is on the raw text so a
+    legitimate ``<think>`` block preceding the action is preserved verbatim.
+    """
+    m = _FENCE_RE.search(content)
+    if not m:
+        return content, ""
+    # Code from the think-stripped view (never run example code inside reasoning).
+    stripped_m = _FENCE_RE.search(_strip_think(content))
+    code = (stripped_m.group(1).strip() if stripped_m else "")
+    return content[: m.end()], code
 
 
 def _unwrap_final(result: Any) -> tuple[FinalOutput | None, str]:
@@ -171,11 +202,18 @@ class CodeActChatProgram:
         / RL target) and re-fed to the model on the next turn. Falls back
         cleanly when thinking is off or already inlined as ``<think>``.
         """
+        # Merge our turn-boundary stops with any the LM already carries.
+        extra = dict(lm.kwargs)
+        existing_stop = extra.pop("stop", None)
+        stop = list(_TURN_STOP)
+        if existing_stop:
+            stop += existing_stop if isinstance(existing_stop, list) else [existing_stop]
         resp = litellm.completion(
             model=lm.model,
             messages=messages,
             num_retries=getattr(lm, "num_retries", 0),
-            **lm.kwargs,
+            stop=stop,
+            **extra,
         )
         msg = resp.choices[0].message
         content = msg.content or ""
@@ -243,9 +281,9 @@ class CodeActChatProgram:
         try:
             for i in range(max_iter):
                 content = self._complete(lm, messages)
+                content, code = _split_first_turn(content)
                 messages.append({"role": "assistant", "content": content})
 
-                code = _extract_code(content)
                 logger.info("CODEACT-CHAT step %d/%d\nAssistant:\n%s", i + 1, max_iter, content)
 
                 if not code:
