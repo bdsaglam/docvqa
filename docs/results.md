@@ -54,7 +54,7 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > (+1.25), 4b-homog 16.25 vs 12.49 (+3.76, borderline); old `codeact` trailed
 > `rvlm` at every config, so the corrected MDP loop *catches up* to the proposed
 > method at no accuracy cost (it does not beat it). Queued:
-> gemma-E4B rerun (post-fix), Phase-4 27b/4b ×3 harnesses, dataset axis. A per-cell
+> Phase-4 27b/4b ×3 harnesses, dataset axis, test SC-8. A per-cell
 > **10-min `exec_timeout`** + clean subprocess-reset (commit `f7f497e`) was
 > added to cap the 4B's degenerate per-page `batch_look` scans and recover
 > from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed

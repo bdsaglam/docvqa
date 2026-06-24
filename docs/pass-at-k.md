@@ -102,6 +102,7 @@ variants below.
 | `codeact-chat-4b-llm-27b-vlm-val` | 4B-LM / 27B-VLM | 8 | 22.34 ± 3.44 | 55.00 | 26.25 |
 | `codeact-chat-4b-val` | 4B homog | 8 | 16.25 ± 2.00 | 47.50 | 20.00 |
 | `codeact-chat-gemma-31b-val` | gemma-4-31B homog (post stop-fix) | 4 | 30.31 ± 2.13 | 47.50 | 28.75 |
+| `codeact-chat-gemma-e4b-val` | gemma-4-E4B homog (post stop-fix) | 8 | 7.81 ± 1.86 | 20.00 | 8.75 |
 
 ### Cross-model harness axis — RLM (`rvlm-minimal-*`) / CodeAct (old dspy) / ReAct
 

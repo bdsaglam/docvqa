@@ -123,7 +123,7 @@ amax1 (swap model → run to n=8 → swap). Queue:
 | 4b-homog | 4B / 4B | 8 | **16.25% ± 2.00** | 12.19 | **DONE** |
 | 9b-homog | 9B / 9B | 8 | **22.97% ± 2.75** | 19.35 | **DONE** |
 | 27B-homog | 27B / 27B | 8 | **39.53% ± 2.83** | 36.74 | **DONE** |
-| gemma-E4B | gemma-4-E4B / E4B | 8 | _rerun pending (stop-token fix)_ | 7.66 | RERUN |
+| gemma-E4B | gemma-4-E4B / E4B | 8 | **7.81% ± 1.86** | 7.66 | **DONE** |
 | gemma-31B | gemma-4-31B / 31B | 4 | **30.31% ± 2.13** | 29.25 (n=5) | **DONE** |
 
 > **Stop-token fix (2026-06-24, commit in `codeact_chat_solver.py`).** gemma-4
@@ -146,9 +146,15 @@ amax1 (swap model → run to n=8 → swap). Queue:
   `codeact_chat` ties `rvlm` for **both** model families at the strong-reasoner
   end (Qwen-27B 39.5≈39.4; gemma-31B 30.3≈33.0).
 
-- **gemma-E4B** (pre-fix, n=8): 6.56% ± 2.19 — **confounded by the same
-  stop-token bug** (gemma-4 family); rerun queued. Old reading ("no harness lift
-  at 4B") is suspended pending the post-fix number.
+- **gemma-E4B** (post-fix, n=8): **7.81% ± 1.86**, **pass@8 20.00 · SC@8 8.75**,
+  Unknown 40% (gemma4 E4B image, DP=3 @ `:8904`). The stop-token fix barely
+  moves E4B (pre-fix 6.56 → 7.81), because a 4B-class model scores at the floor
+  whether it takes proper turns or runs away — it is simply too weak to exploit
+  the scaffold. So the **"no harness lift at 4B" negative control holds**: E4B
+  (7.81) ≈ old `codeact` (7.66) ≈ `official_baseline` floor (6.25). Clean
+  contrast with gemma-31B, where the *same* bug suppressed a genuinely capable
+  model from 30.31 → 5.00 — the bug's impact scales with how much real
+  multi-turn reasoning the model would otherwise contribute.
 
 - **4b-homog** per-trial: 15.0 / 17.5 / 18.8 / 15.0 / 12.5 / 16.2 / 17.5 /
   17.5 (n=8). Was n=6 (15.83 ± 2.20) when paused; t7/t8 ran on the
