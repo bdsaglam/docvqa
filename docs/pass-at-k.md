@@ -111,6 +111,7 @@ variants below.
 |---|---|---|---|---|---|
 | `rvlm-minimal-27b-llm-9b-vlm-val` | RLM v3 27B/9B | 2 | 36.88 ± 0.88 | 48.75 | 33.75 |
 | `rvlm-27b-llm-4b-vlm-val` | RLM 27B-LM / 4B-VLM (Phase-4 rung) | 4 | 32.81 ± 3.13 | 55.00 | 32.50 |
+| `react-27b-llm-4b-vlm-val` | ReAct 27B-LM / 4B-VLM (Phase-4 rung) | 4 | 20.00 ± 3.54 | 37.50 | 21.25 |
 | `codeact-3_5-27b-val` | CodeAct 27B homog (old dspy) | 5 | 37.50 ± 4.24 | 56.25 | 46.25 |
 | `codeact-27b-llm-9b-vlm-val` | CodeAct v3 27B/9B (old dspy) | 4 | 32.19 ± 4.00 | 51.25 | 32.50 |
 | `rvlm-minimal-9b-llm-27b-vlm-val` | RLM v2 9B-LM / 27B-VLM | 8 | 25.31 ± 4.16 | 58.75 | 31.25 |
