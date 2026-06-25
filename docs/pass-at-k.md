@@ -100,6 +100,7 @@ variants below.
 | `codeact-chat-27b-llm-9b-vlm-val` | v3 27B-LM / 9B-VLM | 8 | 32.81 ± 3.04 | 67.50 | 37.50 |
 | `codeact-chat-8b-llm-27b-vlm-val` | Qwen3-8B-LM / 27B-VLM | 8 | 16.72 ± 3.20 | 37.50 | 17.50 |
 | `codeact-chat-4b-llm-27b-vlm-val` | 4B-LM / 27B-VLM | 8 | 22.34 ± 3.44 | 55.00 | 26.25 |
+| `codeact-chat-27b-llm-4b-vlm-val` | 27B-LM / 4B-VLM (Phase-4 rung) | 4 | 27.19 ± 2.77 | 47.50 | 30.00 |
 | `codeact-chat-4b-val` | 4B homog | 8 | 16.25 ± 2.00 | 47.50 | 20.00 |
 | `codeact-chat-gemma-31b-val` | gemma-4-31B homog (post stop-fix) | 4 | 30.31 ± 2.13 | 47.50 | 28.75 |
 | `codeact-chat-gemma-e4b-val` | gemma-4-E4B homog (post stop-fix) | 8 | 7.81 ± 1.86 | 20.00 | 8.75 |
