@@ -2,8 +2,8 @@
   {
     "category": "business_report",
     "question_id": "business_report_10_q1",
-    "answer": "SUBMIT(answer=\"25\")",
-    "full_answer": "SUBMIT(answer=\"25\")"
+    "answer": "25",
+    "full_answer": "25"
   },
   {
     "category": "business_report",
@@ -26,8 +26,8 @@
   {
     "category": "business_report",
     "question_id": "business_report_10_q5",
-    "answer": "SUBMIT(answer=\"hedges\")",
-    "full_answer": "SUBMIT(answer=\"hedges\")"
+    "answer": "hedges",
+    "full_answer": "hedges"
   },
   {
     "category": "business_report",
@@ -116,8 +116,8 @@
   {
     "category": "business_report",
     "question_id": "business_report_9_q1",
-    "answer": "SUBMIT(answer=\"30\")",
-    "full_answer": "SUBMIT(answer=\"30\")"
+    "answer": "30",
+    "full_answer": "30"
   },
   {
     "category": "comics",
@@ -146,8 +146,8 @@
   {
     "category": "comics",
     "question_id": "comics_13_q11",
-    "answer": "SUBMIT(answer=\"Unknown\")",
-    "full_answer": "SUBMIT(answer=\"Unknown\")"
+    "answer": "Unknown",
+    "full_answer": "Unknown"
   },
   {
     "category": "comics",
@@ -302,8 +302,8 @@
   {
     "category": "engineering_drawing",
     "question_id": "engineering_drawing_1_q5",
-    "answer": "SUBMIT(answer=\"1010965-1\")",
-    "full_answer": "SUBMIT(answer=\"1010965-1\")"
+    "answer": "1010965-1",
+    "full_answer": "1010965-1"
   },
   {
     "category": "engineering_drawing",
@@ -332,14 +332,14 @@
   {
     "category": "engineering_drawing",
     "question_id": "engineering_drawing_6_q3",
-    "answer": "SUBMIT(answer=\"05\")",
-    "full_answer": "SUBMIT(answer=\"05\")"
+    "answer": "05",
+    "full_answer": "05"
   },
   {
     "category": "engineering_drawing",
     "question_id": "engineering_drawing_8_q1",
-    "answer": "Based on the most consistent information I gathered, when H=0:\n- E = D \u2295 F (XOR of D and F)\n- G = D \u2295 F (XOR of D and F)\n\nComputing for each case:\n- (D=0, F=0): E=0, G=0\n- (D=1, F=0): E=1, G=1\n- (D=0, F=1): E=1, G=1\n- (D=1, F=1): E=0, G=0\n\nEGEGEGEG = 00111100\n\nSUBMIT(answer=\"00111100\")",
-    "full_answer": "Based on the most consistent information I gathered, when H=0:\n- E = D \u2295 F (XOR of D and F)\n- G = D \u2295 F (XOR of D and F)\n\nComputing for each case:\n- (D=0, F=0): E=0, G=0\n- (D=1, F=0): E=1, G=1\n- (D=0, F=1): E=1, G=1\n- (D=1, F=1): E=0, G=0\n\nEGEGEGEG = 00111100\n\nSUBMIT(answer=\"00111100\")"
+    "answer": "00111100",
+    "full_answer": "00111100"
   },
   {
     "category": "engineering_drawing",
@@ -440,8 +440,8 @@
   {
     "category": "infographics",
     "question_id": "infographics_7_q6",
-    "answer": "SUBMIT(answer=\"Satellite\")",
-    "full_answer": "SUBMIT(answer=\"Satellite\")"
+    "answer": "Satellite",
+    "full_answer": "Satellite"
   },
   {
     "category": "infographics",
@@ -482,8 +482,8 @@
   {
     "category": "maps",
     "question_id": "maps_10_q2",
-    "answer": "SUBMIT(answer=\"27\")",
-    "full_answer": "SUBMIT(answer=\"27\")"
+    "answer": "27",
+    "full_answer": "27"
   },
   {
     "category": "maps",
@@ -500,8 +500,8 @@
   {
     "category": "maps",
     "question_id": "maps_3_q2",
-    "answer": "Based on my analysis, I found that there are 2 civilian airports along the route from Earlimart to Mojave by interstate highway:\n1. Earlimart Airport (at the starting point)\n2. Mojave Airport (at the ending point)\n\nThe VLM confirmed both airports exist, though it gave inconsistent answers throughout. The question asks for airports \"passed\" including those at the start and end points.\n\nSUBMIT(answer=\"2\")",
-    "full_answer": "Based on my analysis, I found that there are 2 civilian airports along the route from Earlimart to Mojave by interstate highway:\n1. Earlimart Airport (at the starting point)\n2. Mojave Airport (at the ending point)\n\nThe VLM confirmed both airports exist, though it gave inconsistent answers throughout. The question asks for airports \"passed\" including those at the start and end points.\n\nSUBMIT(answer=\"2\")"
+    "answer": "2",
+    "full_answer": "2"
   },
   {
     "category": "maps",
@@ -530,20 +530,20 @@
   {
     "category": "maps",
     "question_id": "maps_5_q5",
-    "answer": "SUBMIT(answer=\"2\")",
-    "full_answer": "SUBMIT(answer=\"2\")"
+    "answer": "2",
+    "full_answer": "2"
   },
   {
     "category": "maps",
     "question_id": "maps_6_q1",
-    "answer": "SUBMIT(answer=\"5\")",
-    "full_answer": "SUBMIT(answer=\"5\")"
+    "answer": "5",
+    "full_answer": "5"
   },
   {
     "category": "maps",
     "question_id": "maps_6_q2",
-    "answer": "SUBMIT(answer=\"17.20\")",
-    "full_answer": "SUBMIT(answer=\"17.20\")"
+    "answer": "17.20",
+    "full_answer": "17.20"
   },
   {
     "category": "maps",
@@ -554,14 +554,14 @@
   {
     "category": "maps",
     "question_id": "maps_7_q2",
-    "answer": "SUBMIT(answer=\"Puffer-Th\u00fcr-Bolwerck\")",
-    "full_answer": "SUBMIT(answer=\"Puffer-Th\u00fcr-Bolwerck\")"
+    "answer": "Puffer-Th\u00fcr-Bolwerck",
+    "full_answer": "Puffer-Th\u00fcr-Bolwerck"
   },
   {
     "category": "maps",
     "question_id": "maps_8_q1",
-    "answer": "SUBMIT(answer=\"Silver Tip\")",
-    "full_answer": "SUBMIT(answer=\"Silver Tip\")"
+    "answer": "Silver Tip",
+    "full_answer": "Silver Tip"
   },
   {
     "category": "maps",
@@ -716,8 +716,8 @@
   {
     "category": "science_paper",
     "question_id": "science_paper_9_q5",
-    "answer": "Based on my analysis:\n\n1. The dataset from Computational Linguistics 2019 is Hellaswag (Zellers et al., 2019 - Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics)\n\n2. From Table 3, the SFT-trained models with 1M SGD steps have these average accuracies:\n   - T2L (SFT) L: 67.7 (best)\n   - T2L (SFT) M: 67.5 (second best)\n   - T2L (SFT) S: 65.2 (third)\n\n3. The second best accuracy model is T2L (SFT) M\n\n4. From Table 6, the reconstruction performance for model M is 61.7\n\nSUBMIT(answer=\"61.7\")",
-    "full_answer": "Based on my analysis:\n\n1. The dataset from Computational Linguistics 2019 is Hellaswag (Zellers et al., 2019 - Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics)\n\n2. From Table 3, the SFT-trained models with 1M SGD steps have these average accuracies:\n   - T2L (SFT) L: 67.7 (best)\n   - T2L (SFT) M: 67.5 (second best)\n   - T2L (SFT) S: 65.2 (third)\n\n3. The second best accuracy model is T2L (SFT) M\n\n4. From Table 6, the reconstruction performance for model M is 61.7\n\nSUBMIT(answer=\"61.7\")"
+    "answer": "61.7",
+    "full_answer": "61.7"
   },
   {
     "category": "science_poster",
@@ -764,8 +764,8 @@
   {
     "category": "science_poster",
     "question_id": "science_poster_5_q1",
-    "answer": "SUBMIT(answer=\"14\")",
-    "full_answer": "SUBMIT(answer=\"14\")"
+    "answer": "14",
+    "full_answer": "14"
   },
   {
     "category": "science_poster",

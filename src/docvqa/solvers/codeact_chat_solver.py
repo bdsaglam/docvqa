@@ -110,6 +110,18 @@ def _extract_code(text: str) -> str:
     return "\n\n".join(b.strip() for b in blocks if b.strip()).strip()
 
 
+# A SUBMIT(answer="...") call the model emits as *text* (not executed code) —
+# happens on the out-of-turns fallback path, where we ask for a bare value but
+# the model replies with the REPL call form. Unwrap to the value so the recorded
+# prediction is the answer, not the wrapper.
+_SUBMIT_TEXT_RE = re.compile(r"""SUBMIT\s*\(\s*answer\s*=\s*(['"])(.*?)\1""", re.DOTALL)
+
+
+def _unwrap_submit_text(answer: str) -> str:
+    m = _SUBMIT_TEXT_RE.search(answer or "")
+    return m.group(2).strip() if m else answer
+
+
 def _split_first_turn(content: str) -> tuple[str, str]:
     """Truncate an assistant turn to its first code block; return (content, code).
 
@@ -355,8 +367,9 @@ class CodeActChatProgram:
             })
             full = self._complete(lm, messages)
             messages.append({"role": "assistant", "content": full})
-            # The prediction is the answer value only — drop any <think> block.
-            answer = _strip_think(full).strip()
+            # The prediction is the answer value only — drop any <think> block,
+            # and unwrap a SUBMIT(answer="...") the model may emit as text here.
+            answer = _unwrap_submit_text(_strip_think(full).strip())
             return answer, messages
         finally:
             repl.shutdown()
