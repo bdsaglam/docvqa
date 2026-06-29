@@ -336,14 +336,33 @@ absent at 4B. Detail: `gemma-4-e4b.md` + `gemma-4-31b.md` (per-model) +
 on `vllm/vllm-openai:gemma4`; 31B TP=2 one-trial-at-a-time, inherent shm crash
 handled by restart+resume.)
 
-## Document-length axis (prediction 2)
+## Document-length axis (prediction 2) — **DONE (current code, 2026-06-29)**
 
-> Prior MP-DocVQA / MMLongBench-Doc cross-benchmark numbers were run on
-> pre-change prompts/retry logic and are **invalid** (archived under
-> `archive/experiments/mp-docvqa-qwen27b.md`,
-> `mmlongbench-doc-qwen27b.md`). The mechanism (lift sign + magnitude
-> scale with the benchmark's page-count distribution) is robust, but the
-> magnitudes need a current-code re-run before citing. **Pending.**
+Main solvers (no ablations), Qwen 3.5 27B, n=1 exploratory, stratified-random
+subsets. MP-DocVQA (≤20pg, mean 5.3) scored by ANLS; MMLongBench-Doc (~47pg)
+scored by the Qwen judge on `:8927`. Per-cell: `dataset-axis-{mp-docvqa,mmlongbench}.md`.
+
+| solver | MP-DocVQA (≤20pg, ANLS) | MMLongBench-Doc (~47pg, judge) |
+|---|---|---|
+| `codeact_chat` (twin) | 64.4% | 65.8% (0% Unk) |
+| **`rvlm`** (proposed) | 60.8% | **66.5%** (0% Unk) |
+| `official_baseline` | 58.8% (8% Unk) | 49.7% (36% Unk) |
+| `raw_vlm_multi` | 58.2% (22% Unk) | 24.2% (87% Unk) |
+| **recursive − baseline gap** | **~2–6pp** | **~16–42pp** |
+
+**The recursive-perception advantage scales with document length** (confirms
+D-006). The recursive methods are ~flat across the axis (61–66%, Unknown ≈ 0% —
+they navigate the doc regardless of length); the raw-VLM baselines **degrade with
+length** as the fixed page budget misses evidence (Unknown 8/22% on moderate docs
+→ 36/87% on long docs). When the document fits the page budget the scaffold buys
+little (gap ~2–6pp); when it overflows, recursive navigation is decisive
+(~16–42pp). The Unknown-rate ladder is the mechanism made visible.
+
+> Setup (autonomous): `scripts/stratified_sample.py` (stratified-random
+> doc_ids); `LOAD_TRUNCATED_IMAGES` in `data.py`; judge via
+> `QWEN_JUDGE_BASE_URL=http://localhost:8927/v1`; multi-image baselines need the
+> 27B at `--limit-mm-per-prompt {"image":32}` + `solver.max_pages=20`. Prior
+> pre-change MP/MMLB numbers (archived) are superseded by this.
 
 ## Solver taxonomy (engineering names)
 
