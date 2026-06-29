@@ -32,10 +32,37 @@ uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
 
 | Solver | role | ANLS | notes |
 |---|---|---|---|
+| **`codeact_chat`** (twin) | chat-MDP, recursive | **64.4%** (125/194) | 40 docs |
 | **`rvlm`** (proposed) | REPL + recursive `batch_look` | **60.8%** (118/194) | 40 docs |
-| **`codeact_chat`** (twin) | chat-MDP, recursive | _running_ | |
-| `official_baseline` | MASTER_PROMPT, multi-image | _queued_ | |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | _queued_ | |
+| `official_baseline` | MASTER_PROMPT, multi-image, `max_pages=20` | **58.8%** (114/194) | 8% Unknown |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold, `max_pages=20` | **58.2%** (113/194) | 22% Unknown |
 
-(Main solvers only, per scope — no ablations. The doc-length-axis read is the
-rvlm-vs-baseline gap *here* vs on MMLongBench: see `dataset-axis-mmlongbench.md`.)
+(Main solvers only, per scope — no ablations.)
+
+## Read — the gap nearly vanishes on moderate docs
+
+All four solvers cluster at **58–64% ANLS**: the recursive methods
+(codeact_chat 64.4, rvlm 60.8) lead the baselines (official 58.8, raw_vlm 58.2)
+by only **~2–6pp** — and the baselines' Unknown rates are low (8% / 22%). On
+≤20-page docs the raw-VLM baseline can fit most of the document in its page
+budget, so it *sees the evidence* and the navigation advantage is small.
+
+This is the **moderate-length contrast that completes the document-length axis**.
+Against MMLongBench-Doc (~47pg; `dataset-axis-mmlongbench.md`):
+
+| | MP-DocVQA (≤20pg) | MMLongBench-Doc (~47pg) |
+|---|---|---|
+| codeact_chat | 64.4% | 65.8% |
+| rvlm | 60.8% | 66.5% |
+| official_baseline | 58.8% (8% Unk) | 49.7% (36% Unk) |
+| raw_vlm_multi | 58.2% (22% Unk) | 24.2% (87% Unk) |
+| **recursive − baseline gap** | **~2–6pp** | **~16–42pp** |
+
+**The recursive-perception advantage scales with document length** (D-006). The
+recursive methods are flat across the axis (~61–66%, Unknown ≈ 0%) — they
+navigate the doc regardless of length. The baselines *degrade with length* as the
+fixed page budget increasingly misses evidence (Unknown 8/22% → 36/87%). When the
+document fits the budget the scaffold buys little; when it doesn't, recursive
+navigation is decisive. (n=1 exploratory, stratified subsets, ANLS vs Qwen-judge
+across the two datasets — the **within-dataset gaps and their scaling**, not the
+cross-dataset absolutes, are the claim.)
