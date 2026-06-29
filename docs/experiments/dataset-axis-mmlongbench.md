@@ -34,19 +34,23 @@ QWEN_JUDGE_BASE_URL=http://localhost:8927/v1 uv run python evals.py \
 
 | Solver | role | acc | notes |
 |---|---|---|---|
-| **`rvlm`** (proposed) | REPL + recursive `batch_look` | **66.5%** (103/155) | 19/20 docs, 0% Unknown |
-| `codeact_chat` | chat-MDP twin | _running_ | |
-| `rvlm_ocr_ablation` | + OCR/search | _queued_ | |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | _queued (needs image:N server)_ | |
-| `official_baseline` | MASTER_PROMPT, no scaffold | _queued (needs image:N server)_ | |
+| **`rvlm`** (proposed) | REPL + recursive `batch_look` | **66.5%** (103/155) | 19 docs, 0% Unknown |
+| `official_baseline` | MASTER_PROMPT, no scaffold, `max_pages=20` | **49.7%** (80/161) | 20 docs, **36% Unknown** |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | _running_ | |
+| `codeact_chat` | chat-MDP twin | _queued (heavy)_ | |
+| `rvlm_ocr_ablation` | + OCR/search | _queued (heavy)_ | |
 
-- **`rvlm` = 66.5%** on the 19-doc stratified subset. Strong for a long-doc
-  benchmark — the recursive page-navigation lets a 32k-context reasoner answer
-  over ~47-page docs it could never fit in-context. The decisive comparison is
-  vs the raw-VLM baselines on the *same* docs (expected to collapse: a fixed
-  page budget misses evidence on later pages — the page-budget-bound signature).
-  Absolute value is one n=1 read on a subset; the rvlm-vs-baseline *gap* is the
-  load-bearing result.
+- **`rvlm` 66.5% > `official_baseline` 49.7% (≈ +17pp)** on the long-doc subset.
+  The baseline is capped by **36% Unknown** — the **page-budget signature**: with
+  `max_pages=20` (downscaled) on ~47-page docs, evidence on later pages is unseen,
+  so the model returns "Unknown". `rvlm` navigates the full document via
+  `batch_look`, so a 32k-context reasoner answers over docs it could never fit
+  in-context (0% Unknown). This is the doc-length axis's load-bearing result: the
+  recursive-perception advantage *widens* on long docs (cf. DocVQA-2026's mostly
+  ≤10-page docs, where `rvlm`≈OCR/baseline gaps are smaller). n=1, judge-scored;
+  rvlm on 19 docs vs official on 20 (the 20th, a Pew report, crashed rvlm's tail).
+  Absolute values use the Qwen judge (likely more lenient than the official GPT-4o
+  protocol) — the **gap**, not the absolute, is the claim.
 
 > Status: rvlm done (19/20; 20th doc — a Pew report — repeatedly crashed the
 > process at the tail, dropped for the n=1 read). Baselines pending a 27B restart
