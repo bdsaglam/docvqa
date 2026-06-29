@@ -83,7 +83,10 @@ def _mp_items() -> dict[str, str]:
 
     from datasets import load_dataset
 
-    ds = load_dataset("lmms-lab/MP-DocVQA", split="val", streaming=True)
+    # Non-streaming: the val split is cached locally, so iterating the cached
+    # arrow table is fast. (Streaming re-fetches image-laden row-groups and is
+    # far slower.) We only touch the text columns here.
+    ds = load_dataset("lmms-lab/MP-DocVQA", split="val")
     pages: dict[str, int] = {}
     for row in ds:
         doc_id = row["doc_id"]
