@@ -6,9 +6,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from datasets import load_dataset
-from PIL import Image
+from PIL import Image, ImageFile
 
 Image.MAX_IMAGE_PIXELS = 500_000_000
+# Some benchmark page images (e.g. a few MMLongBench-Doc rasters) are slightly
+# truncated; tolerate them rather than crashing the whole document load.
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 @dataclass
