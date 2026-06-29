@@ -36,9 +36,9 @@ QWEN_JUDGE_BASE_URL=http://localhost:8927/v1 uv run python evals.py \
 |---|---|---|---|
 | **`rvlm`** (proposed) | REPL + recursive `batch_look` | **66.5%** (103/155) | 19 docs, 0% Unknown |
 | `official_baseline` | MASTER_PROMPT, no scaffold, `max_pages=20` | **49.7%** (80/161) | 20 docs, **36% Unknown** |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | _running_ | |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold, `max_pages=20` | **24.2%** (39/161) | 20 docs, **87% Unknown** |
+| `rvlm_ocr_ablation` | + OCR/search (OCR-extension long-doc payoff test) | _running_ | |
 | `codeact_chat` | chat-MDP twin | _queued (heavy)_ | |
-| `rvlm_ocr_ablation` | + OCR/search | _queued (heavy)_ | |
 
 - **`rvlm` 66.5% > `official_baseline` 49.7% (≈ +17pp)** on the long-doc subset.
   The baseline is capped by **36% Unknown** — the **page-budget signature**: with
@@ -51,6 +51,13 @@ QWEN_JUDGE_BASE_URL=http://localhost:8927/v1 uv run python evals.py \
   rvlm on 19 docs vs official on 20 (the 20th, a Pew report, crashed rvlm's tail).
   Absolute values use the Qwen judge (likely more lenient than the official GPT-4o
   protocol) — the **gap**, not the absolute, is the claim.
+
+- **Unknown-rate ladder is the cleanest read: 0% (rvlm) → 36% (official) → 87%
+  (raw_vlm_multi).** As page-navigation is removed, the baseline increasingly
+  cannot reach later-page evidence and falls back to "Unknown". `raw_vlm_multi`
+  (no MASTER_PROMPT scaffold, raw multi-image, page-capped) collapses hardest
+  (24.2%, 87% Unknown). This monotone ladder — navigation ability ∝ accuracy,
+  inverse ∝ Unknown — is the long-doc instance of the perception-budget thesis.
 
 > Status: rvlm done (19/20; 20th doc — a Pew report — repeatedly crashed the
 > process at the tail, dropped for the n=1 read). Baselines pending a 27B restart
