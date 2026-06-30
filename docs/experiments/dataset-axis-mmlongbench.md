@@ -74,11 +74,11 @@ Unknown** (rvlm 66.5, codeact_chat 65.8) while the **raw-VLM baselines fall to
 perception-budget thesis: when the document exceeds the in-context page budget,
 the ability to *navigate* it (recursive `batch_look`) is decisive. Main solvers
 only (per scope); OCR-extension (`rvlm_ocr`) skipped — it's an ablation and
-MMLongBench ships no OCR. **MP-DocVQA (moderate-length axis point) pending** a
-data download.
+MMLongBench ships no OCR. The moderate-length axis point is
+[`dataset-axis-mp-docvqa.md`](dataset-axis-mp-docvqa.md) (≤20pg), where the gap
+narrows to ~2–6pp — the scaling that completes the axis.
 
-> Status: rvlm done (19/20; 20th doc — a Pew report — repeatedly crashed the
-> process at the tail, dropped for the n=1 read). Baselines pending a 27B restart
-> with `--limit-mm-per-prompt {"image":32}`. MP-DocVQA (moderate-length axis
-> point) deprioritized — streaming its image-laden val parquet timed out; needs
-> a real download.
+> Status: n=1 complete for all four main solvers (table above); **escalating to
+> n=3** (same stratified subset, run_ids `mmlb-<solver>-t{2,3}`). One doc (a Pew
+> report) repeatedly crashes the process at the tail and is dropped from the n=1
+> read; resume fills it where it completes.

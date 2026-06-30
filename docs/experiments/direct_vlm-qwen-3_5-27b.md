@@ -77,7 +77,8 @@ questions through a dedicated VLM sub-call. Close to the
 `raw_vlm_multi_baseline` floor (18.75% t1): same collapse on detail
 categories (business_report, comics, maps all 0/10), confirming that
 direct image access without recursive querying can't resolve fine print.
-Lock paired Δ at n=3.
+The collapse holds across the n=8 mean: ≈ `raw_vlm_multi` and **−17.04pp**
+vs `rvlm` — the sub-call indirection, not raw pixel access, is what lifts.
 
 ## Observations / caveats
 
@@ -87,4 +88,4 @@ Lock paired Δ at n=3.
 
 ## Status
 
-in progress (n=1 of 8)
+done — n=8 (22.34% ± 2.79).
