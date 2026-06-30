@@ -20,19 +20,20 @@ per-trial data live in the **per-model files** below; this doc holds the
 [`qwen3-8b.md`](qwen3-8b.md) · [`gemma-4-e4b.md`](gemma-4-e4b.md) ·
 [`gemma-4-31b.md`](gemma-4-31b.md). The 27B-reasoner row is in the per-solver
 files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
-`codeact-qwen-3_5-27b.md`) and `docs/results.md`.
+`codeact-chat-qwen-3_5-27b.md`) and `docs/results.md`.
 
-> **⚠ STALE CodeAct — do not cite.** Every CodeAct (`CodeActᶜ`) number in
-> this document is an **old-dspy `codeact`** result. The corrected
-> **`codeact_chat`** twin is the sole source of truth for CodeAct numbers
-> going forward, and these are retained for **provenance only**. Every
-> finding derived from CodeAct numbers below — the **reasoner-scaling
-> slope** (Finding 2), the **v3 reasoning-bound delta** (Finding 3,
-> CodeActᶜ +6.2), the **Gemma CodeAct lifts** (Findings 4–5), and the
-> **clean append-only-code MDP fine-tuning-target argument** — is
-> therefore **provisional**, pending the `codeact_chat` re-run that
-> replaces these rows. The analysis is kept intact, but no CodeAct number
-> here is a current result.
+> **⚠ STALE CodeAct rows — cite the `codeact_chat` grid instead.** Every
+> CodeAct (`CodeActᶜ`) number in this document is an **old-dspy `codeact`**
+> result, retained for **provenance only**. The corrected **`codeact_chat`**
+> model-axis grid is **complete** and is the source of truth for CodeAct
+> numbers (`codeact-chat-qwen-3_5-27b.md`; summary in
+> `docs/experiment-status.md`). It **confirms every CodeAct-derived finding
+> here qualitatively** — the reasoner-scaling slope (27B 39.53 > 9B-homog
+> 22.97 > 4B-homog 16.25), the v3 reasoning-bound direction (27B/9B 32.81 >
+> 9B/27B 26.56), the Gemma capacity-gate lift (31B 30.31 ≫ baseline 11.09;
+> E4B 7.81 ≈ baseline), and the append-only-code MDP fine-tuning-target
+> argument — at corrected (generally higher) levels. Read the dspy rows below
+> for the shape of the analysis; take exact CodeAct values from the grid.
 
 ## Table 1 — v1 homog (LLM = VLM) + 27B anchor (n=8)
 

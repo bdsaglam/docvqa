@@ -2,7 +2,7 @@
 
 ## Hypothesis / question
 
-Anchor for the 7-solver comparison re-run: the proposed OCR-free
+Anchor for the 8-solver comparison: the proposed OCR-free
 recursive-perception method (`rvlm`, VLM sub-call via `batch_look`) under
 the post-cleanup code (minimized prompts, parity-stripped, per-call
 `num_retries=5` only — whole-agent `@retry` removed). This is the
@@ -14,7 +14,7 @@ reference every other solver's Δ is measured against.
 - Model: Qwen 3.5 27B local vllm 8927 (lm + vlm), `enable_thinking=false`
 - Profile: DocVQA-2026 (default)
 - max_concurrency: 24
-- Part of the 7-solver comparison re-run (val, n=3), 2026-06-01.
+- Headline cell of the 8-solver comparison matrix (val, n=8).
 
 ## Command
 
@@ -29,6 +29,9 @@ uv run python evals.py \
 ```
 
 ## Per-trial table
+
+*Original measurement batch (per-category texture; per-trial artifacts since
+deleted → not the pass@k source). Canonical n=8 = the re-run in Summary below.*
 
 | Trial | run_id | Score | Correct | Wall | Notes |
 |---|---|---|---|---|---|
@@ -67,27 +70,28 @@ Per-category (t3): business_report 5/10, comics 4/10, engineering_drawing
 
 ## Summary
 
-> **⟳ RE-RUN 2026-06-17 (fresh artifacts — supersedes the deleted run below).**
-> The original `*-cmp-val` per-trial artifacts (the table above) were **deleted
-> on both hosts**, leaving no pass@k/SC@k. Re-ran n=8 on a local 27B DP=3:
-> **41.88% ± 5.79, pass@8 68.75, SC@8 47.50** (per-trial 30.0 / 43.8 / 45.0 /
-> 50.0 / 43.8 / 42.5 / 41.2 / 38.8). The fresh re-roll lands **+2.5pp above the
-> old 39.38**, with higher std (5.79 vs 1.49 — t1's 30.0 is the low outlier; the
-> other 7 cluster 38.8–50.0). `science_paper_3`/`comics_2` are the recurring
-> degenerate-loop traps (rvlm has no exec-timeout; cleared via kill+resume).
-> The table below is the historical (deleted-artifact) run, kept for provenance.
+**n=8 (retained per-trial artifacts): 41.88% ± 5.79, pass@8 68.75, SC@8 47.50**
+(per-trial 30.0 / 43.8 / 45.0 / 50.0 / 43.8 / 42.5 / 41.2 / 38.8). The relatively
+high std is driven by the single **t1 = 30.0 low outlier**; the other 7 trials
+cluster 38.8–50.0. `science_paper_3` / `comics_2` are the recurring
+degenerate-loop traps (rvlm has no exec-timeout; cleared via kill+resume). This
+is the canonical headline cell and the reference all other Δ are measured against.
 
-**Original run (artifacts deleted) — n=8: 39.38% ± 1.49pp** (40.00 / 38.75 /
-37.50 / 41.25 / 41.25 / 40.00 / 37.50 / 38.75) — tight variance (±1.5pp). maps
-is the consistent weak spot.
+> **Provenance.** An earlier measurement batch of the same cell (n=8, **39.38% ±
+> 1.49**) had its per-trial `submission.json`s deleted in a disk cleanup, so it
+> carried no pass@k/SC@k — the run above re-measures with retained artifacts and
+> is canonical. The per-trial **table above** (with per-category texture) is that
+> original batch, kept for the category-level detail; the re-roll lands +2.5pp
+> higher with wider variance (the original's ±1.49 vs 41.88's ±5.79).
 
 ## Comparison
 
-Reference method — others compared against this. Paired Δ vs each solver
-(both at n=3) computed in `docs/results.md` once all 27 cells land. Known
-so far: vs `rvlm_ocr_ablation` (37.08% ± 2.60pp) → **+1.67pp** — OCR adds
-nothing over the OCR-free method (slightly below). vs the n=1 baselines:
-raw_vlm_multi 18.75% (+~20pp).
+Reference method — every other solver's Δ is measured against this. The full
+n=8 matrix and per-cell Δ live in `docs/results.md`: the rvlm-tier ablations
+(`rvlm_ocr` 36.56, `rvlm_subagent` 36.72, `rvlm_nocrop` 35.78) sit ~5pp below
+the `rvlm` mean but within combined std (rvlm ±5.79) — OCR and sub-call
+generalization add nothing over the minimal OCR-free `batch_look`. The
+no-recursion baselines collapse to 21–27% and the OCR-only control to 14.7%.
 
 ## Observations / caveats
 

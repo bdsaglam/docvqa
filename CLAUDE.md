@@ -146,16 +146,17 @@ per-trial artifacts** (deleted both hosts) → its pass@k/SC@k need a re-run.
 > current code/framing.
 
 Current headline (Qwen 3.5 27B, val 25-doc/80-Q subset, `n=8`, current
-code — three clean tiers, every gap ≫ the std):
+code — three clean tiers, every cross-tier gap ≫ the std; numbers from the
+retained-artifact matrix that carries pass@k/SC@k):
 
 | Tier | Solver | Val (n=8) |
 |---|---|---|
-| **proposed** | **`rvlm`** (REPL + recursive VLM `batch_look`, OCR-free) | **39.38% ± 1.49** |
-| CodeAct twin (MDP/RL-target) | **`codeact_chat`** (append-only chat MDP; ties `rvlm`) | **39.53% ± 2.83** |
-| +OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
-| no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
-| OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
-| competition anchor | `official_baseline` (MASTER_PROMPT, no scaffold) | 17.81% ± 1.86 |
+| **proposed** | **`rvlm`** (REPL + recursive VLM `batch_look`, OCR-free) | **41.88% ± 5.79** |
+| CodeAct twin (MDP/RL-target) | **`codeact_chat`** (append-only chat MDP; within ~2pp of `rvlm`) | **39.53% ± 2.83** |
+| +OCR extension | `rvlm_ocr_ablation` | 36.56% ± 2.89 |
+| no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 21–27% |
+| OCR-only floor (no vision) | `rlm_ocr` | 14.69% ± 2.19 |
+| competition anchor | `official_baseline` (MASTER_PROMPT, no scaffold) | 18.91% ± 1.94 |
 
 Official ICDAR baselines (external): Gemini 3 Pro 37.5% test, GPT-5.2 35.0% test.
 
@@ -194,10 +195,10 @@ solvers (`subagent_full`, `codeact_chat` on long docs) and small/slow servers.
 
 ## Key Findings (current code; see `docs/results.md`)
 
-1. **Three clean tiers**: visual-recursive (`rvlm` ~39%) ≫ no-recursion
-   (`react`/`direct_vlm`/`raw_vlm_multi` 20–25%) ≫ OCR-only floor (`rlm_ocr` 14%).
+1. **Three clean tiers**: visual-recursive (`rvlm` ~42%) ≫ no-recursion
+   (`react`/`direct_vlm`/`raw_vlm_multi` 21–27%) ≫ OCR-only floor (`rlm_ocr` 15%).
 2. **OCR-free is decisive**: swapping visual perception for OCR text
-   (`rlm_ocr`) is the matrix floor, **−25.5pp** vs `rvlm`. Adding OCR *on top*
+   (`rlm_ocr`) is the matrix floor, **−27.2pp** vs `rvlm`. Adding OCR *on top*
    of vision (`rvlm_ocr`) buys ≈ 0 on moderate-doc DocVQA; it pays off on
    long-doc benchmarks (the OCR extension's job).
 3. **Both halves of the scaffold are load-bearing**: dropping the recursive
