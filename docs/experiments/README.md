@@ -15,32 +15,43 @@ future sessions don't re-derive numbers from `output/runs/`.
 
 ### Method vs baselines — Qwen 3.5 27B, val (25 docs / 80 Qs)
 
-The 8-solver comparison re-run (`lm.enable_thinking=false`, local vllm
-:8927), **complete at n=8** (val 25 docs / 80 Qs). Mean ± std over 8
-trials; Δ vs the `rvlm` reference. The append-only/MDP twin is the
-**`codeact_chat`** solver (corrected — ties `rvlm` at 39.53 ± 2.83); the
-old dspy `codeact` budget sweep is deprecated/archived. Full detail +
-headlines in [`../results.md`](../results.md).
+The 8-solver comparison (`lm.enable_thinking=false`, local vllm :8927),
+**n=8** (val 25 docs / 80 Qs). Numbers are the **canonical re-run** (retained
+per-trial artifacts → pass@k/SC@k); Δ vs the `rvlm` reference. The append-only/
+MDP twin is **`codeact_chat`** (corrected; within ~2pp of `rvlm`); the old dspy
+`codeact` budget sweep is deprecated/archived. Full detail + headlines in
+[`../results.md`](../results.md).
+
+> **Per-cell vs synthesis.** This table and `results.md` use the re-run batch.
+> The individual ablation per-cell docs below report each cell's *original-batch*
+> measurement (with per-trial detail), and their "Δ vs `rvlm` 39.38" are clean
+> **within-original-batch** comparisons — both numbers re-rolled together in the
+> re-run, so the re-run cross-cell deltas (here) differ but the rankings hold.
 
 | Solver | Role | Val (n=8) | Δ vs `rvlm` | Status |
 |---|---|---|---|---|
-| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — | ✓ reference |
-| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` (OCR extension) | 37.81% ± 3.12 | −1.56pp | ✓ done — **OCR adds nothing** over OCR-free |
-| **`codeact_chat`** | corrected append-only/MDP twin of `rvlm` (true chat MDP, no dspy; FT target) | **39.53% ± 2.83** | +0.15pp (tied) | ✓ done — MDP ~free; old dspy `codeact` deprecated |
-| `rvlm_hybrid_ablation` | + direct `display()` image channel on top of the sub-call | 35.47% ± 4.48 | −3.91pp | ✓ done — direct channel mildly harmful (3× variance) |
-| `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | 25.16% ± 4.60 | −14.22pp | ✓ done — REPL load-bearing |
-| `direct_vlm` | `display()` pages into agent's own context, **no** VLM sub-call | 22.34% ± 2.79 | −17.03pp | ✓ done — sub-call load-bearing |
-| `raw_vlm_multi_baseline` | raw multi-image, single VLM call, **no scaffold** | 20.47% ± 1.63 | −18.91pp | ✓ done — scaffold-lift floor |
-| `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold | 17.81% ± 1.86 | −21.56pp | ✓ done — external anchor (kit-faithful: 21.67% ± 1.91) |
-| `rlm_ocr` | RLM + OCR text perception, **no vision** | 13.91% ± 1.56 | −25.47pp | ✓ done — **OCR-free headline control** (matrix floor) |
+| **`rvlm`** | **proposed method** — REPL + recursive VLM `batch_look` (OCR-free) | **41.88% ± 5.79** | — | ✓ reference |
+| **`codeact_chat`** | corrected append-only/MDP twin of `rvlm` (true chat MDP, no dspy; FT target) | **39.53% ± 2.83** | −2.35pp | ✓ done — within ~2pp; old dspy `codeact` deprecated |
+| `rvlm_subagent_ablation` | sub-call generalized to `batch_subagent` | 36.72% ± 2.75 | −5.16pp | ✓ done — within combined std (general delegation unused) |
+| `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` (OCR extension) | 36.56% ± 2.89 | −5.32pp | ✓ done — **OCR adds nothing** over OCR-free |
+| `rvlm_nocrop_ablation` | `batch_look` by page index, no crop/zoom | 35.78% ± 2.31 | −6.10pp | ✓ done — crop is category-specific |
+| `react_baseline` | perception tools, **no REPL** (`dspy.ReAct`) | 27.19% ± 3.19 | −14.69pp | ✓ done — REPL load-bearing |
+| `direct_vlm` | `display()` pages into agent's own context, **no** VLM sub-call | 22.34% ± 2.79† | −17.04pp† | ✓ done — sub-call load-bearing |
+| `raw_vlm_multi_baseline` | raw multi-image, single VLM call, **no scaffold** | 20.94% ± 1.60 | −20.94pp | ✓ done — scaffold-lift floor |
+| `official_baseline` | competition `MASTER_PROMPT`, multi-image, no scaffold | 18.91% ± 1.94 | −22.97pp | ✓ done — external anchor (kit-faithful: 21.67% ± 1.91) |
+| `rlm_ocr` | RLM + OCR text perception, **no vision** | 14.69% ± 2.19 | −27.19pp | ✓ done — **OCR-free headline control** (matrix floor) |
 
-**Reading:** `rvlm` (~39%) lifts ~+21pp over the no-scaffold raw-VLM floor
-(~20%). The two halves of the scaffold each matter — drop the REPL
-(`react` ~24%) or serve perception one-shot instead of via the recursive
-sub-call (`raw_vlm_multi` ~20%, `direct_vlm` 21%) and it collapses, but
-neither alone recovers `rvlm`. Adding OCR (`rvlm_ocr`) or a direct
-image channel (`rvlm_hybrid`) on top of the OCR-free recursive sub-call
-buys ~0 — supporting the OCR-free recursive-perception framing.
+† `direct_vlm` (and `rvlm_rationale` 39.22, parity) were not in the re-run; their
+numbers are original-batch (Δ vs original `rvlm` 39.38). `rvlm_hybrid` is the
+accepted context-ceiling failure (35.47 upper bound, not tabled) — see `results.md`.
+
+**Reading:** `rvlm` (~42%) lifts ~+21pp over the no-scaffold raw-VLM floor
+(~21%). The two halves of the scaffold each matter — drop the REPL
+(`react` ~27%) or serve perception one-shot instead of via the recursive
+sub-call (`raw_vlm_multi` ~21%, `direct_vlm` 22%) and it collapses, but
+neither alone recovers `rvlm`. Adding OCR (`rvlm_ocr`) or generalizing the
+sub-call (`rvlm_subagent`) on top of the OCR-free recursive sub-call buys ~0
+(within combined std) — supporting the OCR-free recursive-perception framing.
 
 ### Model-size / VLM-quality axis (prediction 1)
 
@@ -121,7 +132,7 @@ budget; stratified-random subsets (`scripts/stratified_sample.py`, seed 0):
 
 | Model | RLM (`rvlm`) headline | File |
 |---|---|---|
-| Qwen 3.5 27B | 39.38 ± 1.49 | `rvlm-qwen-3_5-27b.md` |
+| Qwen 3.5 27B | 41.88 ± 5.79 (re-run) | `rvlm-qwen-3_5-27b.md` |
 | Qwen 3.5 9B | 16.67 (homog) / 24.54 (VLM=27B) | `qwen-3_5-9b.md` |
 | Qwen 3.5 4B | 12.49 (homog) / 21.09 (VLM=27B) | `qwen-3_5-4b.md` |
 | Qwen3 8B (older gen) | 11.73 (VLM=27B) | `qwen3-8b.md` |

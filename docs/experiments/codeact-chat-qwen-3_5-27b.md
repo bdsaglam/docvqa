@@ -62,7 +62,8 @@ headroom for a verifier/RL reward; SC@8 +5.5pp. Full axis in
 | comparison | value | Δ vs codeact_chat |
 |---|---|---|
 | **codeact_chat (corrected, MDP)** | **39.53% ± 2.83** | — |
-| `rvlm` (proposed) | 39.38% ± 1.49 | **+0.15pp — tied** |
+| `rvlm` (proposed, canonical re-run) | 41.88% ± 5.79 | −2.35pp (within combined std) |
+| `rvlm` (original batch, same era as this cell) | 39.38% ± 1.49 | +0.15pp (within-batch tie) |
 | old `codeact` (b40, matched budget, n=7) | 36.96% | +2.6pp |
 | old `codeact` (pooled b24/40/56, n=23) | 36.74% ± 4.29 | +2.8pp |
 
@@ -75,12 +76,14 @@ headroom for a verifier/RL reward; SC@8 +5.5pp. Full axis in
    helped accuracy. Plausible mechanisms: native multi-turn chat (the
    model re-reads its own prior actions as real `assistant` turns) vs a
    re-rendered string field; fewer parse-failure dead steps.
-2. It is **statistically tied with `rvlm`** (39.53 vs 39.38). So the
-   true append-only **MDP matches `rvlm`'s compacted POMDP at no accuracy
-   cost** — which *strengthens* the codeact-as-RL-target narrative without
-   disturbing `rvlm` as the proposed method. (An early n=3 read of 42.1%
-   suggested it might *exceed* `rvlm`; that regressed to parity by n=8 —
-   it was top-of-noise, not a real edge.)
+2. It **matches `rvlm` within combined std** — a within-batch tie against the
+   same-era `rvlm` (39.53 vs 39.38), and within ~2pp of the canonical re-run
+   `rvlm` (41.88, which edges ahead but with ±5.79). So the true append-only
+   **MDP matches `rvlm`'s compacted POMDP at no accuracy cost** (it catches up,
+   it does not beat it) — which *strengthens* the codeact-as-RL-target narrative
+   without disturbing `rvlm` as the proposed method. (An early n=3 read of 42.1%
+   suggested it might *exceed* `rvlm`; that regressed to parity by n=8 — it was
+   top-of-noise, not a real edge.)
 
 ### Thinking ablation — `enable_thinking=true`, n=7
 
@@ -225,9 +228,13 @@ amax1 (swap model → run to n=8 → swap). Queue:
 
 These `rvlm` numbers are already-locked references (don't recompute).
 
+These are the **model-axis** `rvlm` references (same era as the `codeact_chat`
+cells). The canonical 27B headline uses the re-run `rvlm` (41.88 ± 5.79), against
+which `codeact_chat` 39.53 is −2.35pp, still within combined std.
+
 | cell | `codeact_chat` | `rvlm` (proposed) | Δ (cc − rvlm) | read |
 |---|---|---|---|---|
-| 27B-homog | 39.53% ± 2.83 (n=8) | 39.38% ± 1.49 (n=8) | +0.15 | **tied** |
+| 27B-homog | 39.53% ± 2.83 (n=8) | 39.38% ± 1.49 (n=8) | +0.15 | within-batch tie (re-run rvlm 41.88 edges ahead) |
 | 4b/27b | 22.34% ± 3.44 (n=8) | 21.09% ± 3.16 (n=8) | +1.25 | tied (Δ ≪ combined std) |
 | 4b-homog | 16.25% ± 2.00 (n=8) | 12.49% ± 3.74 (n=8) | +3.76 | borderline (overlapping std) |
 

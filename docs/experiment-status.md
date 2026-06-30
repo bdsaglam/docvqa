@@ -26,25 +26,25 @@ context — per policy that counts as the solver failing, not a harness gap; the
 
 | Solver | Role | Val n=8 |
 |---|---|---|
-| **`rvlm`** | proposed — REPL + recursive `batch_look`, OCR-free | **39.38% ± 1.49** |
-| `codeact_chat` | append-only/MDP twin (FT target) | 39.53% ± 2.83 (ties `rvlm`) |
-| `rvlm_ocr_ablation` | + OCR + BM25 (OCR extension) | 37.81% ± 3.12 (OCR adds ~0) |
-| `rvlm_nocrop_ablation` | no crop/zoom | 36.88% ± 3.20 |
-| `rvlm_subagent_ablation` | generalized `batch_subagent` | 39.22% ± 3.34 (parity) |
-| `react_baseline` | perception tools, no REPL | 25.16% ± 4.60 (REPL load-bearing) |
-| `direct_vlm` | pages into own context, no sub-call | 22.34% ± 2.79 (sub-call load-bearing) |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.47% ± 1.63 (scaffold floor) |
-| `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 17.81% ± 1.86 (external anchor) |
-| `rlm_ocr` | RLM + OCR, no vision | 13.91% ± 1.56 (OCR-free control / floor) |
+| **`rvlm`** | proposed — REPL + recursive `batch_look`, OCR-free | **41.88% ± 5.79** |
+| `codeact_chat` | append-only/MDP twin (FT target) | 39.53% ± 2.83 (within ~2pp of `rvlm`) |
+| `rvlm_subagent_ablation` | generalized `batch_subagent` | 36.72% ± 2.75 (within combined std) |
+| `rvlm_ocr_ablation` | + OCR + BM25 (OCR extension) | 36.56% ± 2.89 (OCR adds ~0) |
+| `rvlm_nocrop_ablation` | no crop/zoom | 35.78% ± 2.31 |
+| `react_baseline` | perception tools, no REPL | 27.19% ± 3.19 (REPL load-bearing) |
+| `direct_vlm` | pages into own context, no sub-call | 22.34% ± 2.79† (sub-call load-bearing) |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.94% ± 1.60 (scaffold floor) |
+| `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 18.91% ± 1.94 (external anchor) |
+| `rlm_ocr` | RLM + OCR, no vision | 14.69% ± 2.19 (OCR-free control / floor) |
 
-> The matrix was re-run with retained artifacts (the original `*-cmp-val` run
-> lost its per-trial files). The re-run reproduces every tier and re-rolls a few
-> cells by ±2.5pp within variance (e.g. `rvlm` 41.88, `rvlm_subagent` 36.72); the
-> live re-run triple is in `pass-at-k.md`. **Which set anchors the paper headline
-> — published 39.38 or re-run 41.88 — is an open call** (`results.md`).
+> Numbers are from the **canonical re-run** (retained per-trial artifacts → the
+> pass@k/SC@k triple). The original `*-cmp-val` batch lost its per-trial files;
+> the re-run reproduces every tier (rvlm re-rolls +2.5pp to 41.88, std inflated
+> by a single t1=30 outlier). †`direct_vlm` and `rvlm_rationale` (39.22, parity)
+> were **not** in the re-run; their numbers are original-batch (see `results.md`).
 
-**Three clean tiers + cross-cutting reads.** Visual-recursive (`rvlm`/`codeact_chat`
-~39%) ≫ no-recursion (`react`/`direct_vlm`/`raw_vlm_multi` 20–25%) ≫ OCR-only floor
+**Three clean tiers + cross-cutting reads.** Visual-recursive (`rvlm` ~42% /
+`codeact_chat` ~40%) ≫ no-recursion (`react`/`direct_vlm`/`raw_vlm_multi` 21–27%) ≫ OCR-only floor
 (`rlm_ocr` 14%). Both halves of the scaffold are load-bearing (drop REPL → `react`;
 drop sub-call → `raw_vlm_multi`/`direct_vlm`). Enriching the sub-call — generality
 (`subagent`), full agency (`subagent_full`), a rationale channel (`rvlm_rationale`)
