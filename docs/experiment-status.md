@@ -54,12 +54,13 @@ top of vision (`rvlm_ocr`) or a direct image channel (`rvlm_hybrid`) buys ~0.
 ### `codeact_chat` model-axis grid — val/80-Q, no-think, n=8 (gemma-31B n=4)
 
 Retires the stale dspy `codeact` at every still-cited config. `codeact_chat`
-**ties `rvlm` across the model axis in both families** — the corrected MDP loop
-catches up to the proposed method at no accuracy cost (it does not beat it).
+**matches `rvlm` within combined std across the model axis in both families** —
+the corrected MDP loop catches up to the proposed method at no accuracy cost (it
+does not beat it).
 
 | Config (LM / VLM) | `codeact_chat` n=8 | vs `rvlm` same config |
 |---|---|---|
-| 27B / 27B (homog) | 39.53% ± 2.83 | +0.15 (tie) |
+| 27B / 27B (homog) | 39.53% ± 2.83 | within-batch tie vs 39.38; −2.35 vs re-run 41.88 |
 | 27B / 9B (v3) | 32.81% ± 3.04 | reasoner-fixed middle rung |
 | 9B / 27B | 26.56% ± 4.21 | perception lift one rung up |
 | 9B / 9B (homog) | 22.97% ± 2.75 | +4.1 vs `rvlm` 9b-homog (18.91) |
