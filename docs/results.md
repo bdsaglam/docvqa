@@ -26,9 +26,10 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > (its "compaction ~free" finding holds — `archive/experiments/`).
 > **`codeact_chat`** (2026-06-12) — the *corrected* codeact (true
 > multi-turn chat MDP, no dspy in the loop) — is **done at n=8: 39.53% ±
-> 2.83**, i.e. **+2.7pp over old `codeact` and tied with `rvlm`**; a
-> thinking ablation (n=7, 37.68%) shows `enable_thinking` gives **no
-> gain**. See [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md).
+> 2.83**, i.e. **+2.7pp over old `codeact`** and within ~2pp of `rvlm` (the
+> re-run `rvlm` 41.88 edges ahead, within combined std); a thinking ablation
+> (n=7, 37.68%) shows `enable_thinking` gives **no gain**. See
+> [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md).
 > Cross-model `codeact_chat` model-axis (no-think): **4b/27b** (4B-LM /
 > 27B-VLM) **22.34% ± 3.44 (n=8)** — **+6.7pp** vs old `codeact` (15.66)
 > and **+6.1pp** vs `4b-homog` (16.25 ± 2.00, n=8), the perception-budget
@@ -48,17 +49,16 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > with old `codeact` (29.25) and `rvlm` (33.04), after a **stop-token fix** to
 > `codeact_chat` (gemma-4 doesn't self-stop → it had hallucinated the whole
 > rollout in one turn for a bogus 5%; `_split_first_turn` enforces one action
-> per turn). **vs `rvlm`:**
-> `codeact_chat` **ties `rvlm` across the model axis, both families** — Qwen-27B
-> 39.53 vs 39.38 (+0.15), gemma-31B 30.31 vs 33.04 (−2.7), 4b/27b 22.34 vs 21.09
-> (+1.25), 4b-homog 16.25 vs 12.49 (+3.76, borderline); old `codeact` trailed
-> `rvlm` at every config, so the corrected MDP loop *catches up* to the proposed
-> method at no accuracy cost (it does not beat it). Queued:
-> Phase-4 27b/4b ×3 harnesses, dataset axis, test SC-8. A per-cell
-> **10-min `exec_timeout`** + clean subprocess-reset (commit `f7f497e`) was
-> added to cap the 4B's degenerate per-page `batch_look` scans and recover
-> from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8 ran/resumed
-> on the fixed code.
+> per turn). **vs `rvlm`:** `codeact_chat` lands **within ~2–4pp of `rvlm`
+> across the model axis in both families** (mostly within combined std) — Qwen
+> 4b-homog 16.25 vs 12.49 (+3.76, borderline), 4b/27b 22.34 vs 21.09 (+1.25),
+> gemma-31B 30.31 vs 33.04 (−2.7); at 27B-homog the artifact-recovery re-run puts
+> `rvlm` ahead, 41.88 vs 39.53 (−2.35). Old `codeact` trailed `rvlm` at every
+> config, so the corrected MDP loop *catches up* to the proposed method (it does
+> not beat it). A per-cell **10-min `exec_timeout`** + clean subprocess-reset
+> (commit `f7f497e`) caps the 4B's degenerate per-page `batch_look` scans and
+> recovers from VLM-saturation doc-drops; t1/t6/t7/t8 of the 4b/27b n=8
+> ran/resumed on the fixed code.
 
 ## Official baselines (ICDAR 2026 — external, for context)
 
@@ -71,47 +71,40 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 
 ## Method vs baselines — Qwen 3.5 27B, val (current code, **n=8 complete**)
 
-> **⟳ Matrix RE-RUN in progress (2026-06-17).** The table below shows the
-> original published `*-cmp-val` numbers, whose per-trial artifacts were
-> **deleted on both hosts** (so they had no pass@8/SC@8). They are being
-> **re-run** with fresh, retained artifacts + the full metric triple. Recovered
-> so far (see [`pass-at-k.md`](pass-at-k.md) for the live table):
-> **`rvlm` 41.88% ± 5.79** (pass@8 68.75, SC@8 47.50) — *+2.5pp above the old
-> 39.38*; **`rvlm_ocr` 36.56% ± 2.89** (pass@8 67.50) — reproduces old 37.81;
-> **`rvlm_nocrop` 35.78% ± 2.31** (pass@8 58.75) — reproduces old 36.88;
-> **`react` 27.19% ± 3.19** (pass@8 53.75) — reproduces old 25.16;
-> **`raw_vlm_multi` 20.94% ± 1.60** (pass@8 27.50) — reproduces old 20.47;
-> **`official` 18.91% ± 1.94** (pass@8 33.75) — reproduces old 17.81;
-> **`rlm_ocr` 14.69% ± 2.19** (pass@8 27.50) — reproduces old 13.91;
-> **`rvlm_subagent` 36.72% ± 2.75** (pass@8 66.25, SC@8 41.25) — re-rolls −2.5pp
-> vs old 39.22 (still in the proposed tier).
-> **Matrix re-run complete: 8/9 cells recovered with the full triple.** The 9th,
-> `rvlm_hybrid`, **fails at the model's context ceiling** (accepted negative
-> result): its extra `display()` channel emits ~163k-token requests on heavy docs,
-> **exceeding Qwen 3.5 27B's 131k max context** — per policy that counts as the
-> solver failing, not a harness gap. Headline 35.47% ± 4.48 (below `rvlm`) is
-> retained as an upper bound; true score under the ceiling is lower, pass@8/SC@8
-> unavailable. Conclusion reinforced: `+display` doesn't help **and** blows the
-> context budget. See [`pass-at-k.md`](pass-at-k.md).
+> **`rvlm_hybrid` is an accepted failure at the context ceiling, not a tabled
+> result.** Its extra `display()` channel makes the heaviest docs emit
+> ~163k-token requests, **exceeding Qwen 3.5 27B's 131k max context** — per
+> project policy that counts as the solver failing, not a harness gap to
+> engineer around. The 35.47% ± 4.48 figure (below `rvlm`) is its last clean
+> full-context measurement, kept as an **upper bound** only; the true score under
+> the ceiling is lower and pass@8/SC@8 is unavailable. The ablation's conclusion
+> is reinforced: the `+display` channel doesn't help **and** blows the context
+> budget. Per-cell pass@k/SC@k for the whole matrix: [`pass-at-k.md`](pass-at-k.md).
 
-8-solver comparison re-run (val 25 docs / 80 Qs, `enable_thinking=false`,
-local vllm :8927, **n=8**). Mean ± std over 8 trials; Δ vs the `rvlm`
-reference (difference of means).
+8-solver comparison (val 25 docs / 80 Qs, `enable_thinking=false`, local
+vllm :8927, **n=8**, retained per-trial artifacts → full pass@k/SC@k triple).
+Mean ± std over 8 trials; Δ vs the `rvlm` reference (difference of means).
 
 | Group | Solver | Role | Val (n=8) | Δ vs `rvlm` |
 |---|---|---|---|---|
-| **proposed** | **`rvlm`** | REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** | — |
-| corrected twin | **`codeact_chat`** | true multi-turn chat MDP (no dspy in loop); RL-target transcript | **39.53% ± 2.83** | +0.15pp (tied) |
-| ablation | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | 37.81% ± 3.12 | −1.56pp |
-| ablation | `rvlm_hybrid_ablation` | + direct `display()` channel on top of sub-call | 35.47% ± 4.48 | −3.91pp |
-| ablation | `rvlm_nocrop_ablation` | `batch_look` by **page index, no crop/zoom** (whole pages only) | 36.88% ± 3.20 | −2.51pp |
-| ablation | `rvlm_subagent_ablation` | sub-call generalized to **`batch_subagent`** (any subtask, image optional) | 39.22% ± 3.34 | −0.16pp |
-| ablation | `rvlm_rationale` | VLM sub-call returns **answer + observation/uncertainty `[note: ...]`** (every call) | 39.22% ± 2.91 | −0.16pp |
-| baseline | `react_baseline` | perception (VLM tools), **no REPL** | 25.16% ± 4.60 | −14.22pp |
-| baseline | `direct_vlm` | `display()` pages into own context, no sub-call | 22.34% ± 2.79 | −17.03pp |
-| baseline | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.47% ± 1.63 | −18.91pp |
-| anchor | `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 17.81% ± 1.86 | −21.56pp |
-| **control** | **`rlm_ocr`** | RLM + OCR text, **no vision** (perception modality swap) | **13.91% ± 1.56** | **−25.47pp** |
+| **proposed** | **`rvlm`** | REPL + recursive VLM `batch_look` (OCR-free) | **41.88% ± 5.79** | — |
+| corrected twin | **`codeact_chat`** | true multi-turn chat MDP (no dspy in loop); RL-target transcript | **39.53% ± 2.83** | −2.35pp |
+| ablation | `rvlm_subagent_ablation` | sub-call generalized to **`batch_subagent`** (any subtask, image optional) | 36.72% ± 2.75 | −5.16pp |
+| ablation | `rvlm_ocr_ablation` | + OCR `page_texts` + BM25 `search` | 36.56% ± 2.89 | −5.32pp |
+| ablation | `rvlm_nocrop_ablation` | `batch_look` by **page index, no crop/zoom** (whole pages only) | 35.78% ± 2.31 | −6.10pp |
+| ablation† | `rvlm_rationale` | VLM sub-call returns **answer + observation/uncertainty `[note: ...]`** (every call) | 39.22% ± 2.91 | −0.16pp† |
+| baseline | `react_baseline` | perception (VLM tools), **no REPL** | 27.19% ± 3.19 | −14.69pp |
+| baseline† | `direct_vlm` | `display()` pages into own context, no sub-call | 22.34% ± 2.79 | −17.04pp† |
+| baseline | `raw_vlm_multi_baseline` | raw multi-image, no scaffold | 20.94% ± 1.60 | −20.94pp |
+| anchor | `official_baseline` | competition `MASTER_PROMPT`, no scaffold | 18.91% ± 1.94 | −22.97pp |
+| **control** | **`rlm_ocr`** | RLM + OCR text, **no vision** (perception modality swap) | **14.69% ± 2.19** | **−27.19pp** |
+
+† `rvlm_rationale` and `direct_vlm` are from the original measurement batch (not
+part of the artifact-recovery re-run that carries the other cells' pass@k/SC@k);
+their Δ is shown against the **original-batch `rvlm` (39.38%)** so each is a clean
+within-batch comparison (rationale = parity; `direct_vlm` = collapse). The
+re-rolled cells compare within the re-run batch (`rvlm` 41.88%). `rvlm_hybrid` is
+not tabled — it is the accepted context-ceiling failure noted above.
 
 > **Provisional (not in the table above — n=6, paused):**
 > **`rvlm_vsearch`** (OCR-free *visual* retrieval extension — `batch_look`
@@ -128,36 +121,42 @@ Detail: `docs/experiments/{solver}-qwen-3_5-27b.md` for each row.
 (dense multi-panel comics) crash its long-image in-context display and
 only clear stochastically.
 
-**Headlines (all hold at n=8):**
-1. **Three clean tiers, every gap ≫ the std:** visual-recursive
-   (`rvlm`/`rvlm_ocr`/`rvlm_hybrid`, 35–39%) ≫ no-recursion
-   (`react`/`direct_vlm`/`raw_vlm_multi`, 20–25%) ≫ OCR-only floor
-   (`rlm_ocr`, 14%).
+**Headlines (n=8):**
+1. **Three clean tiers, every cross-tier gap ≫ the std:** visual-recursive
+   (`rvlm` 41.9, `rvlm_rationale` 39.2, `rvlm_subagent` 36.7, `rvlm_ocr` 36.6,
+   `rvlm_nocrop` 35.8 — ~36–42%) ≫ no-recursion (`react` 27.2 / `direct_vlm`
+   22.3 / `raw_vlm_multi` 20.9) ≫ OCR-only floor (`rlm_ocr` 14.7%). The ~15pp
+   proposed-vs-no-recursion and ~21pp no-recursion-vs-floor gaps dwarf every
+   per-cell std; the **intra-tier** differences (ablations vs `rvlm`) sit within
+   combined std — see finding 3.
 2. **OCR-free is decisive (the headline control):** `rlm_ocr` — same
    LeanRLM scaffold as `rvlm` with visual perception swapped for OCR
-   text — is the matrix floor, **−25.5pp** below `rvlm`, with
+   text — is the matrix floor, **−27.2pp** below `rvlm`, with
    engineering_drawing & maps 0/10 in **all 8 trials**. Recursive
    *visual* perception does work OCR text cannot replace.
-3. **OCR adds nothing on top of vision** (`rvlm_ocr` −1.6pp); the
-   **direct display channel is mildly harmful** (`rvlm_hybrid` −3.9pp,
-   3× the variance — it destabilizes the agent).
+3. **Enrichments on top of the OCR-free sub-call don't significantly move
+   accuracy.** `rvlm_ocr` (+OCR, 36.6) and `rvlm_subagent` (general delegation,
+   36.7) land ~5pp below the `rvlm` mean but **within combined std** (`rvlm`
+   ±5.79) — neither a real gain nor loss; OCR buys nothing over OCR-free vision
+   on moderate docs. The `+display` channel (`rvlm_hybrid`) is the exception: it
+   doesn't help **and** exceeds the model's 131k context on heavy docs (the
+   accepted context-ceiling failure noted above).
 3b. **Cropping is a category-specific lever, not a global one**
-   (`rvlm_nocrop` −2.5pp overall): removing crop/zoom (whole-page reads
-   only) costs −11.2pp on `engineering_drawing` and −17.5pp on
-   `science_poster` — the detail-dense categories where zoom is
-   load-bearing — but is ≈ 0 elsewhere. It does **not** raise iteration
-   count (11.8 vs `rvlm` 13.0). Detail:
+   (`rvlm_nocrop` 35.8): removing crop/zoom (whole-page reads only) costs
+   −11.2pp on `engineering_drawing` and −17.5pp on `science_poster` — the
+   detail-dense categories where zoom is load-bearing — but is ≈ 0 elsewhere,
+   and does **not** raise iteration count (11.8 vs `rvlm` 13.0). Detail:
    `docs/experiments/rvlm_nocrop_ablation-qwen-3_5-27b.md`.
-3c. **Generalizing the sub-call is harmless but unused** (`rvlm_subagent`
-   −0.16pp, dead parity): replacing the perception-only `batch_look` with a
-   general `batch_subagent` (delegate any subtask, image optional) doesn't
-   move accuracy — because the agent uses it as a perception tool **~99%**
-   of the time (only ~1% of delegations are non-visual). A single focused
+3c. **Generalizing the sub-call is harmless but unused** (`rvlm_subagent`,
+   within combined std of `rvlm`): replacing the perception-only `batch_look`
+   with a general `batch_subagent` (delegate any subtask, image optional)
+   doesn't move accuracy — the agent uses it as a perception tool **~99%** of
+   the time (only ~1% of delegations are non-visual). A single focused
    perception sub-call already captures the benefit → bounds the necessary
    sub-call interface. Detail:
    `docs/experiments/rvlm_subagent_ablation-qwen-3_5-27b.md`.
 4. **Parity prompt is honest:** the competition `official` prompt sits
-   *below* our minimized-prompt `raw_vlm_multi` (17.8 vs 20.5) — our
+   *below* our minimized-prompt `raw_vlm_multi` (18.9 vs 20.9) — our
    prompt scrub is not sandbagging the baselines.
 
 ## Oracle ceiling & self-consistency (pass@k / SC@k) — diagnostic
@@ -170,10 +169,11 @@ DocVQA scorer; incomplete trials dropped so pass@k/SC@k are over the full 80 Qs)
 
 - **pass@k** = oracle (any of the k trials correct); **SC@k** = majority-vote
   the k answers, then score.
-- ⚠ **The published Qwen-27B `*-cmp-val` headline matrix (rvlm/react/baselines/
-  ablations) has no retained per-trial artifacts** (deleted on both hosts) → its
-  pass@k/SC@k are **pending a re-run**. Surviving `rvlm-minimal/-unified/
-  -skeletal-val` are earlier *prompt-scrub variants*, not the published runs.
+- The Qwen-27B headline matrix carries the full triple from its retained-artifact
+  re-run (table at the top of `pass-at-k.md`): `rvlm` pass@8 **68.75** / SC@8
+  **47.50**, down through `rlm_ocr` pass@8 27.50 / SC@8 15.00. The original
+  measurement batch had its per-trial `submission.json`s deleted, so the re-run
+  is the source for all pass@k/SC@k.
 
 Headline-tier cells with retained artifacts:
 
@@ -199,12 +199,16 @@ capacity floor).
 The matrix above triangulates the mechanism — both halves of the scaffold
 are load-bearing and the recursive sub-call is the active ingredient:
 
-| Component dropped | Solver | vs `rvlm` (39.38%) | Reading |
+| Component dropped | Solver | vs `rvlm` (41.88%) | Reading |
 |---|---|---|---|
-| Recursive sub-call | `raw_vlm_multi_baseline` (20.47%) | **+18.9pp** | recursive agent↔VLM dominates one-shot multi-image |
-| The REPL | `react_baseline` (25.16%) | **+14.2pp** | code REPL is load-bearing (crop/arith/compose) |
-| Sub-call (kept pixels) | `direct_vlm` (22.34%) | **+17.0pp** | raw pixels in-context ≠ a focused VLM sub-call |
-| All perception (OCR-only) | `rlm_ocr` (13.91%) | **+25.5pp** | swapping visual perception for OCR text collapses the score |
+| Recursive sub-call | `raw_vlm_multi_baseline` (20.94%) | **+20.9pp** | recursive agent↔VLM dominates one-shot multi-image |
+| The REPL | `react_baseline` (27.19%) | **+14.7pp** | code REPL is load-bearing (crop/arith/compose) |
+| Sub-call (kept pixels) | `direct_vlm` (22.34%) | **+17.0pp**† | raw pixels in-context ≠ a focused VLM sub-call |
+| All perception (OCR-only) | `rlm_ocr` (14.69%) | **+27.2pp** | swapping visual perception for OCR text collapses the score |
+
+† `direct_vlm` is an original-batch cell (not re-run); its drop is shown vs the
+original-batch `rvlm` 39.38% (within-batch). The collapse is qualitatively the
+same against either reference.
 
 Dropping either half of the scaffold collapses the score: perception
 served one-shot instead of via the recursive sub-call (`raw_vlm_multi`,
@@ -255,7 +259,7 @@ Efficiency tracks the accuracy story:
 The append-only/MDP twin is now the **`codeact_chat`** solver (corrected:
 true multi-turn chat MDP, no dspy in the loop) — see
 [`codeact-chat-qwen-3_5-27b.md`](experiments/codeact-chat-qwen-3_5-27b.md)
-(27B-homog **39.53% ± 2.83**, ties `rvlm`; full model-axis above). The
+(27B-homog **39.53% ± 2.83**, within ~2pp of `rvlm`; full model-axis above). The
 **old dspy `codeact`** (single-turn `dspy.Predict` re-rendering history into
 a `trajectory` string — POMDP-shaped, not a clean RL rollout) is
 **deprecated**; its budget sweep `max_iterations ∈ {24,40,56}` is archived

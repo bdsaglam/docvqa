@@ -36,44 +36,42 @@ uv run python -m scripts.pass_at_k --all --min-trials 3 --markdown   # all multi
 uv run python -m scripts.pass_at_k codeact-chat-val rvlm-vsearch-val  # specific cells
 ```
 
-## Headline 8-solver matrix — RE-RUN in progress (2026-06-17)
+## Headline 8-solver matrix (Qwen 27B, n=8)
 
-The published Qwen-27B headline matrix (`rvlm-cmp-val`, `react-cmp-val`,
-`raw-vlm-multi-cmp-val`, `official-cmp-val`, `rlm-ocr-cmp-val`, +`rvlm_*`
-ablations) had its per-trial `submission.json`s **deleted on both hosts** (disk
-cleanup), so its pass@k/SC@k were unrecoverable. It is now being **re-run** on a
-local 27B DP=3 (rvlm+ablations) + a remote 27B (light baselines) — fresh
-artifacts, fresh `avg@1` re-rolled within trial noise. Recovered so far:
+The Qwen-27B headline matrix with retained per-trial artifacts → the full metric
+triple. (The original measurement batch's per-trial `submission.json`s were
+deleted in a disk cleanup, so these re-measured runs — local 27B DP=3 for
+rvlm+ablations, 27B for the light baselines — are the source for all pass@k/SC@k.)
 
-| cmp cell | k | avg@1 (±std) | pass@k | SC@k | vs old avg@1 |
-|---|---|---|---|---|---|
-| **`rvlm-cmp-val` (proposed M, headline)** | 8 | **41.88 ± 5.79** | **68.75** | **47.50** | 39.38 → **+2.5** (re-rolls higher) |
-| `rvlm-ocr-cmp-val` (+OCR ablation) | 8 | **36.56 ± 2.89** | 67.50 | 40.00 | 37.81 → −1.2 (✓ reproduces) |
-| `rvlm-nocrop-cmp-val` (no-crop ablation) | 8 | **35.78 ± 2.31** | 58.75 | 42.50 | 36.88 → −1.1 (✓ reproduces) |
-| `rvlm-subagent-cmp-val` (general-delegation ablation) | 8 | **36.72 ± 2.75** | 66.25 | 41.25 | 39.22 → −2.5 (re-rolls lower) |
-| `rvlm-hybrid-cmp-val` (+display channel ablation) | — | **35.47 ± 4.48** (old, retained) | n/a | n/a | pass@k **unrecoverable** — see note |
-| `react-cmp-val` (ReAct, no-REPL baseline) | 8 | **27.19 ± 3.19** | 53.75 | 32.50 | 25.16 → +2.0 (✓ reproduces) |
-| `raw-vlm-multi-cmp-val` (raw-VLM baseline) | 8 | **20.94 ± 1.60** | 27.50 | 20.00 | 20.47 → +0.5 (✓ reproduces) |
-| `official-cmp-val` (competition anchor) | 8 | **18.91 ± 1.94** | 33.75 | 21.25 | 17.81 → +1.1 (✓ reproduces) |
-| `rlm-ocr-cmp-val` (OCR-floor control) | 8 | **14.69 ± 2.19** | 27.50 | 15.00 | 13.91 → +0.8 (✓ reproduces) |
+| cmp cell | k | avg@1 (±std) | pass@k | SC@k |
+|---|---|---|---|---|
+| **`rvlm-cmp-val` (proposed M, headline)** | 8 | **41.88 ± 5.79** | **68.75** | **47.50** |
+| `rvlm-subagent-cmp-val` (general-delegation ablation) | 8 | **36.72 ± 2.75** | 66.25 | 41.25 |
+| `rvlm-ocr-cmp-val` (+OCR ablation) | 8 | **36.56 ± 2.89** | 67.50 | 40.00 |
+| `rvlm-nocrop-cmp-val` (no-crop ablation) | 8 | **35.78 ± 2.31** | 58.75 | 42.50 |
+| `react-cmp-val` (ReAct, no-REPL baseline) | 8 | **27.19 ± 3.19** | 53.75 | 32.50 |
+| `raw-vlm-multi-cmp-val` (raw-VLM baseline) | 8 | **20.94 ± 1.60** | 27.50 | 20.00 |
+| `official-cmp-val` (competition anchor) | 8 | **18.91 ± 1.94** | 33.75 | 21.25 |
+| `rlm-ocr-cmp-val` (OCR-floor control) | 8 | **14.69 ± 2.19** | 27.50 | 15.00 |
+| `rvlm-hybrid-cmp-val` (+display channel) | — | **35.47 ± 4.48** (upper bound) | n/a | n/a |
 
 `rvlm-cmp` per-trial: 30.0 / 43.8 / 45.0 / 50.0 / 43.8 / 42.5 / 41.2 / 38.8 (n=8) —
-the fresh re-roll lands **+2.5pp above the deleted-run 39.38**, with higher std
-(5.79 vs the old 1.49; t1's 30.0 is the low outlier, the other 7 cluster 38.8–50.0).
-Re-run is **8/9 recovered with the full metric triple**; the 9th cell
-(`rvlm_hybrid`) **fails at the model's context ceiling** — an accepted negative
-result, not a harness gap. `rvlm_hybrid_ablation`'s extra `display()` channel
-makes the heaviest docs emit **~163k-token requests, exceeding Qwen 3.5 27B's
-maximum context (131k)**. Per project policy, exceeding the model's max context
-counts as the **solver failing**, not something to engineer around. Its last
-clean full-context measurement (**35.47% ± 4.48**, below `rvlm`) is retained as
-an upper bound; the true score under the 131k ceiling is lower (heavy docs fail),
-and pass@8/SC@8 is not available (deleted artifacts). The ablation's conclusion
-is unchanged and in fact reinforced: the `+display` channel doesn't help accuracy
-**and** makes the solver exceed the model's context budget. The surviving
-`rvlm-minimal/-unified/-skeletal-val` cells are **undocumented earlier
-prompt-scrub variants** (not the published `*-cmp-val` runs) and are labeled as
-variants below.
+the headline's relatively high std (5.79) is driven by the single **t1 = 30.0 low
+outlier**; the other 7 trials cluster 38.8–50.0.
+
+The matrix carries the full triple for **8/9 cells**; the 9th, `rvlm_hybrid`,
+**fails at the model's context ceiling** — an accepted negative result, not a
+harness gap. `rvlm_hybrid_ablation`'s extra `display()` channel makes the
+heaviest docs emit **~163k-token requests, exceeding Qwen 3.5 27B's maximum
+context (131k)**. Per project policy, exceeding the model's max context counts as
+the **solver failing**, not something to engineer around. Its last clean
+full-context measurement (**35.47% ± 4.48**, below `rvlm`) is kept as an upper
+bound; the true score under the 131k ceiling is lower (heavy docs fail), and
+pass@8/SC@8 is unavailable. The ablation's conclusion is reinforced: the
+`+display` channel doesn't help accuracy **and** makes the solver exceed the
+model's context budget. The `rvlm-minimal/-unified/-skeletal-val` cells below are
+**undocumented earlier prompt-scrub variants** (not the headline `*-cmp-val`
+runs) and are labeled as variants.
 
 ## Results (cells with retained artifacts)
 
@@ -183,8 +181,3 @@ variants below.
    *any* of 8 trials, confirming the capacity-gate reading (no recoverable signal
    to re-rank), unlike the small-Qwen cells above.
 
-## TODO
-
-- **Re-run the headline `*-cmp-val` matrix** (n=8, Qwen 27B) to recover its
-  pass@8 / SC@8 (artifacts not retained). The 27B server is up; gated on the
-  paused-campaign resume decision.
