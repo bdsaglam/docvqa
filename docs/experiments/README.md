@@ -108,6 +108,15 @@ cross-cutting narratives in a single synthesis doc.
 | [gemma-4-31b.md](gemma-4-31b.md) | Gemma-4 31B homog | rvlm + react + codeact (n=5) + 2 baselines — harness-lift |
 | [harness-axis-summary.md](harness-axis-summary.md) | — synthesis — | cross-size tables, rank-flip, v2↔v3 mechanism, cross-family read |
 
+**Cross-benchmark / document-length axis (prediction 2)** — main solvers, Qwen
+3.5 27B homog, dataset-aware profile + `use_profile_scoring=true` + raised page
+budget; stratified-random subsets (`scripts/stratified_sample.py`, seed 0):
+
+| File | Benchmark | Covers |
+|---|---|---|
+| [dataset-axis-mp-docvqa.md](dataset-axis-mp-docvqa.md) | MP-DocVQA (≤20pg, moderate) | rvlm / codeact_chat / official / raw_vlm_multi, ANLS |
+| [dataset-axis-mmlongbench.md](dataset-axis-mmlongbench.md) | MMLongBench-Doc (~47pg, long) | same 4 solvers, Qwen-judge scored |
+
 **Find numbers by model** (where a given model's RLM headline lives):
 
 | Model | RLM (`rvlm`) headline | File |
