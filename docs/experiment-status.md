@@ -90,12 +90,17 @@ harnesses within noise of `official_baseline`). Older-gen Qwen3-8B reasoner is a
 clean reasoner-*quality* point (11.73%, off the 9B↔4B size curve). Detail:
 `harness-axis-summary.md` + by-model files.
 
-### Test-set submissions (competition; 48 docs, no gold → SC-vote)
+### Test-set submissions (competition; 48 docs / 160 Qs, no gold → SC-vote)
 
-- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json`.
-- **`codeact_chat`** — SC-8 → `submissions/codeact-chat-test-sc8.json`.
+Scores are from the competition leaderboard (ANLS; no public ground truth).
+
+- **`codeact_chat`** — SC-8 → `submissions/codeact-chat-test-sc8.json` →
+  **test 41.25% (0.4125)**.
+- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json` → test score TBD (not yet
+  submitted/recorded).
 - `react_baseline` test — **skipped** (user): the two recursive submissions
-  suffice; a no-REPL baseline isn't worth the ~2-day heavy-doc grind.
+  suffice; a no-REPL baseline isn't worth the ~2-day heavy-doc grind, so there is
+  **no ReAct test submission**.
 
 ## 🔄 In progress
 

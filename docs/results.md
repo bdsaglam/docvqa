@@ -69,6 +69,21 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 | Gemini 3 Flash | 33.75% | 33.75% |
 | GPT-5 Mini | — | 22.50% |
 
+### Our competition test submissions (current code, Qwen 3.5 27B, SC-8 vote)
+
+Leaderboard ANLS on the 48-doc / 160-Q test split (no public ground truth →
+SC-8 self-consistency vote → submission JSON):
+
+| Solver | Test | Submission |
+|---|---|---|
+| **`codeact_chat`** | **41.25%** | `submissions/codeact-chat-test-sc8.json` |
+| `rvlm` | TBD | `submissions/rvlm-test-sc8.json` |
+| `react_baseline` | — (no submission, skipped) | — |
+
+`codeact_chat` at **41.25%** clears every external open/closed official baseline
+on test (Gemini 3 Pro 37.5%, GPT-5.2 35.0%) with a mid-sized open 27B — the
+headline competition result for the current-code method.
+
 ## Method vs baselines — Qwen 3.5 27B, val (current code, **n=8 complete**)
 
 > **`rvlm_hybrid` is an accepted failure at the context ceiling, not a tabled
