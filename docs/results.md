@@ -357,31 +357,36 @@ handled by restart+resume.)
 
 ## Document-length axis (prediction 2) — **DONE (current code, 2026-06-29)**
 
-Main solvers (no ablations), Qwen 3.5 27B, n=1 exploratory, stratified-random
-subsets. MP-DocVQA (≤20pg, mean 5.3) scored by ANLS; MMLongBench-Doc (~47pg)
-scored by the Qwen judge on `:8927`. Per-cell: `dataset-axis-{mp-docvqa,mmlongbench}.md`.
+Main solvers (no ablations), Qwen 3.5 27B, **n=3 (mean ± std)**, stratified-random
+subsets. MP-DocVQA (≤20pg, mean 5.3; 40-doc subset) scored by ANLS;
+MMLongBench-Doc (~47pg; 20-doc subset) scored by the Qwen judge on `:8927`.
+Per-cell: `dataset-axis-{mp-docvqa,mmlongbench}.md`.
 
 | solver | MP-DocVQA (≤20pg, ANLS) | MMLongBench-Doc (~47pg, judge) |
 |---|---|---|
-| `codeact_chat` (twin) | 64.4% | 65.8% (0% Unk) |
-| **`rvlm`** (proposed) | 60.8% | **66.5%** (0% Unk) |
-| `official_baseline` | 58.8% (8% Unk) | 49.7% (36% Unk) |
-| `raw_vlm_multi` | 58.2% (22% Unk) | 24.2% (87% Unk) |
-| **recursive − baseline gap** | **~2–6pp** | **~16–42pp** |
+| `codeact_chat` (twin) | 63.7 ± 2.66 | 63.8 ± 2.55 (0% Unk) |
+| **`rvlm`** (proposed) | 61.8 ± 1.79 | **66.6 ± 2.15** (0% Unk) |
+| `official_baseline` | 59.8 ± 1.32 (8% Unk) | 53.8 ± 3.58 (36% Unk) |
+| `raw_vlm_multi` | 58.1 ± 0.81 (22% Unk) | 24.2 ± 0.60 (87% Unk) |
+| **recursive − baseline gap** | **~2–6pp** | **~13–42pp** |
 
 **The recursive-perception advantage scales with document length** (confirms
-D-006). The recursive methods are ~flat across the axis (61–66%, Unknown ≈ 0% —
+D-006). The recursive methods are ~flat across the axis (62–67%, Unknown ≈ 0% —
 they navigate the doc regardless of length); the raw-VLM baselines **degrade with
 length** as the fixed page budget misses evidence (Unknown 8/22% on moderate docs
-→ 36/87% on long docs). When the document fits the page budget the scaffold buys
-little (gap ~2–6pp); when it overflows, recursive navigation is decisive
-(~16–42pp). The Unknown-rate ladder is the mechanism made visible.
+→ 36/87% on long docs) and also carry the higher variance (official ±3.58 — it
+swings with which evidence pages fall inside the 20-page budget). When the
+document fits the page budget the scaffold buys little (gap ~2–6pp); when it
+overflows, recursive navigation is decisive (~13–42pp). The Unknown-rate ladder
+is the mechanism made visible.
 
-> Setup (autonomous): `scripts/stratified_sample.py` (stratified-random
-> doc_ids); `LOAD_TRUNCATED_IMAGES` in `data.py`; judge via
+> Setup: `scripts/stratified_sample.py` (stratified-random doc_ids);
+> `LOAD_TRUNCATED_IMAGES` in `data.py`; judge via
 > `QWEN_JUDGE_BASE_URL=http://localhost:8927/v1`; multi-image baselines need the
-> 27B at `--limit-mm-per-prompt {"image":32}` + `solver.max_pages=20`. Prior
-> pre-change MP/MMLB numbers (archived) are superseded by this.
+> 27B at `--limit-mm-per-prompt {"image":32}` + `solver.max_pages=20`. Run
+> MMLongBench trials one at a time (long-doc-concurrency trap). rvlm scores over
+> 19 docs (the 20th crashes its REPL tail), the others over 20. Prior pre-change
+> MP/MMLB numbers (archived) are superseded by this.
 
 ## Solver taxonomy (engineering names)
 

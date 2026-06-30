@@ -52,19 +52,19 @@ the evidence* and the navigation advantage is small.
 This is the **moderate-length contrast that completes the document-length axis**.
 Against MMLongBench-Doc (~47pg; `dataset-axis-mmlongbench.md`):
 
-| | MP-DocVQA (≤20pg) | MMLongBench-Doc (~47pg) |
+| (n=3, mean ± std) | MP-DocVQA (≤20pg) | MMLongBench-Doc (~47pg) |
 |---|---|---|
-| codeact_chat | 64.4% | 65.8% |
-| rvlm | 60.8% | 66.5% |
-| official_baseline | 58.8% (8% Unk) | 49.7% (36% Unk) |
-| raw_vlm_multi | 58.2% (22% Unk) | 24.2% (87% Unk) |
-| **recursive − baseline gap** | **~2–6pp** | **~16–42pp** |
+| codeact_chat | 63.7 ± 2.66 | 63.8 ± 2.55 |
+| rvlm | 61.8 ± 1.79 | 66.6 ± 2.15 |
+| official_baseline | 59.8 ± 1.32 (8% Unk) | 53.8 ± 3.58 (36% Unk) |
+| raw_vlm_multi | 58.1 ± 0.81 (22% Unk) | 24.2 ± 0.60 (87% Unk) |
+| **recursive − baseline gap** | **~2–6pp** | **~13–42pp** |
 
 **The recursive-perception advantage scales with document length** (D-006). The
-recursive methods are flat across the axis (~61–66%, Unknown ≈ 0%) — they
+recursive methods are flat across the axis (~62–67%, Unknown ≈ 0%) — they
 navigate the doc regardless of length. The baselines *degrade with length* as the
 fixed page budget increasingly misses evidence (Unknown 8/22% → 36/87%). When the
 document fits the budget the scaffold buys little; when it doesn't, recursive
-navigation is decisive. (n=1 exploratory, stratified subsets, ANLS vs Qwen-judge
-across the two datasets — the **within-dataset gaps and their scaling**, not the
+navigation is decisive. (n=3, stratified subsets, ANLS vs Qwen-judge across the
+two datasets — the **within-dataset gaps and their scaling**, not the
 cross-dataset absolutes, are the claim.)

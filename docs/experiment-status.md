@@ -102,32 +102,32 @@ Scores are from the competition leaderboard (ANLS; no public ground truth).
   suffice; a no-REPL baseline isn't worth the ~2-day heavy-doc grind, so there is
   **no ReAct test submission**.
 
-## 🔄 In progress
-
-### Dataset / document-length axis (prediction 2) — escalating to n=3
+### Dataset / document-length axis (prediction 2) — n=3
 
 Current code, Qwen 27B homog, **main solvers only** (`rvlm`, `codeact_chat`,
-`official_baseline`, `raw_vlm_multi_baseline`). Mandatory cross-benchmark rules
-applied: dataset-aware profile, `use_profile_scoring=true`, raised page budget.
-Stratified-random subsets (`scripts/stratified_sample.py`, seed 0). n=1 is in and
-reads as predicted; **escalating n=1 → n=3** (16 runs: 4 solvers × 2 datasets ×
-trials 2–3), two-lane (MMLongBench judge-scored / MP-DocVQA ANLS), c=4.
-
-n=1 result — the recursive-perception advantage **scales with document length**:
+`official_baseline`, `raw_vlm_baseline`). Mandatory cross-benchmark rules applied:
+dataset-aware profile, `use_profile_scoring=true`, `solver.max_pages=20` for the
+baselines. Stratified-random subsets (`scripts/stratified_sample.py`, seed 0).
+The recursive-perception advantage **scales with document length** (D-006):
 
 | Solver | MP-DocVQA (≤20pg, ANLS) | MMLongBench-Doc (~47pg, judge) |
 |---|---|---|
-| `codeact_chat` | 64.4% | 65.8% (0% Unk) |
-| `rvlm` | 60.8% | 66.5% (0% Unk) |
-| `official_baseline` | 58.8% (8% Unk) | 49.7% (36% Unk) |
-| `raw_vlm_multi` | 58.2% (22% Unk) | 24.2% (87% Unk) |
-| recursive − baseline gap | **~2–6pp** | **~16–42pp** |
+| `codeact_chat` | 63.7 ± 2.66 | 63.8 ± 2.55 (0% Unk) |
+| `rvlm` | 61.8 ± 1.79 | 66.6 ± 2.15 (0% Unk) |
+| `official_baseline` | 59.8 ± 1.32 (8% Unk) | 53.8 ± 3.58 (36% Unk) |
+| `raw_vlm_multi` | 58.1 ± 0.81 (22% Unk) | 24.2 ± 0.60 (87% Unk) |
+| recursive − baseline gap | **~2–6pp** | **~13–42pp** |
 
-Recursive methods are flat (~61–66%, ~0% Unknown); baselines degrade with length
+Recursive methods are flat (~62–67%, ~0% Unknown); baselines degrade with length
 as the fixed page budget misses later-page evidence (the Unknown-rate ladder is
 the mechanism). Detail: `dataset-axis-{mp-docvqa,mmlongbench}.md`, `results.md`
 ("Document-length axis"). OCR-extension long-doc payoff (`rvlm_ocr`) is untestable
 here (no OCR data for these benchmarks) — skipped per main-solvers scope.
+
+## 🔄 In progress
+
+Nothing running — the paper-completion experiment set is complete. Open items are
+authoring (manuscript) and the one external dependency below (rvlm test score).
 
 ## ⏸ Parked (not in the paper-completion set)
 
