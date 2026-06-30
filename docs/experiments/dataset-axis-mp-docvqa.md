@@ -13,7 +13,7 @@ largely fits a raised page budget — so the baselines can see most evidence.
 - **Sample:** 40 docs, **stratified-random by page-count bin** (seed 0) via
   `scripts/stratified_sample.py` → `data/mp-docvqa/val/sample_doc_ids.txt`
   (1-2pg 20 · 3-5pg 8 · 6-10pg 5 · 11-20pg 7, proportional to the 927-doc val).
-  n=1 (exploratory, D-008).
+  **n=3** (mean ± std; run_ids `mpdoc-<S>-t{1,2,3}`).
 - **Scoring:** **ANLS** (MP-DocVQA's metric; the profile uses the default ANLS
   scorer — no judge). `data.use_profile_scoring=true` for the MP-DocVQA profile
   prompt/formatting.
@@ -28,24 +28,26 @@ uv run python evals.py lm=qwen-3_5-27b-vllm-local vlm=qwen-3_5-27b-vllm-local \
   data.split=val data.num_samples=null max_concurrency=4 run_id=mpdoc-<S>-t1
 ```
 
-## Results (n=1, ANLS, 40-doc stratified subset)
+## Results (n=3, ANLS, 40-doc stratified subset)
 
-| Solver | role | ANLS | notes |
+| Solver | role | ANLS (n=3) | per-trial |
 |---|---|---|---|
-| **`codeact_chat`** (twin) | chat-MDP, recursive | **64.4%** (125/194) | 40 docs |
-| **`rvlm`** (proposed) | REPL + recursive `batch_look` | **60.8%** (118/194) | 40 docs |
-| `official_baseline` | MASTER_PROMPT, multi-image, `max_pages=20` | **58.8%** (114/194) | 8% Unknown |
-| `raw_vlm_multi_baseline` | raw multi-image, no scaffold, `max_pages=20` | **58.2%** (113/194) | 22% Unknown |
+| **`codeact_chat`** (twin) | chat-MDP, recursive | **63.7% ± 2.66** | 64.4 / 66.0 / 60.8 |
+| **`rvlm`** (proposed) | REPL + recursive `batch_look` | **61.8% ± 1.79** | 60.8 / 60.8 / 63.9 |
+| `official_baseline` | MASTER_PROMPT, multi-image, `max_pages=20` | **59.8% ± 1.32** | 58.8 / 59.3 / 61.3 |
+| `raw_vlm_multi_baseline` | raw multi-image, no scaffold, `max_pages=20` | **58.1% ± 0.81** | 58.2 / 57.2 / 58.8 |
 
-(Main solvers only, per scope — no ablations.)
+(Main solvers only, per scope — no ablations. Baselines' Unknown rates from t1:
+official 8%, raw_vlm 22%.)
 
 ## Read — the gap nearly vanishes on moderate docs
 
 All four solvers cluster at **58–64% ANLS**: the recursive methods
-(codeact_chat 64.4, rvlm 60.8) lead the baselines (official 58.8, raw_vlm 58.2)
-by only **~2–6pp** — and the baselines' Unknown rates are low (8% / 22%). On
-≤20-page docs the raw-VLM baseline can fit most of the document in its page
-budget, so it *sees the evidence* and the navigation advantage is small.
+(codeact_chat 63.7, rvlm 61.8) lead the baselines (official 59.8, raw_vlm 58.1)
+by only **~2–6pp**, and the per-trial spread is small (std ≤ 2.7) so the ordering
+is stable — but the baselines' Unknown rates are low (8% / 22%). On ≤20-page docs
+the raw-VLM baseline can fit most of the document in its page budget, so it *sees
+the evidence* and the navigation advantage is small.
 
 This is the **moderate-length contrast that completes the document-length axis**.
 Against MMLongBench-Doc (~47pg; `dataset-axis-mmlongbench.md`):
