@@ -65,12 +65,12 @@ numbers in the by-model files (see *Active files*).
 
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
-| Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
-| Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
+| Qwen 3.5 9B | 18.91% ± 3.81 | 25.31% ± 4.16 | **+6.41pp** — Welch t=3.21, 95% CI [+2.1, +10.7], **sig.** | 8 |
+| Qwen 3.5 4B | 14.22% ± 3.83 | 21.09% ± 3.16 | **+6.88pp** — Welch t=3.91, 95% CI [+3.1, +10.7], **sig.** | 8 |
 | Qwen3 8B (older gen) | — (n/a) | 11.73% ± 2.96 | — (off the size curve) | 8 |
 
-At both 9B and 4B, swapping only the VLM →27B lifts ~8pp (9B +7.87,
-4B +8.60) → the scaffold is **perception-budget-bound** for mid/small
+At both 9B and 4B, swapping only the VLM →27B lifts ~6–7pp (9B +6.41,
+4B +6.88) → the scaffold is **perception-budget-bound** for mid/small
 reasoners (supports D-006); the lift holds across reasoner size, the
 signature of a perception (not orchestration) bottleneck.
 
@@ -133,10 +133,10 @@ budget; stratified-random subsets (`scripts/stratified_sample.py`, seed 0):
 | Model | RLM (`rvlm`) headline | File |
 |---|---|---|
 | Qwen 3.5 27B | 41.88 ± 5.79 (re-run) | `rvlm-qwen-3_5-27b.md` |
-| Qwen 3.5 9B | 16.67 (homog) / 24.54 (VLM=27B) | `qwen-3_5-9b.md` |
-| Qwen 3.5 4B | 12.49 (homog) / 21.09 (VLM=27B) | `qwen-3_5-4b.md` |
+| Qwen 3.5 9B | 18.91 (homog) / 25.31 (VLM=27B) | `qwen-3_5-9b.md` |
+| Qwen 3.5 4B | 14.22 (homog) / 21.09 (VLM=27B) | `qwen-3_5-4b.md` |
 | Qwen3 8B (older gen) | 11.73 (VLM=27B) | `qwen3-8b.md` |
-| Gemma-4 31B | 32.50 ± 4.48 (homog) | `gemma-4-31b.md` |
+| Gemma-4 31B | 33.04 ± 4.56 (homog) | `gemma-4-31b.md` |
 | Gemma-4 E4B | 7.34 ± 3.30 (homog) | `gemma-4-e4b.md` |
 
 The cross-axis summary lives in [`docs/results.md`](../results.md).

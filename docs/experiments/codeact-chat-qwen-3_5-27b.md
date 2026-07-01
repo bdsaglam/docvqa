@@ -236,12 +236,12 @@ which `codeact_chat` 39.53 is −2.35pp, still within combined std.
 |---|---|---|---|---|
 | 27B-homog | 39.53% ± 2.83 (n=8) | 39.38% ± 1.49 (n=8) | +0.15 | within-batch tie (re-run rvlm 41.88 edges ahead) |
 | 4b/27b | 22.34% ± 3.44 (n=8) | 21.09% ± 3.16 (n=8) | +1.25 | tied (Δ ≪ combined std) |
-| 4b-homog | 16.25% ± 2.00 (n=8) | 12.49% ± 3.74 (n=8) | +3.76 | borderline (overlapping std) |
+| 4b-homog | 16.25% ± 2.00 (n=8) | 14.22% ± 3.83 (n=8) | +2.03 | borderline (overlapping std) |
 
 Old `codeact` *trailed* `rvlm` at every config; the corrected
 `codeact_chat` **catches up to a statistical tie** — 27B +0.15, 4b/27b
 +1.25 (both Δ ≪ combined std), and only a borderline nominal edge at
-4b-homog (+3.76, both n=8 now, but overlapping stds → don't lean on it).
+4b-homog (+2.03, both n=8 now, but overlapping stds → don't lean on it).
 So the finding is **`codeact_chat` ≈ `rvlm` across the model axis** — the
 append-only MDP matches the compacted-POMDP proposed method at no accuracy
 cost. It does **not** beat `rvlm`; `rvlm` remains the proposed method, and

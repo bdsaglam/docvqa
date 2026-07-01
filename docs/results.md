@@ -51,7 +51,7 @@ submission). Per-cell detail lives in `docs/experiments/{solver}-{model}.md`.
 > rollout in one turn for a bogus 5%; `_split_first_turn` enforces one action
 > per turn). **vs `rvlm`:** `codeact_chat` lands **within ~2–4pp of `rvlm`
 > across the model axis in both families** (mostly within combined std) — Qwen
-> 4b-homog 16.25 vs 12.49 (+3.76, borderline), 4b/27b 22.34 vs 21.09 (+1.25),
+> 4b-homog 16.25 vs 14.22 (+2.03, borderline), 4b/27b 22.34 vs 21.09 (+1.25),
 > gemma-31B 30.31 vs 33.04 (−2.7); at 27B-homog the artifact-recovery re-run puts
 > `rvlm` ahead, 41.88 vs 39.53 (−2.35). Old `codeact` trailed `rvlm` at every
 > config, so the corrected MDP loop *catches up* to the proposed method (it does
@@ -179,7 +179,7 @@ only clear stochastically.
    *below* our minimized-prompt `raw_vlm_multi` (18.9 vs 20.9) — our
    prompt scrub is not sandbagging the baselines.
 
-## Oracle ceiling & self-consistency (pass@k / SC@k) — diagnostic
+## Coverage & self-consistency (pass@k / SC@k) — diagnostic
 
 Per [D-003](paper/decisions.md) the headline stays **mean ± std** (`avg@1`) and
 SC is out of the method framing; these are **analysis-only** numbers. Full
@@ -187,8 +187,9 @@ per-cell table, method, and findings: **[`pass-at-k.md`](pass-at-k.md)**
 (computed by [`scripts/pass_at_k.py`](../scripts/pass_at_k.py), same binary
 DocVQA scorer; incomplete trials dropped so pass@k/SC@k are over the full 80 Qs).
 
-- **pass@k** = oracle (any of the k trials correct); **SC@k** = majority-vote
-  the k answers, then score.
+- **pass@k** = coverage (any of the k trials correct — whether sampling ever
+  reaches the answer; also the upper bound for any trial-selector, so `SC@k ≤
+  pass@k`); **SC@k** = majority-vote the k answers, then score.
 - The Qwen-27B headline matrix carries the full triple from its retained-artifact
   re-run (table at the top of `pass-at-k.md`): `rvlm` pass@8 **68.75** / SC@8
   **47.50**, down through `rlm_ocr` pass@8 27.50 / SC@8 15.00. The original
@@ -206,7 +207,7 @@ Headline-tier cells with retained artifacts:
 | Gemma-4 31B `rvlm` | 7 | 33.04 ± 4.56 | 60.00 | 42.50 |
 
 **Two findings worth carrying into the paper's analysis** (detail in
-`pass-at-k.md`): (1) **large oracle headroom** on strong scaffolds — pass@8
+`pass-at-k.md`): (1) **large coverage headroom** on strong scaffolds — pass@8
 nearly doubles avg@1 (`codeact-chat` 39.5→63.8) → ~25pp recoverable by a
 verifier / best-of-n / RL reward model; (2) **pass@k cleanly marks
 perception-budget-bound cells** — small reasoner + 27B VLM reaches the answer in
@@ -300,19 +301,19 @@ older-gen point; cross-cutting synthesis in `harness-axis-summary.md`.
 
 | Reasoner (LLM) | v1 homog (VLM = LLM) | v2 mixed (VLM = 27B) | Δ (v2 − v1) | n |
 |---|---|---|---|---|
-| Qwen 3.5 9B | 16.67% ± 3.40 | 24.54% ± 5.30 | **+7.87pp** — Welch t=3.54, 95% CI [+3.4, +12.3], **sig.** | 8 |
-| Qwen 3.5 4B | 12.49% ± 3.74 | 21.09% ± 3.16 | **+8.60pp** — Welch t=4.96, 95% CI [+5.20, +11.99], **sig.** | 8 |
+| Qwen 3.5 9B | 18.91% ± 3.81 | 25.31% ± 4.16 | **+6.41pp** — Welch t=3.21, 95% CI [+2.1, +10.7], **sig.** | 8 |
+| Qwen 3.5 4B | 14.22% ± 3.83 | 21.09% ± 3.16 | **+6.88pp** — Welch t=3.91, 95% CI [+3.1, +10.7], **sig.** | 8 |
 | Qwen3 8B (older gen) | — (n/a, text-only) | 11.73% ± 2.96 | — (off the Qwen3.5 size curve) | 8 |
 
 At both 9B and 4B, swapping only the VLM →27B with the reasoner fixed
-lifts ~8pp (9B +7.87, 4B +8.60) → the scaffold is
+lifts ~6–7pp (9B +6.41, 4B +6.88) → the scaffold is
 **perception-budget-bound** for mid/small reasoners (supports D-006).
 The lift's consistency across reasoner size is the signature of a
 perception (not orchestration) bottleneck.
 
 **Older-generation reasoner point (Qwen3-8B):** with perception fixed
 at the 27B VLM, a Qwen3-8B reasoner scores only **11.73% ± 2.96** —
-below 4B v2 (21.09%) and half of 9B v2 (24.54%) on the *same* VLM.
+below 4B v2 (21.09%) and half of 9B v2 (25.31%) on the *same* VLM.
 Modality is **not** a confound: in v2 the reasoner delegates all
 perception to the VLM via `batch_look` and never sees pixels, so
 text-only vs multimodal is irrelevant — every reasoner is a text
@@ -334,12 +335,15 @@ max(rawvlm, official).**
 | Gemma | rvlm | codeactᶜ | react | rawvlm | official | base | best lift |
 |---|---|---|---|---|---|---|---|
 | **E4B** | 7.34 ± 3.30 | 7.66 ± 1.94 | 6.09 ± 2.36 | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | **+1.4 (n.s.)** |
-| **31B** | **32.50 ± 4.48** | 29.25 ± 5.77† | 18.44 ± 3.58 | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **+21.4** |
+| **31B** | **33.04 ± 4.56**§ | 29.25 ± 5.77† | 18.44 ± 3.58 | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **+21.9** |
 
 † 31B codeact n=5 (stopped early per user); score depressed by slow-doc guards +
 gemma4-31B codeact operational instability (8 shm-crashes + degenerate-gen /
 max-iter runaways during the sweep) — `rvlm`/`react`/baselines ran clean. An
 operational finding in its own right; see `gemma-4-31b.md`.
+
+§ 31B rvlm n=7 (one trial's artifacts not retained); value recomputed from the
+retained submissions, consistent with the pass@k table above.
 
 ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
 **`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
@@ -348,8 +352,8 @@ figure is shown for provenance only, not as a current result. Tracking and
 replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 **Cross-family findings.** (1) At **31B every harness clears both no-scaffold
-baselines by ≫ the std** — rvlm +21.4, codeact +18.2ᶜ, react +7.4 over base
-11.09. rvlm 32.50 ≫ react 18.44 (+14.1pp): the recursive VLM sub-call is
+baselines by ≫ the std** — rvlm +22.0, codeact +18.2ᶜ, react +7.4 over base
+11.09. rvlm 33.04 ≫ react 18.44 (+14.6pp): the recursive VLM sub-call is
 **load-bearing**, mirroring Qwen 27B (rvlm 39.4 ≫ react 25.2) — "recursive-
 perception ≫ tool-only ReAct" is **robust across model families**. (2) At
 **E4B no harness clears `official_baseline`** (all within ~1 std) — a 4B model

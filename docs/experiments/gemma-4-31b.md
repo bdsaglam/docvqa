@@ -9,7 +9,7 @@ Cross-family synthesis: [`harness-axis-summary.md`](harness-axis-summary.md).
 
 | Harness / baseline | Val | Lift vs no-scaffold |
 |---|---|---|
-| RLM (`rvlm`) | **32.50% ± 4.48** (n=8) | **+21.4pp** |
+| RLM (`rvlm`) | **33.04% ± 4.56** (n=7) | **+22.0pp** |
 | CodeActᶜ | **29.25% ± 5.77** (n=5) | **+18.2pp** |
 | ReAct | **18.44% ± 3.58** (n=8) | **+7.4pp** |
 | `raw_vlm_multi_baseline` | 10.78% ± 0.93 (n=8) | — |
@@ -38,15 +38,15 @@ replacements: `codeact-chat-qwen-3_5-27b.md`.
 
 ## Reads
 
-- **rvlm ≫ react, the headline cross-family result.** RLM 32.50 ≫ ReAct 18.44
-  — a **+14.1pp** gap, ≫ the combined std. The recursive VLM sub-call (`rvlm`)
+- **rvlm ≫ react, the headline cross-family result.** RLM 33.04 ≫ ReAct 18.44
+  — a **+14.6pp** gap, ≫ the combined std. The recursive VLM sub-call (`rvlm`)
   is **load-bearing**; the REPL-only ReAct harness collapses to the
   no-recursion tier. This mirrors Qwen 27B (RLM 39.4 ≫ ReAct 25.2) almost
   exactly, so the ordering **recursive-perception ≫ tool-only ReAct is robust
   across model families** — and is *sharp* at 31B while *vanishing into noise*
   at 4B (see `gemma-4-e4b.md`). Capacity gates whether the scaffold can be
   driven.
-- Numbers moved modestly from the n=1/n=2 pilots (rvlm 30.00→32.50,
+- Numbers moved modestly from the n=1/n=2 pilots (rvlm 30.00→33.04,
   react 20.00→18.44) — the pilots were inside the ~3–4pp trial noise.
 
 ## Setup / serving
@@ -81,7 +81,8 @@ Configs: `configs/{lm,vlm}/gemma-4-31b-vllm-local.yaml` (@8931).
 
 ## Status
 
-`done` — full per-model harness-lift table complete: rvlm (n=8), react (n=8),
-codeact (n=5, stopped early per user), both baselines (n=8). See
+`done` — full per-model harness-lift table complete: rvlm (n=7, one trial's
+artifacts not retained), react (n=8), codeact (n=5, stopped early per user),
+both baselines (n=8). See
 `harness-axis-summary.md` for the cross-family synthesis.
 Coordination: `coordination/amax1.md`.

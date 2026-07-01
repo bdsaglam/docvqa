@@ -1,14 +1,15 @@
-# pass@k & SC@k — oracle ceiling and self-consistency (DocVQA-2026 val)
+# pass@k & SC@k — coverage and self-consistency (DocVQA-2026 val)
 
 **Diagnostic, not headline.** Per [D-003](paper/decisions.md) the paper's
 headline reporting is **mean ± std across independent trials** (`avg@1` below)
 and self-consistency is out of the method framing. This page reports two extra
 per-cell numbers for analysis only:
 
-- **pass@k** — *oracle ceiling*: a question counts correct if **any** of the
-  cell's `k` trials got it right. Upper bound an ideal trial-selector / verifier
-  could reach. The gap `pass@k − avg@1` is the headroom a re-ranker or RL
-  reward model could in principle recover.
+- **pass@k** — *coverage*: a question counts correct if **any** of the cell's
+  `k` trials got it right, i.e. whether the model's sampling ever *reaches* the
+  answer within `k` tries. (Read as a bound, it is also the best any trial-selector
+  / verifier could do, so `SC@k ≤ pass@k`.) The gap `pass@k − avg@1` is the
+  headroom a re-ranker or RL reward model could in principle recover.
 - **SC@k** — *self-consistency*: majority-vote the `k` trial answers, then score
   the vote. What post-hoc voting (the old competition tactic) would buy.
 
@@ -157,7 +158,7 @@ runs) and are labeled as variants.
 
 ## Findings
 
-1. **Large oracle headroom on the strong scaffolds.** On the proposed tier,
+1. **Large coverage headroom on the strong scaffolds.** On the proposed tier,
    pass@k roughly *doubles* avg@1: `codeact-chat` 39.5 → **63.8** (+24.2pp),
    `rvlm-vsearch` 36.7 → **66.3** (+29.6pp), `rvlm-minimal` 42.0 → **67.5**.
    Most failures are not "the scaffold can't" but "the scaffold is inconsistent"

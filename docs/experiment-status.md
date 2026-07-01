@@ -66,7 +66,7 @@ does not beat it).
 | 9B / 9B (homog) | 22.97% ± 2.75 | +4.1 vs `rvlm` 9b-homog (18.91) |
 | 8B / 27B (Qwen3-8B, older gen) | 16.72% ± 3.20 | off-axis weak reasoner (32% Unk, page-scans) |
 | 4B / 27B | 22.34% ± 3.44 | +1.25 |
-| 4B / 4B (homog) | 16.25% ± 2.00 | +3.76 (borderline) |
+| 4B / 4B (homog) | 16.25% ± 2.00 | +2.03 (borderline) |
 | gemma-4-31B homog (n=4) | 30.31% ± 2.13 | −2.7 vs `rvlm` 33.04 |
 | gemma-4-E4B homog | 7.81% ± 1.86 | floor (fix barely moves a 4B) |
 
@@ -82,10 +82,10 @@ bottom rung: **`rvlm` 32.81% ± 3.13 > `codeact_chat` 27.19% ± 2.77 > `react`
 
 ### Model-size / VLM-quality axis (prediction 1) — n=8
 
-Hold the reasoner fixed, swap **only** the VLM →27B: at both 9B (+7.87pp) and 4B
-(+8.60pp) the `rvlm` headline lifts ~8pp — the signature of a **perception-budget**
+Hold the reasoner fixed, swap **only** the VLM →27B: at both 9B (+6.41pp) and 4B
+(+6.88pp) the `rvlm` headline lifts ~6–7pp — the signature of a **perception-budget**
 (not reasoning) bottleneck (supports D-006). Gemma confirms it's a capacity gate:
-sharp harness-lift at 31B (`rvlm` +21.4pp over baseline), absent at E4B (all
+sharp harness-lift at 31B (`rvlm` +22.0pp over baseline), absent at E4B (all
 harnesses within noise of `official_baseline`). Older-gen Qwen3-8B reasoner is a
 clean reasoner-*quality* point (11.73%, off the 9B↔4B size curve). Detail:
 `harness-axis-summary.md` + by-model files.

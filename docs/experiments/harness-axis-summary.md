@@ -39,11 +39,11 @@ files (`rvlm-qwen-3_5-27b.md`, `react_baseline-qwen-3_5-27b.md`,
 
 | Config | RLM (`rvlm`) | ReAct | CodeActᶜ |
 |---|---|---|---|
-| Qwen3.5 4B homog | 12.49 ± 3.74 | 11.94 ± 2.23 | 12.19 ± 3.50 |
-| Qwen3.5 9B homog | 16.67 ± 3.40 | 14.97 ± 2.96 | 19.35 ± 4.24 |
+| Qwen3.5 4B homog | 14.22 ± 3.83 | 13.44 ± 1.98 | 12.19 ± 3.50 |
+| Qwen3.5 9B homog | 18.91 ± 3.81 | 16.25 ± 3.06 | 19.35 ± 4.24 |
 | Qwen3.5 27B homog | **39.38 ± 1.49** | 25.16 ± 4.60 | 36.96 ± 5.25 (b=40, n=7) |
 | Gemma-4 E4B homog | 7.34 ± 3.30 | 6.09 ± 2.36 | 7.66 ± 1.94 |
-| Gemma-4 31B homog | **32.50 ± 4.48** | 18.44 ± 3.58 | 29.25 ± 5.77 (n=5†) |
+| Gemma-4 31B homog | **33.04 ± 4.56** (n=7) | 18.44 ± 3.58 | 29.25 ± 5.77 (n=5†) |
 
 † Gemma-31B CodeAct n=5 (stopped early per user); score depressed by slow-doc
 guards + gemma4-31B CodeAct operational instability — see below and
@@ -60,18 +60,18 @@ replacements: `codeact-chat-qwen-3_5-27b.md`.
 | Reasoner | RLM | ReAct | CodeActᶜ | best |
 |---|---|---|---|---|
 | Qwen3 8B (text-only, older gen) | 11.73 ± 2.96 | **15.79 ± 2.03** | 9.50 ± 1.44 | ReAct |
-| Qwen3.5 4B | **21.09 ± 3.16** | 15.66 ± 4.73 | 15.66 ± 3.00 | RLM |
-| Qwen3.5 9B | **24.54 ± 5.30** | 21.01 ± 4.63 | 24.26 ± 4.68 | RLM ≈ CodeAct |
+| Qwen3.5 4B | **21.09 ± 3.16** | 18.12 ± 4.06 | 15.66 ± 3.00 | RLM |
+| Qwen3.5 9B | **25.31 ± 4.16** | 22.66 ± 4.93 | 24.26 ± 4.68 | RLM ≈ CodeAct |
 | (27B/27B homog, for reference) | **39.38** | 25.16 | 36.96ᶜ (b40) | RLM ≳ CodeAct ≫ ReAct |
 
 ## Finding 1 — perception-budget lift (v1 → v2, swap only the VLM)
 
 Holding the reasoner fixed and swapping **only** the VLM → 27B lifts the RLM
-headline ~8pp at both Qwen3.5 sizes (**9B +7.87pp**, Welch t=3.54, sig.;
-**4B +8.60pp**, t=4.96, sig.). The lift's consistency across reasoner size is
+headline ~6–7pp at both Qwen3.5 sizes (**9B +6.41pp**, Welch t=3.21, sig.;
+**4B +6.88pp**, t=3.91, sig.). The lift's consistency across reasoner size is
 the signature of a **perception (not orchestration) bottleneck** → the scaffold
 is **perception-budget-bound** for mid/small reasoners (supports D-006). Under
-ReAct/CodeAct the same swap lifts less (4B +~3.5pp, 9B +5–6pp) — the weaker
+ReAct/CodeAct the same swap lifts less (4B +3.5–4.7pp, 9B +4.9–6.4pp) — the weaker
 harnesses can't convert better perception into accuracy as efficiently as RLM's
 hidden-state REPL.
 
@@ -82,16 +82,16 @@ The best harness changes with reasoner capability:
 - **8B (text-only): ReAct 15.79 > RLM 11.73 > CodeAct 9.50ᶜ.** The simplest
   harness wins for the weakest reasoner; CodeAct's append-only growing-code
   context is *hardest* (fails consistently — lowest mean, lowest variance).
-- **4B: RLM 21.09 > ReAct ≈ CodeAct 15.66ᶜ.** RLM already leads.
-- **9B: RLM 24.54 ≈ CodeAct 24.26ᶜ > ReAct 21.01.** RLM/CodeAct overtake ReAct
+- **4B: RLM 21.09 > ReAct 18.12 > CodeAct 15.66ᶜ.** RLM leads.
+- **9B: RLM 25.31 ≈ CodeAct 24.26ᶜ > ReAct 22.66.** RLM/CodeAct overtake ReAct
   once the reasoner can exploit code + state.
 - **27B: RLM 39.38 ≳ CodeAct 36.96ᶜ ≫ ReAct 25.16.** RLM and CodeAct close at
   the top; ReAct far back.
 
 **CodeAct scales hardest.** Worst at 8B → catches RLM at 9B → lands ~2.4pp under
 RLM at 27B (within noise). **CodeAct reasoner-scaling slope (Qwen3.5):** 4B
-15.66 → 9B 24.26 = **+8.6pp**ᶜ, vs RLM 4B 21.09 → 9B 24.54 = +3.5pp — CodeAct
-benefits ~2.5× more from reasoner scale.
+15.66 → 9B 24.26 = **+8.6pp**ᶜ, vs RLM 4B 21.09 → 9B 25.31 = +4.2pp — CodeAct
+benefits ~2× more from reasoner scale.
 
 **FT implication.** The clean append-only-code **MDP** target (CodeAct) costs
 ~no accuracy vs hidden-state RLM *given a strong reasoner* (≥9B); below 9B, RLM
@@ -107,9 +107,9 @@ The missing factorial corner: **strong reasoner on weak perception** (v3:
 
 | Harness | v2 (9B-LM / 27B-VLM) | v3 (27B-LM / 9B-VLM) | Δ | lean |
 |---|---|---|---|---|
-| RLM | 24.54 | **34.82 ± 3.01** | **+10.3** | **reasoning-bound** |
+| RLM | 25.31 | **34.82 ± 3.01** | **+9.5** | **reasoning-bound** |
 | CodeActᶜ | 24.26 | **30.43 ± 2.86** | **+6.2** | **reasoning-bound** |
-| ReAct | 21.01 | **17.96 ± 3.94** | **−3.05** | **perception-bound** |
+| ReAct | 22.66 | **17.96 ± 3.94** | **−4.70** | **perception-bound** |
 
 Per-trial — RLM v3: 32.60 / 34.74 / 32.50 / 35.00 / 32.50 / 32.50 / 40.00 /
 38.75. CodeAct v3: 27.87 / 35.24 / 32.81 / 28.75 / 30.00 / 31.25 / 31.25 /
@@ -123,14 +123,14 @@ coordinate arithmetic on an image (no Python; `react_baseline_solver.py`
 docstring: *"no crops … no PIL.crop on retrieved page images"*). So ReAct's
 perception ceiling **is** the VLM's whole-page acuity: a stronger reasoner has
 no actuator to direct finer-grained perception, so swapping 9B→27B reasoner
-while the VLM stays at 9B buys nothing (it even regresses −3.05pp) — ReAct is
+while the VLM stays at 9B buys nothing (it even regresses −4.70pp) — ReAct is
 **perception-bound**.
 
 RLM and CodeAct write Python around the same `batch_look`: they crop to the
 evidence region, zoom, retry tighter, composite panels, do coordinate
 arithmetic. A stronger reasoner produces **better-targeted sub-images** and
 extracts more *even from a weaker (9B) VLM* — so the 27B-LM/9B-VLM corner
-*gains* (RLM +10.3, CodeAct +6.2) → these harnesses are **reasoning-bound**.
+*gains* (RLM +9.5, CodeAct +6.2) → these harnesses are **reasoning-bound**.
 This is a direct corollary of the D-006 active-perception thesis: the REPL
 crop/zoom loop is the mechanism that **turns reasoning capability into
 perception quality**; remove it (ReAct) and reasoning can no longer buy
@@ -140,7 +140,7 @@ perception.
 
 The harness ordering reproduces on a second model family:
 
-- **31B: rvlm 32.50 ≫ react 18.44 (+14.1pp ≫ std)** — the recursive VLM
+- **31B: rvlm 33.04 ≫ react 18.44 (+14.6pp ≫ std)** — the recursive VLM
   sub-call is **load-bearing**; REPL-only ReAct collapses to the no-recursion
   tier, mirroring Qwen 27B (rvlm 39.4 ≫ react 25.2). "Recursive-perception ≫
   tool-only ReAct" is **robust across model families**.
@@ -152,11 +152,12 @@ The harness ordering reproduces on a second model family:
 
 Each harness measured against the two no-scaffold baselines on the same model.
 **Baseline = max(`raw_vlm_multi_baseline`, `official_baseline`)** (the stronger
-no-scaffold point). All n=8 except Gemma-31B CodeAct (n=5, stopped early).
+no-scaffold point). All n=8 except Gemma-31B rvlm (n=7, one trial's artifacts
+not retained) and CodeAct (n=5, stopped early).
 
 | Model | rawvlm | official | base | rvlm (lift) | CodeActᶜ (lift) | ReAct (lift) |
 |---|---|---|---|---|---|---|
-| **Gemma-4 31B** | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **32.50 (+21.4)** | 29.25 n=5 (+18.2) | 18.44 (+7.4) |
+| **Gemma-4 31B** | 10.78 ± 0.93 | 11.09 ± 1.82 | 11.09 | **33.04 n=7 (+22.0)** | 29.25 n=5 (+18.2) | 18.44 (+7.4) |
 | **Gemma-4 E4B** | 3.75 ± 0.00 | 6.25 ± 1.16 | 6.25 | 7.34 (+1.1 n.s.) | 7.66 (+1.4 n.s.) | 6.09 (−0.2 n.s.) |
 
 **The lift is a capacity gate, cleanly bracketed by one model family.** At 31B
@@ -179,6 +180,7 @@ is the clean cross-family confirmation of the D-006 active-perception thesis.
 
 n=8 locked for: Qwen3.5 {4B, 9B} (v1+v2, all harnesses), Qwen3 8B (v2),
 v2↔v3 factorial (all harnesses), Gemma {E4B (3 harnesses + 2 baselines), 31B
-(rvlm+react + 2 baselines)}; Gemma-31B CodeAct n=5 (stopped early per user).
+(rvlm+react + 2 baselines)}; Gemma-31B rvlm n=7 (one trial's artifacts not
+retained), CodeAct n=5 (stopped early per user).
 **Per-model harness-lift table (Finding 5) complete for both Gemma sizes.**
 Coordination: `coordination/amax1.md`, `coordination/amax7.md`.

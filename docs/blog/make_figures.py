@@ -48,7 +48,7 @@ def fig3_tiers():
         ("+ general sub-agent", 36.72, 2.75, "top"),
         ("+ OCR & search", 36.56, 2.89, "top"),
         ("ReAct (no REPL)", 27.19, 3.19, "mid"),
-        ("In-context pixels (no call)", 22.34, 2.79, "mid"),
+        ("In-context pixels (no sub-VLM)", 22.34, 2.79, "mid"),
         ("Raw multi-image (no scaffold)", 20.94, 1.60, "mid"),
         ("Competition prompt (no scaffold)", 18.91, 1.94, "floor"),
         ("OCR-only (no vision)", 14.69, 2.19, "floor"),
@@ -122,11 +122,11 @@ def fig4_grid():
 def fig5_vlm_swap():
     # reasoner fixed; swap VLM from homog -> 27B
     groups = ["9B reasoner", "4B reasoner"]
-    homog = [16.67, 12.49]
-    homog_s = [3.40, 3.74]
-    swap = [24.54, 21.09]
-    swap_s = [5.30, 3.16]
-    lifts = [7.87, 8.60]
+    homog = [18.91, 14.22]
+    homog_s = [3.81, 3.83]
+    swap = [25.31, 21.09]
+    swap_s = [4.16, 3.16]
+    lifts = [6.41, 6.88]
 
     import numpy as np
     x = np.arange(len(groups))
@@ -148,7 +148,7 @@ def fig5_vlm_swap():
     ax.set_axisbelow(True)
     ax.legend(frameon=False, fontsize=9, loc="upper center",
               bbox_to_anchor=(0.5, 1.0), ncol=2)
-    ax.set_title("Fix the reasoner, improve only perception → ~8 pp",
+    ax.set_title("Fix the reasoner, improve only perception → ~7 pp",
                  fontsize=12, fontweight="bold")
     save(fig, "f5-vlm-swap.png")
 
@@ -243,18 +243,64 @@ def fig2_architecture():
     arrow(axl, (2.3, 2.2), (2.3, 3.1), "observation (text)", rad=-0.0, side="right")
 
     # Right: ReAct
-    axr.set_title("ReAct (no REPL)", fontsize=12, fontweight="bold")
+    axr.set_title("ReAct", fontsize=12, fontweight="bold")
     box(axr, (2, 5.2), 2.6, 0.8, "Reasoner (LLM)", "#dbe7f1")
     box(axr, (2, 2.6), 2.6, 0.8, "Perceiver (VLM)", "#dbe7f1")
     box(axr, (2, 0.9), 2.8, 0.55, "document pages", "#f1f1f1")
     arrow(axr, (1.7, 4.8), (1.7, 3.0), "tool call", side="left")
     arrow(axr, (2.3, 3.0), (2.3, 4.8), "observation (text)", side="right")
     arrow(axr, (2.0, 2.2), (2.0, 1.2), "whole page", side="right")
-    axr.text(2, 0.1, "no crop / zoom — perception fixed at page granularity",
+    axr.text(2, 0.1, "no crop or zoom; perception fixed at page granularity",
              ha="center", fontsize=8.5, color="#8a5a2b", style="italic")
 
     fig.subplots_adjust(wspace=0.12, top=0.9)
     save(fig, "f2-architecture.png")
+
+
+def fig_lengthaxis():
+    """Blog Figure 4: recursive-perception advantage vs raw multi-image baseline
+    across two benchmarks of different length. Baseline left, ours (blue) right."""
+    import numpy as np
+    groups = ["MP-DocVQA\n(short, ≤20 pg)", "MMLongBench-Doc\n(long, ~47 pg)"]
+    ours, ours_s = [61.8, 66.6], [1.79, 2.15]     # active perception (rvlm)
+    base, base_s = [58.1, 24.2], [0.81, 0.60]     # raw multi-image, no scaffold
+    gaps = [4, 42]
+    C_BASE = "#c7bca6"   # muted tan
+    RED = "#9a3b2e"
+
+    x = np.arange(len(groups))
+    w = 0.34
+    fig, ax = plt.subplots(figsize=(8.4, 4.7))
+    ax.bar(x - w / 2, base, w, yerr=base_s, label="raw multi-image baseline (no scaffold)",
+           color=C_BASE, error_kw=dict(ecolor="#444", capsize=3, lw=1))
+    ax.bar(x + w / 2, ours, w, yerr=ours_s, label="active perception (ours)",
+           color=C_TOP, error_kw=dict(ecolor="#444", capsize=3, lw=1))
+    for i in range(len(groups)):
+        ax.text(x[i] - w / 2, base[i] + base_s[i] + 1.4, f"{base[i]:.0f}",
+                ha="center", fontsize=11, color="#444")
+        ax.text(x[i] + w / 2, ours[i] + ours_s[i] + 1.4, f"{ours[i]:.0f}",
+                ha="center", fontsize=11, color="#444")
+        # gap label above the group (text only, consistent across both groups)
+        ax.text(x[i], max(ours[i], base[i]) + max(ours_s[i], base_s[i]) + 5.5,
+                f"+{gaps[i]} pp", ha="center", va="bottom",
+                fontsize=13, fontweight="bold", color=RED)
+    ax.set_xticks(x)
+    ax.set_xticklabels(groups)
+    ax.set_ylabel("accuracy (%)")
+    ax.set_ylim(0, 92)
+    ax.yaxis.grid(True, color=GRID, lw=0.7)
+    ax.set_axisbelow(True)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)
+    ax.legend(frameon=False, fontsize=10, loc="upper center",
+              bbox_to_anchor=(0.5, 1.0), ncol=2)
+    ax.set_title("Across benchmarks, the advantage widens on longer documents",
+                 fontsize=13, fontweight="bold", pad=30)
+    fig.text(0.5, -0.01,
+             'raw baseline “Unknown” rate climbs 22% → 87% as evidence '
+             'falls off the fixed page budget',
+             ha="center", fontsize=10, style="italic", color="#8a6a2b")
+    save(fig, "f-lengthaxis.png")
 
 
 if __name__ == "__main__":
@@ -264,4 +310,5 @@ if __name__ == "__main__":
     fig4_grid()
     fig5_vlm_swap()
     figcat()
+    fig_lengthaxis()
     print("done")

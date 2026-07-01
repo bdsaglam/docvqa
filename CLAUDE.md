@@ -133,7 +133,7 @@ multi-step orchestrators.
 **`docs/results.md`** is the single source of truth for cross-solver
 numbers; **`docs/experiment-status.md`** for what's done / in progress /
 queued; `docs/experiments/{solver}-{model}.md` for per-cell detail.
-**`docs/pass-at-k.md`** holds the pass@k (oracle) / SC@k (self-consistency)
+**`docs/pass-at-k.md`** holds the pass@k (coverage) / SC@k (self-consistency)
 diagnostic per cell (script: `scripts/pass_at_k.py`; headline stays mean±std
 per D-003). ⚠ The published `*-cmp-val` headline matrix has **no retained
 per-trial artifacts** (deleted both hosts) → its pass@k/SC@k need a re-run.

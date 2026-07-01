@@ -42,7 +42,7 @@ replacements: `codeact-chat-qwen-3_5-27b.md`.
   9B/4B points is **generation** (Qwen3 vs Qwen3.5). The older 8B is simply a
   **weaker orchestrator**: on RLM it thrashed ~18 iterations/question and
   force-submitted wrong, scoring 11.73% — *below* even the newer 4B (RLM v2
-  21.09%) and half of 9B v2 (24.54%). Bug ruled out: `enable_thinking=false`
+  21.09%) and half of 9B v2 (25.31%). Bug ruled out: `enable_thinking=false`
   correctly applied (`types.py:66` → `chat_template_kwargs`), tool/parse errors
   negligible, `batch_look` returns real content. A clean reasoner-quality
   signal — kept **off** the Qwen3.5 9B↔4B size curve. A clean 8B size point
