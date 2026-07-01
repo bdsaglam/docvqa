@@ -1,9 +1,9 @@
 # rvlm — Reasoner × Perceiver 3×3 matrix (val, Qwen 3.5 {4B, 9B, 27B})
 
-> **STATUS: SCAFFOLD.** Result cells are `TBD` — this file is maintained by the
-> report-writing agent, which fills each cell from the run_ids in the
-> *Cell data sources* table below as trials land. Do not hand-edit the matrix
-> values; update the source runs and let the agent recompute.
+> **STATUS: LIVE.** Completed cells are filled; `TBD`/`—` remain for the
+> report-writing agent to fill (or mark not-run) from the run_ids in the
+> *Cell data sources* table below as trials land. Keep values in sync with the
+> per-cell by-model files.
 
 Full factorial of the **proposed method `rvlm`** (OCR-free RLM + recursive VLM
 `batch_look`) across its two model axes, holding everything else fixed
@@ -21,9 +21,14 @@ Each axis ∈ {Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B}. Diagonal = homogeneous
 
 | Reasoner ↓ \ Perceiver → | 4B-VLM | 9B-VLM | 27B-VLM |
 |---|---|---|---|
-| **4B-LM**  | TBD | TBD | TBD |
-| **9B-LM**  | TBD | TBD | TBD |
-| **27B-LM** | TBD | TBD | TBD |
+| **4B-LM**  | 14.22 ± 3.83 (n=8)ᵐ | — not run | 21.09 ± 3.16 (n=8)ᵐ |
+| **9B-LM**  | — not run | 18.91 ± 3.81 (n=8)ᵐ | 25.31 ± 4.16 (n=8)ᵐ |
+| **27B-LM** | 32.81 ± 3.13 (n=4) | *in progress (n=4)* | **41.88 ± 5.79 (n=8)** |
+
+ᵐ = `rvlm-minimal` prompt-era variant (see caveat ¹ below); unmarked cells use
+current `rvlm`. Bold = headline. Reading (where filled): both axes rise
+monotonically — across row 27B (perception axis) 32.81 → [27B/9B] → 41.88, and
+down column 27B-VLM (reasoning axis) 21.09 → 25.31 → 41.88.
 
 ## How to read the axes
 
