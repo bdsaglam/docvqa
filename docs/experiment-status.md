@@ -96,11 +96,22 @@ Scores are from the competition leaderboard (ANLS; no public ground truth).
 
 - **`codeact_chat`** — SC-8 → `submissions/codeact-chat-test-sc8.json` →
   **test 41.25% (0.4125)**.
-- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json` → test score TBD (not yet
-  submitted/recorded).
+- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json` → **test 39.0%**.
 - `react_baseline` test — **skipped** (user): the two recursive submissions
   suffice; a no-REPL baseline isn't worth the ~2-day heavy-doc grind, so there is
   **no ReAct test submission**.
+
+**`rvlm` (39.0%) and `codeact_chat` (41.25%) are statistically tied on test**, not
+a real difference: the gap is ~3.6 Q / 160, and the binomial SE at ~40% on n=160
+is ±3.9pp → the two are **0.58 SE apart**. The submissions give identical answers
+on 68% of Qs (with identical unknown-rate 10/160 and answer length), so the gap is
+a coin-flip on the 51 they disagree on. Consistent with val, where they tie
+(41.88±5.79 vs 39.53±2.83) and rvlm actually led on SC@8 (47.5 vs 45.0) — the
+single test vote just resolved the tie toward the twin this time. (Both drop
+val→test on the far longer 200–281pg test docs; rvlm drops ~5pp more, a ~1-SE
+differential that is suggestive-but-not-significant here — if real, cc's
+`exec_timeout` guardrail + lower per-trial variance make its vote slightly more
+robust on ultra-long docs.) Headline reporting stays val mean±std per D-003.
 
 ### Dataset / document-length axis (prediction 2) — n=3
 
