@@ -133,7 +133,10 @@ pages in a loop, composite regions, and do in code the coordinate math and
 arithmetic a VLM is bad at. Perception becomes something the model spends
 deliberately, a region at a time, rather than a single fixed gulp of pixels. Three
 moves give the system its name, **Perceive-Reason-Code**: perceive through a VLM
-call, reason in language, act by writing code.
+call, reason in language, act by writing code. Unless noted otherwise, every
+experiment below uses Qwen 3.5 27B as both the reasoner and the VLM, on the
+DocVQA-2026 validation set (25 documents, 80 questions), eight trials, scored by
+ANLS (the fuzzy string-match metric DocVQA uses), reported as mean ± std.
 
 ![](f2-architecture.png)
 
@@ -196,87 +199,37 @@ Re-enabling it doesn't change the picture (a separate ablation moves it less tha
 the trial-to-trial noise).
 
 
-## The model axis: perception or reasoning?
+## The model axis: does it generalize?
 
-The method works, but why? Is the bottleneck perception or reasoning? The setup
-lets us vary each and watch the score. Fix the reasoner and improve the eyes; then
-fix the eyes and change the reasoner.
+The win used Qwen 3.5 27B, but nothing in the recipe is specific to it. To check,
+we run the harness homogeneously (the same model as both reasoner and VLM) across
+sizes and across a second family.
 
-Start by holding the reasoner fixed and changing only the eyes. Take a smaller model
-as the reasoner and feed its perception calls to progressively better VLMs, ending
-at the 27B. The reasoner never changes; only the quality of what it can see does.
-Accuracy climbs about **eight points** at both sizes we tried: +7.9 with a 9B
-reasoner, +8.6 with a 4B one, both well outside the noise.[^stats] Same brain,
-better eyes, large lift: that's the signature of a perception bottleneck, not a
-reasoning one. (And it cuts the other way too: a stronger reasoner writes
-better-targeted perception queries and gets more out of even a weak VLM. ReAct has
-no such actuator. Its ceiling is whatever a whole-page read resolves, and a smarter
-reasoner can't aim it.)
+| Model (reasoner = VLM) | ReAct (no REPL) | RLM (`rvlm`, ours) | CodeAct twin |
+|---|---|---|---|
+| Qwen 3.5 4B | 11.9 | 12.5 | 16.3 |
+| Qwen 3.5 9B | 15.0 | 16.7 | 23.0 |
+| Qwen 3.5 27B | 27.2 | **41.9** | 39.5 |
+| Gemma 4 31B | 18.4 | 32.5 | 30.3 |
+| Gemma 4 E4B | 6.1 | 7.3 | 7.7 |
 
-![](f5-vlm-swap.png)
+The code-REPL harnesses (RLM and its CodeAct twin) beat the no-REPL ReAct agent at
+every capable size, and the margin scales with model capability: a point or two at
+4B, about fifteen points at Qwen 27B and Gemma 31B. But the lift has a floor. Gemma
+4B (E4B) sits below the capacity gate: no harness clears the no-scaffold baseline
+(around 6), because the model cannot write the code to drive the loop. The harness
+amplifies a capable model; it cannot rescue one that cannot code.
 
-**Figure 4.** Hold the reasoner fixed and swap in a stronger (27B) perception
-backend, and accuracy jumps about eight points at both reasoner sizes (4B and 9B
-reasoners). The signature of a perception bottleneck.
-
-Now do the opposite: hold the VLM fixed at the 27B backend and vary the reasoner.
-The active-perception agent scores 42% at 27B, 25% at 9B, 21% at 4B, beating ReAct
-at every size.
-
-| reasoner (VLM = 27B) | active perception | ReAct (no REPL) |
-|---|---|---|
-| 4B | 21% | 16% |
-| 9B | 25% | 21% |
-| 27B | 42% | 27% |
-
-The reasoner clearly matters, and the jump from 9B to 27B (+17pp) is even larger
-than the VLM swap.
-
-The lift is a **capacity gate**, though, not a free lunch. The model has to be a
-good enough coder to drive the REPL at all. You can watch the gate switch on and off
-inside a single model family: a 31B Gemma clears its ReAct baseline by fourteen
-points, but a 4B Gemma collapses. Every configuration lands in the same low single
-digits, the model too weak to write the code, so the scaffold has nothing to stand
-on. The same gate shows up in Qwen, where the reasoner sweep above beats ReAct at
-every size and the margin is widest for the strongest reasoner. The harness
-amplifies a capable model; it can't rescue one that can't code.
-
-None of this is special to Qwen 3.5 27B. The lift shows up across Qwen sizes and in
-a second family (Gemma), for any model that's a strong enough multimodal,
-code-writing reasoner. Qwen 3.5 27B is simply the one we entered in the challenge.
-The recipe is about the harness, not the checkpoint.
-
-If perception is the real story, the advantage should be largest where a page packs
-the most fine detail, and it broadly is. The per-category gap between the
-active-perception agent and the ReAct baseline tracks visual density:
-
-![](f-category.png)
-
-**Figure 5.** The active-perception advantage over ReAct, by document category
-(Qwen 3.5 27B, eight trials). Biggest on dense, structured pages where cropping
-recovers fine detail: engineering drawings (+36), business reports (+30),
-infographics (+19). Smallest on text-linear pages like science papers (+4) and
-slides (+1), where a single read already gets most of the page. (Maps are a hard
-case for every configuration, so the *advantage* there is modest even though the
-pages are busy.) The ranking is the point, not the exact values.
-
-The advantage concentrates where a page packs fine detail.[^length]
-
-So is the bottleneck perception or reasoning? What we can show cleanly is that the scaffold's contribution is perceptual. Hold the models fixed and swap whole-page ReAct for active perception, and accuracy jumps from 27% to 42%, with nothing changing but how perception is spent. The reasoner matters too, and in raw points more: shrink it and accuracy falls further than swapping the VLM does. But a bigger reasoner in this loop is also a better perception-director. It writes tighter crops and better code, and it has to be a competent coder to drive the REPL at all. Much of its lift plausibly flows through perception rather than around it, though no experiment here separates sharper aiming from sharper reasoning over the evidence. The honest read is that these models are at least as perception-bound as reasoning-bound. They can reason about the answer once they can see it. What they cannot do is resolve a dense page in one look.
-
-[^stats]: +7.87pp at 9B (Welch *t* = 3.54, 95% CI [+3.4, +12.3]) and +8.60pp at 4B
-(*t* = 4.96, 95% CI [+5.2, +12.0]), eight trials per arm.
-
-[^length]: Within-set, the "advantage grows with page count" hypothesis doesn't
-hold: on the longest documents with a strong VLM the gap is flat. Across
-benchmarks of very different length, a budget effect does appear, which the next
-section takes up directly.
+So the lift is a **capacity gate**, not a free lunch. It generalizes across sizes
+and across a second family, for any model that is a strong enough multimodal coder.
+Qwen 3.5 27B is simply the checkpoint we entered in the challenge. The recipe is
+about the harness, not the model.
 
 
 ## The dataset axis: document length
 
-The category story is about density within DocVQA-2026. Length is a second axis, and
-it separates the methods cleanly once documents get long. To see it, run the main
+Document length is an axis of its own, and it separates the methods cleanly once
+documents get long. To see it, run the main
 solvers (no ablations) on two benchmarks of very different length: MP-DocVQA (short,
 at most 20 pages, mean 5.3, scored by ANLS, the fuzzy string-match metric DocVQA
 uses) and MMLongBench-Doc (long, around 47
@@ -285,7 +238,7 @@ pages, scored by a Qwen judge). Both on stratified-random subsets, n=3, Qwen 3.5
 
 ![the active-perception advantage grows with document length across benchmarks](f-lengthaxis.png)
 
-**Figure 6.** Across two benchmarks of very different length, the active-perception
+**Figure 4.** Across two benchmarks of very different length, the active-perception
 advantage over a raw multi-image baseline widens from a few points on short documents
 to tens of points on long ones. Qwen 3.5 27B, n=3, mean ± std.
 
@@ -312,10 +265,8 @@ would actually reach for it.
 The harness has a few moving parts: a Python REPL, a VLM that the agent calls as a
 perception tool, and the loop that ties them together. Which of those is doing the
 work? The clean way to find out is to remove one part at a time and watch the
-score move. Every run below is the same model (Qwen 3.5 27B as both reasoner and
-VLM), on the same DocVQA-2026 validation set (25 documents, 80 questions), with the
-same answer-formatting rules. Eight trials each, scored by ANLS, and reported as
-mean ± standard deviation. Only the structure changes.
+score move. Every run keeps the same answer-formatting rules; only the structure
+changes.
 
 Start at the top and take away the REPL. What's left is a **ReAct agent**: the
 same VLM perception tool, but called through plain tool-use instead of from inside
@@ -356,7 +307,7 @@ combination: a code REPL **and** an on-demand VLM perception call.
 
 ![](f3-tiers.png)
 
-**Figure 7.** The full configuration space, eight trials each. Three tiers
+**Figure 5.** The full configuration space, eight trials each. Three tiers
 separate cleanly: REPL + active perception (~36–42%), missing one of the two
 (no REPL, or no perception call, 21–27%), and an OCR-only floor (the OCR knockout
 below). Every cross-tier gap is much larger than the per-cell spread.
@@ -439,6 +390,66 @@ Reinforcement Learning*, arXiv:2505.14362.
 
 [^foldact]: Shao et al., *FoldAct: Efficient and Stable Context Folding for
 Long-Horizon Search Agents*, arXiv:2512.22733.
+
+### Is it perception or reasoning?
+
+The knockouts pin the scaffold's contribution to perception. To separate
+perception from reasoning directly, we vary each in turn and watch the score.
+Start by holding the reasoner fixed and changing only the eyes. Take a smaller model
+as the reasoner and feed its perception calls to progressively better VLMs, ending
+at the 27B. The reasoner never changes; only the quality of what it can see does.
+Accuracy climbs about **eight points** at both sizes we tried: +7.9 with a 9B
+reasoner, +8.6 with a 4B one, both well outside the noise.[^stats] Same brain,
+better eyes, large lift: that's the signature of a perception bottleneck, not a
+reasoning one. (And it cuts the other way too: a stronger reasoner writes
+better-targeted perception queries and gets more out of even a weak VLM. ReAct has
+no such actuator. Its ceiling is whatever a whole-page read resolves, and a smarter
+reasoner can't aim it.)
+
+![](f5-vlm-swap.png)
+
+**Figure 6.** Hold the reasoner fixed and swap in a stronger (27B) perception
+backend, and accuracy jumps about eight points at both reasoner sizes (4B and 9B
+reasoners). The signature of a perception bottleneck.
+
+Now do the opposite: hold the VLM fixed at the 27B backend and vary the reasoner.
+The active-perception agent scores 42% at 27B, 25% at 9B, 21% at 4B, beating ReAct
+at every size.
+
+| reasoner (VLM = 27B) | active perception | ReAct (no REPL) |
+|---|---|---|
+| 4B | 21 | 16 |
+| 9B | 25 | 21 |
+| 27B | 42 | 27 |
+
+The reasoner clearly matters, and the jump from 9B to 27B (+17pp) is even larger
+than the VLM swap.
+
+If perception is the real story, the advantage should be largest where a page packs
+the most fine detail, and it broadly is. The per-category gap between the
+active-perception agent and the ReAct baseline tracks visual density:
+
+![](f-category.png)
+
+**Figure 7.** The active-perception advantage over ReAct, by document category.
+Biggest on dense, structured pages where cropping recovers fine detail: engineering
+drawings (+36), business reports (+30), infographics (+19). Smallest on text-linear
+pages like science papers (+4) and slides (+1), where a single read already gets
+most of the page. (Maps are a hard case for every configuration, so the *advantage*
+there is modest even though the pages are busy.) The ranking is the point, not the
+exact values.
+
+The advantage concentrates where a page packs fine detail.[^length]
+
+So is the bottleneck perception or reasoning? What we can show cleanly is that the scaffold's contribution is perceptual. Hold the models fixed and swap whole-page ReAct for active perception, and accuracy jumps from 27% to 42%, with nothing changing but how perception is spent. The reasoner matters too, and in raw points more: shrink it and accuracy falls further than swapping the VLM does. But a bigger reasoner in this loop is also a better perception-director. It writes tighter crops and better code, and it has to be a competent coder to drive the REPL at all. Much of its lift plausibly flows through perception rather than around it, though no experiment here separates sharper aiming from sharper reasoning over the evidence. The honest read is that these models are at least as perception-bound as reasoning-bound. They can reason about the answer once they can see it. What they cannot do is resolve a dense page in one look.
+
+[^stats]: +7.87pp at 9B (Welch *t* = 3.54, 95% CI [+3.4, +12.3]) and +8.60pp at 4B
+(*t* = 4.96, 95% CI [+5.2, +12.0]), eight trials per arm.
+
+[^length]: Within-set, the "advantage grows with page count" hypothesis doesn't
+hold: on the longest documents with a strong VLM the gap is flat. Across
+benchmarks of very different length, a budget effect does appear, which the
+document-length section takes up directly.
 
 
 ## The cost of generality: it's slow
