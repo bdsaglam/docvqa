@@ -43,8 +43,8 @@ def save(fig, name):
 def fig3_tiers():
     # (label, mean, std, tier)
     rows = [
-        ("REPL + active perception\n(full method)", 41.88, 5.79, "top"),
-        ("Append-only twin", 39.53, 2.83, "top"),
+        ("RLM (full method)", 41.88, 5.79, "top"),
+        ("CodeAct (append-only twin)", 39.53, 2.83, "top"),
         ("+ general sub-agent", 36.72, 2.75, "top"),
         ("+ OCR & search", 36.56, 2.89, "top"),
         ("ReAct (no REPL)", 27.19, 3.19, "mid"),
@@ -120,35 +120,39 @@ def fig4_grid():
 
 # ----------------------------------------------------- F5: VLM-swap (perception)
 def fig5_vlm_swap():
-    # reasoner fixed; swap VLM from homog -> 27B
-    groups = ["9B reasoner", "4B reasoner"]
-    homog = [18.91, 14.22]
-    homog_s = [3.81, 3.83]
-    swap = [25.31, 21.09]
-    swap_s = [4.16, 3.16]
-    lifts = [6.41, 6.88]
+    # reasoner fixed; upgrade only the VLM to 27B.
+    # 4B/9B reasoner: smaller VLM = homogeneous (own size), n=8 both arms.
+    # 27B reasoner: smaller VLM = 4B (n=4), vs homogeneous 27B (n=8).
+    groups = ["4B reasoner", "9B reasoner", "27B reasoner"]
+    weak = [14.22, 18.91, 32.81]
+    weak_s = [3.83, 3.81, 3.13]
+    weak_lbl = ["4B", "9B", "4B"]
+    strong = [21.09, 25.31, 41.88]
+    strong_s = [3.16, 4.16, 5.79]
+    lifts = [6.88, 6.41, 9.07]
 
     import numpy as np
     x = np.arange(len(groups))
     w = 0.34
-    fig, ax = plt.subplots(figsize=(6.0, 4.4))
-    ax.bar(x - w / 2, homog, w, yerr=homog_s, label="VLM = reasoner (homogeneous)",
+    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    ax.bar(x - w / 2, weak, w, yerr=weak_s, label="smaller VLM",
            color=C_FLOOR, error_kw=dict(ecolor="#555", capsize=3, lw=1))
-    ax.bar(x + w / 2, swap, w, yerr=swap_s, label="VLM swapped to 27B",
+    ax.bar(x + w / 2, strong, w, yerr=strong_s, label="VLM = 27B",
            color=C_TOP, error_kw=dict(ecolor="#555", capsize=3, lw=1))
     for i in range(len(groups)):
-        top = max(homog[i] + homog_s[i], swap[i] + swap_s[i]) + 1.2
+        top = max(weak[i] + weak_s[i], strong[i] + strong_s[i]) + 1.4
         ax.annotate(f"+{lifts[i]:.1f} pp", xy=(x[i], top), ha="center",
                     fontsize=11, fontweight="bold", color="#2f6f9f")
+        ax.annotate(weak_lbl[i], xy=(x[i] - w / 2, 1.2), ha="center",
+                    fontsize=9, color="white", fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(groups)
-    ax.set_ylabel("Val accuracy (ANLS %), n=8")
-    ax.set_ylim(0, 36)
+    ax.set_ylabel("Val accuracy (ANLS %)")
+    ax.set_ylim(0, 52)
     ax.yaxis.grid(True, color=GRID, lw=0.7)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=9, loc="upper center",
-              bbox_to_anchor=(0.5, 1.0), ncol=2)
-    ax.set_title("Fix the reasoner, improve only perception → ~7 pp",
+    ax.legend(frameon=False, fontsize=9, loc="upper left")
+    ax.set_title("Fix the reasoner, upgrade only the VLM → 6–9 pp",
                  fontsize=12, fontweight="bold")
     save(fig, "f5-vlm-swap.png")
 
@@ -273,7 +277,7 @@ def fig_lengthaxis():
     fig, ax = plt.subplots(figsize=(8.4, 4.7))
     ax.bar(x - w / 2, base, w, yerr=base_s, label="raw multi-image baseline (no scaffold)",
            color=C_BASE, error_kw=dict(ecolor="#444", capsize=3, lw=1))
-    ax.bar(x + w / 2, ours, w, yerr=ours_s, label="active perception (ours)",
+    ax.bar(x + w / 2, ours, w, yerr=ours_s, label="RLM (ours)",
            color=C_TOP, error_kw=dict(ecolor="#444", capsize=3, lw=1))
     for i in range(len(groups)):
         ax.text(x[i] - w / 2, base[i] + base_s[i] + 1.4, f"{base[i]:.0f}",
