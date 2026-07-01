@@ -96,14 +96,14 @@ Scores are from the competition leaderboard (ANLS; no public ground truth).
 
 - **`codeact_chat`** — SC-8 → `submissions/codeact-chat-test-sc8.json` →
   **test 41.25% (0.4125)**.
-- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json` → **test 39.0%**.
+- **`rvlm`** — SC-8 → `submissions/rvlm-test-sc8.json` → **test 39.38% (0.3938)**.
 - `react_baseline` test — **skipped** (user): the two recursive submissions
   suffice; a no-REPL baseline isn't worth the ~2-day heavy-doc grind, so there is
   **no ReAct test submission**.
 
-**`rvlm` (39.0%) and `codeact_chat` (41.25%) are statistically tied on test**, not
-a real difference: the gap is ~3.6 Q / 160, and the binomial SE at ~40% on n=160
-is ±3.9pp → the two are **0.58 SE apart**. The submissions give identical answers
+**`rvlm` (39.38%) and `codeact_chat` (41.25%) are statistically tied on test**, not
+a real difference: the gap is ~3 Q / 160, and the binomial SE at ~40% on n=160
+is ±3.9pp → the two are **0.48 SE apart**. The submissions give identical answers
 on 68% of Qs (with identical unknown-rate 10/160 and answer length), so the gap is
 a coin-flip on the 51 they disagree on. Consistent with val, where they tie
 (41.88±5.79 vs 39.53±2.83) and rvlm actually led on SC@8 (47.5 vs 45.0) — the

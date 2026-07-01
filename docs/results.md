@@ -77,13 +77,13 @@ SC-8 self-consistency vote → submission JSON):
 | Solver | Test | Submission |
 |---|---|---|
 | **`codeact_chat`** | **41.25%** | `submissions/codeact-chat-test-sc8.json` |
-| **`rvlm`** | **39.0%** | `submissions/rvlm-test-sc8.json` |
+| **`rvlm`** | **39.38%** | `submissions/rvlm-test-sc8.json` |
 | `react_baseline` | — (no submission, skipped) | — |
 
 Both recursive methods clear the external open/closed official baselines on test
-(Gemini 3 Pro 37.5%, GPT-5.2 35.0%) with a mid-sized open 27B. `rvlm` (39.0%) and
-`codeact_chat` (41.25%) are **statistically tied** — the gap is ~3.6 Q / 160
-(binomial SE ±3.9pp → 0.58 SE apart); the two submissions agree on 68% of answers
+(Gemini 3 Pro 37.5%, GPT-5.2 35.0%) with a mid-sized open 27B. `rvlm` (39.38%) and
+`codeact_chat` (41.25%) are **statistically tied** — the gap is ~3 Q / 160
+(binomial SE ±3.9pp → 0.48 SE apart); the two submissions agree on 68% of answers
 with identical unknown-rate/length, so it's a coin-flip on the 51 they disagree
 on. This matches val, where they tie (41.88±5.79 vs 39.53±2.83) and rvlm led on
 SC@8 (47.5 vs 45.0). Headline reporting stays val mean±std (D-003); the single
