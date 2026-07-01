@@ -141,7 +141,7 @@ ANLS (the fuzzy string-match metric DocVQA uses), reported as mean ± std.
 ![](f2-architecture.png)
 
 **Figure 2.** Left: the active-perception loop. The reasoner writes code, the
-code calls a (frozen) VLM against a chosen crop, the text it returns flows back
+code calls the VLM against a chosen crop, the text it returns flows back
 into the REPL as the next observation. Right: a ReAct agent (tool calls, no code
 environment) with the same VLM but no REPL. It calls the tool and gets a text observation back, but only for whole
 pages, with no way to crop, compose, or compute. The REPL is the only structural
@@ -156,10 +156,10 @@ way that doesn't affect accuracy at all.
 Here is one run of the loop on a real question: the gap between two values on a
 chart buried in a 181-page report.
 
-![representative trajectory: reasoner-LM writes Python that calls a frozen VLM on chosen regions](trajectory.png)
+![representative trajectory: reasoner-LM writes Python that calls a VLM on chosen regions](trajectory.png)
 
 **Figure 3.** One run of the loop (16 iterations, correct). The reasoner-LM writes
-Python that calls the frozen VLM on regions it chooses. It surveys ten candidate
+Python that calls the VLM on regions it chooses. It surveys ten candidate
 pages in one batched call, locates the table via a table-of-contents pointer, and
 reads page 76 whole, getting a wrong number ($978.42). It distrusts that, crops to
 the chart band and re-reads ($2,287.07), which disagrees; it adjudicates by reading

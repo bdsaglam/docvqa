@@ -234,7 +234,7 @@ def fig2_architecture():
     axl.set_title("Perceive-Reason-Code", fontsize=12, fontweight="bold")
     box(axl, (2, 5.2), 2.6, 0.8, "Reasoner (LLM)", "#dbe7f1")
     box(axl, (2, 3.5), 2.6, 0.8, "Python REPL", "#eef3f8")
-    box(axl, (2, 1.8), 2.6, 0.8, "VLM (frozen)", "#dbe7f1")
+    box(axl, (2, 1.8), 2.6, 0.8, "Perceiver (VLM)", "#dbe7f1")
     box(axl, (2, 0.4), 2.8, 0.55, "document pages", "#f1f1f1")
     arrow(axl, (1.7, 4.8), (1.7, 3.9), "writes code", side="left")
     arrow(axl, (2.3, 3.9), (2.3, 4.8), "reads variables", side="right")
@@ -245,7 +245,7 @@ def fig2_architecture():
     # Right: ReAct
     axr.set_title("ReAct (no REPL)", fontsize=12, fontweight="bold")
     box(axr, (2, 5.2), 2.6, 0.8, "Reasoner (LLM)", "#dbe7f1")
-    box(axr, (2, 2.6), 2.6, 0.8, "VLM (frozen)", "#dbe7f1")
+    box(axr, (2, 2.6), 2.6, 0.8, "Perceiver (VLM)", "#dbe7f1")
     box(axr, (2, 0.9), 2.8, 0.55, "document pages", "#f1f1f1")
     arrow(axr, (1.7, 4.8), (1.7, 3.0), "tool call", side="left")
     arrow(axr, (2.3, 3.0), (2.3, 4.8), "observation (text)", side="right")

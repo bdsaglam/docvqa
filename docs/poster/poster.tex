@@ -84,8 +84,8 @@
 \includegraphics[width=0.99\linewidth]{figures/trajectory-1.png}\\[3pt]
 \begin{minipage}{0.98\linewidth}\justifying
 \figcap{\textbf{Fig.~1.} \keyval{Perceive--Reason--Code} on a 181-page report. The
-reasoner-LM writes Python that calls a \emph{frozen} VLM (\texttt{batch\_look}) on
-regions it chooses: it \keyval{surveys} pages, \keyval{locates} the table,
+reasoner-LM writes Python that calls the \keyval{Perceiver} (VLM) on regions it
+chooses: it \keyval{surveys} pages, \keyval{locates} the table,
 \keyval{distrusts} a full-page read, re-reads a tighter \keyval{crop} that
 disagrees, adjudicates, and \keyval{computes} the answer in Python --- finding
 \emph{across} pages and reading \emph{within} one. The crop-verify catches a wrong
