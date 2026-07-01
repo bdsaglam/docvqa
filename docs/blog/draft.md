@@ -191,8 +191,12 @@ that's how we'll treat it.)
 
 RLM had already shown, for *text*, that the REPL alone lifts a baseline and a
 sub-call lifts it further. The question this post answers is whether that holds when
-the sub-call is a *VLM* over a stack of document images. More usefully: which
-piece is actually responsible. The rest of the post is the controlled answer.
+the sub-call is a *VLM* over a stack of document images. Concurrent work takes the
+recursive idea multimodal from a different angle: RVLM (Recursive Vision-Language
+Models with Adaptive Depth, 2026) applies it to single-image medical scans, while
+our setting is the multi-page document, where finding evidence across and within
+pages is the whole game. More usefully for us: which piece is actually responsible.
+The rest of the post is the controlled answer.
 
 [^think]: We run with `enable_thinking=false` for cost and reproducibility.
 Re-enabling it doesn't change the picture (a separate ablation moves it less than
@@ -231,10 +235,9 @@ about the harness, not the model.
 Document length is an axis of its own, and it separates the methods cleanly once
 documents get long. To see it, run the main
 solvers (no ablations) on two benchmarks of very different length: MP-DocVQA (short,
-at most 20 pages, mean 5.3, scored by ANLS, the fuzzy string-match metric DocVQA
-uses) and MMLongBench-Doc (long, around 47
-pages, scored by a Qwen judge). Both on stratified-random subsets, n=3, Qwen 3.5
-27B.
+at most 20 pages, mean 5.3, scored by ANLS; Tito et al., 2023) and MMLongBench-Doc
+(long, around 47 pages, scored by a Qwen judge; Ma et al., 2024). Both on
+stratified-random subsets, n=3, Qwen 3.5 27B.
 
 ![the active-perception advantage grows with document length across benchmarks](f-lengthaxis.png)
 
@@ -549,6 +552,7 @@ itself more capable.
 ## References
 
 - Zhang, A. L., Kraska, T., & Khattab, O. (2025). Recursive Language Models. [arXiv:2512.24601](https://arxiv.org/abs/2512.24601).
+- *Recursive Vision-Language Models with Adaptive Depth (RVLM).* [arXiv:2603.24224](https://arxiv.org/abs/2603.24224) (2026). Concurrent work applying the recursive idea to vision-language.
 - Wang, X., et al. (2024). Executable Code Actions Elicit Better LLM Agents (CodeAct). ICML.
 - Yao, S., et al. (2023). ReAct: Synergizing Reasoning and Acting in Language Models. ICLR.
 - Gupta, T., & Kembhavi, A. (2023). Visual Programming (VisProg). CVPR.
@@ -557,6 +561,8 @@ itself more capable.
 - Borchmann, Ł., et al. (2026). Strategic Navigation or Stochastic Search? (MADQA). [arXiv:2603.12180](https://arxiv.org/abs/2603.12180).
 - Shao, J., et al. (2025). FoldAct: Efficient and Stable Context Folding for Long-Horizon Search Agents. [arXiv:2512.22733](https://arxiv.org/abs/2512.22733).
 - Mathew, M., Karatzas, D., & Jawahar, C. V. (2021). DocVQA: A Dataset for VQA on Document Images. WACV.
+- Tito, R., Karatzas, D., & Valveny, E. (2023). Hierarchical Multimodal Transformers for Multi-Page DocVQA (MP-DocVQA). [arXiv:2212.05935](https://arxiv.org/abs/2212.05935).
+- Ma, Y., et al. (2024). MMLongBench-Doc: Benchmarking Long-context Document Understanding with Visualizations. [arXiv:2407.01523](https://arxiv.org/abs/2407.01523).
 
 
 ## Citation
