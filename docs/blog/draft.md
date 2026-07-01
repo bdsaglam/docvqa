@@ -15,7 +15,6 @@
 > adds is putting them together for documents and pinning down which parts carry the
 > result.
 
-
 ## A 27B model, a Python REPL, and one question
 
 We entered the ICDAR 2026 DocVQA challenge with an approach, not a model: let a
@@ -46,9 +45,8 @@ But first, the result that makes the tear-down worth doing.
 We were a **joint winner of the ICDAR 2026 DocVQA challenge in the 8–35B parameter
 tier** with Qwen 3.5 27B, an open model, and no fine-tuning.
 
-The challenge scores a held-out test set, with self-consistency voting (sample the
-model several times and take the majority answer) over a handful of samples (the
-rules allow it). Two of the entries below are ours: the
+The challenge scores a held-out test set, with self-consistency voting over a
+handful of samples (the rules allow it). Two of the entries below are ours: the
 tuned one that topped the tier, and the streamlined general method this post
 describes. Both clear the challenge's official baselines. Those baselines are bare
 models, reported with no agentic scaffold, so the fair reading is a harnessed 27B
@@ -413,15 +411,28 @@ layout-bound categories (engineering drawings, maps) it scores zero out of ten i
 all eight trials. For these questions, OCR text cannot stand in for looking.
 Perception is not optional; it is the thing the scaffold is buying.
 
-### An unspent signal
+### The full table
 
-The knockouts are done. One diagnostic number points past them. Take the append-only
-variant and, over its eight
-trials per question, ask how often *any* one of them got the answer right: the
-oracle, pass@8. It's about **64%**, versus the **40%** that variant actually lands
-on a single try. The right answer is reachable far more often than it's reliably
-produced; somewhere in that ~24-point gap is a learning signal nobody has spent yet.
-We'll come back to it.
+Every configuration, with its single-trial mean, oracle ceiling (pass@8), and
+self-consistency vote (SC@8) over the eight trials:
+
+| Configuration | avg@1 (± std) | pass@8 | SC@8 |
+|---|---|---|---|
+| **Active perception (full)** | **41.9 ± 5.8** | **68.8** | **47.5** |
+| Append-only twin | 39.5 ± 2.8 | 63.8 | 45.0 |
+| + general sub-agent | 36.7 ± 2.8 | 66.3 | 41.3 |
+| + OCR & search | 36.6 ± 2.9 | 67.5 | 40.0 |
+| ReAct (no REPL) | 27.2 ± 3.2 | 53.8 | 32.5 |
+| Raw multi-image (no scaffold) | 20.9 ± 1.6 | 27.5 | 20.0 |
+| Competition prompt (no scaffold) | 18.9 ± 1.9 | 33.8 | 21.3 |
+| OCR-only (no vision) | 14.7 ± 2.2 | 27.5 | 15.0 |
+
+Two things to note. Self-consistency (SC@8) buys a few points over a single trial,
+which is why the competition submissions vote. And the oracle ceiling sits far above
+single-trial accuracy on the strong scaffolds: pass@8 is 68.8 against an avg@1 of
+41.9, and 63.8 against 39.5 for the trainable append-only twin. The right answer is
+reachable much more often than it is reliably produced, and the last section picks
+up that gap.
 
 [^deepeyes]: Zheng et al., *DeepEyes: Incentivizing "Thinking with Images" via
 Reinforcement Learning*, arXiv:2505.14362.
@@ -512,9 +523,9 @@ Two things from this study make it feel concrete rather than idle. First, we
 already know which form is trainable: the append-only trajectory ties the compacted
 one on accuracy but keeps the clean, growing-prefix structure that learning methods
 assume. And making folded trajectories trainable is itself an active problem.
-Second, the oracle gap is just sitting there: the right answer is reachable about
-24 points more often than the model reliably produces it. That's not noise. That's
-an unspent signal, exactly the kind of thing a learning procedure exists to capture.
+Second, the oracle gap is just sitting there: for the append-only twin, pass@8 is
+about 24 points above what a single trial reliably produces. That is not noise. It
+is exactly the kind of signal a learning procedure exists to capture.
 
 Whether the symbolic substrate can be made part of the model *during training* (so
 that neural and symbolic computation are learned together rather than stitched
@@ -551,5 +562,3 @@ If you found this useful:
   howpublished = {\url{https://barisdeniz.is-a.dev/posts/perceive-reason-code/}}
 }
 ```
-
-
