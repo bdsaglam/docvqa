@@ -38,8 +38,9 @@ which of its pieces (the REPL, the VLM tool, the agent loop) is actually carryin
 the result. So this post takes the thing apart, one piece at a time: **which
 components carry the lift, and which are just along for the ride?**
 
-The core that does the work turns out to be small. Two parts matter; the rest (a general sub-agent, clever
-trajectory management, an OCR pipeline) barely move accuracy. And underneath sits
+The core that does the work turns out to be small: the Python REPL and the
+on-demand perception call, and only the two together. The rest (a general
+sub-agent, clever trajectory management, an OCR pipeline) barely moves accuracy. And underneath sits
 a reframe for anyone building multimodal agents: on documents, perception is the
 constraint, but **the reasoner is the lever**. No model can afford to see a dense
 page all at once; what separates systems is how well the reasoner directing the
@@ -200,8 +201,8 @@ RLM had already shown, for *text*, that the REPL alone lifts a baseline and a
 sub-call lifts it further. The question this post answers is whether that holds when
 the sub-call is a *VLM* over a stack of document images. Active perception itself is not new for a single image: DeepEyes (Zheng et al., 2025) trains a model to
 zoom into an image region to answer, and concurrent work, RVLM (Recursive
-Vision-Language Models with Adaptive Depth; Mayumu et al., 2026), applies the recursive idea to
-single-image medical scans. Our setting is the multi-page document, where finding
+Vision-Language Models with Adaptive Depth; Mayumu et al., 2026), applies the same
+REPL-plus-sub-call shape to single-image medical scans. Our setting is the multi-page document, where finding
 evidence across and within pages is the whole game. What none of this settles is
 which piece of the harness carries the result; the ablations do.
 
@@ -278,9 +279,10 @@ than a clean one), whereas a focused sub-call that returns *compact text* keeps 
 context clean. RLM tells this story for long text; here it shows up for pixels, and
 it's what pins down *which* half does the work. Having a REPL isn't enough on its
 own; the perception has to go through **a call that returns text**,
-not be poured into the reasoner's own window. (The RL-trained version of "let the
-model look at its own image crops" is DeepEyes; the point here is only
-that a *prompted* REPL agent is better off not.)
+not be poured into the reasoner's own window. (This channel, crops appended to
+the model's own context, is exactly the one DeepEyes trains with RL, though
+through plain zoom actions rather than a REPL; the point here is only that a
+*prompted* REPL agent is better off not.)
 
 Put the two knockouts together and you get a clean 2×2:
 
