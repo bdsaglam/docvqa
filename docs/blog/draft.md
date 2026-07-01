@@ -199,8 +199,8 @@ that's how we'll treat it.)
 
 RLM had already shown, for *text*, that the REPL alone lifts a baseline and a
 sub-call lifts it further. The question this post answers is whether that holds when
-the sub-call is a *VLM* over a stack of document images. Active perception itself is not new for a single image: DeepEyes (Zheng et al., 2025) trains a model to
-zoom into an image region to answer, and concurrent work, RVLM (Recursive
+the sub-call is a *VLM* over a stack of document images. Active perception itself is not new for a single image: **DeepEyes** (Zheng et al., 2025) trains a model to
+zoom into an image region to answer, and concurrent work, **RVLM** (Recursive
 Vision-Language Models with Adaptive Depth; Mayumu et al., 2026), applies the same
 REPL-plus-sub-call shape to single-image medical scans. Our setting is the multi-page document, where finding
 evidence across and within pages is the whole game. What none of this settles is
