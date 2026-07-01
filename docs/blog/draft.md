@@ -9,18 +9,16 @@ We jointly won the ICDAR 2026 DocVQA challenge in the 8–35B tier. An
 open Qwen 3.5 27B beat the challenge's bare-model baselines, Gemini 3 Pro and
 GPT-5.2, on the held-out test set, with no fine-tuning. Our approach is a Python
 REPL plus a single perception tool: a vision model the reasoner points at any
-region of any page. So it decides where to look, instead of reading whole pages at
-a fixed resolution. Two parts carry the accuracy, and only together: the REPL and
-the perception call. The usual additions do nothing for accuracy. That includes a general
-sub-agent, clever trajectory management, and the OCR and search our competition
-entry used. Perception is the constraint: a dense page defeats a single
+region of any page, so it decides where to look instead of reading whole pages at
+a fixed resolution. Those two parts carry the result, and only together; the
+usual additions (a general sub-agent, clever trajectory management, the OCR and
+search our competition entry used) do nothing for accuracy. Perception is the constraint: a dense page defeats a single
 fixed-resolution look, whoever is looking. But the reasoner is the lever.
 Scaling the reasoner moves accuracy about twice as much as scaling the VLM it
 looks through, and a strong coding reasoner driving a small VLM beats a small
 reasoner driving a strong one. The approach builds on
-RLM, CodeAct, and the code-as-vision line. What this post
-adds is putting them together for documents and pinning down which parts carry the
-result.
+RLM, CodeAct, and the code-as-vision line; the contribution here is putting them
+together for documents, plus the ablations behind each of these claims.
 
 </details>
 
@@ -33,14 +31,12 @@ REPL, and an on-demand call to a vision-language model (VLM), used as a percepti
 tool the reasoner invokes region by region.
 
 The leaderboard result is a single number; the sharper question is where the lift
-comes from. A code harness helps a model; what's less clear is
-which of its pieces (the REPL, the VLM tool, the agent loop) is actually carrying
-the result. So this post takes the thing apart, one piece at a time: **which
+comes from. So this post takes the system apart, one piece at a time: **which
 components carry the lift, and which are just along for the ride?**
 
-The core that does the work turns out to be small: the Python REPL and the
-on-demand perception call, and only the two together. The rest (a general
-sub-agent, clever trajectory management, an OCR pipeline) barely moves accuracy. And underneath sits
+The answer turns out to be short: the REPL and the perception call, and only the
+two together. The rest (a general sub-agent, clever trajectory management, an OCR
+pipeline) barely moves accuracy. And underneath sits
 a reframe for anyone building multimodal agents: on documents, perception is the
 constraint, but **the reasoner is the lever**. No model can afford to see a dense
 page all at once; what separates systems is how well the reasoner directing the
@@ -69,9 +65,8 @@ against unharnessed frontier models.
 
 The **tuned entry** scored higher because it was fitted to this benchmark:
 DocVQA-specific prompts, plus the OCR and search we spend the post stripping away.
-The **general method** drops all of that and still clears the frontier. Specializing
-buys a few points of peak score; generalizing gives them up. This post is about
-the general one.
+The **general method** drops all of that and still clears the frontier. This post
+is about the general one.
 
 These test numbers sit below our validation numbers. The gap could be a harder test
 split as much as any fit to the set we developed against; the general method strips
@@ -145,7 +140,9 @@ pages in a loop, composite regions, and do in code the coordinate math and
 arithmetic a VLM is bad at. Perception becomes something the model spends
 deliberately, a region at a time, rather than a single fixed gulp of pixels. Three
 moves give the system its name, **Perceive-Reason-Code**: perceive through a VLM
-call, reason in language, act by writing code. Unless noted otherwise, every
+call, reason in language, act by writing code.
+
+Unless noted otherwise, every
 experiment below uses Qwen 3.5 27B as both the reasoner and the VLM, on the
 DocVQA-2026 validation set (25 documents, 80 questions), eight trials, scored by
 ANLS (the fuzzy string-match metric DocVQA uses), reported as mean ± std.
@@ -161,8 +158,8 @@ way to crop, compose, or compute.
 Concretely, the loop is the familiar agent shape: a **state** (a representation of
 the run so far), an **action** (a block of Python the model writes), and an **observation**
 (whatever that code prints, including the text a perception call returns). Hold
-onto that framing; how the state is represented matters later, in a
-way that doesn't affect accuracy at all.
+onto that framing: how the state is represented comes back in the ablations,
+where it matters for training rather than accuracy.
 
 Here is one run of the loop on a real question: the gap between two values on a
 chart buried in a 181-page report.
@@ -174,14 +171,11 @@ pages in one batched call, locates the table via a table-of-contents pointer, re
 page whole and distrusts the number it gets, crops to the chart band and re-reads,
 then does the subtraction in Python, where it's exact.
 
-The actions are Python the model writes, and the arithmetic happens where it's
-exact rather than in the VLM's head. The whole-page read returned $978.42, and it
-was wrong. The crop caught it.
+The whole-page read returned $978.42, and it was wrong. The crop caught it.
 
-One setup detail: these runs disable the model's
-native "thinking" channel.[^think] This relocates the reasoning into the visible
-body of each turn, where the code and the comments are. The reasoning is still
-there; thinking-off just moves it somewhere we can see it.
+One setup detail: these runs disable the model's native "thinking"
+channel.[^think] The reasoning is still there; it just moves into the visible
+body of each turn, where the code and the comments live.
 
 ### Related work
 
@@ -202,8 +196,8 @@ sub-call lifts it further. The question this post answers is whether that holds 
 the sub-call is a *VLM* over a stack of document images. Active perception itself is not new for a single image: **DeepEyes** (Zheng et al., 2025) trains a model to
 zoom into an image region to answer, and concurrent work, **RVLM** (Recursive
 Vision-Language Models with Adaptive Depth; Mayumu et al., 2026), applies the same
-REPL-plus-sub-call shape to single-image medical scans. Our setting is the multi-page document, where finding
-evidence across and within pages is the whole game. What none of this settles is
+REPL-plus-sub-call shape to single-image medical scans. Our setting is the multi-page
+document, where the evidence must first be found, across pages and within them. What none of this settles is
 which piece of the harness carries the result; the ablations do.
 
 [^think]: We run with `enable_thinking=false` for cost and reproducibility.
@@ -274,16 +268,13 @@ and here it is prompted. It collapses too, down to **22.3%**. The agent also thr
 runs 30+ steps per question and pins the iteration cap on most of them, grinding
 without converging.
 
-That second result is exactly what the RLM line would
-predict. Stuffing raw content into the reasoner's own context degrades it (the
-familiar context-rot effect, where a model handles a long or noisy context worse
-than a clean one), whereas a focused sub-call that returns *compact text* keeps the
-context clean. RLM tells this story for long text; here it shows up for pixels, and
-it's what pins down *which* half does the work. Having a REPL isn't enough on its
-own; the perception has to go through **a call that returns text**,
-not be poured into the reasoner's own window. (DeepEyes shows the in-context-crops
-channel can work when a model is trained for it; the point here is only that a
-*prompted* REPL agent is better off not.)
+That second result is exactly what the RLM line would predict. Stuffing raw
+content into the reasoner's own context degrades it: the familiar context-rot
+effect, where a model handles a long or noisy context worse than a clean one. RLM
+tells this story for long text; here it shows up for pixels, and it pins down
+*which* half does the work. Having a REPL isn't enough on its own; the perception
+has to go through **a call that returns compact text**, not be poured into the
+reasoner's own window.
 
 Put the two knockouts together and you get a clean 2×2:
 
@@ -294,9 +285,9 @@ Put the two knockouts together and you get a clean 2×2:
 
 : **Table 3.** The two halves of the scaffold, ablated: the REPL crossed with the sub-VLM call (validation ANLS).
 
-You need both halves; neither alone gets you far. Drop either and you
-land in the low-to-mid 20s, near the no-scaffold baseline. The lift lives in the
-combination: a code REPL **and** an on-demand VLM perception call.
+Drop either half and you land in the low-to-mid 20s, near the no-scaffold
+baseline. The lift lives in the combination: a code REPL **and** an on-demand VLM
+perception call.
 
 Plotted together, the configurations fall into three tiers whose gaps dwarf the
 spread within each.
@@ -309,9 +300,8 @@ or no perception call), and the no-scaffold / OCR-only floor.
 
 ### Three things that turn out *not* to matter
 
-The core is small, and the obvious ways to enrich it don't make it any bigger.
-This is what tells you what you
-*don't* need to build.
+The obvious ways to enrich the core don't make it any bigger; these results tell
+you what you *don't* need to build.
 
 **Generalizing the call buys nothing.** We replaced the focused "look at this
 region" call with a general sub-agent that could take on any subtask (image
@@ -344,12 +334,11 @@ We'll come back to this at the end.
 layout-aware page text, IBM granite-vision (a 2B vision-language model) for
 captioning the embedded figures and charts, and a BM25 index for lexical search.
 Wire all three into the full method and the score is **36.6%**, flat, within the
-noise. On these
-moderate-length documents, that text adds nothing the active-perception call isn't
-already getting from the pixels. One caveat on scope: this is the pipeline we ran,
-not a verdict on OCR in general. A stronger OCR engine, better matched to these
-layouts, might surface detail ours missed and lift accuracy, not just efficiency.
-What we can say is that the one we used didn't beat looking.
+noise. On these moderate-length documents, that text adds nothing the
+active-perception call isn't already getting from the pixels. This is a verdict
+on the pipeline we ran, not on OCR in general; a stronger engine, better matched
+to these layouts, might surface detail ours missed. What we can say is that the
+one we used didn't beat looking.
 
 So the core that matters is small: **a REPL plus one active-perception call.**
 Generality, trajectory format, and OCR-on-top are all dispensable.
@@ -423,14 +412,11 @@ papers +4, slides +1. Maps are a hard case for every configuration.
 So is the bottleneck perception or reasoning? Perception is what binds in the
 moment: a dense page defeats any single look, whoever is looking, and the
 OCR-only collapse shows nothing substitutes for looking. But the leverage sits
-with the reasoner. At a fixed 27B VLM, scaling the reasoner buys +20.8 points; at
-a fixed 27B reasoner, scaling the VLM buys +9.1. And that leverage only exists
-inside the loop: the same capacity buys three to four times more when the
-reasoner can act on perception than when it reads whole pages. The practical
-corollary is the one the corners show. The VLM does not have to be great. A
-decent but limited one, driven by a capable coding reasoner that can crop, zoom,
-and re-read on demand, does far more than the same VLM read in a single pass,
-and more than a stronger VLM aimed by a weaker director.
+with the reasoner: at a fixed 27B VLM, scaling the reasoner adds +20.8 points; at
+a fixed 27B reasoner, scaling the VLM adds +9.1. And that leverage exists only
+inside the loop; ReAct's much shallower column shows what the same capacity
+yields without it. The practical corollary is the one the corners show: the VLM
+does not have to be great, so long as the director aiming it is.
 
 One caveat bounds the reasoning half of this. The data does not separate how much of a stronger reasoner's lift comes from sharper aiming (better crops and code) versus sharper reasoning over what it then sees. That decomposition stays open.
 
@@ -467,15 +453,14 @@ sizes and across a second family.
 
 The code-REPL harnesses (RLM and its CodeAct twin) beat the no-REPL ReAct agent at
 every capable size, and the margin scales with model capability: a point or two at
-4B, about fifteen points at Qwen 27B and Gemma 31B. But the lift has a floor. Gemma
-4B (E4B) sits below the capacity gate: no harness clears the no-scaffold baseline
-(around 6), because the model cannot write the code to drive the loop. The harness
-amplifies a capable model; it cannot rescue one that cannot code.
+4B, about fifteen points at Qwen 27B and Gemma 31B. But the lift is gated by
+capacity. Gemma 4 E4B falls below the gate: no harness clears the no-scaffold
+baseline (around 6), because the model cannot write the code to drive the loop.
+The harness amplifies a capable model; it cannot rescue one that cannot code.
 
-So the lift is a **capacity gate**, not a free lunch. It generalizes across sizes
-and across a second family, for any model that is a strong enough multimodal coder.
-Qwen 3.5 27B is simply the checkpoint we entered in the challenge. The recipe is
-about the harness, not the model.
+The gate is about capability, not family or checkpoint: any model that is a
+strong enough multimodal coder gets the lift. Qwen 3.5 27B is simply the one we
+entered in the challenge. The recipe is about the harness, not the model.
 
 
 ## The advantage grows with document length
@@ -503,10 +488,10 @@ of length. The raw multi-image baseline degrades. Its "Unknown" rate (the questi
 cannot find the evidence) climbs from about 22% on short documents to about 87% on
 long ones, as the evidence falls off the end of a fixed page budget.
 
-So length is one axis along which the advantage grows, and it dominates where
-documents are long, as evidence falls off a fixed page budget. On moderate
-collections like DocVQA-2026 the budget barely binds, because the pages fit; the
-large edge there comes from a different axis, within-page density.
+So length is one axis along which the advantage grows, and it dominates once
+documents are long. On moderate collections like DocVQA-2026 the page budget
+barely binds; the large edge there comes from a different axis, within-page
+density.
 
 
 ## Limitations
@@ -538,13 +523,12 @@ recursive agent can be flexible *and* ruinously expensive. In their setting, suc
 an agent burned on the order of 270M input tokens and several hundred dollars on a
 task it then *lost* to a far cheaper retrieval agent. Flexibility has a bill attached.
 
-More steps mark a
-*hard* document, not a path to a better answer. Across questions, trajectory
-length is mildly *negatively* correlated with correctness. The lever is the quality
-of the perception loop, not its length; grinding longer is a symptom, not a fix.
+More steps mark a *hard* document, not a path to a better answer: across
+questions, trajectory length is mildly *negatively* correlated with correctness.
+Grinding longer is a symptom, not a fix.
 
-The encouraging part is that we left the efficiency levers untouched.
-There's clear room, we just didn't need it to make the point:
+The encouraging part is that we left the efficiency levers untouched, so there is
+clear room:
 
 - **Cut calls with cheap retrieval.** High-quality OCR run once as preprocessing,
   plus a searchable index, would let the agent jump to the right page instead of
@@ -563,11 +547,10 @@ faster.
 
 Beyond cost, a few limits bound the claims. The test numbers sit below validation
 (a harder test split is at least as plausible a reason as fit to the development
-set). And the scaffold has a
-floor: it
-amplifies a capable coder but cannot rescue a model too weak to drive the loop, and
-it does not cleanly separate how much of a stronger reasoner's lift is sharper
-aiming versus sharper reasoning. None of these moves the central picture.
+set). The scaffold has a floor: it amplifies a capable coder but cannot rescue a
+model too weak to drive the loop. And the data does not separate how much of a
+stronger reasoner's lift is sharper aiming versus sharper reasoning. None of
+these moves the central picture.
 
 Set the caveats aside for a moment, because the REPL is really an instance of a
 more general idea.
@@ -583,19 +566,17 @@ to *aim its own eyes*, and the code does the cropping and the arithmetic that th
 network is bad at. The neural part proposes; the symbolic part executes and
 remembers.
 
-Using this substrate at *inference* is already common. Frontier models interleave
-code execution and tool calls with their reasoning, running Python or calling a tool
-between thinking steps; the results here add a document-domain instance, with the
-twist that the code aims a second model's perception. The weights stay frozen, and
-the substrate wraps around them from the outside.
+Using this substrate at *inference* is already common: frontier models interleave
+code execution and tool calls with their reasoning. The results here add a
+document-domain instance, with the twist that the code aims a second model's
+perception.
 
 The open question is about *learning*. Everything above uses the substrate at
-deployment, bolted on as an external harness. What if it were part of the model
-*itself*, woven into how the model is trained rather than added afterward? Not a
-scaffold you remove, but a native faculty the model learns to use: to compose, to
-compute, to aim its own perception. Could a model learn *in* this symbolic substrate,
-not just borrow it at answer time? That is a sharper and more uncertain claim than
-"code helps agents," and it is the one we keep coming back to.
+deployment: the weights stay frozen, and the harness wraps around them from the
+outside. What if it were woven into how the model is trained instead? Not a
+scaffold you remove, but a native faculty: to compose, to compute, to aim its own
+perception. That is a sharper and more uncertain claim than "code helps agents,"
+and it is the one we keep coming back to.
 
 Two things from this study make it feel concrete rather than idle. First, we
 already know which form is trainable: the append-only trajectory ties the compacted
@@ -606,12 +587,10 @@ about 24 points above what a single trial reliably produces. The answer is alrea
 reach; the model just does not land on it by default. That is not noise. It is
 exactly the kind of signal a learning procedure exists to capture.
 
-Whether the symbolic substrate can be made part of the model *during training* (so
+We got these results by letting a frozen model write code to look more carefully.
+The thread worth pulling next is whether a model trained to use the substrate, so
 that neural and symbolic computation are learned together rather than stitched
-together at inference) is genuinely open. We got these results by letting a frozen
-model write code to look more carefully. The thread worth pulling next is whether a
-model that learns to use that substrate, as part of itself, outgrows one that only
-borrows it at inference.
+together at inference, outgrows one that only borrows it at answer time.
 
 
 ## References
