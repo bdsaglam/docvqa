@@ -268,7 +268,9 @@ thing that lets reasoning turn into *targeted* perception.
 Now do the opposite: keep the REPL, take away the perception *call*. Give the
 agent a `display()` that loads the page pixels straight into its own context, so
 it looks at the document itself instead of asking a focused VLM call to look and
-report back. This collapses too, down to **22.3%**. The agent also thrashes: it
+report back. This is DeepEyes' perception channel driven from a REPL: the model
+inspects its own crops in-context, except that DeepEyes trains the habit with RL
+and here it is prompted. It collapses too, down to **22.3%**. The agent also thrashes: it
 runs 30+ steps per question and pins the iteration cap on most of them, grinding
 without converging.
 
@@ -279,9 +281,8 @@ than a clean one), whereas a focused sub-call that returns *compact text* keeps 
 context clean. RLM tells this story for long text; here it shows up for pixels, and
 it's what pins down *which* half does the work. Having a REPL isn't enough on its
 own; the perception has to go through **a call that returns text**,
-not be poured into the reasoner's own window. (This channel, crops appended to
-the model's own context, is exactly the one DeepEyes trains with RL, though
-through plain zoom actions rather than a REPL; the point here is only that a
+not be poured into the reasoner's own window. (DeepEyes shows the in-context-crops
+channel can work when a model is trained for it; the point here is only that a
 *prompted* REPL agent is better off not.)
 
 Put the two knockouts together and you get a clean 2×2:
