@@ -183,7 +183,7 @@ native "thinking" channel.[^think] This relocates the reasoning into the visible
 body of each turn, where the code and the comments are. The reasoning is still
 there; thinking-off just moves it somewhere we can see it.
 
-### Where this comes from
+### Related work
 
 Perceive-Reason-Code stands on a few well-tested ideas. The REPL-with-a-sub-call
 shape comes from **Recursive Language Models** (RLM; Zhang et al., 2025): the model works
