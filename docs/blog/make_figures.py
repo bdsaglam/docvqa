@@ -237,9 +237,10 @@ def fig2_architecture():
     box(axl, (2, 1.8), 2.6, 0.8, "VLM (frozen)", "#dbe7f1")
     box(axl, (2, 0.4), 2.8, 0.55, "document pages", "#f1f1f1")
     arrow(axl, (1.7, 4.8), (1.7, 3.9), "writes code", side="left")
+    arrow(axl, (2.3, 3.9), (2.3, 4.8), "reads variables", side="right")
     arrow(axl, (1.7, 3.1), (1.7, 2.2), "look(crop, zoom)", side="left")
     arrow(axl, (2.0, 1.4), (2.0, 0.7))
-    arrow(axl, (2.3, 2.2), (2.3, 3.1), "text", rad=-0.0, side="right")
+    arrow(axl, (2.3, 2.2), (2.3, 3.1), "observation (text)", rad=-0.0, side="right")
 
     # Right: ReAct
     axr.set_title("ReAct (no REPL)", fontsize=12, fontweight="bold")
@@ -247,6 +248,7 @@ def fig2_architecture():
     box(axr, (2, 2.6), 2.6, 0.8, "VLM (frozen)", "#dbe7f1")
     box(axr, (2, 0.9), 2.8, 0.55, "document pages", "#f1f1f1")
     arrow(axr, (1.7, 4.8), (1.7, 3.0), "tool call", side="left")
+    arrow(axr, (2.3, 3.0), (2.3, 4.8), "observation (text)", side="right")
     arrow(axr, (2.0, 2.2), (2.0, 1.2), "whole page", side="right")
     axr.text(2, 0.1, "no crop / zoom — perception fixed at page granularity",
              ha="center", fontsize=8.5, color="#8a5a2b", style="italic")
