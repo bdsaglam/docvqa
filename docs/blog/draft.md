@@ -186,14 +186,14 @@ inspect with code, and it can fire off a sub-call to a model when it needs one.
 Writing actions *as code* rather than as JSON tool calls is **CodeAct** (Wang et
 al., 2024). Orchestrating vision modules with a program goes back to **VisProg**
 (Gupta & Kembhavi, 2023) and **ViperGPT** (Surís et al., 2023). The move here is to put them together for documents, with the sub-call
-specialized as visual perception. (When the same model serves as both reasoner and
-VLM, that perception call is the model calling itself. But nothing here turns on
-that. It's one perception primitive the reasoner invokes as often as it needs, and
-that's how we'll treat it.)
+specialized as visual perception. (When the same model serves both roles, the
+perception call is the model calling itself; nothing turns on that, and we treat
+it simply as one primitive the reasoner invokes as often as it needs.)
 
 RLM had already shown, for *text*, that the REPL alone lifts a baseline and a
 sub-call lifts it further. The question this post answers is whether that holds when
-the sub-call is a *VLM* over a stack of document images. Active perception itself is not new for a single image: **DeepEyes** (Zheng et al., 2025) trains a model to
+the sub-call is a *VLM* over a stack of document images. Active perception over a
+single image is not new: **DeepEyes** (Zheng et al., 2025) trains a model to
 zoom into an image region to answer, and concurrent work, **RVLM** (Recursive
 Vision-Language Models with Adaptive Depth; Mayumu et al., 2026), applies the same
 REPL-plus-sub-call shape to single-image medical scans. Our setting is the multi-page
@@ -372,11 +372,11 @@ Grey cells were not run. The 4B- and 9B-reasoner rows use a minimally different
 prompt variant of the same solver (identical harness and tools); the 27B row uses
 the exact configuration reported everywhere else in the post.
 
-Read the matrix **across a row** and the reasoner stays fixed while only the eyes
-improve. Accuracy climbs at every reasoner size: +6.9 with the 4B reasoner, +6.4
-with the 9B, and stepwise along the full 27B row, 32.8 with 4B eyes, 37.2 with
-9B, 41.9 with 27B, all well outside the noise.[^stats] Better eyes help.
-Perception is a real constraint, even with reasoning held fixed.
+Read the matrix **across a row**: the reasoner stays fixed and only the eyes
+improve. Accuracy climbs at every reasoner size, +6.9 with the 4B reasoner, +6.4
+with the 9B, and +9.1 end to end on the 27B row (32.8 with 4B eyes, 37.2 with 9B,
+41.9 with 27B), all well outside the noise.[^stats] Better eyes help. Perception
+is a real constraint, even with reasoning held fixed.
 
 Now read **down the rightmost column**: the VLM stays at 27B and the reasoner
 scales, and accuracy nearly doubles. The reasoner is the bigger lever, but only
@@ -420,8 +420,8 @@ moment: a dense page defeats any single look, whoever is looking, and the
 OCR-only collapse shows nothing substitutes for looking. But the leverage sits
 with the reasoner: at a fixed 27B VLM, scaling the reasoner adds +20.8 points; at
 a fixed 27B reasoner, scaling the VLM adds +9.1. And that leverage exists only
-inside the loop; ReAct's much shallower column shows what the same capacity
-yields without it. The practical corollary is the one the corners show: the VLM
+inside the loop; ReAct's much shallower column in Table 4 shows what the same
+capacity yields without it. The practical corollary is the one the corners show: the VLM
 does not have to be great, so long as the director aiming it is.
 
 One caveat bounds the reasoning half of this. The data does not separate how much of a stronger reasoner's lift comes from sharper aiming (better crops and code) versus sharper reasoning over what it then sees. That decomposition stays open.
@@ -475,8 +475,8 @@ stratified-random subsets, n=3, Qwen 3.5 27B.
 
 ![](f-lengthaxis.png){fig-alt="the active-perception advantage grows with document length across benchmarks"}
 
-**Figure 7.** RLM's advantage over the raw multi-image baseline, across
-two benchmarks of very different length. Qwen 3.5 27B, n=3, mean ± std.
+**Figure 7.** RLM's advantage over the raw multi-image baseline on MP-DocVQA
+(short documents) and MMLongBench-Doc (long). Qwen 3.5 27B, n=3, mean ± std.
 
 On the short benchmark the gap is about 4 points (61.8 against 58.1). On the long
 one it is about 42 (66.6 against 24.2). The baseline is the same raw multi-image
@@ -484,8 +484,8 @@ configuration as in the ablations; nothing changed between the two benchmarks bu
 the documents.
 
 The mechanism is visible in how each method moves across the axis. RLM stays
-flat (62 to 67%), because it navigates the document regardless
-of length. The raw multi-image baseline degrades. Its "Unknown" rate (the questions where it
+flat, because it navigates the document regardless of length. The raw
+multi-image baseline degrades. Its "Unknown" rate (the questions where it
 cannot find the evidence) climbs from about 22% on short documents to about 87% on
 long ones, as the evidence falls off the end of a fixed page budget.
 
