@@ -90,7 +90,7 @@ system is a REPL and one perception call.
 So what makes this task hard enough to need a system like that?
 
 
-## The task, and why it's hard
+## The challenge
 
 Document visual question answering (Mathew et al., 2021) is what it sounds like: you're handed a document
 and a question in plain language, and you have to answer it. The catch is what
