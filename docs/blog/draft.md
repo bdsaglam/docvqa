@@ -5,8 +5,9 @@
 <details class="tldr">
 <summary>TL;DR</summary>
 
-We jointly won the ICDAR 2026 DocVQA challenge in the 8–35B tier. With no
-fine-tuning, an open Qwen 3.5 27B beat the challenge's bare-model baselines,
+We [jointly won the 8–35B tier](https://rrc.cvc.uab.es/?com=news&view=data&id=83)
+of the [ICDAR 2026 DocVQA challenge](https://rrc.cvc.uab.es/?ch=34). An open
+Qwen 3.5 27B beat the challenge's bare-model baselines, the much larger
 Gemini 3 Pro and GPT-5.2, on the held-out test set. Our approach is a Python
 REPL plus a single perception tool: a vision model the reasoner points at any
 region of any page, so it decides where to look instead of reading whole pages at
@@ -24,10 +25,10 @@ together for documents, and the ablations behind every claim above.
 
 ## A 27B model, a Python REPL, and one question
 
-We [jointly won](https://rrc.cvc.uab.es/?com=news&view=data&id=83) the 8–35B
-tier of the [ICDAR 2026 DocVQA challenge](https://rrc.cvc.uab.es/?ch=34) with
-an open Qwen 3.5 27B and no fine-tuning: on the held-out test set, our system
-beat the challenge's bare-model baselines, Gemini 3 Pro and GPT-5.2. What we entered was
+We [jointly won the 8–35B tier](https://rrc.cvc.uab.es/?com=news&view=data&id=83)
+of the [ICDAR 2026 DocVQA challenge](https://rrc.cvc.uab.es/?ch=34) with an
+open Qwen 3.5 27B: on the held-out test set, our system beat the challenge's
+bare-model baselines, the far larger Gemini 3 Pro and GPT-5.2. What we entered was
 one idea: let a code-capable model direct its own perception from inside a
 Python REPL. At its core the system is two things: the REPL, and an on-demand
 call to a vision-language model (VLM), used as a perception tool the reasoner
