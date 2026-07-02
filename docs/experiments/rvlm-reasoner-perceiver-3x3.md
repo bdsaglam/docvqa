@@ -27,23 +27,28 @@ Each axis ∈ {Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B}. Diagonal = homogeneous
 
 ᵐ = `rvlm-minimal` prompt-era variant (see caveat ¹ below); unmarked cells use
 current `rvlm`. Bold = headline. **Perception axis** (fix reasoner, scale VLM):
-the 4B and 27B rows rise monotonically — row 27B 32.81 → 37.2 → 41.88, row 4B
-14.22 → **17.31** → 21.09 — degrading the perceiver steadily drops rvlm. The **9B
-row is the exception at the low end**: 19.38 → 18.91 → 25.31, i.e. 9B/4B ≈ 9B/9B
-(a **0.47pp difference, far inside the ±4pp stds** — a statistical tie, not a real
-inversion), then a real +6.4pp jump to the 27B perceiver. Two things blunt the
-4B→9B step here: it straddles a prompt-variant boundary (9B/4B is current `rvlm`,
-9B/9B is `rvlm-minimal`ᵐ), and a 9B reasoner gains little from a 9B vs 4B
-perceiver — both are "small VLMs" that miss the same fine print — until the jump
-to 27B. **Reasoning axis** (fix VLM, scale reasoner): column 27B-VLM 21.09 → 25.31
-→ 41.88. Note the 27B/9B cell's wide std (±6.2, > 27B/27B ±5.79): a weaker
-perceiver adds trial-to-trial variance, not just a lower mean.
+the 4B and 27B rows — internally consistent enough to read — rise monotonically:
+row 27B 32.81 → 37.2 → 41.88, row 4B 14.22 → **17.31** → 21.09 — degrading the
+perceiver steadily drops rvlm. The **9B row's 4B→9B step is not yet
+interpretable**: 9B/4B (19.38, current `rvlm`) and 9B/9B (18.91, `rvlm-minimal`ᵐ)
+are within noise of each other, but they straddle a prompt-variant boundary — the
+near-tie is a **confounded baseline, not a measured flat**. The `rvlm-minimal`
+9B/9B is likely understated relative to current `rvlm`, which would restore the
+row to monotone; a **current-`rvlm` 9B/9B re-run (n=4) is in progress** to settle
+it. The 9B→27B jump (+6.4pp to 25.31) is real. **Reasoning axis** (fix VLM, scale
+reasoner): column 27B-VLM 21.09 → 25.31 → 41.88. Note the 27B/9B cell's wide std
+(±6.2, > 27B/27B ±5.79): a weaker perceiver adds trial-to-trial variance, not just
+a lower mean.
 
-> **Provisional:** the 9B/4B value assumes t4's last question (`comics_2_q3`, a
-> degenerate scan-loop that will `SUBMIT("Unknown")` at `max_iterations`) scores
-> WRONG (t4 `comics_2` = 1/4). If it lands CORRECT instead, t4 rises one question
-> (→ 25.00%) and the cell becomes **19.69 ± 4.34** — a ≤0.31pp shift that changes
-> nothing above. Finalize once `comics_2` writes.
+> **9B/4B — final (n=4):** 19.38 ± 4.39, per-trial 15.00 / 22.50 / 16.25 / 23.75.
+> t4's `comics_2` degenerate-looped on its last question and was dropped (t4
+> scored over 24 docs); including it as an assumed-WRONG doc shifts the cell mean
+> by ≤0.02pp, so the value is stable.
+>
+> **9B/9B — re-run pending.** The diagonal 9B cell above is `rvlm-minimal`ᵐ
+> (deleted artifacts, recorded-only). A current-`rvlm` 9B/9B n=4 re-run (9B
+> reasoner local `:8909` + 9B VLM on amax7) is queued to make the 9B row
+> all-current and resolve the 4B→9B step.
 
 ## How to read the axes
 
