@@ -36,7 +36,7 @@ components carry the lift, and which are just along for the ride?**
 
 The answer turns out to be short: the REPL and the perception call, and only the
 two together. The rest (a general sub-agent, clever trajectory management, an OCR
-pipeline) adds nothing, and the OCR even costs points. And underneath sits
+pipeline) doesn't help, and the OCR actively hurts. And underneath sits
 a reframe for anyone building multimodal agents: on documents, perception is the
 constraint, but **the reasoner is the lever**. No model can afford to see a dense
 page all at once; what separates systems is how well the reasoner directing the
@@ -298,14 +298,14 @@ spread within each.
 configuration, colored by tier: REPL + active perception, missing one half (no REPL
 or no perception call), and the no-scaffold / OCR-only floor.
 
-### Three things that turn out *not* to matter
+### Three things that don't help
 
-The obvious ways to enrich the core don't make it any bigger; these results tell
-you what you *don't* need to build.
+The obvious ways to enrich the core don't make it any bigger, and one makes it
+smaller; these results tell you what you *don't* need to build.
 
 **Generalizing the call buys nothing.** We replaced the focused "look at this
 region" call with a general sub-agent that could take on any subtask (image
-optional). Accuracy didn't move: **36.7%**, inside the noise of the full method.
+optional). Accuracy did not improve: **36.7%**, a shade below the plain call.
 And when we logged what the agent actually asked the sub-call to do, about **99%**
 of the calls were still plain perception. One focused perception primitive already captures the
 benefit; the extra generality just sits there. (We use one level of perception call
@@ -548,9 +548,8 @@ clear room:
 
 And this reframes the OCR result from earlier. As an *evidence* channel our OCR
 pipeline cost accuracy, but run once as preprocessing it still buys
-**efficiency**: fewer and cheaper looks. That is the extension to keep,
-whether a stronger engine eventually answers better or ours just answers the same,
-faster.
+**efficiency**: fewer and cheaper looks. The extension to keep uses OCR for
+navigation, not as evidence.
 
 Beyond cost, a few limits bound the claims. The test numbers sit below validation
 (a harder test split is at least as plausible a reason as fit to the development
