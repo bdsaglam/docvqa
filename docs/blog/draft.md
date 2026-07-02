@@ -365,8 +365,9 @@ call.
 
 ![](f5-matrix.png){fig-alt="heatmap of the reasoner-by-VLM matrix: accuracy rises modestly left to right with a stronger VLM and sharply bottom to top with a stronger reasoner"}
 
-**Figure 5.** Validation accuracy (ANLS %; mean, ± std, and n per cell) for each
-reasoner × VLM pairing of Qwen 3.5 4B/9B/27B, all under the same RLM harness.
+**Figure 5.** Validation accuracy (ANLS %, mean ± std over 4–8 trials per cell)
+for each reasoner × VLM pairing of Qwen 3.5 4B/9B/27B, all under the same RLM
+harness.
 Grey cells were not run. The 4B- and 9B-reasoner rows use a minimally different
 prompt variant of the same solver (identical harness and tools); the 27B row uses
 the exact configuration reported everywhere else in the post.

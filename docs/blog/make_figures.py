@@ -131,8 +131,6 @@ def fig5_matrix():
     std = np.array([[3.83, np.nan, 3.16],
                     [np.nan, 3.81, 4.16],
                     [3.13, 6.2, 5.79]])
-    n = np.array([[8, 0, 8], [0, 8, 8], [4, 4, 8]])
-
     fig, ax = plt.subplots(figsize=(6.2, 5.0))
     masked = np.ma.masked_invalid(mean)
     cmap = plt.get_cmap("Blues").copy()
@@ -149,7 +147,7 @@ def fig5_matrix():
                         ha="center", va="center", fontsize=15,
                         fontweight="bold",
                         color="white" if dark else "#1f3d57")
-                ax.text(j, i - 0.30, f"±{std[i, j]:.1f}  (n={n[i, j]})",
+                ax.text(j, i - 0.30, f"±{std[i, j]:.1f}",
                         ha="center", va="center", fontsize=8.5,
                         color="white" if dark else "#4a6a88")
     ax.set_xticks(range(3), sizes)
