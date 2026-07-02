@@ -54,6 +54,29 @@ replacements: `codeact-chat-qwen-3_5-27b.md`.
   REPL — consistent with CodeAct needing a capable reasoner to pay off (see the
   CodeAct reasoner-scaling slope in `harness-axis-summary.md`).
 
+## 4B as Perceiver — reasoner-fixed cell (27B-LM / 4B-VLM), `rvlm`, n=4
+
+The complementary role: fix a **strong 27B reasoner** and use **4B as the VLM
+perceiver** — the bottom rung of the reasoner-fixed perception ladder (full grid:
+[`rvlm-reasoner-perceiver-3x3.md`](rvlm-reasoner-perceiver-3x3.md)).
+
+**`rvlm` 27B-LM / 4B-VLM = 32.81% ± 3.13 (n=4)** — `rvlm-27b-llm-4b-vlm-val-t{1..4}`
+(current `rvlm`, `enable_thinking=false`; this is also the Phase-4 bottom rung).
+
+Ladder (fix 27B reasoner, scale the perceiver):
+
+| Perceiver | `rvlm` | n |
+|---|---|---|
+| **4B-VLM**  | **32.81 ± 3.13** | 4 |
+| 9B-VLM  | 37.2 ± 6.2 | 4 |
+| 27B-VLM | 41.88 ± 5.79 | 8 |
+
+**Read:** monotone ~4–5pp/step — even a strong 27B reasoner can't compensate for a
+weak 4B perceiver, dropping −9pp vs 27B/27B. Perception is load-bearing under a
+fixed reasoner (D-006). Contrast the *perception-budget lift* direction above (fix
+the 4B reasoner, upgrade the VLM →27B = +6.88pp): the two directions are the same
+mechanism seen from both ends.
+
 ## Setup
 
 - Solver: `rvlm` (RLM), `react_baseline` (ReAct), `codeact` (CodeAct).

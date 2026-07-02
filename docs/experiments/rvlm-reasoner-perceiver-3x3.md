@@ -1,9 +1,11 @@
 # rvlm — Reasoner × Perceiver 3×3 matrix (val, Qwen 3.5 {4B, 9B, 27B})
 
-> **STATUS: LIVE.** Completed cells are filled; `TBD`/`—` remain for the
-> report-writing agent to fill (or mark not-run) from the run_ids in the
-> *Cell data sources* table below as trials land. Keep values in sync with the
-> per-cell by-model files.
+> **STATUS: 7/9 filled (final for now).** The 27B row is current `rvlm` (live
+> artifacts); the four small cells are current-era `rvlm` on the earlier
+> `rvlm-minimal` prompt (recorded-only — see caveat ¹). The two small×small
+> off-diagonals (4B/9B, 9B/4B) were **never run** and are left blank by decision
+> (time constraint); the axis story is fully carried by the 27B-anchored row and
+> column. Keep values in sync with the per-cell by-model files.
 
 Full factorial of the **proposed method `rvlm`** (OCR-free RLM + recursive VLM
 `batch_look`) across its two model axes, holding everything else fixed
@@ -23,12 +25,15 @@ Each axis ∈ {Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B}. Diagonal = homogeneous
 |---|---|---|---|
 | **4B-LM**  | 14.22 ± 3.83 (n=8)ᵐ | — not run | 21.09 ± 3.16 (n=8)ᵐ |
 | **9B-LM**  | — not run | 18.91 ± 3.81 (n=8)ᵐ | 25.31 ± 4.16 (n=8)ᵐ |
-| **27B-LM** | 32.81 ± 3.13 (n=4) | *in progress (n=4)* | **41.88 ± 5.79 (n=8)** |
+| **27B-LM** | 32.81 ± 3.13 (n=4) | 37.2 ± 6.2 (n=4) | **41.88 ± 5.79 (n=8)** |
 
 ᵐ = `rvlm-minimal` prompt-era variant (see caveat ¹ below); unmarked cells use
-current `rvlm`. Bold = headline. Reading (where filled): both axes rise
-monotonically — across row 27B (perception axis) 32.81 → [27B/9B] → 41.88, and
-down column 27B-VLM (reasoning axis) 21.09 → 25.31 → 41.88.
+current `rvlm`. Bold = headline. Reading: both axes rise monotonically — the
+**perception axis** (row 27B) 32.81 → 37.2 → 41.88 (~4–5pp/step; degrading the
+perceiver under a fixed strong reasoner steadily drops rvlm) and the **reasoning
+axis** (column 27B-VLM) 21.09 → 25.31 → 41.88. Note the 27B/9B cell's wide std
+(±6.2, > the 27B/27B ±5.79): a weaker perceiver adds trial-to-trial variance,
+not just a lower mean.
 
 ## How to read the axes
 
@@ -56,17 +61,21 @@ coverage** (drop incomplete trials or resume to fill).
 | 9B / 9B   | `rvlm-minimal-3_5-9b-val-t*`            | 8 | rvlm-minimal¹ | have |
 | 9B / 27B  | `rvlm-minimal-9b-llm-27b-vlm-val-t*`    | 8 | rvlm-minimal¹ | have |
 | 27B / 4B  | `rvlm-27b-llm-4b-vlm-val-t*`            | 4 | rvlm (current) | have |
-| 27B / 9B  | `rvlm-27b-llm-9b-vlm-val-t*`            | 4 | rvlm (current) | **in progress** |
+| 27B / 9B  | `rvlm-27b-llm-9b-vlm-val-t*`            | 4 | rvlm (current) | have (37.2 ± 6.2) |
 | 27B / 27B | headline `rvlm` re-run (`rvlm-cmp-val-t*`) | 8 | rvlm (current) | have (41.88 ± 5.79) |
 
 ¹ **Solver-variant caveat (must be stated in any writeup).** The small-model
-cells were run under the `rvlm-minimal` run-id era — an **earlier prompt-scrub
-variant** of the same `rvlm_solver` (`docvqa.solvers.rvlm_solver`), not the
-current canonical prompt. The 27B-row cells (27B/4B, 27B/9B, 27B/27B) use the
-**current `rvlm`**. So the matrix mixes two prompt eras; the 27B-anchored ladders
-(row 27B, column 27B) are internally consistent (current `rvlm`), while the
-4B/9B-reasoner cells are minimal-variant. Flag this wherever the matrix is cited;
-re-running the minimal cells under current `rvlm` would make it fully uniform.
+cells (4B/4B, 4B/27B, 9B/9B, 9B/27B) were run **2026-06-01/02** under the
+`rvlm-minimal` run-id era — the **same `rvlm_solver`** (`docvqa.solvers.rvlm_solver`,
+*not* `flat_solo` or any legacy solver) and the same post-2026-06-01 retry logic,
+but an **earlier prompt-scrub variant** of the prompt (slightly different wording
+from the final current `rvlm`). Their per-doc artifacts were **deleted** in a disk
+cleanup → values are **recorded-only** (from `docs/pass-at-k.md`), not
+recomputable from `output/runs`. **Decision (accepted):** keep these as-is — same
+solver, ~1 month old, post-cleanup; the prompt-variant delta is a footnote, not a
+re-run trigger. The 27B row (27B/4B, 27B/9B, 27B/27B) is current `rvlm` with live
+retained artifacts. So the 27B-anchored ladders are fully current + live; the four
+small cells are current-era `rvlm` on the minimal prompt.
 
 ## Notes
 

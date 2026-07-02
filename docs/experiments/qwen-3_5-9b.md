@@ -56,6 +56,33 @@ strong enough to exploit code+state, RLM/CodeAct overtake the no-REPL ReAct.
   ReAct or RLM, catching RLM by 9B after trailing badly at 8B/4B. Full slope in
   `harness-axis-summary.md`.
 
+## 9B as Perceiver — reasoner-fixed cell (27B-LM / 9B-VLM), `rvlm`, n=4
+
+The complementary role: fix a **strong 27B reasoner** and use **9B as the VLM
+perceiver** — the middle rung of the reasoner-fixed perception ladder (the
+full grid is [`rvlm-reasoner-perceiver-3x3.md`](rvlm-reasoner-perceiver-3x3.md)).
+
+**`rvlm` 27B-LM / 9B-VLM = 37.2% ± 6.2 (n=4)** — per-trial **38.4 / 43.8 / 28.8 /
+37.7** (`rvlm-27b-llm-9b-vlm-val-t{1..4}`, current `rvlm`, `enable_thinking=false`,
+27B LM on 1 GPU + 9B VLM DP=2). Scored over ~24/25 docs/trial (`science_paper_1`
+drops under `rvlm`'s no-exec-timeout, worse with the weaker VLM).
+
+Ladder (fix 27B reasoner, scale the perceiver):
+
+| Perceiver | `rvlm` | n |
+|---|---|---|
+| 4B-VLM  | 32.81 ± 3.13 | 4 |
+| **9B-VLM**  | **37.2 ± 6.2** | 4 |
+| 27B-VLM | 41.88 ± 5.79 | 8 |
+
+**Reads:** (1) monotone ~4–5pp/step — degrading the perceiver under a fixed strong
+reasoner steadily lowers `rvlm`, the complement of the perception-budget lift and
+direct support for D-006 (perception is load-bearing). (2) The 9B-perceiver cell's
+**std (±6.2) exceeds the 27B/27B ±5.79** — a weaker perceiver injects
+trial-to-trial variance (noisier `batch_look` on borderline questions), not just a
+lower mean; verified per-doc (diffuse borderline losses, no doc collapse, shared
+hard-zeros across trials).
+
 ## Setup
 
 - Solver: `rvlm` / `react_baseline` / `codeact`. `max_iterations=25` (RLM/ReAct).
