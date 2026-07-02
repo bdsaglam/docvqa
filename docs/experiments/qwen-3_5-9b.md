@@ -75,6 +75,13 @@ Ladder (fix 27B reasoner, scale the perceiver):
 | **9B-VLM**  | **37.2 ± 6.2** | 4 |
 | 27B-VLM | 41.88 ± 5.79 | 8 |
 
+**9B-as-perceiver also under a weak (4B) reasoner:** `rvlm` **4B-LM / 9B-VLM =
+17.31% ± 1.57 (n=4)** (per-trial 16.7 / 18.4 / 15.4 / 18.8;
+`rvlm-4b-llm-9b-vlm-val-t*`, current `rvlm`, 4B LM DP=3 local + 9B VLM on amax7) —
+the mid-VLM point of the 4B-reasoner ladder (4B/4B 14.22 → **4B/9B 17.31** →
+4B/27B 21.09). So 9B perception lands at ~17% with a 4B reasoner vs ~37% with a
+27B reasoner: the same perceiver, gated by reasoner capability.
+
 **Reads:** (1) monotone ~4–5pp/step — degrading the perceiver under a fixed strong
 reasoner steadily lowers `rvlm`, the complement of the perception-budget lift and
 direct support for D-006 (perception is load-bearing). (2) The 9B-perceiver cell's

@@ -27,6 +27,25 @@ forward; a config without a `codeact_chat` value is **open** — the stale dspy
 figure is shown for provenance only, not as a current result. Tracking and
 replacements: `codeact-chat-qwen-3_5-27b.md`.
 
+### 4B-reasoner perception ladder — mid-VLM point added (`rvlm`, VLM=9B)
+
+Filling the middle of the 4B-reasoner perception axis: `rvlm` **4B-LM / 9B-VLM =
+17.31% ± 1.57 (n=4)** (per-trial 16.7 / 18.4 / 15.4 / 18.8;
+`rvlm-4b-llm-9b-vlm-val-t*`, current `rvlm`, 4B LM DP=3 local + 9B VLM on amax7).
+
+| Perceiver (VLM) | `rvlm` (4B reasoner) | n |
+|---|---|---|
+| 4B  | 14.22 ± 3.83 | 8 (rvlm-minimal¹) |
+| **9B**  | **17.31 ± 1.57** | 4 (current) |
+| 27B | 21.09 ± 3.16 | 8 (rvlm-minimal¹) |
+
+Monotone ~3–4pp/step — even the **weak 4B reasoner** monotonically converts a
+better perceiver into accuracy (14.2 → 17.3 → 21.1), the same perception-budget
+signature seen under the 27B reasoner (32.8 → 37.2 → 41.9). Full grid:
+[`rvlm-reasoner-perceiver-3x3.md`](rvlm-reasoner-perceiver-3x3.md). ¹ homog/mixed
+cells are the earlier `rvlm-minimal` prompt (same solver); the 9B-VLM cell is
+current `rvlm`.
+
 ## Per-trial
 
 | Cell | run_id stem | per-trial (8) | mean ± std |

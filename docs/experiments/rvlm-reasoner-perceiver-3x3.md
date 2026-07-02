@@ -1,11 +1,10 @@
 # rvlm — Reasoner × Perceiver 3×3 matrix (val, Qwen 3.5 {4B, 9B, 27B})
 
-> **STATUS: 7/9 filled (final for now).** The 27B row is current `rvlm` (live
-> artifacts); the four small cells are current-era `rvlm` on the earlier
-> `rvlm-minimal` prompt (recorded-only — see caveat ¹). The two small×small
-> off-diagonals (4B/9B, 9B/4B) were **never run** and are left blank by decision
-> (time constraint); the axis story is fully carried by the 27B-anchored row and
-> column. Keep values in sync with the per-cell by-model files.
+> **STATUS: 8/9 filled.** The 27B row + the **4B/9B** cell are current `rvlm`
+> (live artifacts); the other four small cells are current-era `rvlm` on the
+> earlier `rvlm-minimal` prompt (recorded-only — see caveat ¹). Only **9B/4B**
+> (9B-LM / 4B-VLM) remains — being run next (needs a 4B VLM on amax7). Keep
+> values in sync with the per-cell by-model files.
 
 Full factorial of the **proposed method `rvlm`** (OCR-free RLM + recursive VLM
 `batch_look`) across its two model axes, holding everything else fixed
@@ -23,17 +22,18 @@ Each axis ∈ {Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B}. Diagonal = homogeneous
 
 | Reasoner ↓ \ Perceiver → | 4B-VLM | 9B-VLM | 27B-VLM |
 |---|---|---|---|
-| **4B-LM**  | 14.22 ± 3.83 (n=8)ᵐ | — not run | 21.09 ± 3.16 (n=8)ᵐ |
+| **4B-LM**  | 14.22 ± 3.83 (n=8)ᵐ | 17.31 ± 1.57 (n=4) | 21.09 ± 3.16 (n=8)ᵐ |
 | **9B-LM**  | — not run | 18.91 ± 3.81 (n=8)ᵐ | 25.31 ± 4.16 (n=8)ᵐ |
 | **27B-LM** | 32.81 ± 3.13 (n=4) | 37.2 ± 6.2 (n=4) | **41.88 ± 5.79 (n=8)** |
 
 ᵐ = `rvlm-minimal` prompt-era variant (see caveat ¹ below); unmarked cells use
-current `rvlm`. Bold = headline. Reading: both axes rise monotonically — the
-**perception axis** (row 27B) 32.81 → 37.2 → 41.88 (~4–5pp/step; degrading the
-perceiver under a fixed strong reasoner steadily drops rvlm) and the **reasoning
-axis** (column 27B-VLM) 21.09 → 25.31 → 41.88. Note the 27B/9B cell's wide std
-(±6.2, > the 27B/27B ±5.79): a weaker perceiver adds trial-to-trial variance,
-not just a lower mean.
+current `rvlm`. Bold = headline. Reading: every filled row/column rises
+monotonically. **Perception axis** (fix reasoner, scale VLM): row 27B 32.81 →
+37.2 → 41.88, row 4B 14.22 → **17.31** → 21.09 — degrading the perceiver steadily
+drops rvlm at *both* reasoner sizes. **Reasoning axis** (fix VLM, scale reasoner):
+column 27B-VLM 21.09 → 25.31 → 41.88. Note the 27B/9B cell's wide std (±6.2, >
+27B/27B ±5.79): a weaker perceiver adds trial-to-trial variance, not just a lower
+mean.
 
 ## How to read the axes
 
@@ -55,7 +55,7 @@ coverage** (drop incomplete trials or resume to fill).
 | Cell (LM / VLM) | run_id glob | n target | solver variant | status |
 |---|---|---|---|---|
 | 4B / 4B   | `rvlm-minimal-3_5-4b-val-t*`            | 8 | rvlm-minimal¹ | have |
-| 4B / 9B   | *(none)*                                | — | —             | **not run** |
+| 4B / 9B   | `rvlm-4b-llm-9b-vlm-val-t*`             | 4 | rvlm (current) | have (17.31 ± 1.57) |
 | 4B / 27B  | `rvlm-minimal-4b-llm-27b-vlm-val-t*`    | 8 | rvlm-minimal¹ | have |
 | 9B / 4B   | *(none)*                                | — | —             | **not run** |
 | 9B / 9B   | `rvlm-minimal-3_5-9b-val-t*`            | 8 | rvlm-minimal¹ | have |
