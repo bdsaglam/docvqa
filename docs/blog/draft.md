@@ -1,6 +1,8 @@
 
 
 [Code: github.com/bdsaglam/docvqa](https://github.com/bdsaglam/docvqa){.more}
+&nbsp;·&nbsp;
+[Poster (PDF)](poster.pdf){.more}
 
 <details class="tldr">
 <summary>TL;DR</summary>
