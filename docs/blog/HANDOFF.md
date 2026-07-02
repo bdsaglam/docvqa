@@ -84,11 +84,13 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
    a wide variant `f5-matrix-poster.png` via
    `fig5_matrix(fname=..., figsize=(8.2,4.6), fscale=1.25, aspect='auto')`).
    The poster carries the same framing (panel "The constraint and the lever",
-   Fig. 3; compile with `latexmk -xelatex`, must stay **1 page**). The user
-   will run the two remaining cells (**4B/9B and 9B/4B**) soon; when they
-   land: score, fill the matrix doc, regenerate both matrix pngs (grey
-   "not run" cells become values; drop the caption's grey-cell sentence),
-   re-sync `draft.md`, commit + push both repos.
+   Fig. 3; compile with `latexmk -xelatex`, must stay **1 page**). The 4B/9B
+   cell is done and published (17.31 ± 1.57, n=4, current rvlm). Only
+   **9B/4B** remains; when it lands: score, fill the matrix doc, regenerate
+   both matrix pngs (the grey "not run" cell becomes a value; drop the
+   caption's grey-cell sentence; reword its prompt-provenance sentence:
+   minimal-prompt cells are 4B/4B, 4B/27B, 9B/9B, 9B/27B, all others
+   current), re-sync `draft.md`, commit + push both repos.
 2. **Baseline column for the homogeneous table** — parked, awaiting Qwen
    **4B/9B** no-scaffold baseline re-runs (rawvlm + official, homogeneous;
    they do not exist yet). When available: compute avg@1 (+ pass@8/SC@8 via
