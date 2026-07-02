@@ -12,7 +12,7 @@ REPL plus a single perception tool: a vision model the reasoner points at any
 region of any page, so it decides where to look instead of reading whole pages at
 a fixed resolution. Those two parts carry the result, and only together; the
 usual additions (a general sub-agent, clever trajectory management, the OCR and
-search our competition entry used) add nothing, and the OCR even costs points. Perception is the constraint: a dense page defeats a single
+search our competition entry used) add nothing or cost accuracy. Perception is the constraint: a dense page defeats a single
 fixed-resolution look, whoever is looking. But the reasoner is the lever.
 Scaling the reasoner moves accuracy about twice as much as scaling the VLM it
 looks through, and a strong coding reasoner driving a small VLM beats a small
@@ -36,7 +36,7 @@ components carry the lift, and which are just along for the ride?**
 
 The answer turns out to be short: the REPL and the perception call, and only the
 two together. The rest (a general sub-agent, clever trajectory management, an OCR
-pipeline) doesn't help, and the OCR actively hurts. And underneath sits
+pipeline) doesn't help, and mostly hurts. And underneath sits
 a reframe for anyone building multimodal agents: on documents, perception is the
 constraint, but **the reasoner is the lever**. No model can afford to see a dense
 page all at once; what separates systems is how well the reasoner directing the
@@ -300,16 +300,16 @@ or no perception call), and the no-scaffold / OCR-only floor.
 
 ### Three things that don't help
 
-The obvious ways to enrich the core don't make it any bigger, and one makes it
+The obvious ways to enrich the core don't make it any bigger, and two make it
 smaller; these results tell you what you *don't* need to build.
 
-**Generalizing the call buys nothing.** We replaced the focused "look at this
+**Generalizing the call costs points.** We replaced the focused "look at this
 region" call with a general sub-agent that could take on any subtask (image
-optional). Accuracy did not improve: **36.7%**, a shade below the plain call.
-And when we logged what the agent actually asked the sub-call to do, about **99%**
-of the calls were still plain perception. One focused perception primitive already captures the
-benefit; the extra generality just sits there. (We use one level of perception call
-throughout; we never tried stacking them deeper.)
+optional). Accuracy regressed: **36.7%**, five points below the plain call. And
+when we logged what the agent actually asked the sub-call to do, about **99%**
+of the calls were still plain perception. One focused perception primitive
+already captures the benefit; the extra generality is pure overhead. (We use one
+level of perception call throughout; we never tried stacking them deeper.)
 
 **The trajectory format doesn't matter, for inference.** RLM conditions on a
 compacted representation of the run: a sliding window of its recent REPL steps,
@@ -346,8 +346,8 @@ missed. The one we used didn't just fail to beat looking; it crowded looking
 out.
 
 So the core that matters is small: **a REPL plus one active-perception call.**
-Generality and trajectory format are dispensable, and our OCR-on-top was a net
-negative.
+The trajectory format is a free choice; generality and our OCR-on-top were net
+negatives.
 
 That leaves one more knockout, the one that says what kind of problem this is.
 
