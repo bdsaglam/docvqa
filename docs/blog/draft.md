@@ -393,9 +393,10 @@ call.
 **Figure 5.** Validation accuracy (ANLS %, mean ± std over 4–8 trials per cell)
 for each reasoner × VLM pairing of Qwen 3.5 4B/9B/27B, all under the same RLM
 harness.
-Grey cells were not run. The 4B- and 9B-reasoner rows use a minimally different
-prompt variant of the same solver (identical harness and tools); the 27B row uses
-the exact configuration reported everywhere else in the post.
+The grey cell was not run. The 27B row and the 4B-reasoner/9B-VLM cell use the
+exact configuration reported everywhere else in the post; the remaining cells use
+a minimally different prompt variant of the same solver (identical harness and
+tools).
 
 Read the matrix **across a row**: the reasoner stays fixed and only the eyes
 improve. Accuracy climbs at every reasoner size, +6.9 with the 4B reasoner, +6.4
