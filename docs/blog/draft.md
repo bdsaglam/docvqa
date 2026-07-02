@@ -355,22 +355,26 @@ That leaves one more knockout, the one that says what kind of problem this is.
 
 ### Passive perception is the floor
 
-**Swap active looking for a precomputed text channel.** Give the same REPL
-agent our OCR text for every page plus a search tool, and no way to look at the
-pixels itself. The channel is not perception-free; it even includes some
-vision, since a small VLM captions the figures and charts during preprocessing.
-But all of that perception is passive and upfront: every page read once, whole,
-before the question is even asked, with no way to crop, zoom, or re-read. It scores **14.7%**, the floor of the study, below even
-the no-scaffold competition prompt, with zero out of ten on layout-bound
-categories (engineering drawings, maps) in all eight trials.
+**Swap the actively driven VLM for a precomputed pipeline.** The reasoner in
+the full method never looks at the pixels; everything it knows arrives as text
+a VLM reported about regions it chose. This knockout keeps the reasoner, the
+REPL, and the text interface, and changes only where the text comes from. The
+agent now works over the output of our OCR pipeline, built once per document
+before any question is asked: page text, a small VLM's captions for the figures
+and charts (so the channel even contains some vision), and a search tool over
+it all. Perception still happened; none of it was the reasoner's doing. It
+scores **14.7%**, the floor of the study, below even the no-scaffold
+competition prompt, with zero out of ten on layout-bound categories
+(engineering drawings, maps) in all eight trials.
 
-Lined up this way, the perception ablations form a ladder of control. Full
-control over where to look: 41.9. Whole pages on demand (ReAct): 27.2. One
-fixed serving of pages (raw multi-image): 20.9. That serving rendered to text:
-14.7. Each rung gives the reasoner less say over how the document is perceived,
-and the score falls with it. What the scaffold buys is *actively controlled
-looking*; a text rendering, however searchable, is the far end of giving that
-up.
+The floor is not mainly about the pipeline's quality. Hand the same reasoner a
+far weaker perceiver, a 4B VLM, but let it drive it, region by region, question
+by question, and it scores 32.8 (next section): more than double the passive
+channel. What collapses at 14.7 is not perception but agency over it. Every
+page was read once, whole, and question-blind, and no amount of searching that
+transcript recovers what a directed look would have caught. Active use of a
+mediocre perceiver beats passive consumption of any perception pipeline we
+built.
 
 ### Better eyes, or a better director?
 
@@ -434,8 +438,8 @@ category: engineering drawings +36, business reports +30, infographics +19, scie
 papers +4, slides +1. Maps are a hard case for every configuration.
 
 So is the bottleneck perception or reasoning? Perception is what binds in the
-moment: no single look resolves a dense page, and no text channel replaces
-looking. But the leverage sits
+moment: no single look resolves a dense page, and perception done in advance
+does not replace directed looks. But the leverage sits
 with the reasoner: at a fixed 27B VLM, scaling the reasoner adds +20.8 points; at
 a fixed 27B reasoner, scaling the VLM adds +9.1. And that leverage exists only
 inside the loop; ReAct's much shallower column in Table 4 shows what the same
