@@ -333,12 +333,15 @@ We'll come back to this at the end.
 **Our OCR pipeline adds nothing on top here.** The pipeline is docling for
 layout-aware page text, IBM granite-vision (a 2B vision-language model) for
 captioning the embedded figures and charts, and a BM25 index for lexical search.
-Wire all three into the full method and the score is **36.6%**, flat, within the
-noise. On these moderate-length documents, that text adds nothing the
-active-perception call isn't already getting from the pixels. This is a verdict
-on the pipeline we ran, not on OCR in general; a stronger engine, better matched
-to these layouts, might surface detail ours missed. What we can say is that the
-one we used didn't beat looking.
+Wire all three into the full method and the score is **36.6%**, within the noise
+and trending slightly below. The asymmetry is why the extra channel doesn't pay.
+What the text gets right, the perception call was already reading off the
+pixels; what it gets wrong is new: where the OCR misreads a value or flattens a
+table, the reasoner sometimes takes the plausible-looking text at face value and
+answers without a verifying look, even though its prompt says to check critical
+values visually. This is a verdict on the pipeline we ran, not on OCR in
+general; a stronger engine, better matched to these layouts, might surface
+detail ours missed. What we can say is that the one we used didn't beat looking.
 
 So the core that matters is small: **a REPL plus one active-perception call.**
 Generality, trajectory format, and OCR-on-top are all dispensable.
