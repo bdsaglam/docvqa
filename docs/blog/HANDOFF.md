@@ -17,7 +17,12 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
   - `docs/blog/HANDOFF.md` — this file
   - Results source of truth: `docs/results.md`, `docs/pass-at-k.md`
 - **Live preview:** `http://localhost:4444/posts/perceive-reason-code/` (tmux session
-  `blog-preview`, host 144.122.52.7). Auto-rebuilds on `.qmd` save.
+  `blog-preview`, host 144.122.52.7). Auto-rebuilds on `.qmd` save, **but the
+  watcher wedges silently and often** (serves stale HTML; changed PNGs are never
+  re-copied). After any edit, verify with
+  `curl -s localhost:4444/... | grep "<new phrase>"`; if stale, restart:
+  `tmux kill-session -t blog-preview; rm -rf _site/posts/perceive-reason-code;`
+  then relaunch `quarto preview` in a fresh `blog-preview` tmux session.
 
 ## Working conventions (hard rules)
 
