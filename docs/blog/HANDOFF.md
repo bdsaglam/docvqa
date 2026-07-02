@@ -23,6 +23,10 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
 
 - **No em-dashes.** `grep -c "—" index.qmd` must return **0** before any commit. Use
   colons, periods, parentheses, semicolons.
+- **No AI-marker phrases** in post or poster: "load-bearing", "delve". Grep before
+  committing.
+- **No per-cell (n=k) annotations in figures**; state trial counts in the caption
+  (e.g. "4–8 trials per cell").
 - **Artifacts are syntheses, not changelogs** — no "previously/now", no "X instead of Y"
   against a Y the reader never saw, no discovery-order narration.
 - **Scope claims.** OCR results are "our docling + granite-vision pipeline", never "OCR
@@ -66,14 +70,17 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
 
 ## Open decisions / pending
 
-1. **3×3 matrix watch (active).** An hourly cron checks
-   `docs/experiments/rvlm-reasoner-perceiver-3x3.md` + `output/runs/` for the
-   pending cells (27B/9B in progress; 4B/9B and 9B/4B not run). When a cell
-   completes: score it, fill the matrix doc, update the post (Figure 5 gains
-   the 9B point via `fig5_vlm_swap`, prose numbers in "Better eyes, or a
-   better director?"), re-sync `draft.md`, commit + push. When the matrix is
-   done: update `docs/poster/poster.tex` to the same framing, then commit +
-   push both repos.
+1. **3×3 matrix watch (active).** The 27B/9B cell is done and published
+   (37.2 ± 6.2, n=4). **Figure 5 is now the full matrix heatmap**
+   (`fig5_matrix` in `make_figures.py`; blog uses `f5-matrix.png`, the poster
+   a wide variant `f5-matrix-poster.png` via
+   `fig5_matrix(fname=..., figsize=(8.2,4.6), fscale=1.25, aspect='auto')`).
+   The poster carries the same framing (panel "The constraint and the lever",
+   Fig. 3; compile with `latexmk -xelatex`, must stay **1 page**). The user
+   will run the two remaining cells (**4B/9B and 9B/4B**) soon; when they
+   land: score, fill the matrix doc, regenerate both matrix pngs (grey
+   "not run" cells become values; drop the caption's grey-cell sentence),
+   re-sync `draft.md`, commit + push both repos.
 2. **Baseline column for the homogeneous table** — parked, awaiting Qwen
    **4B/9B** no-scaffold baseline re-runs (rawvlm + official, homogeneous;
    they do not exist yet). When available: compute avg@1 (+ pass@8/SC@8 via
