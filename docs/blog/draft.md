@@ -367,10 +367,11 @@ scores **14.7%**, the floor of the study, below even the no-scaffold
 competition prompt, with zero out of ten on layout-bound categories
 (engineering drawings, maps) in all eight trials.
 
-The floor is not mainly about the pipeline's quality. Hand the same reasoner a
-far weaker perceiver, a 4B VLM, but let it drive it, region by region, question
-by question, and it scores 32.8 (next section): more than double the passive
-channel. What collapses at 14.7 is not perception but agency over it. Every
+Some of the floor is simple quality: the pipeline's perceiver is small, it
+reads whole pages, and its misreads are baked in. But quality is not the main
+story. Hand the same reasoner a far weaker perceiver than its usual 27B, a 4B
+VLM, and let it drive it, region by region, question by question, and it
+scores 32.8 (next section): more than double the passive channel. What collapses at 14.7 is not perception but agency over it. Every
 page was read once, whole, and question-blind, and no amount of searching that
 transcript recovers what a directed look would have caught. Active use of a
 mediocre perceiver beats passive consumption of any perception pipeline we
