@@ -5,9 +5,9 @@
 <details class="tldr">
 <summary>TL;DR</summary>
 
-We jointly won the ICDAR 2026 DocVQA challenge in the 8–35B tier. An
-open Qwen 3.5 27B beat the challenge's bare-model baselines, Gemini 3 Pro and
-GPT-5.2, on the held-out test set, with no fine-tuning. Our approach is a Python
+We jointly won the ICDAR 2026 DocVQA challenge in the 8–35B tier. With no
+fine-tuning, an open Qwen 3.5 27B beat the challenge's bare-model baselines,
+Gemini 3 Pro and GPT-5.2, on the held-out test set. Our approach is a Python
 REPL plus a single perception tool: a vision model the reasoner points at any
 region of any page, so it decides where to look instead of reading whole pages at
 a fixed resolution. Those two parts carry the result, and only together; the
@@ -17,18 +17,20 @@ fixed-resolution look, whoever is looking. But the reasoner is the lever.
 Scaling the reasoner moves accuracy about twice as much as scaling the VLM it
 looks through, and a strong coding reasoner driving a small VLM beats a small
 reasoner driving a strong one. The approach builds on
-RLM, CodeAct, and the code-as-vision line; the contribution here is putting them
-together for documents, plus the ablations behind each of these claims.
+RLM, CodeAct, and the code-as-vision line; the contribution is putting them
+together for documents, and the ablations behind every claim above.
 
 </details>
 
 ## A 27B model, a Python REPL, and one question
 
-We entered the ICDAR 2026 DocVQA challenge with an approach: let a
-code-capable model direct its own perception from inside a Python REPL. The model we
-plugged into it was an open Qwen 3.5 27B. At its core the system is two things: the
-REPL, and an on-demand call to a vision-language model (VLM), used as a perception
-tool the reasoner invokes region by region.
+We entered the ICDAR 2026 DocVQA challenge with one idea: let a code-capable
+model direct its own perception from inside a Python REPL. Built around an open
+Qwen 3.5 27B, with no fine-tuning, the system jointly won the challenge's 8–35B
+tier and beat its bare-model baselines, Gemini 3 Pro and GPT-5.2, on the
+held-out test set. At its core it is two things: the REPL, and an on-demand
+call to a vision-language model (VLM), used as a perception tool the reasoner
+invokes region by region.
 
 The leaderboard result is a single number; the sharper question is where the lift
 comes from. So this post takes the system apart, one piece at a time: **which

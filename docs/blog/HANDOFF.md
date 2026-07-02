@@ -33,7 +33,8 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
   against a Y the reader never saw, no discovery-order narration.
 - **Scope claims.** OCR results are "our docling + granite-vision pipeline", never "OCR
   is useless". Same discipline everywhere.
-- **Competition win stated once** (in the TL;DR), never re-litigated.
+- **Competition win stated once in the body opening** (the TL;DR summarizes it);
+  never re-litigated later in the body.
 - **Label val vs test** on every number. Everything is validation except the one
   held-out-test competition table.
 - **After every edit:** re-sync `draft.md`, grep em-dashes (want 0), glance at preview.
