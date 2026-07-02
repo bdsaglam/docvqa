@@ -70,7 +70,7 @@
 \end{tcolorbox}
 \end{tcolorbox}
 
-\vspace{9pt}
+\vspace{4pt}
 \raggedright
 
 % =========================== LEFT BLOCK (2 cols) + RIGHT SIDEBAR ===========================
@@ -98,12 +98,11 @@ number a single read would have submitted.}
 % ---- two sub-columns below the hero ----
 \begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
 \begin{panel}{ABSTRACT}
-DocVQA asks a model to answer questions over documents from a one-page
-infographic to a 280-page report. General VLMs read every page at fixed resolution and miss fine detail on
-dense pages. We give a code-capable model (Qwen~3.5~27B) a \keyval{Python REPL} and
+DocVQA (Mathew et al., 2021) asks a model to answer questions over documents
+from a one-page infographic to a 281-page report. General VLMs read pages at
+fixed resolution and miss fine detail on dense ones. We give a code-capable model (Qwen~3.5~27B) a \keyval{Python REPL} and
 \keyval{one perception primitive} --- an on-demand VLM call it invokes region by
-region --- so it can crop, zoom, loop, and compute over pages instead of swallowing
-them whole. It was a \keyval{joint winner} of the ICDAR~2026 DocVQA challenge
+region --- so it can crop, zoom, loop, and compute over pages. It was a \keyval{joint winner} of the ICDAR~2026 DocVQA challenge
 (8--35B tier), ahead of the far larger Gemini~3~Pro and GPT-5.2. Ablations show the lift comes \keyval{jointly} from the
 REPL and the perception call; the trajectory format is a free choice, and a
 general sub-agent or added OCR even costs accuracy. Perception is the \keyval{binding constraint} --- no model
@@ -114,7 +113,7 @@ scaling it moves accuracy twice as much as scaling the VLM.
 \begin{panel}{THE CHALLENGE}
 Documents are hard along several axes at once:
 \begin{itemize}
-  \item \keyval{Across pages} --- up to \keyval{280 pages}; the evidence must first
+  \item \keyval{Across pages} --- up to \keyval{281 pages}; the evidence must first
   be \emph{found} among them.
   \item \keyval{Within a page} --- a page can be \keyval{large} (high-resolution)
   and \keyval{dense} (crowded with labels, cells, lines), so the answer region is
@@ -221,16 +220,17 @@ question-blind reading cannot replace directed looks.
 \vspace{5pt}
 {\centering\includegraphics[width=0.88\linewidth]{figures/f5-matrix-poster.png}\par}
 \figcap{\textbf{Fig.~3.} Reasoner $\times$ VLM matrix (val ANLS). Across a row
-(better eyes) +7--9~pts; down a column (better reasoner) +21. A 27B reasoner
+(better eyes) +6--9~pts; down a column (better reasoner) +21. A 27B reasoner
 with 4B eyes (32.8) beats the reverse (21.1).}
 
 \end{panel}
 
 \begin{panel}{ADVANTAGE TRACKS VISUAL DENSITY}
 {\centering\includegraphics[width=0.95\linewidth]{figures/fcat.png}\par}
-\figcap{\textbf{Fig.~4.} Advantage over ReAct by category. Largest on dense,
-structured pages --- engineering drawings (+36), business reports (+30), infographics
-(+19) --- smallest on text-linear pages: science papers (+4), slides (+1).}
+\figcap{\textbf{Fig.~4.} Advantage over ReAct (Yao et al., 2023) by category.
+Largest on dense pages --- engineering drawings (+36), business reports (+30),
+infographics (+19) --- smallest on text-linear ones: science papers (+4),
+slides (+1).}
 \end{panel}
 
 \begin{panel}{LIMITATIONS}
@@ -242,7 +242,7 @@ call are open efficiency levers.
 
 \vspace{4pt}
 \keyval{And a floor}: the harness amplifies a strong-enough coder (31B Gemma:
-+15~pts over ReAct) but cannot rescue one too weak to code (4B Gemma collapses).
++15~pts over ReAct) but cannot rescue one too weak to code (Gemma E4B collapses).
 \end{panel}
 
 \begin{panel}{OUTLOOK}
@@ -264,7 +264,7 @@ inference?
 \includegraphics[width=\linewidth]{figures/qr.png}
 \end{minipage}\hfill
 \begin{minipage}[c]{0.65\linewidth}
-{\raggedright \keyval{Full technical write-up} $\rightarrow$ scan the code.}\\[6pt]
+{\raggedright \keyval{Full technical write-up} $\rightarrow$ scan the QR.}\\[6pt]
 {\smallfont \texttt{barisdeniz.is-a.dev}\\ \texttt{github.com/bdsaglam/docvqa}}
 \end{minipage}
 \end{tcolorbox}
@@ -280,8 +280,6 @@ Yao, S. et al. (2023). \emph{ReAct: Synergizing Reasoning and Acting in LMs.}
 ICLR.\\[2pt]
 Gupta, T., Kembhavi, A. (2023). \emph{Visual Programming (VisProg).} CVPR.\\[2pt]
 Surís, D., Menon, S., Vondrick, C. (2023). \emph{ViperGPT.} ICCV.\\[2pt]
-Zheng, C. et al. (2025). \emph{DeepEyes: Thinking with Images via RL.}
-arXiv:2505.14362.\\[2pt]
 Borchmann, Ł. et al. (2026). \emph{Strategic Navigation or Stochastic Search?
 (MADQA).} arXiv:2603.12180.\\[2pt]
 Mathew, M., Karatzas, D., Jawahar, C.V. (2021). \emph{DocVQA.} WACV.
