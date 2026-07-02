@@ -18,3 +18,12 @@ output/
 data/
 wandb/
 logs/
+# LaTeX intermediaries (poster builds)
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.xdv
+*.synctex.gz
+*.out
+*.toc

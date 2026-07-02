@@ -87,10 +87,8 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
    rvlm (caption discloses). Note: every 4B→9B-eyes step is inside the noise
    (largest Welch *t* = 2.0; the 9B row is an outright tie, 19.4 vs 18.9), so
    the row-reading prose quotes only the to-27B-eyes gains as significant.
-   The 9B/4B value (19.38 ± 4.39, n=4) is provisional by ≤0.31pp: t4's
-   `comics_2` straggler was still retrying at publish time (see the matrix
-   doc's provisional note); if it lands correct, the cell becomes
-   19.69 ± 4.34 and the fig needs a 0.3pp touch-up.
+   The 9B/4B value is final: 19.38 ± 4.39 (n=4; t4's `comics_2` dropped
+   after degenerate-looping, per the matrix doc).
 2. **Baseline column for the homogeneous table** — parked, awaiting Qwen
    **4B/9B** no-scaffold baseline re-runs (rawvlm + official, homogeneous;
    they do not exist yet). When available: compute avg@1 (+ pass@8/SC@8 via

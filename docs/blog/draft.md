@@ -400,10 +400,10 @@ harness and tools).
 
 Read the matrix **across a row**: the reasoner stays fixed and only the eyes
 improve. Upgrading to 27B eyes pays at every reasoner size, well outside the
-noise:[^stats] +6.9 end to end on the 4B row, +6.4 on the 9B, and +9.1 on the
-27B row (32.8 with 4B eyes, 37.2 with 9B, 41.9 with 27B). The smaller upgrade,
-4B eyes to 9B, is inside the noise everywhere; the per-cell spread swallows it,
-and for the 9B reasoner the two cells are an outright tie (19.4 and 18.9).
+noise:[^stats] +6.9 end to end on the 4B row, +6.4 from 9B eyes on the 9B, and
++9.1 end to end on the 27B row (32.8 with 4B eyes, 37.2 with 9B, 41.9 with
+27B). The smaller upgrade, 4B eyes to 9B, is inside the noise at every reasoner
+size; for the 9B reasoner the two cells are an outright tie (19.4 and 18.9).
 Better eyes help when the upgrade is large; they are also the smaller axis.
 
 Now read **down the rightmost column**: the VLM stays at 27B and the reasoner
