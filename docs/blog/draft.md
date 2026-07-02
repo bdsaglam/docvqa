@@ -12,7 +12,7 @@ REPL plus a single perception tool: a vision model the reasoner points at any
 region of any page, so it decides where to look instead of reading whole pages at
 a fixed resolution. Those two parts carry the result, and only together; the
 usual additions (a general sub-agent, clever trajectory management, the OCR and
-search our competition entry used) do nothing for accuracy. Perception is the constraint: a dense page defeats a single
+search our competition entry used) add nothing, and the OCR even costs points. Perception is the constraint: a dense page defeats a single
 fixed-resolution look, whoever is looking. But the reasoner is the lever.
 Scaling the reasoner moves accuracy about twice as much as scaling the VLM it
 looks through, and a strong coding reasoner driving a small VLM beats a small
@@ -36,7 +36,7 @@ components carry the lift, and which are just along for the ride?**
 
 The answer turns out to be short: the REPL and the perception call, and only the
 two together. The rest (a general sub-agent, clever trajectory management, an OCR
-pipeline) barely moves accuracy. And underneath sits
+pipeline) adds nothing, and the OCR even costs points. And underneath sits
 a reframe for anyone building multimodal agents: on documents, perception is the
 constraint, but **the reasoner is the lever**. No model can afford to see a dense
 page all at once; what separates systems is how well the reasoner directing the
@@ -330,21 +330,24 @@ just saw, choosing it costs nothing in accuracy. (Making compacted trajectories
 trainable anyway is its own open problem; FoldAct (Shao et al., 2025) is an early attempt.)
 We'll come back to this at the end.
 
-**Our OCR pipeline adds nothing on top here.** The pipeline is docling for
-layout-aware page text, IBM granite-vision (a 2B vision-language model) for
+**Our OCR pipeline costs accuracy when added on top.** The pipeline is docling
+for layout-aware page text, IBM granite-vision (a 2B vision-language model) for
 captioning the embedded figures and charts, and a BM25 index for lexical search.
-Wire all three into the full method and the score is **36.6%**, within the noise
-and trending slightly below. The asymmetry is why the extra channel doesn't pay.
-What the text gets right, the perception call was already reading off the
-pixels; what it gets wrong is new: where the OCR misreads a value or flattens a
-table, the reasoner sometimes takes the plausible-looking text at face value and
-answers without a verifying look, even though its prompt says to check critical
-values visually. This is a verdict on the pipeline we ran, not on OCR in
-general; a stronger engine, better matched to these layouts, might surface
-detail ours missed. What we can say is that the one we used didn't beat looking.
+Wire all three into the full method and the score drops to **36.6%**. The drop
+has a clear mechanism. OCR reads each page whole, in one fixed pass with no
+crop or zoom, which is exactly the reading mode the scaffold exists to escape,
+so on dense regions its parse is unreliable. And because the parse arrives as
+confident text, the reasoner leans on it instead of aiming the perception call:
+it takes a misread value or a flattened table at face value and answers without
+a verifying look, even though its prompt says to check critical values
+visually. This is a verdict on the pipeline we ran, not on OCR in general; a
+stronger engine, better matched to these layouts, might surface detail ours
+missed. The one we used didn't just fail to beat looking; it crowded looking
+out.
 
 So the core that matters is small: **a REPL plus one active-perception call.**
-Generality, trajectory format, and OCR-on-top are all dispensable.
+Generality and trajectory format are dispensable, and our OCR-on-top was a net
+negative.
 
 That leaves one more knockout, the one that says what kind of problem this is.
 
@@ -543,8 +546,8 @@ clear room:
   the per-call cost, and a document-specialized small VLM could close more of
   the gap.
 
-And this reframes the OCR result from earlier. Our OCR pipeline bought ~0
-*accuracy* on these documents, but run once as preprocessing it still buys
+And this reframes the OCR result from earlier. As an *evidence* channel our OCR
+pipeline cost accuracy, but run once as preprocessing it still buys
 **efficiency**: fewer and cheaper looks. That is the extension to keep,
 whether a stronger engine eventually answers better or ours just answers the same,
 faster.

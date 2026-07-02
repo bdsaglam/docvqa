@@ -105,8 +105,8 @@ dense pages. We give a code-capable model (Qwen~3.5~27B) a \keyval{Python REPL} 
 region --- so it can crop, zoom, loop, and compute over pages instead of swallowing
 them whole. With no fine-tuning, it was a \keyval{joint winner} of the ICDAR~2026
 DocVQA challenge (8--35B tier). Ablations show the lift comes \keyval{jointly} from the
-REPL and the perception call; generality, trajectory format, and added OCR
-contribute nothing. Perception is the \keyval{binding constraint} --- no model
+REPL and the perception call; generality and trajectory format contribute
+nothing, and added OCR even costs accuracy. Perception is the \keyval{binding constraint} --- no model
 resolves a dense page in one look --- but the \keyval{reasoner is the lever}:
 scaling it moves accuracy twice as much as scaling the VLM.
 \end{panel}
@@ -175,19 +175,20 @@ ANLS. Remove one part at a time:
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{@{}p{0.27\linewidth} >{\centering\arraybackslash}p{0.31\linewidth} >{\centering\arraybackslash}p{0.28\linewidth}@{}}
 \toprule
-{\smallfont\bfseries } & {\smallfont\bfseries percep.\ call} & {\smallfont\bfseries no call} \\
+{\smallfont\bfseries } & {\smallfont\bfseries with sub-VLM} & {\smallfont\bfseries no sub-VLM} \\
 \midrule
-{\smallfont\bfseries REPL} & {\bfseries\textcolor{pblue}{41.9\%}}\newline{\smallfont full} & {\smallfont 22.3\%}\newline{\smallfont display()} \\
-{\smallfont\bfseries no REPL} & {\smallfont 27.2\%}\newline{\smallfont ReAct} & {\smallfont 20.9\%}\newline{\smallfont no scaffold} \\
+{\smallfont\bfseries with REPL} & {\bfseries\textcolor{pblue}{41.9\%}}\newline{\smallfont full method} & {\smallfont 22.3\%}\newline{\smallfont display() only} \\
+{\smallfont\bfseries without REPL} & {\smallfont 27.2\%}\newline{\smallfont ReAct} & {\smallfont 20.9\%}\newline{\smallfont raw multi-image} \\
 \bottomrule
 \end{tabular}
 \justifying
 \vspace{6pt}
 
 \keyval{Both halves are essential} --- drop either and the score falls to the
-low-20s. \keyval{Three things do not matter:} a general sub-agent (36.7\%),
-append-only vs.\ compacted trajectory (39.5\% vs.\ 41.9\%), and OCR + search on top
-(36.6\%) --- all within trial noise.
+low-20s. \keyval{Enrichments don't help:} a general sub-agent (36.7\%) and
+append-only vs.\ compacted trajectory (39.5\% vs.\ 41.9\%) are within noise;
+OCR + search on top \keyval{costs accuracy} (36.6\%): misparsed pages arrive as
+confident text and crowd out the verifying look.
 
 \vspace{5pt}
 {\centering\includegraphics[width=0.9\linewidth]{figures/f3.png}\par}
