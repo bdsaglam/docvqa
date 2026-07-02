@@ -799,3 +799,46 @@ docker run --runtime nvidia --gpus all \
     --dtype bfloat16 \
     --max-model-len 131072 \
     --reasoning-parser qwen3 
+
+# ============================================================
+# VLM-OPTIMIZED serving — DocVQA rvlm (recursive batch_look) on 80GB A100
+# Added 2026-07-02. rvlm re-queries the SAME page image many times per doc
+# (crop/zoom loop), so the multimodal *processor cache* is the big lever —
+# it caches image preprocessing (resize/patchify) across those repeated calls.
+# ============================================================
+
+# Small model (4B / 9B) AS THE VLM, one 80GB GPU per replica (DP, not TP).
+# Fill KV cache + high max-num-seqs + prefix cache + mm-processor shm cache.
+docker run -d --runtime nvidia --gpus '"device=<G>"' --ipc=host \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    --env "HF_TOKEN=$HF_TOKEN" \
+    -p <PORT>:<PORT> --name <NAME> \
+    vllm/vllm-openai:qwen3_5 \
+    --port <PORT> \
+    --model Qwen/Qwen3.5-<4B|9B> \
+    --data-parallel-size <N> \        # 1 full replica/GPU; DP >> TP for a model that fits on 1 GPU
+    --gpu-memory-utilization 0.92 \   # 4B weights ~8GB of 80GB -> the rest becomes KV cache
+    --max-num-seqs 768 \              # THE throughput lever for a small model: hundreds of concurrent seqs
+    --dtype bfloat16 \
+    --max-model-len 65536 \           # plenty for rvlm-on-val; larger over-reserves blocks, caps concurrency
+    --enable-prefix-caching \         # rvlm reuses one system prompt on every call -> computed once
+    --mm-processor-cache-type shm \   # <== VLM KEY: cache processed images across repeated batch_look calls (and across DP replicas)
+    --limit-mm-per-prompt '{"image":8}' \  # rvlm sends 1 image/batch_look; small limit avoids reserving mm cache for nothing
+    --async-scheduling \
+    --reasoning-parser qwen3 \
+    --enable-auto-tool-choice --tool-call-parser qwen3_coder
+
+# If the VLM is TENSOR-parallel (a big VLM, e.g. Qwen2.5-VL-72B, TP>1), ALSO add:
+#     --mm-encoder-tp-mode data       # vision encoder runs data-parallel across TP ranks
+# For DP-on-1-GPU small models it is a no-op (leave it out).
+
+# Notes
+# - --mm-processor-cache-type shm is the rvlm-specific win: batch_look hits the
+#   same page repeatedly with different queries; shm caches the preprocessing
+#   across those calls AND shares it across DP replicas.
+# - Throughput ladder for a tiny model on 80GB: DP=#GPUs, gpu-mem-util 0.92,
+#   max-num-seqs 512-1024, prefix-caching on. The small reasoner (LM) is never
+#   the bottleneck; the VLM is -> spend the GPUs/cache on the VLM.
+# - image:8 (not 64) UNLESS serving the multi-image baselines
+#   (official_baseline / raw_vlm_multi), which need image:32+.
+# - Client-side eval concurrency can go high (c=24+) once the VLM has this config.
