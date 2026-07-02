@@ -280,10 +280,10 @@ reasoner's own window.
 
 Put the two knockouts together and you get a clean 2×2:
 
-| | **with sub-VLM** | **without sub-VLM (pixels in-context)** |
+| | **w/ sub-VLM** | **w/o sub-VLM (pixels in-context)** |
 |---|---|---|
-| **with REPL** | **41.9%** (full method) | 22.3% (`display()` only) |
-| **without REPL** | 27.2% (ReAct) | 20.9% (raw multi-image, no scaffold) |
+| **w/ REPL** | **41.9%** (full method) | 22.3% (`display()` only) |
+| **w/o REPL** | 27.2% (ReAct) | 20.9% (raw multi-image, no scaffold) |
 
 : **Table 3.** The two halves of the scaffold, ablated: the REPL crossed with the sub-VLM call (validation ANLS).
 
