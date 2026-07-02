@@ -808,37 +808,47 @@ docker run --runtime nvidia --gpus all \
 # ============================================================
 
 # Small model (4B / 9B) AS THE VLM, one 80GB GPU per replica (DP, not TP).
-# Fill KV cache + high max-num-seqs + prefix cache + mm-processor shm cache.
-docker run -d --runtime nvidia --gpus '"device=<G>"' --ipc=host \
+# COPY-PASTE SAFE: no inline comments — a `\` must be the LAST char on its line
+# or the shell breaks the continuation (that's what gave you
+# `--limit-mm-per-prompt: command not found`). Flag explanations are BELOW.
+# Example filled for 4B on GPU1, port 8904, DP=1:
+docker run -d --runtime nvidia --gpus '"device=1"' --ipc=host \
     -v ~/.cache/huggingface:/root/.cache/huggingface \
     --env "HF_TOKEN=$HF_TOKEN" \
-    -p <PORT>:<PORT> --name <NAME> \
+    -p 8904:8904 --name qwen35-4b \
     vllm/vllm-openai:qwen3_5 \
-    --port <PORT> \
-    --model Qwen/Qwen3.5-<4B|9B> \
-    --data-parallel-size <N> \        # 1 full replica/GPU; DP >> TP for a model that fits on 1 GPU
-    --gpu-memory-utilization 0.92 \   # 4B weights ~8GB of 80GB -> the rest becomes KV cache
-    --max-num-seqs 768 \              # THE throughput lever for a small model: hundreds of concurrent seqs
+    --port 8904 \
+    --model Qwen/Qwen3.5-4B \
+    --data-parallel-size 1 \
+    --gpu-memory-utilization 0.92 \
+    --max-num-seqs 768 \
     --dtype bfloat16 \
-    --max-model-len 65536 \           # plenty for rvlm-on-val; larger over-reserves blocks, caps concurrency
-    --enable-prefix-caching \         # rvlm reuses one system prompt on every call -> computed once
-    --mm-processor-cache-type shm \   # <== VLM KEY: cache processed images across repeated batch_look calls (and across DP replicas)
-    --limit-mm-per-prompt '{"image":8}' \  # rvlm sends 1 image/batch_look; small limit avoids reserving mm cache for nothing
+    --max-model-len 65536 \
+    --enable-prefix-caching \
+    --mm-processor-cache-type shm \
+    --limit-mm-per-prompt '{"image":8}' \
     --async-scheduling \
     --reasoning-parser qwen3 \
     --enable-auto-tool-choice --tool-call-parser qwen3_coder
 
-# If the VLM is TENSOR-parallel (a big VLM, e.g. Qwen2.5-VL-72B, TP>1), ALSO add:
-#     --mm-encoder-tp-mode data       # vision encoder runs data-parallel across TP ranks
-# For DP-on-1-GPU small models it is a no-op (leave it out).
+# Bare-CLI form (no docker): `vllm serve` wants the model POSITIONAL, not --model
+# (that's the deprecation warning you saw). Same flags:
+#   CUDA_VISIBLE_DEVICES=1 vllm serve Qwen/Qwen3.5-4B --port 8904 \
+#     --data-parallel-size 1 --gpu-memory-utilization 0.92 --max-num-seqs 768 \
+#     --dtype bfloat16 --max-model-len 65536 --enable-prefix-caching \
+#     --mm-processor-cache-type shm --limit-mm-per-prompt '{"image":8}' \
+#     --reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_coder
 
-# Notes
-# - --mm-processor-cache-type shm is the rvlm-specific win: batch_look hits the
-#   same page repeatedly with different queries; shm caches the preprocessing
-#   across those calls AND shares it across DP replicas.
-# - Throughput ladder for a tiny model on 80GB: DP=#GPUs, gpu-mem-util 0.92,
-#   max-num-seqs 512-1024, prefix-caching on. The small reasoner (LM) is never
-#   the bottleneck; the VLM is -> spend the GPUs/cache on the VLM.
-# - image:8 (not 64) UNLESS serving the multi-image baselines
-#   (official_baseline / raw_vlm_multi), which need image:32+.
+# Flag notes (keep these OUT of the command):
+# - --data-parallel-size N : 1 full replica/GPU; DP >> TP for a model that fits on 1 GPU.
+# - --gpu-memory-utilization 0.92 : 4B weights ~8GB of 80GB -> rest becomes KV cache.
+# - --max-num-seqs 768 : THE throughput lever for a small model (hundreds of concurrent seqs).
+# - --max-model-len 65536 : plenty for rvlm-on-val; larger over-reserves blocks, caps concurrency.
+# - --enable-prefix-caching : rvlm reuses one system prompt every call -> computed once.
+# - --mm-processor-cache-type shm : *** VLM KEY *** caches processed images across the
+#     repeated batch_look calls on the same page (and across DP replicas).
+# - --limit-mm-per-prompt '{"image":8}' : rvlm sends 1 image/batch_look; small limit avoids
+#     reserving mm cache for nothing. Use image:32+ ONLY for the multi-image baselines
+#     (official_baseline / raw_vlm_multi).
+# - TP VLMs only (big VLM, TP>1): also add `--mm-encoder-tp-mode data`. No-op for DP-on-1-GPU.
 # - Client-side eval concurrency can go high (c=24+) once the VLM has this config.
