@@ -106,9 +106,9 @@ region --- so it can crop, zoom, loop, and compute over pages instead of swallow
 them whole. With no fine-tuning, it was a \keyval{joint winner} of the ICDAR~2026
 DocVQA challenge (8--35B tier). Ablations show the lift comes \keyval{jointly} from the
 REPL and the perception call; generality, trajectory format, and added OCR
-contribute nothing. The binding constraint is a \keyval{perception budget}: the
-models reason fine once they can see the evidence, they just can't resolve a dense
-page in one look.
+contribute nothing. Perception is the \keyval{binding constraint} --- no model
+resolves a dense page in one look --- but the \keyval{reasoner is the lever}:
+scaling it moves accuracy twice as much as scaling the VLM.
 \end{panel}
 
 \begin{panel}{THE PROBLEM: TWO KINDS OF SEARCH}
@@ -200,17 +200,18 @@ frontier. Specializing buys a few points; generalizing gives them back.}
 \hfill
 % =========================== RIGHT SIDEBAR (full height) ===========================
 \begin{minipage}[t]{0.325\textwidth}\vspace{0pt}
-\begin{panel}{WHY IT WORKS: A PERCEPTION BUDGET}
+\begin{panel}{THE CONSTRAINT AND THE LEVER}
 Swap the eyes for a text channel --- OCR of every page plus search, \keyval{no
 vision}. Same scaffold, same reasoner. It falls to \keyval{14.7\%}, the study floor,
 and scores \keyval{0/10 in all 8 trials} on layout-bound categories (drawings,
 maps). OCR cannot stand in for looking; the scaffold buys \keyval{perception}.
 
 \vspace{5pt}
-{\centering\includegraphics[width=0.82\linewidth]{figures/f5.png}\par}
-\figcap{\textbf{Fig.~3.} Hold the reasoner fixed, feed its perception calls a
-stronger (27B) VLM: accuracy climbs $\sim$7~pts at both reasoner sizes. Same brain,
-better eyes --- a perception bottleneck.}
+{\centering\includegraphics[width=0.88\linewidth]{figures/f5-matrix-poster.png}\par}
+\figcap{\textbf{Fig.~3.} Reasoner $\times$ VLM matrix (val ANLS). Across a row
+(better eyes) +7--9~pts; down a column (better reasoner) +21.
+\keyval{The strong-director corner wins}: 27B reasoner with 4B eyes (32.8)
+beats the reverse (21.1).}
 
 \vspace{5pt}
 The lift is a \keyval{capacity gate}: the model must be a good-enough coder to drive

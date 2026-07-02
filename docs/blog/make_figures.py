@@ -119,9 +119,11 @@ def fig4_grid():
 
 
 # ----------------------------------------------------- F5: VLM-swap (perception)
-def fig5_matrix():
+def fig5_matrix(fname="f5-matrix.png", figsize=(6.2, 5.0), fscale=1.0,
+                aspect="equal"):
     # Reasoner x Perceiver 3x3 (rvlm, val ANLS, mean over n trials).
     # Source: docs/experiments/rvlm-reasoner-perceiver-3x3.md. Two cells not run.
+    # Poster variant: wider figsize + fscale>1 (fits the sidebar height budget).
     import numpy as np
     sizes = ["4B", "9B", "27B"]
     # rows = reasoner (bottom-to-top 4B..27B after flip), cols = perceiver VLM
@@ -131,24 +133,25 @@ def fig5_matrix():
     std = np.array([[3.83, np.nan, 3.16],
                     [np.nan, 3.81, 4.16],
                     [3.13, 6.2, 5.79]])
-    fig, ax = plt.subplots(figsize=(6.2, 5.0))
+    fig, ax = plt.subplots(figsize=figsize)
     masked = np.ma.masked_invalid(mean)
     cmap = plt.get_cmap("Blues").copy()
     cmap.set_bad("#efefef")
-    im = ax.imshow(masked, cmap=cmap, vmin=8, vmax=48, origin="lower")
+    im = ax.imshow(masked, cmap=cmap, vmin=8, vmax=48, origin="lower",
+                   aspect=aspect)
     for i in range(3):
         for j in range(3):
             if np.isnan(mean[i, j]):
                 ax.text(j, i, "not run", ha="center", va="center",
-                        fontsize=10, color="#999999", style="italic")
+                        fontsize=10 * fscale, color="#999999", style="italic")
             else:
                 dark = mean[i, j] > 30
                 ax.text(j, i, f"{mean[i, j]:.1f}",
-                        ha="center", va="center", fontsize=15,
+                        ha="center", va="center", fontsize=15 * fscale,
                         fontweight="bold",
                         color="white" if dark else "#1f3d57")
                 ax.text(j, i - 0.30, f"±{std[i, j]:.1f}",
-                        ha="center", va="center", fontsize=8.5,
+                        ha="center", va="center", fontsize=8.5 * fscale,
                         color="white" if dark else "#4a6a88")
     ax.set_xticks(range(3), sizes)
     ax.set_yticks(range(3), sizes)
@@ -161,8 +164,8 @@ def fig5_matrix():
     for s in ax.spines.values():
         s.set_visible(False)
     ax.set_title("Reasoner × VLM: validation accuracy (ANLS %)",
-                 fontsize=12, fontweight="bold")
-    save(fig, "f5-matrix.png")
+                 fontsize=12 * fscale, fontweight="bold")
+    save(fig, fname)
 
 
 # ------------------------------------------------------- F-cat: per-category gap
