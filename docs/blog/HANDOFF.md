@@ -22,7 +22,9 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
 ## Working conventions (hard rules)
 
 - **No em-dashes.** `grep -c "—" index.qmd` must return **0** before any commit. Use
-  colons, periods, parentheses, semicolons.
+  colons, periods, parentheses, semicolons. ⚠ `grep -c` **exits 1 when the count
+  is 0**, so never put it mid-`&&`-chain before a commit/push (it silently drops
+  the rest of the chain); run it as its own command.
 - **No AI-marker phrases** in post or poster: "load-bearing", "delve". Grep before
   committing.
 - **No per-cell (n=k) annotations in figures**; state trial counts in the caption
