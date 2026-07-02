@@ -122,16 +122,16 @@ def fig4_grid():
 def fig5_matrix(fname="f5-matrix.png", figsize=(6.2, 5.0), fscale=1.0,
                 aspect="equal"):
     # Reasoner x Perceiver 3x3 (rvlm, val ANLS, mean over n trials).
-    # Source: docs/experiments/rvlm-reasoner-perceiver-3x3.md. One cell not run.
+    # Source: docs/experiments/rvlm-reasoner-perceiver-3x3.md. All nine cells run.
     # Poster variant: wider figsize + fscale>1 (fits the sidebar height budget).
     import numpy as np
     sizes = ["4B", "9B", "27B"]
     # rows = reasoner (bottom-to-top 4B..27B after flip), cols = perceiver VLM
     mean = np.array([[14.22, 17.31, 21.09],
-                     [np.nan, 18.91, 25.31],
+                     [19.38, 18.91, 25.31],
                      [32.81, 37.2, 41.88]])
     std = np.array([[3.83, 1.57, 3.16],
-                    [np.nan, 3.81, 4.16],
+                    [4.39, 3.81, 4.16],
                     [3.13, 6.2, 5.79]])
     fig, ax = plt.subplots(figsize=figsize)
     masked = np.ma.masked_invalid(mean)

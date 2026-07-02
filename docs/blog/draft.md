@@ -393,16 +393,18 @@ call.
 **Figure 5.** Validation accuracy (ANLS %, mean ± std over 4–8 trials per cell)
 for each reasoner × VLM pairing of Qwen 3.5 4B/9B/27B, all under the same RLM
 harness.
-The grey cell was not run. The 27B row and the 4B-reasoner/9B-VLM cell use the
-exact configuration reported everywhere else in the post; the remaining cells use
-a minimally different prompt variant of the same solver (identical harness and
-tools).
+The 27B row and the mixed 4B-reasoner/9B-VLM and 9B-reasoner/4B-VLM cells use
+the exact configuration reported everywhere else in the post; the remaining
+cells use a minimally different prompt variant of the same solver (identical
+harness and tools).
 
 Read the matrix **across a row**: the reasoner stays fixed and only the eyes
-improve. Accuracy climbs at every reasoner size, +6.9 with the 4B reasoner, +6.4
-with the 9B, and +9.1 end to end on the 27B row (32.8 with 4B eyes, 37.2 with 9B,
-41.9 with 27B), all well outside the noise.[^stats] Better eyes help; they are
-also the smaller axis.
+improve. Upgrading to 27B eyes pays at every reasoner size, well outside the
+noise:[^stats] +6.9 end to end on the 4B row, +6.4 on the 9B, and +9.1 on the
+27B row (32.8 with 4B eyes, 37.2 with 9B, 41.9 with 27B). The smaller upgrade,
+4B eyes to 9B, is inside the noise everywhere; the per-cell spread swallows it,
+and for the 9B reasoner the two cells are an outright tie (19.4 and 18.9).
+Better eyes help when the upgrade is large; they are also the smaller axis.
 
 Now read **down the rightmost column**: the VLM stays at 27B and the reasoner
 scales, and accuracy nearly doubles. Does that leverage need the loop? Put the
@@ -452,9 +454,11 @@ does not have to be great, so long as the director aiming it is.
 
 One caveat bounds the reasoning half of this. The data does not separate how much of a stronger reasoner's lift comes from sharper aiming (better crops and code) versus sharper reasoning over what it then sees. That decomposition stays open.
 
-[^stats]: +6.88pp at 4B (Welch *t* = 3.91, 95% CI [+3.1, +10.7]) and +6.41pp at 9B
-(*t* = 3.21, 95% CI [+2.1, +10.7]), eight trials per arm; +9.07pp at 27B
-(*t* = 3.52, 95% CI [+3.3, +14.8]), four trials against eight.
+[^stats]: 4B row, 4B→27B eyes: +6.88pp (Welch *t* = 3.91, 95% CI [+3.1, +10.7]),
+eight trials per arm. 9B row, 9B→27B eyes: +6.41pp (*t* = 3.21, 95% CI
+[+2.1, +10.7]), eight per arm. 27B row, 4B→27B eyes: +9.07pp (*t* = 3.52, 95% CI
+[+3.3, +14.8]), four trials against eight. Each row's 4B→9B-eyes step is
+individually inside the noise (largest *t* = 2.0).
 
 [^length]: Within-set, the "advantage grows with page count" hypothesis doesn't
 hold: on the longest documents with a strong VLM the gap is flat. Across

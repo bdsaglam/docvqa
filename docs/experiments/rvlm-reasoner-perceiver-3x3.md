@@ -1,10 +1,9 @@
 # rvlm — Reasoner × Perceiver 3×3 matrix (val, Qwen 3.5 {4B, 9B, 27B})
 
-> **STATUS: 8/9 filled.** The 27B row + the **4B/9B** cell are current `rvlm`
-> (live artifacts); the other four small cells are current-era `rvlm` on the
-> earlier `rvlm-minimal` prompt (recorded-only — see caveat ¹). Only **9B/4B**
-> (9B-LM / 4B-VLM) remains — being run next (needs a 4B VLM on amax7). Keep
-> values in sync with the per-cell by-model files.
+> **STATUS: 9/9 filled.** The 27B row + the **4B/9B** and **9B/4B** cells are
+> current `rvlm` (live artifacts); the other four small cells are current-era
+> `rvlm` on the earlier `rvlm-minimal` prompt (recorded-only — see caveat ¹).
+> Keep values in sync with the per-cell by-model files.
 
 Full factorial of the **proposed method `rvlm`** (OCR-free RLM + recursive VLM
 `batch_look`) across its two model axes, holding everything else fixed
@@ -23,17 +22,28 @@ Each axis ∈ {Qwen3.5-4B, Qwen3.5-9B, Qwen3.5-27B}. Diagonal = homogeneous
 | Reasoner ↓ \ Perceiver → | 4B-VLM | 9B-VLM | 27B-VLM |
 |---|---|---|---|
 | **4B-LM**  | 14.22 ± 3.83 (n=8)ᵐ | 17.31 ± 1.57 (n=4) | 21.09 ± 3.16 (n=8)ᵐ |
-| **9B-LM**  | — not run | 18.91 ± 3.81 (n=8)ᵐ | 25.31 ± 4.16 (n=8)ᵐ |
+| **9B-LM**  | 19.38 ± 4.39 (n=4) | 18.91 ± 3.81 (n=8)ᵐ | 25.31 ± 4.16 (n=8)ᵐ |
 | **27B-LM** | 32.81 ± 3.13 (n=4) | 37.2 ± 6.2 (n=4) | **41.88 ± 5.79 (n=8)** |
 
 ᵐ = `rvlm-minimal` prompt-era variant (see caveat ¹ below); unmarked cells use
-current `rvlm`. Bold = headline. Reading: every filled row/column rises
-monotonically. **Perception axis** (fix reasoner, scale VLM): row 27B 32.81 →
-37.2 → 41.88, row 4B 14.22 → **17.31** → 21.09 — degrading the perceiver steadily
-drops rvlm at *both* reasoner sizes. **Reasoning axis** (fix VLM, scale reasoner):
-column 27B-VLM 21.09 → 25.31 → 41.88. Note the 27B/9B cell's wide std (±6.2, >
-27B/27B ±5.79): a weaker perceiver adds trial-to-trial variance, not just a lower
-mean.
+current `rvlm`. Bold = headline. **Perception axis** (fix reasoner, scale VLM):
+the 4B and 27B rows rise monotonically — row 27B 32.81 → 37.2 → 41.88, row 4B
+14.22 → **17.31** → 21.09 — degrading the perceiver steadily drops rvlm. The **9B
+row is the exception at the low end**: 19.38 → 18.91 → 25.31, i.e. 9B/4B ≈ 9B/9B
+(a **0.47pp difference, far inside the ±4pp stds** — a statistical tie, not a real
+inversion), then a real +6.4pp jump to the 27B perceiver. Two things blunt the
+4B→9B step here: it straddles a prompt-variant boundary (9B/4B is current `rvlm`,
+9B/9B is `rvlm-minimal`ᵐ), and a 9B reasoner gains little from a 9B vs 4B
+perceiver — both are "small VLMs" that miss the same fine print — until the jump
+to 27B. **Reasoning axis** (fix VLM, scale reasoner): column 27B-VLM 21.09 → 25.31
+→ 41.88. Note the 27B/9B cell's wide std (±6.2, > 27B/27B ±5.79): a weaker
+perceiver adds trial-to-trial variance, not just a lower mean.
+
+> **Provisional:** the 9B/4B value assumes t4's last question (`comics_2_q3`, a
+> degenerate scan-loop that will `SUBMIT("Unknown")` at `max_iterations`) scores
+> WRONG (t4 `comics_2` = 1/4). If it lands CORRECT instead, t4 rises one question
+> (→ 25.00%) and the cell becomes **19.69 ± 4.34** — a ≤0.31pp shift that changes
+> nothing above. Finalize once `comics_2` writes.
 
 ## How to read the axes
 
@@ -57,7 +67,7 @@ coverage** (drop incomplete trials or resume to fill).
 | 4B / 4B   | `rvlm-minimal-3_5-4b-val-t*`            | 8 | rvlm-minimal¹ | have |
 | 4B / 9B   | `rvlm-4b-llm-9b-vlm-val-t*`             | 4 | rvlm (current) | have (17.31 ± 1.57) |
 | 4B / 27B  | `rvlm-minimal-4b-llm-27b-vlm-val-t*`    | 8 | rvlm-minimal¹ | have |
-| 9B / 4B   | *(none)*                                | — | —             | **not run** |
+| 9B / 4B   | `rvlm-9b-llm-4b-vlm-val-t*`             | 4 | rvlm (current) | have (19.38 ± 4.39) |
 | 9B / 9B   | `rvlm-minimal-3_5-9b-val-t*`            | 8 | rvlm-minimal¹ | have |
 | 9B / 27B  | `rvlm-minimal-9b-llm-27b-vlm-val-t*`    | 8 | rvlm-minimal¹ | have |
 | 27B / 4B  | `rvlm-27b-llm-4b-vlm-val-t*`            | 4 | rvlm (current) | have |
@@ -79,7 +89,8 @@ small cells are current-era `rvlm` on the minimal prompt.
 
 ## Notes
 
-- **n is not uniform** (27B-row cells are n=4, others n=8). State per-cell n.
+- **n is not uniform** — the current-`rvlm` cells (27B row, 4B/9B, 9B/4B) are
+  n=4; the four `rvlm-minimal`ᵐ cells are n=8. State per-cell n.
 - **Known degenerate-loop drop:** `science_paper_1` (and sometimes `maps_2`,
   `comics_2`) can fail under `rvlm` (no exec-timeout), worse with a weak VLM →
   some cells score over 24/25 docs. Note the doc count per cell.
