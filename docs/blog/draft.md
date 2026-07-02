@@ -353,14 +353,16 @@ negatives.
 
 That leaves one more knockout, the one that says what kind of problem this is.
 
-### Perception is not optional
+### Text cannot stand in for looking
 
 **Swap the eyes for a text channel.** Give the same REPL agent our OCR text for
 every page plus a search tool, and no vision at all. It falls to **14.7%**, the
 lowest score in the study, below even the no-scaffold competition prompt. On
-layout-bound categories (engineering drawings, maps) it scores zero out of ten in
-all eight trials. For these questions, OCR text cannot stand in for looking.
-Perception is not optional; it is the thing the scaffold is buying.
+layout-bound categories (engineering drawings, maps) it scores zero out of ten
+in all eight trials. A text rendering of the document, however searchable,
+loses exactly what these answers live in: layout, marks, fine visual detail.
+That sharpens the earlier knockouts: what the scaffold buys is *actively
+controlled looking*, and the looking itself has no substitute.
 
 ### Better eyes, or a better director?
 
@@ -383,12 +385,12 @@ the exact configuration reported everywhere else in the post.
 Read the matrix **across a row**: the reasoner stays fixed and only the eyes
 improve. Accuracy climbs at every reasoner size, +6.9 with the 4B reasoner, +6.4
 with the 9B, and +9.1 end to end on the 27B row (32.8 with 4B eyes, 37.2 with 9B,
-41.9 with 27B), all well outside the noise.[^stats] Better eyes help. Perception
-is a real constraint, even with reasoning held fixed.
+41.9 with 27B), all well outside the noise.[^stats] Better eyes help; they are
+also the smaller axis.
 
 Now read **down the rightmost column**: the VLM stays at 27B and the reasoner
-scales, and accuracy nearly doubles. The reasoner is the bigger lever, but only
-inside the loop.
+scales, and accuracy nearly doubles. Does that leverage need the loop? Put the
+same ladder of reasoners behind ReAct:
 
 | Reasoner | RLM | ReAct |
 |---|---|---|
@@ -424,8 +426,8 @@ category: engineering drawings +36, business reports +30, infographics +19, scie
 papers +4, slides +1. Maps are a hard case for every configuration.
 
 So is the bottleneck perception or reasoning? Perception is what binds in the
-moment: a dense page defeats any single look, whoever is looking, and the
-OCR-only collapse shows nothing substitutes for looking. But the leverage sits
+moment: no single look resolves a dense page, and no text channel replaces
+looking. But the leverage sits
 with the reasoner: at a fixed 27B VLM, scaling the reasoner adds +20.8 points; at
 a fixed 27B reasoner, scaling the VLM adds +9.1. And that leverage exists only
 inside the loop; ReAct's much shallower column in Table 4 shows what the same
