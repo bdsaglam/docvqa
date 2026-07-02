@@ -2,7 +2,7 @@
 
 [Code: github.com/bdsaglam/docvqa](https://github.com/bdsaglam/docvqa){.more}
 &nbsp;·&nbsp;
-[Poster (PDF)](poster.pdf){.more}
+[Poster (PDF)](https://barisdeniz.is-a.dev/posts/perceive-reason-code/poster.pdf){.more}
 
 <details class="tldr">
 <summary>TL;DR</summary>
