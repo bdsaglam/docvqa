@@ -78,19 +78,19 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
 
 ## Open decisions / pending
 
-1. **3×3 matrix watch (active).** The 27B/9B cell is done and published
-   (37.2 ± 6.2, n=4). **Figure 5 is now the full matrix heatmap**
+1. **3×3 matrix (COMPLETE, 9/9).** **Figure 5 is the full matrix heatmap**
    (`fig5_matrix` in `make_figures.py`; blog uses `f5-matrix.png`, the poster
    a wide variant `f5-matrix-poster.png` via
-   `fig5_matrix(fname=..., figsize=(8.2,4.6), fscale=1.25, aspect='auto')`).
-   The poster carries the same framing (panel "The constraint and the lever",
-   Fig. 3; compile with `latexmk -xelatex`, must stay **1 page**). The 4B/9B
-   cell is done and published (17.31 ± 1.57, n=4, current rvlm). Only
-   **9B/4B** remains; when it lands: score, fill the matrix doc, regenerate
-   both matrix pngs (the grey "not run" cell becomes a value; drop the
-   caption's grey-cell sentence; reword its prompt-provenance sentence:
-   minimal-prompt cells are 4B/4B, 4B/27B, 9B/9B, 9B/27B, all others
-   current), re-sync `draft.md`, commit + push both repos.
+   `fig5_matrix(fname=..., figsize=(8.2,4.6), fscale=1.25, aspect='auto')`;
+   poster compiles with `latexmk -xelatex`, must stay **1 page**).
+   Minimal-prompt cells: 4B/4B, 4B/27B, 9B/9B, 9B/27B; all others current
+   rvlm (caption discloses). Note: every 4B→9B-eyes step is inside the noise
+   (largest Welch *t* = 2.0; the 9B row is an outright tie, 19.4 vs 18.9), so
+   the row-reading prose quotes only the to-27B-eyes gains as significant.
+   The 9B/4B value (19.38 ± 4.39, n=4) is provisional by ≤0.31pp: t4's
+   `comics_2` straggler was still retrying at publish time (see the matrix
+   doc's provisional note); if it lands correct, the cell becomes
+   19.69 ± 4.34 and the fig needs a 0.3pp touch-up.
 2. **Baseline column for the homogeneous table** — parked, awaiting Qwen
    **4B/9B** no-scaffold baseline re-runs (rawvlm + official, homogeneous;
    they do not exist yet). When available: compute avg@1 (+ pass@8/SC@8 via
