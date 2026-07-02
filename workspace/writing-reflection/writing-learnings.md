@@ -93,6 +93,15 @@ separately, reading as a discerning author: *would a serious paper write this?*
 - **Verify numbers against the source of truth.** A "(roughly 13 to 42)" range was
   impossible given the reported stds (the metric never dropped that low); it had
   gone stale. Recompute before publishing.
+- **State an ablation as held-fixed vs changed, precisely.** Before framing a
+  knockout, list what it holds fixed and what it varies; the interesting claim is
+  usually "everything fixed except X." Two failure modes: a *false contrast*
+  (claiming the baseline lacks something the full method lacks too — "the OCR agent
+  can't see pixels," but the full method's reasoner never sees pixels either; only
+  the *origin* of its text differs), and a *forced ladder* (lining up configs as one
+  monotone axis when the rungs vary different things at once). When a comparison is
+  confounded (weaker perceiver AND passive), look for another cell in the study that
+  unconfounds it (an actively driven weak perceiver) instead of hedging.
 - **Reconcile apparent contradictions at the point of tension.** "Perception-bound,
   not reasoning" vs "the reasoner is the bigger lever" reads as a contradiction
   until you say the reasoner's leverage is *unlocked by the perception loop*.
