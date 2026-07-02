@@ -111,7 +111,7 @@ resolves a dense page in one look --- but the \keyval{reasoner is the lever}:
 scaling it moves accuracy twice as much as scaling the VLM.
 \end{panel}
 
-\begin{panel}{THE PROBLEM: TWO KINDS OF SEARCH}
+\begin{panel}{THE TASK, AND WHY IT'S HARD}
 Documents are hard along several axes at once:
 \begin{itemize}
   \item \keyval{Across pages} --- up to \keyval{280 pages}; the evidence must first
@@ -143,7 +143,30 @@ Builds on Recursive Language Models (Zhang et al., 2025), CodeAct (Wang et al.,
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.485\linewidth}\vspace{0pt}
-\begin{panel}{RESULTS: WHAT CARRIES THE LIFT}
+\begin{panel}{THE RESULT}
+\centering
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}p{0.66\linewidth} >{\raggedleft\arraybackslash}p{0.26\linewidth}@{}}
+\toprule
+{\smallfont\bfseries System (held-out test)} & {\smallfont\bfseries Score} \\
+\midrule
+{\bfseries\textcolor{pgold}{Qwen 3.5 27B (ours) --- tuned}} & {\bfseries\textcolor{pgold}{43.8\%}} \\
+{\bfseries\textcolor{pblue}{Qwen 3.5 27B (ours) --- general}} & {\bfseries\textcolor{pblue}{39.4\%}} \\
+Gemini 3 Pro & 37.5\% \\
+GPT-5.2 & 35.0\% \\
+Gemini 3 Flash & 33.8\% \\
+GPT-5 Mini & 22.5\% \\
+\bottomrule
+\end{tabular}
+\justifying
+\vspace{5pt}
+{\smallfont Baselines are \keyval{bare frontier models} (no scaffold). The
+\keyval{tuned entry} that won the tier added DocVQA-specific prompts + OCR/search
+(43.8\%); the \keyval{general} method here strips those and still clears the
+frontier. Specializing buys a few points; generalizing gives them back.}
+\end{panel}
+
+\begin{panel}{ABLATIONS}
 Qwen~3.5~27B as reasoner \emph{and} VLM, DocVQA-2026 val (25 docs / 80 Q), 8 trials,
 ANLS. Remove one part at a time:
 
@@ -172,27 +195,13 @@ append-only vs.\ compacted trajectory (39.5\% vs.\ 41.9\%), and OCR + search on 
 missing one half (21--27\%), OCR-only floor (15\%).}
 \end{panel}
 
-\begin{panel}{ON THE HELD-OUT TEST SET}
-\centering
-\renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}p{0.66\linewidth} >{\raggedleft\arraybackslash}p{0.26\linewidth}@{}}
-\toprule
-{\smallfont\bfseries System (held-out test)} & {\smallfont\bfseries Score} \\
-\midrule
-{\bfseries\textcolor{pgold}{Qwen 3.5 27B (ours) --- tuned}} & {\bfseries\textcolor{pgold}{43.8\%}} \\
-{\bfseries\textcolor{pblue}{Qwen 3.5 27B (ours) --- general}} & {\bfseries\textcolor{pblue}{39.4\%}} \\
-Gemini 3 Pro & 37.5\% \\
-GPT-5.2 & 35.0\% \\
-Gemini 3 Flash & 33.8\% \\
-GPT-5 Mini & 22.5\% \\
-\bottomrule
-\end{tabular}
-\justifying
-\vspace{5pt}
-{\smallfont Baselines are \keyval{bare frontier models} (no scaffold). The
-\keyval{tuned entry} that won the tier added DocVQA-specific prompts + OCR/search
-(43.8\%); the \keyval{general} method here strips those and still clears the
-frontier. Specializing buys a few points; generalizing gives them back.}
+\begin{panel}{THE ADVANTAGE GROWS WITH LENGTH}
+On short MP-DocVQA ($\le$20 pages) RLM leads the raw multi-image baseline by
+\keyval{$\sim$4 pts}; on long MMLongBench-Doc ($\sim$47 pages) by
+\keyval{$\sim$42 pts}. RLM stays flat across both --- it navigates the document
+--- while the baseline's ``Unknown'' rate climbs from 22\% to 87\% as evidence
+falls off a fixed page budget. On moderate DocVQA-2026 the edge comes instead
+from \keyval{within-page density} (Fig.~4).
 \end{panel}
 \end{minipage}
 
@@ -200,7 +209,7 @@ frontier. Specializing buys a few points; generalizing gives them back.}
 \hfill
 % =========================== RIGHT SIDEBAR (full height) ===========================
 \begin{minipage}[t]{0.325\textwidth}\vspace{0pt}
-\begin{panel}{THE CONSTRAINT AND THE LEVER}
+\begin{panel}{BETTER EYES, OR A BETTER DIRECTOR?}
 Swap the eyes for a text channel --- OCR of every page plus search, \keyval{no
 vision}. Same scaffold, same reasoner. It falls to \keyval{14.7\%}, the study floor,
 and scores \keyval{0/10 in all 8 trials} on layout-bound categories (drawings,
@@ -213,10 +222,6 @@ maps). OCR cannot stand in for looking; the scaffold buys \keyval{perception}.
 \keyval{The strong-director corner wins}: 27B reasoner with 4B eyes (32.8)
 beats the reverse (21.1).}
 
-\vspace{5pt}
-The lift is a \keyval{capacity gate}: the model must be a good-enough coder to drive
-the REPL. A 31B Gemma clears its ReAct baseline by 15~pts; a 4B Gemma collapses ---
-too weak to write the code.
 \end{panel}
 
 \begin{panel}{ADVANTAGE TRACKS VISUAL DENSITY}
@@ -224,25 +229,31 @@ too weak to write the code.
 \figcap{\textbf{Fig.~4.} Advantage over ReAct by category. Largest on dense,
 structured pages --- engineering drawings (+36), business reports (+30), infographics
 (+19) --- smallest on text-linear pages: science papers (+4), slides (+1).}
-
-\vspace{6pt}
-\keyval{An unspent signal.} Over 8 trials the right answer is reached
-\keyval{$\sim$64\%} of the time (oracle, pass@8) but reliably produced only
-\keyval{40\%} --- a $\sim$24-point gap a learning procedure could capture.
 \end{panel}
 
-\begin{panel}{COST \& OUTLOOK}
+\begin{panel}{LIMITATIONS}
 \keyval{Generality costs calls} --- perception is a region at a time, each a
 sequential VLM call ($\sim$13 steps/Q); unconstrained recursion can be ruinously
-expensive (Borchmann et al., 2026). Cheap OCR retrieval or a smaller VLM behind the
+expensive (Borchmann et al., 2026). More steps mark a \emph{hard} document, not a
+better answer. Cheap OCR retrieval or a smaller VLM behind the
 call are open efficiency levers.
 
 \vspace{4pt}
+\keyval{And a floor}: the harness amplifies a strong-enough coder (31B Gemma:
++15~pts over ReAct) but cannot rescue one too weak to code (4B Gemma collapses).
+\end{panel}
+
+\begin{panel}{OUTLOOK}
 The REPL is a \keyval{symbolic substrate} for a neural model --- a medium to hold,
 compose, and compute what its context cannot. That code helps at \emph{test time} is
 established. The open question: could the symbolic substrate become \keyval{part of
 the model itself} --- woven into how it learns and computes, not bolted on at
-inference? The 24-point oracle gap says there is signal to learn from.
+inference?
+
+\vspace{4pt}
+\keyval{The signal is there.} Over 8 trials the right answer is reached
+\keyval{$\sim$69\%} of the time (oracle, pass@8) but reliably produced only
+\keyval{$\sim$42\%} --- a 27-point gap a learning procedure could capture.
 
 \vspace{7pt}
 \begin{tcolorbox}[colback=white, colframe=pblue, boxrule=1.1pt, arc=5pt,
