@@ -45,8 +45,8 @@ def fig3_tiers():
     rows = [
         ("RLM (full method)", 41.88, 5.79, "top"),
         ("CodeAct (append-only twin)", 39.53, 2.83, "top"),
-        ("+ general sub-agent", 36.72, 2.75, "top"),
-        ("+ OCR & search", 36.56, 2.89, "top"),
+        ("RLM + general sub-agent", 36.72, 2.75, "top"),
+        ("RLM + OCR & search", 36.56, 2.89, "top"),
         ("ReAct (no REPL)", 27.19, 3.19, "mid"),
         ("In-context pixels (no sub-VLM)", 22.34, 2.79, "mid"),
         ("Raw multi-image (no scaffold)", 20.94, 1.60, "mid"),
