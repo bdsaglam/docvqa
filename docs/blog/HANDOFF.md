@@ -88,7 +88,11 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
    (largest Welch *t* = 2.0; the 9B row is an outright tie, 19.4 vs 18.9), so
    the row-reading prose quotes only the to-27B-eyes gains as significant.
    The 9B/4B value is final: 19.38 ± 4.39 (n=4; t4's `comics_2` dropped
-   after degenerate-looping, per the matrix doc).
+   after degenerate-looping, per the matrix doc). The post links the poster
+   PDF (top, next to the code link); after any poster recompile, re-copy:
+   `cp docs/poster/poster.pdf
+   /home/baris/repos/bdsaglam.github.io/posts/perceive-reason-code/poster.pdf`
+   and push the blog repo.
 2. **Baseline column for the homogeneous table** — parked, awaiting Qwen
    **4B/9B** no-scaffold baseline re-runs (rawvlm + official, homogeneous;
    they do not exist yet). When available: compute avg@1 (+ pass@8/SC@8 via
