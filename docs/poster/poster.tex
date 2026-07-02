@@ -103,8 +103,8 @@ infographic to a 280-page report. General VLMs read every page at fixed resoluti
 dense pages. We give a code-capable model (Qwen~3.5~27B) a \keyval{Python REPL} and
 \keyval{one perception primitive} --- an on-demand VLM call it invokes region by
 region --- so it can crop, zoom, loop, and compute over pages instead of swallowing
-them whole. With no fine-tuning, it was a \keyval{joint winner} of the ICDAR~2026
-DocVQA challenge (8--35B tier). Ablations show the lift comes \keyval{jointly} from the
+them whole. It was a \keyval{joint winner} of the ICDAR~2026 DocVQA challenge
+(8--35B tier), ahead of the far larger Gemini~3~Pro and GPT-5.2. Ablations show the lift comes \keyval{jointly} from the
 REPL and the perception call; the trajectory format is a free choice, and a
 general sub-agent or added OCR even costs accuracy. Perception is the \keyval{binding constraint} --- no model
 resolves a dense page in one look --- but the \keyval{reasoner is the lever}:
