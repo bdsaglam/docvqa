@@ -96,6 +96,13 @@ fixed reasoner (D-006). Contrast the *perception-budget lift* direction above (f
 the 4B reasoner, upgrade the VLM →27B = +6.88pp): the two directions are the same
 mechanism seen from both ends.
 
+**4B-as-perceiver also under a mid (9B) reasoner:** `rvlm` **9B-LM / 4B-VLM =
+19.38% ± 4.39 (n=4)** (per-trial 15.00 / 22.50 / 16.25 / 23.75;
+`rvlm-9b-llm-4b-vlm-val-t*`, current `rvlm`, 9B LM local `:8909` + 4B VLM on
+amax7) — the bottom rung of the 9B-reasoner ladder (9B/4B **19.38** → 9B/9B 20.00
+→ 9B/27B 25.31). So a 4B perceiver yields ~19% under a 9B reasoner vs ~33% under a
+27B reasoner: the same weak perceiver, gated by reasoner capability.
+
 ## Setup
 
 - Solver: `rvlm` (RLM), `react_baseline` (ReAct), `codeact` (CodeAct).

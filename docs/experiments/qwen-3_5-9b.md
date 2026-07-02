@@ -15,9 +15,17 @@ live in [`harness-axis-summary.md`](harness-axis-summary.md).
 
 | Harness | v1 homog (VLM=9B) | v2 mixed (VLM=27B) | Δ (v2−v1) |
 |---|---|---|---|
-| RLM (`rvlm`) | 18.91% ± 3.81 | **25.31% ± 4.16** | **+6.41pp** — Welch t=3.21, 95% CI [+2.1,+10.7], **sig.** |
+| RLM (`rvlm`) | 18.91% ± 3.81ᵖ | **25.31% ± 4.16** | **+6.41pp** — Welch t=3.21, 95% CI [+2.1,+10.7], **sig.** |
 | ReAct | 16.25% ± 3.06 | 22.66% ± 4.93 | +6.41pp |
 | CodeActᶜ | 19.35% ± 4.24 | 24.26% ± 4.68 | +4.91pp |
+
+ᵖ **Prompt-era note.** All three v1 cells above are the `rvlm-minimal` prompt era
+(run together, so the harness comparison is internally consistent). The RLM v1
+cell (9B/9B) was later **re-run on current `rvlm` → 20.00% ± 1.02 (n=4)**
+(`rvlm-9b-llm-9b-vlm-val-t*`, all four at full 25/25); that current-`rvlm` value
+is what the 3×3 matrix (`rvlm-reasoner-perceiver-3x3.md`) uses. The 18.91 minimal
+figure is kept here only to preserve the within-table RLM-vs-ReAct-vs-CodeAct
+comparison at a single prompt era.
 
 ᶜ **STALE — do not cite.** Old dspy `codeact` (deprecated). The corrected
 **`codeact_chat`** twin is the sole source of truth for CodeAct numbers going
@@ -55,6 +63,27 @@ strong enough to exploit code+state, RLM/CodeAct overtake the no-REPL ReAct.
   RLM (25.31) — CodeAct's accuracy scales harder with reasoner capability than
   ReAct or RLM, catching RLM by 9B after trailing badly at 8B/4B. Full slope in
   `harness-axis-summary.md`.
+
+## 9B-reasoner perception ladder — `rvlm`, current, n=4
+
+Fix the **9B reasoner** and scale the perceiver — the 9B row of the 3×3 matrix
+([`rvlm-reasoner-perceiver-3x3.md`](rvlm-reasoner-perceiver-3x3.md)), all three
+cells current `rvlm`:
+
+| Perceiver (VLM) | `rvlm` (9B reasoner) | n | per-trial |
+|---|---|---|---|
+| 4B  | 19.38 ± 4.39 | 4 | 15.00 / 22.50 / 16.25 / 23.75 |
+| **9B**  | **20.00 ± 1.02** | 4 | 18.75 / 20.00 / 21.25 / 20.00 |
+| 27B | 25.31 ± 4.16 | 8 (rvlm-minimalᵐ) |  |
+
+Monotone (19.38 → 20.00 → 25.31). The 4B→9B step is small (+0.62pp, inside the
+stds — a tie in magnitude, correct in direction) but **confound-free**: both cells
+are current `rvlm` (`rvlm-9b-llm-4b-vlm-val-t*`, `rvlm-9b-llm-9b-vlm-val-t*`, 9B
+reasoner local `:8909` + 4B/9B VLM on amax7). Under a 9B reasoner, 4B and 9B
+perception land close — both are "small VLMs" that miss the same fine print — while
+the 27B perceiver adds a real +5.3pp. The 9B/9B cell here is the current-`rvlm`
+re-run that **supersedes the `rvlm-minimal` 18.91 ± 3.81** in the harness table
+above (same reasoner, better prompt, tighter std). ᵐ = 9B/27B still `rvlm-minimal`.
 
 ## 9B as Perceiver — reasoner-fixed cell (27B-LM / 9B-VLM), `rvlm`, n=4
 
