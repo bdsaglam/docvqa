@@ -119,42 +119,52 @@ def fig4_grid():
 
 
 # ----------------------------------------------------- F5: VLM-swap (perception)
-def fig5_vlm_swap():
-    # reasoner fixed; upgrade only the VLM to 27B.
-    # 4B/9B reasoner: smaller VLM = homogeneous (own size), n=8 both arms.
-    # 27B reasoner: smaller VLM = 4B (n=4), vs homogeneous 27B (n=8).
-    groups = ["4B reasoner", "9B reasoner", "27B reasoner"]
-    weak = [14.22, 18.91, 32.81]
-    weak_s = [3.83, 3.81, 3.13]
-    weak_lbl = ["4B", "9B", "4B"]
-    strong = [21.09, 25.31, 41.88]
-    strong_s = [3.16, 4.16, 5.79]
-    lifts = [6.88, 6.41, 9.07]
-
+def fig5_matrix():
+    # Reasoner x Perceiver 3x3 (rvlm, val ANLS, mean over n trials).
+    # Source: docs/experiments/rvlm-reasoner-perceiver-3x3.md. Two cells not run.
     import numpy as np
-    x = np.arange(len(groups))
-    w = 0.34
-    fig, ax = plt.subplots(figsize=(6.6, 4.4))
-    ax.bar(x - w / 2, weak, w, yerr=weak_s, label="smaller VLM",
-           color=C_FLOOR, error_kw=dict(ecolor="#555", capsize=3, lw=1))
-    ax.bar(x + w / 2, strong, w, yerr=strong_s, label="VLM = 27B",
-           color=C_TOP, error_kw=dict(ecolor="#555", capsize=3, lw=1))
-    for i in range(len(groups)):
-        top = max(weak[i] + weak_s[i], strong[i] + strong_s[i]) + 1.4
-        ax.annotate(f"+{lifts[i]:.1f} pp", xy=(x[i], top), ha="center",
-                    fontsize=11, fontweight="bold", color="#2f6f9f")
-        ax.annotate(weak_lbl[i], xy=(x[i] - w / 2, 1.2), ha="center",
-                    fontsize=9, color="white", fontweight="bold")
-    ax.set_xticks(x)
-    ax.set_xticklabels(groups)
-    ax.set_ylabel("Val accuracy (ANLS %)")
-    ax.set_ylim(0, 52)
-    ax.yaxis.grid(True, color=GRID, lw=0.7)
-    ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=9, loc="upper left")
-    ax.set_title("Fix the reasoner, upgrade only the VLM → 6–9 pp",
+    sizes = ["4B", "9B", "27B"]
+    # rows = reasoner (bottom-to-top 4B..27B after flip), cols = perceiver VLM
+    mean = np.array([[14.22, np.nan, 21.09],
+                     [np.nan, 18.91, 25.31],
+                     [32.81, 37.2, 41.88]])
+    std = np.array([[3.83, np.nan, 3.16],
+                    [np.nan, 3.81, 4.16],
+                    [3.13, 6.2, 5.79]])
+    n = np.array([[8, 0, 8], [0, 8, 8], [4, 4, 8]])
+
+    fig, ax = plt.subplots(figsize=(6.2, 5.0))
+    masked = np.ma.masked_invalid(mean)
+    cmap = plt.get_cmap("Blues").copy()
+    cmap.set_bad("#efefef")
+    im = ax.imshow(masked, cmap=cmap, vmin=8, vmax=48, origin="lower")
+    for i in range(3):
+        for j in range(3):
+            if np.isnan(mean[i, j]):
+                ax.text(j, i, "not run", ha="center", va="center",
+                        fontsize=10, color="#999999", style="italic")
+            else:
+                dark = mean[i, j] > 30
+                ax.text(j, i, f"{mean[i, j]:.1f}",
+                        ha="center", va="center", fontsize=15,
+                        fontweight="bold",
+                        color="white" if dark else "#1f3d57")
+                ax.text(j, i - 0.30, f"±{std[i, j]:.1f}  (n={n[i, j]})",
+                        ha="center", va="center", fontsize=8.5,
+                        color="white" if dark else "#4a6a88")
+    ax.set_xticks(range(3), sizes)
+    ax.set_yticks(range(3), sizes)
+    ax.set_xlabel("Perceiver (VLM behind the perception call)")
+    ax.set_ylabel("Reasoner (drives the REPL)")
+    ax.set_xticks(np.arange(-0.5, 3), minor=True)
+    ax.set_yticks(np.arange(-0.5, 3), minor=True)
+    ax.grid(which="minor", color="white", lw=2)
+    ax.tick_params(which="both", length=0)
+    for s in ax.spines.values():
+        s.set_visible(False)
+    ax.set_title("Reasoner × VLM: validation accuracy (ANLS %)",
                  fontsize=12, fontweight="bold")
-    save(fig, "f5-vlm-swap.png")
+    save(fig, "f5-matrix.png")
 
 
 # ------------------------------------------------------- F-cat: per-category gap
@@ -312,7 +322,7 @@ if __name__ == "__main__":
     fig2_architecture()
     fig3_tiers()
     fig4_grid()
-    fig5_vlm_swap()
+    fig5_matrix()
     figcat()
     fig_lengthaxis()
     print("done")

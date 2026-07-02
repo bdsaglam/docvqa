@@ -345,7 +345,7 @@ Generality, trajectory format, and OCR-on-top are all dispensable.
 
 That leaves one more knockout, the one that says what kind of problem this is.
 
-### Perception is load-bearing
+### Perception is not optional
 
 **Swap the eyes for a text channel.** Give the same REPL agent our OCR text for
 every page plus a search tool, and no vision at all. It falls to **14.7%**, the
@@ -359,22 +359,27 @@ Perception is not optional; it is the thing the scaffold is buying.
 The knockouts pin the scaffold's contribution to perception: swap whole-page
 ReAct for RLM with the same 27B on both sides, and accuracy jumps
 from 27 to 42, with nothing changing but how perception is spent. To see where the
-remaining headroom lives, we vary each half in turn.
+remaining headroom lives, we scale each half separately: 4B, 9B, and 27B Qwen as
+the reasoner, crossed with the same three sizes as the VLM behind the perception
+call.
 
-Start by holding the reasoner fixed and upgrading only the eyes: feed its
-perception calls to a stronger VLM, up to the 27B. The reasoner never changes;
-only the quality of what it can see does. Accuracy climbs **six to nine points**
-at every reasoner size: +6.9 with a 4B reasoner, +6.4 with a 9B, +9.1 with the
-27B, all well outside the noise.[^stats] Better eyes help. Perception is a real
-constraint, even with reasoning held fixed.
+![](f5-matrix.png){fig-alt="heatmap of the reasoner-by-VLM matrix: accuracy rises modestly left to right with a stronger VLM and sharply bottom to top with a stronger reasoner"}
 
-![](f5-vlm-swap.png){fig-alt="grouped bar chart showing that holding a 4B, 9B, or 27B reasoner fixed and upgrading only the VLM to 27B lifts accuracy six to nine points"}
+**Figure 5.** Validation accuracy (ANLS %; mean, ± std, and n per cell) for each
+reasoner × VLM pairing of Qwen 3.5 4B/9B/27B, all under the same RLM harness.
+Grey cells were not run. The 4B- and 9B-reasoner rows use a minimally different
+prompt variant of the same solver (identical harness and tools); the 27B row uses
+the exact configuration reported everywhere else in the post.
 
-**Figure 5.** Holding each reasoner fixed (4B, 9B, 27B) and upgrading only the VLM
-behind the perception call to the 27B. Bar labels give the smaller VLM's size.
+Read the matrix **across a row** and the reasoner stays fixed while only the eyes
+improve. Accuracy climbs at every reasoner size: +6.9 with the 4B reasoner, +6.4
+with the 9B, and stepwise along the full 27B row, 32.8 with 4B eyes, 37.2 with
+9B, 41.9 with 27B, all well outside the noise.[^stats] Better eyes help.
+Perception is a real constraint, even with reasoning held fixed.
 
-Now do the opposite: hold the VLM at the 27B backend and vary the reasoner. The
-reasoner is the bigger lever, but only inside the loop.
+Now read **down the rightmost column**: the VLM stays at 27B and the reasoner
+scales, and accuracy nearly doubles. The reasoner is the bigger lever, but only
+inside the loop.
 
 | Reasoner | RLM | ReAct |
 |---|---|---|
@@ -392,9 +397,9 @@ whatever one downsampled look yields, and a smarter reasoner cannot aim it. Give
 that reasoner a perception tool and its capacity turns into accuracy: it writes
 tighter crops, cleaner code, and decides where to look again.
 
-Now put the two mixed corners side by side. A 4B reasoner given the 27B VLM
-reaches **21.1**. A 27B reasoner peering through the 4B VLM reaches
-**32.8**.[^corner] The strong director with weak eyes wins by almost twelve
+Now put the two mixed corners of the matrix side by side. A 4B reasoner given the
+27B VLM reaches **21.1**. A 27B reasoner peering through the 4B VLM reaches
+**32.8**. The strong director with weak eyes wins by almost twelve
 points, and it even clears the ReAct agent that has the full 27B as its eyes
 (27.2). Between a stronger VLM and a stronger director, buy the director.
 
@@ -423,11 +428,6 @@ One caveat bounds the reasoning half of this. The data does not separate how muc
 [^stats]: +6.88pp at 4B (Welch *t* = 3.91, 95% CI [+3.1, +10.7]) and +6.41pp at 9B
 (*t* = 3.21, 95% CI [+2.1, +10.7]), eight trials per arm; +9.07pp at 27B
 (*t* = 3.52, 95% CI [+3.3, +14.8]), four trials against eight.
-
-[^corner]: 32.81 ± 3.13 over four trials, against 21.09 ± 3.16 over eight. One
-asymmetry to note: the 4B- and 9B-reasoner cells run a minimally different prompt
-variant of the same solver (identical harness and tools); the 27B-reasoner cells
-run the exact configuration used everywhere else in the post.
 
 [^length]: Within-set, the "advantage grows with page count" hypothesis doesn't
 hold: on the longest documents with a strong VLM the gap is flat. Across
