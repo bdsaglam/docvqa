@@ -163,8 +163,6 @@ def fig5_matrix(fname="f5-matrix.png", figsize=(6.2, 5.0), fscale=1.0,
     ax.tick_params(which="both", length=0)
     for s in ax.spines.values():
         s.set_visible(False)
-    ax.set_title("Reasoner × VLM: validation accuracy (ANLS %)",
-                 fontsize=12 * fscale, fontweight="bold")
     save(fig, fname)
 
 
