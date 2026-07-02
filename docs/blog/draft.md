@@ -255,7 +255,7 @@ reliably produces it. (pass@8 is also the upper bound for any way of picking amo
 the eight; SC@8 is one realizable pick, and it recovers only part of the gap.) We
 return to that gap at the end.
 
-Now the mechanism, one part at a time. Start at the top and take away the REPL. What's left is a **ReAct agent**: the
+Now the mechanism. Start at the top and take away the REPL. What's left is a **ReAct agent**: the
 same VLM perception tool, but called through plain tool-use instead of from inside
 a code environment. The score falls from **41.9%** to **27.2%**, about fifteen
 points. Without a REPL the agent can't crop a region by arithmetic, can't tile a
@@ -304,8 +304,8 @@ or no perception call), and the no-scaffold / OCR-only floor.
 
 ### Three things that don't help
 
-The obvious ways to enrich the core don't make it any bigger, and two make it
-smaller; these results tell you what you *don't* need to build.
+The obvious ways to enrich the core add nothing, and two of the three cost
+accuracy; these results tell you what you *don't* need to build.
 
 **Generalizing the call costs points.** We replaced the focused "look at this
 region" call with a general sub-agent that could take on any subtask (image
@@ -566,10 +566,10 @@ clear room:
   the per-call cost, and a document-specialized small VLM could close more of
   the gap.
 
-And this reframes the OCR result from earlier. As an *evidence* channel our OCR
-pipeline cost accuracy, but run once as preprocessing it still buys
-**efficiency**: fewer and cheaper looks. The extension to keep uses OCR for
-navigation, not as evidence.
+The first lever also reframes the OCR result from earlier. Our pipeline failed
+as an *evidence* channel, where its confident misreads displaced directed looks.
+Pure *navigation* dodges that failure mode: OCR only points at pages, and every
+value the agent uses still comes from a look it aimed.
 
 Beyond cost, a few limits bound the claims. The test numbers sit below validation
 (a harder test split is at least as plausible a reason as fit to the development
