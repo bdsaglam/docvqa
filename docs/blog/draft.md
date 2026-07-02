@@ -125,7 +125,7 @@ bigger model or to stuff more pages into the context window. The move that actua
 worked was to let the model decide *where to look*.
 
 
-## The recipe
+## The method
 
 Picture how a person answers a question from a hundred-page report. They do not
 read every page at a uniform squint. They flip to the section that matters, lean in
@@ -464,7 +464,7 @@ document-length section takes up directly.
 
 ## The lift generalizes across model sizes and families
 
-Our entry used Qwen 3.5 27B, but nothing in the recipe is specific to it. To check,
+Our entry used Qwen 3.5 27B, but nothing in the method is specific to it. To check,
 we run the harness homogeneously (the same model as both reasoner and VLM) across
 sizes and across a second family.
 
@@ -487,7 +487,7 @@ The harness amplifies a capable model; it cannot rescue one that cannot code.
 
 The gate is about capability, not family or checkpoint: any model that is a
 strong enough multimodal coder gets the lift. Qwen 3.5 27B is simply the one we
-entered in the challenge. The recipe is about the harness, not the model.
+entered in the challenge. The method is about the harness, not the model.
 
 
 ## The advantage grows with document length

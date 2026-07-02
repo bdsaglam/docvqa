@@ -64,7 +64,7 @@ DocVQA competition writeup: active perception for document VQA). Publishes to
   prose); `CodeAct` is the append-only twin; a naming paragraph at the top of
   Ablations defines RLM / CodeAct / ReAct before any table uses them.
   "Active perception" is used only as the concept, never as a system name.
-- **Section order:** intro → result → task → recipe → **Ablations** →
+- **Section order:** intro → result → task → method → **Ablations** →
   model-size axis → document-length axis → Limitations → substrate. Tables
   1–6 and Figures 1–7 are numbered in reading order.
 - **Figures** regenerated from `docs/blog/make_figures.py`: `f5-vlm-swap.png`
