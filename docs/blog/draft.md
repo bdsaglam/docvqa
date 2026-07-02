@@ -24,11 +24,11 @@ together for documents, and the ablations behind every claim above.
 
 ## A 27B model, a Python REPL, and one question
 
-We entered the ICDAR 2026 DocVQA challenge with one idea: let a code-capable
-model direct its own perception from inside a Python REPL. Built around an open
-Qwen 3.5 27B, with no fine-tuning, the system jointly won the challenge's 8–35B
-tier and beat its bare-model baselines, Gemini 3 Pro and GPT-5.2, on the
-held-out test set. At its core it is two things: the REPL, and an on-demand
+We jointly won the 8–35B tier of the ICDAR 2026 DocVQA challenge with an open
+Qwen 3.5 27B and no fine-tuning: on the held-out test set, our system beat the
+challenge's bare-model baselines, Gemini 3 Pro and GPT-5.2. What we entered was
+one idea: let a code-capable model direct its own perception from inside a
+Python REPL. At its core the system is two things: the REPL, and an on-demand
 call to a vision-language model (VLM), used as a perception tool the reasoner
 invokes region by region.
 
