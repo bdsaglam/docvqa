@@ -1,37 +1,61 @@
-# DocVQA 2026: Active Perception via RLM Agents
+# DocVQA 2026: Perceive-Reason-Code
 
-ICDAR 2026 DocVQA competition entry. RLM agents with active document perception — iteratively inspect pages via VLM tools from a Python REPL sandbox.
+Active perception for document visual question answering — the ICDAR 2026 DocVQA challenge entry that [jointly won the 8–35B model tier](https://rrc.cvc.uab.es/?com=news&view=data&id=83). An open Qwen 3.5 27B beats the challenge's bare-model baselines — the far larger Gemini 3 Pro and GPT-5.2 — on the held-out test set.
 
-The proposed method is the **`rvlm`** solver: an OCR-free RLM that drives a recursive VLM sub-call (`batch_look`) from a code REPL. The core finding is a **visual context-budget** effect — mid-sized open VLMs are perception-budget-bound, not reasoning-bound, and recursive visual perception is the fix.
+The method fits in one sentence: give a code-capable model a persistent Python REPL and a single perception primitive — an on-demand VLM sub-call pointed at any region of any page — and let it **direct** its own perception instead of reading whole pages at a fixed resolution. Three moves name the system, **Perceive-Reason-Code**: perceive through a VLM call, reason in language, act by writing code. The proposed solver is **`rvlm`** — an OCR-free RLM driving a recursive VLM sub-call (`batch_look`) from the REPL.
+
+The reframe underneath: on documents, **perception is the constraint but the reasoner is the lever**. No model resolves a dense page in one fixed-resolution look, so what separates systems is how well the reasoner directing the looks spends its budget of them — scaling the reasoner moves accuracy about twice as much as scaling the VLM it looks through.
+
+Full write-up: [**Perceive-Reason-Code: Active Perception for Document VQA**](https://barisdeniz.is-a.dev/posts/perceive-reason-code/).
 
 ## Results
 
-Headline comparison on the DocVQA-2026 val subset (25 docs / 80 questions, Qwen 3.5 27B as both LM and VLM, `n=8` trials, ANLS as mean ± std). `rvlm` leads three clean tiers — every gap is larger than the cross-trial std.
+### Held-out test set (competition)
 
-| Tier | Solver | Val (n=8) |
+The challenge scores one submitted answer per question on a private test set (self-consistency vote over 8 samples). Two entries are ours — a **tuned entry** fitted to this benchmark (DocVQA-specific prompts plus OCR and search) and the **general method** this repo is built around, which drops all of that. Both clear the challenge's official baselines, which are bare models reported with no agentic scaffold — a harnessed 27B against unharnessed frontier models.
+
+| System (held-out test set) | ANLS |
+|---|---|
+| **Ours — tuned entry** (`flat_solo`, SC-8) | **43.75%** |
+| **Ours — general method** (`rvlm`, SC-8) | **39.38%** |
+| Gemini 3 Pro | 37.50% |
+| GPT-5.2 | 35.00% |
+| Gemini 3 Flash | 33.75% |
+| GPT-5 Mini | 22.50% |
+
+The general method's append-only twin, `codeact_chat`, scores **41.25%** on test — statistically tied with `rvlm` (the two submissions agree on 68% of answers). See [`docs/results.md`](docs/results.md) for the test-submission detail.
+
+### Validation matrix (ablations)
+
+Every ablation below runs on the DocVQA-2026 val subset (25 docs / 80 questions), Qwen 3.5 27B as both reasoner and VLM, `n=8` trials, reported as **avg@1** (single-trial ANLS, mean ± std). `rvlm` leads three clean tiers — every cross-tier gap is far larger than the within-cell std.
+
+| Tier | Solver | Val avg@1 (n=8) |
 |---|---|---|
-| **proposed** | **`rvlm`** — REPL + recursive VLM `batch_look` (OCR-free) | **39.38% ± 1.49** |
-| CodeAct harness (MDP twin) | `codeact_chat` — append-only chat-MDP twin of `rvlm` (RL-target form) | 39.53% ± 2.83 |
-| + OCR extension | `rvlm_ocr_ablation` | 37.81% ± 3.12 |
-| no recursion | `react_baseline` / `direct_vlm` / `raw_vlm_multi_baseline` | 20–25% |
-| competition anchor | `official_baseline` (`MASTER_PROMPT`, no scaffold) | 17.81% ± 1.86 |
-| OCR-only floor (no vision) | `rlm_ocr` | 13.91% ± 1.56 |
+| **proposed (full method)** | **`rvlm`** — REPL + recursive VLM `batch_look` (OCR-free) | **41.88% ± 5.79** |
+| corrected MDP twin | `codeact_chat` — append-only chat-MDP twin (RL-target form) | 39.53% ± 2.83 |
+| + general sub-agent | `rvlm_subagent_ablation` | 36.72% ± 2.75 |
+| + OCR & search | `rvlm_ocr_ablation` | 36.56% ± 2.89 |
+| no REPL | `react_baseline` | 27.19% ± 3.19 |
+| pixels in-context (no sub-call) | `direct_vlm` | 22.34% ± 2.79 |
+| raw multi-image (no scaffold) | `raw_vlm_multi_baseline` | 20.94% ± 1.60 |
+| competition prompt (no scaffold) | `official_baseline` (`MASTER_PROMPT`) | 18.91% ± 1.94 |
+| OCR-only floor (no vision) | `rlm_ocr` | 14.69% ± 2.19 |
 
-External official baselines (ICDAR 2026, for context): Gemini 3 Pro **37.5%** test, GPT-5.2 **35.0%** test.
+Both halves of the scaffold are load-bearing: dropping the REPL (`react_baseline`) or the recursive sub-call (`raw_vlm_multi_baseline`, `direct_vlm`) collapses the score to the no-recursion tier (~21–27%), and swapping visual perception for OCR text (`rlm_ocr`) is the matrix floor. The enrichments that *don't* help — a general sub-agent, OCR on top, richer trajectory management — cost accuracy or buy nothing.
 
-`codeact_chat` is `rvlm`'s twin — identical tools, prompt, and `batch_look` — but with a strictly **append-only** multi-turn chat transcript (no LeanRLM compaction), making the trajectory a fully-observable MDP suited as an RL fine-tuning target. The append-only MDP costs essentially nothing: **39.53% ± 2.83** (n=8), statistically **tied** with `rvlm` (+0.15pp) and in the same visual-recursive tier. (An earlier dspy-based `codeact` solver — single-turn `dspy.Predict` re-rendering history into a string field, a POMDP-shaped approximation — is **deprecated** in favor of this corrected chat-MDP version; its budget-sweep writeup is archived.)
+`codeact_chat` is `rvlm`'s twin: identical tools, prompt, and `batch_look`, but conditioning on a strictly **append-only** chat transcript (no RLM-style compaction), which keeps the trajectory a growing-prefix MDP suited as an RL fine-tuning target. The append-only form costs essentially nothing — **39.53% ± 2.83** (n=8), statistically tied with `rvlm` (which edges +2.35pp, within combined std). (An earlier dspy-based `codeact` solver — single-turn `dspy.Predict` re-rendering history into a string field, a POMDP-shaped approximation — is **deprecated** in favor of this corrected chat-MDP version; its budget-sweep writeup is archived.)
 
-See [`docs/results.md`](docs/results.md) for the full cross-solver matrix (ablations, the document-length axis, and the model/perception sweeps) and [`docs/experiment-status.md`](docs/experiment-status.md) for run status.
+See [`docs/results.md`](docs/results.md) for the full cross-solver matrix (the reasoner × VLM size matrix, the document-length axis, and the model/family sweeps) and [`docs/experiment-status.md`](docs/experiment-status.md) for run status.
 
-## Competition submission
+## Reproducing the competition entries
 
-The numbers above are from the current `main` codebase. The original ICDAR 2026 competition entry used an earlier solver (`flat_solo`, since refactored away) and is preserved on the **[`docvqa-2026`](../../tree/docvqa-2026)** branch — a frozen snapshot of the code, configs, and prompts as submitted. To reproduce it:
+The **general method** (`rvlm`) is the current `main` codebase — run it directly (see below). The **tuned entry** used an earlier solver (`flat_solo`, since refactored away) and is preserved on the **[`docvqa-2026`](../../tree/docvqa-2026)** branch — a frozen snapshot of the code, configs, and prompts as submitted:
 
 ```bash
 git checkout docvqa-2026
 ```
 
-| Config (submission) | Val | Test |
+| Tuned entry (submission) | Val | Test |
 |---|---|---|
 | Flat Solo SC-8 (Qwen 3.6 27B) | **51.2%** | **43.75%** |
 | Flat Solo SC-8 (Qwen 3.5 27B) | 51.2% | 39.0% |
@@ -190,10 +214,12 @@ Evaluation uses ANLS (Average Normalized Levenshtein Similarity). Dataset: [VLR-
 
 ## Design
 
-**RLM (Reasoning Language Model).** The LLM writes Python code in a subprocess REPL sandbox and drives perception from it, deciding at each step what to examine next. The proposed `rvlm` solver is **OCR-free**: its one perception primitive is a recursive VLM sub-call, `batch_look(image, query)`. OCR text + BM25 `search` are an extension (`rvlm_ocr_ablation`), not part of the core method.
+**RLM (Recursive Language Model).** The LLM writes Python code in a subprocess REPL sandbox and drives perception from it, deciding at each step what to examine next. The proposed `rvlm` solver is **OCR-free**: its one perception primitive is a recursive VLM sub-call, `batch_look(image, query)`. OCR text + BM25 `search` are an extension (`rvlm_ocr_ablation`), not part of the core method.
 
-**Recursive visual perception.** Both halves of the scaffold are load-bearing. Dropping the recursive VLM sub-call (`raw_vlm_multi_baseline`) or the REPL (`react_baseline`) both collapse the score to the no-recursion tier (~20–25% vs `rvlm`'s ~39%); swapping visual perception for OCR text (`rlm_ocr`) is the matrix floor (~14%). Recursive *visual* perception does work OCR text cannot replace.
+**Recursive visual perception.** Both halves of the scaffold are load-bearing. Dropping the recursive VLM sub-call (`raw_vlm_multi_baseline`, `direct_vlm`) or the REPL (`react_baseline`) both collapse the score to the no-recursion tier (~21–27% vs `rvlm`'s ~42%); swapping visual perception for OCR text (`rlm_ocr`) is the matrix floor (~15%). Recursive *visual* perception does work OCR text cannot replace — and it has to arrive as a **compact-text sub-call**, not raw pixels poured into the reasoner's own context (`direct_vlm` does exactly that, pins the iteration cap, and collapses too).
 
-**Active perception.** Rather than passively processing whole pages, the agent decides what to look at: crops, zooms, multi-scale scans. This focuses computation on the regions that matter for each question — the lever is sharpest on detail-dense categories (engineering drawings, science posters).
+**Active perception.** Rather than passively processing whole pages, the agent decides what to look at: crops, zooms, multi-scale scans. This focuses computation on the regions that matter for each question — the advantage is sharpest on detail-dense categories (engineering drawings, science posters).
 
-**Lean RLM.** A minimal prompt with no chain-of-thought tokens consistently outperforms verbose prompts with explicit reasoning. The code REPL itself serves as the reasoning scratchpad -- structured thinking happens implicitly through iterative tool calls.
+**The reasoner is the lever.** Perception binds in the moment — no single look resolves a dense page — but the leverage sits with the reasoner directing the looks. At a fixed 27B VLM, scaling the reasoner (4B→27B) adds ~+20pp; at a fixed 27B reasoner, scaling the VLM adds ~+9pp. The same extra reasoning capacity is worth 3–4× as much inside the loop as in a whole-page ReAct agent, and a strong reasoner peering through a weak 4B VLM (32.8%) beats a weak reasoner given the full 27B VLM (21.1%). Between better eyes and a better director, buy the director.
+
+**Lean RLM.** A minimal prompt with no chain-of-thought tokens consistently outperforms verbose prompts with explicit reasoning. The code REPL itself serves as the reasoning scratchpad — structured thinking happens implicitly through iterative tool calls.
